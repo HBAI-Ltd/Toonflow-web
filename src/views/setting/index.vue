@@ -116,8 +116,15 @@
           <!-- 其他模型配置表单 -->
           <div v-else class="modelForm">
             <div class="formItem" v-if="key !== 'imageModel' || !['apimart', 'runninghub'].includes(settingData[key].manufacturer)">
-              <label class="formLabel">模型名称</label>
-              <a-input v-model:value="settingData[key].model" :placeholder="`请输入${modelRecordName[key]}名称`" class="formInput" />
+              <label class="formLabel">模型 ID</label>
+              <a-auto-complete
+                v-model:value="settingData[key].model"
+                :options="modelHistoryOptions[key] || []"
+                :placeholder="key === 'languageModel' ? '如: gpt-4o、doubao-1-5-pro-32k-250115' : '如: doubao-seedream-4-5-251128'"
+                class="formInput"
+                :filter-option="filterModelOption"
+                @select="(val: string) => onSelectModelHistory(key, val)" />
+              <span class="formHint">填写模型提供商分配的模型标识符（Model ID），非自定义名称</span>
             </div>
             <div class="formItem">
               <label class="formLabel">厂商</label>
@@ -325,7 +332,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, watch, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { message, Modal } from "ant-design-vue";
 import axios from "@/utils/axios";
@@ -563,6 +570,9 @@ const modelRecordName = {
 onMounted(async () => {
   await getSetting();
   getUser();
+  await loadModelHistory();
+  // 初始数据加载完成后才开启自动保存
+  setTimeout(() => { isInitialized.value = true; }, 500);
 });
 
 const customFormat: ModelDataType = {
@@ -646,7 +656,7 @@ function getUser() {
   });
 }
 
-function updateSetting() {
+function updateSetting(silent = false) {
   axios
     .post("/setting/updateSetting", {
       userId: Number(localStorage.getItem("userId")),
@@ -659,11 +669,72 @@ function updateSetting() {
       password: settingData.value.password,
     })
     .then(() => {
-      message.success("设置更新成功");
+      if (silent) {
+        message.success({ content: "已自动保存", duration: 1 });
+      } else {
+        message.success("设置更新成功");
+      }
     })
     .catch(() => {
       message.error("设置更新失败");
     });
+}
+
+// ==================== 自动保存（debounce） ====================
+let autoSaveTimer: ReturnType<typeof setTimeout> | null = null;
+const isInitialized = ref(false);
+
+function autoSave() {
+  if (!isInitialized.value) return;
+  if (autoSaveTimer) clearTimeout(autoSaveTimer);
+  autoSaveTimer = setTimeout(() => {
+    updateSetting(true);
+  }, 800);
+}
+
+// 监听配置变化自动保存（deep watch）
+watch(
+  () => [settingData.value.languageModel, settingData.value.imageModel, settingData.value.name, settingData.value.password],
+  () => autoSave(),
+  { deep: true },
+);
+
+watch(videoModalList, () => autoSave(), { deep: true });
+
+// ==================== 模型历史记录 ====================
+const modelHistoryOptions = ref<Record<string, Array<{ value: string; label: string }>>>({});
+const modelHistoryData = ref<Array<{ modelId: string; type: string; manufacturer: string; baseUrl: string }>>([]);
+
+async function loadModelHistory() {
+  try {
+    const res = await axios.post("/setting/getModelHistory", { userId: Number(localStorage.getItem("userId")) });
+    const list = res.data || [];
+    modelHistoryData.value = list;
+    // 按 type 分组为 options
+    const languageOpts = list.filter((i: any) => i.type === "language").map((i: any) => ({ value: i.modelId, label: i.modelId }));
+    const imageOpts = list.filter((i: any) => i.type === "image").map((i: any) => ({ value: i.modelId, label: i.modelId }));
+    modelHistoryOptions.value = {
+      languageModel: languageOpts,
+      imageModel: imageOpts,
+    };
+  } catch {
+    // 历史记录加载失败不阻断页面
+  }
+}
+
+function filterModelOption(inputValue: string, option: any) {
+  return option.value.toLowerCase().includes(inputValue.toLowerCase());
+}
+
+function onSelectModelHistory(key: string, modelId: string) {
+  const record = modelHistoryData.value.find((i) => i.modelId === modelId);
+  if (record) {
+    const target = (settingData.value as any)[key];
+    if (target) {
+      if (record.manufacturer) target.manufacturer = record.manufacturer;
+      if (record.baseUrl) target.baseURL = record.baseUrl;
+    }
+  }
 }
 
 function showDoubleConfirm(step = 1): Promise<boolean> {

@@ -29,13 +29,14 @@
 
 <script setup lang="ts">
 import store from "@/stores";
-const { activeMenu } = storeToRefs(store());
+const appStore = store();
+const { activeMenu } = storeToRefs(appStore);
 // ,{path:"/taskList",label:"任务列表",icon:"i-list-two"}
 const btnList = [{ path: "/project", label: "我的项目", icon: "i-folder-open" }];
 const router = useRouter();
 function handleClick(path: string) {
+  appStore.openTab(path);
   router.push(path);
-  activeMenu.value = path;
 }
 </script>
 
