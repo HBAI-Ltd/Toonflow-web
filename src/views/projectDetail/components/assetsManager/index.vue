@@ -19,6 +19,17 @@
       </div>
     </div>
 
+    <!-- 视觉风格选择（影响资产生成与分镜图风格统一） -->
+    <div class="visual-style-bar">
+      <span class="visual-style-label">视觉风格</span>
+      <a-radio-group
+        v-model:value="visualStyleValue"
+        option-type="button"
+        size="small"
+        :options="visualStyleOptions"
+        @change="onVisualStyleChange" />
+    </div>
+
     <!-- 工具栏 -->
     <div class="toolbar">
       <div class="tab-group" v-if="!props.radio">
@@ -248,7 +259,7 @@ import batchGenereate from "./components/batchGenereate.vue";
 import generateImage from "./components/generateImage.vue";
 import store from "@/stores";
 
-const { projectId, currentScriptId } = storeToRefs(store());
+const { projectId, currentScriptId, project } = storeToRefs(store());
 
 interface ElementData {
   id: number;
@@ -316,6 +327,36 @@ const typeToParam = (type: string) => ({ role: "角色", scene: "场景", props:
 
 const currentLabel = computed(() => radioOptions.find((i) => i.value === currentFilter.value)?.label);
 const canAddElement = computed(() => !(scriptList.value.length === 0 && currentFilter.value === "storyboard"));
+
+// 视觉风格：现实 / 漫剧 / 其他（用于资产生成与分镜图风格统一）
+const visualStyleOptions = [
+  { label: "未设置", value: "" },
+  { label: "现实", value: "realistic" },
+  { label: "漫剧", value: "anime" },
+  { label: "其他", value: "other" },
+];
+const visualStyleValue = ref<string>("");
+watch(
+  project,
+  (p) => {
+    const v = (p as { visualStyle?: string } | null)?.visualStyle ?? "";
+    visualStyleValue.value = ["realistic", "anime", "other"].includes(v) ? v : "";
+  },
+  { immediate: true }
+);
+async function onVisualStyleChange() {
+  const v = visualStyleValue.value;
+  try {
+    await axios.post("/project/updateProject", {
+      id: projectId.value,
+      visualStyle: v === "" ? null : v,
+    });
+    await store().setProjectById(projectId.value);
+    message.success("视觉风格已更新，后续生成将按此风格统一");
+  } catch (e: any) {
+    message.error(e?.message ?? "更新失败");
+  }
+}
 
 function getTabIcon(value: string) {
   const icons: Record<string, string> = {
@@ -580,6 +621,30 @@ watch(batchShow, (val) => {
           color: #9ca3af;
           margin-top: 2px;
         }
+      }
+    }
+  }
+
+  // 视觉风格栏
+  .visual-style-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 20px;
+    background: #fff;
+    border-radius: 12px;
+    border: 1px solid #f3f4f6;
+    margin-bottom: 16px;
+
+    .visual-style-label {
+      font-size: 14px;
+      color: #374151;
+      font-weight: 500;
+    }
+
+    :deep(.ant-radio-group) {
+      .ant-radio-button-wrapper {
+        border-radius: 8px;
       }
     }
   }
