@@ -89,6 +89,9 @@ interface Storyboard {
   segmentId: number; // 片段ID
   shotIndex: number; // 镜头在片段内的序号
   generateImg: { assetsId: number; filePath: string }[];
+  dialogue: string;
+  narration: string;
+  videoPrompt: string;
 }
 
 const emit = defineEmits(["save"]);
@@ -113,6 +116,10 @@ function handleEdit(item: Storyboard) {
     intro: item.intro || "",
     generateImg: item.generateImg || [],
     editPrompt: "",
+    duration: item.duration ?? undefined,
+    dialogue: item.dialogue ?? undefined,
+    narration: item.narration ?? undefined,
+    videoPrompt: item.videoPrompt ?? undefined,
   });
 }
 

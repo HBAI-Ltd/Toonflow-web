@@ -82,19 +82,13 @@
           {{ mockStoryboard.prompt }}
         </a-card>
         <a-card title="视频提示词" :bordered="false" size="small" style="margin-bottom: 12px">
-          <a-typography-paragraph style="margin-bottom: 0; white-space: pre-wrap">
-            {{ mockStoryboard.videoPrompt || "暂无" }}
-          </a-typography-paragraph>
+          {{ mockStoryboard.videoPrompt || "暂无" }}
         </a-card>
         <a-card title="人物对话" :bordered="false" size="small" style="margin-bottom: 12px">
-          <a-typography-paragraph style="margin-bottom: 0; white-space: pre-wrap">
-            {{ mockStoryboard.dialogue || "暂无" }}
-          </a-typography-paragraph>
+          {{ mockStoryboard.dialogue || "暂无" }}
         </a-card>
         <a-card title="第三方视角叙述" :bordered="false" size="small" style="margin-bottom: 20px">
-          <a-typography-paragraph style="margin-bottom: 0; white-space: pre-wrap">
-            {{ mockStoryboard.narration || "暂无" }}
-          </a-typography-paragraph>
+          {{ mockStoryboard.narration || "暂无" }}
         </a-card>
         <a-card title="生成结果" :bordered="false" size="small">
           <template v-if="mockStoryboard.generateImg && mockStoryboard.generateImg.length > 0">
