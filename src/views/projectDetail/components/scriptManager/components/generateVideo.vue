@@ -6,7 +6,6 @@
         <div class="icon-wrapper">
           <i-pic :size="20" class="icon" />
         </div>
-        {{ currentConfigId }}
         <span>视频配置</span>
         <span v-if="currentConfigs.length" class="count">{{ currentConfigs.length }}</span>
       </div>
@@ -296,6 +295,7 @@ function handleDeleteConfig(configId: number) {
 
         .delete-btn {
           opacity: 1;
+          z-index: 999999999999;
         }
       }
 

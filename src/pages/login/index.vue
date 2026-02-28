@@ -2,6 +2,18 @@
   <div class="bg"></div>
   <div class="loginPage">
     <div class="formBox">
+      <!-- 右下角设置按钮 -->
+      <!-- 设置弹窗 -->
+      <a-modal v-model:open="showSettingModal" title="服务器设置" @ok="handleSaveSetting" :width="400">
+        <a-form :label-col="{ span: 6 }" :wrapper-col="{ span: 18 }">
+          <a-form-item label="请求地址">
+            <a-input v-model:value="tempBaseUrl" placeholder="http://localhost:60000" />
+          </a-form-item>
+          <a-form-item label="WS地址">
+            <a-input v-model:value="tempWsBaseUrl" placeholder="ws://localhost:60000" />
+          </a-form-item>
+        </a-form>
+      </a-modal>
       <div class="logoBox">
         <img :src="logo" alt="logo" class="logo-img" />
         <span class="logo-text">Toonflow</span>
@@ -42,6 +54,13 @@
       </a-alert>
     </div>
   </div>
+  <div class="settingBtn" @click="showSettingModal = true">
+    <t-button shape="circle" theme="primary" size="large">
+      <template #icon>
+        <i-setting-two theme="outline" size="20" />
+      </template>
+    </t-button>
+  </div>
 </template>
 
 <script setup>
@@ -50,9 +69,25 @@ import Router from "@/router/index.ts";
 import { Alert, message } from "ant-design-vue";
 import logo from "@/assets/logo.png";
 import axios from "@/utils/axios";
+import settingStore from "@/stores/setting";
+import { storeToRefs } from "pinia";
+
+const store = settingStore();
+const { baseUrl, wsBaseUrl } = storeToRefs(store);
 
 const svgRef = ref(null);
 const showHint = ref(true);
+const showSettingModal = ref(false);
+const tempBaseUrl = ref(baseUrl.value);
+const tempWsBaseUrl = ref(wsBaseUrl.value);
+
+// 保存设置
+const handleSaveSetting = () => {
+  baseUrl.value = tempBaseUrl.value;
+  wsBaseUrl.value = tempWsBaseUrl.value;
+  showSettingModal.value = false;
+  message.success("设置已保存");
+};
 const state = ref({
   show: true,
   loginLoading: false,
@@ -220,5 +255,12 @@ const resSvg = async () => {
     font-size: 13px;
     border: 1px solid #e8d5ff;
   }
+}
+
+.settingBtn {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 9999;
 }
 </style>

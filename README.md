@@ -404,20 +404,10 @@ VITE_WS_URL=ws://127.0.0.1:60000
 
 # 👨‍👩‍👧‍👦 微信交流群
 
-~~交流群 1~~
+请到主仓库中查看
 
-~~交流群 2~~
-
-~~交流群 3~~
-
-~~交流群 4~~
-
-~~交流群 5~~
-
-交流群 6:
-
-<img src="./docs/chat6QR.jpg" alt="Toonflow Logo" height="400"/>
-<p>使用微信扫码添加，二维码过期可提交 Issues 提醒更新</p>
+- **GitHub**：👉 [Toonflow-app](https://github.com/HBAI-Ltd/Toonflow-app)
+- **Gitee**：👉 [Toonflow-app](https://gitee.com/HBAI-Ltd/Toonflow-app)
 
 ---
 
@@ -451,6 +441,7 @@ Toonflow Web 基于 AGPL-3.0 协议开源发布，许可证详情：https://www.
 - [Vite](https://vitejs.dev/) - 下一代前端构建工具
 - [Ant Design Vue](https://antdv.com/) - 企业级 UI 组件库
 - [Element Plus](https://element-plus.org/) - 基于 Vue 3 的组件库
+- [TDesign](https://element-plus.org/) - 为设计师 & 开发者，打造工作美学
 - [Pinia](https://pinia.vuejs.org/) - Vue 的直观状态管理库
 
 感谢以下组织/单位/个人为 Toonflow 提供支持：

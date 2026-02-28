@@ -174,7 +174,7 @@ function resetToDefault() {
   if (!currentPrompt.value) return;
   // 重置时显示默认值内容
   editingValue.value = processLineBreaks(currentPrompt.value.defaultValue || "");
-  message.info("已重置为默认值，点击保存生效");
+  ElMessage.info("已重置为默认值，点击保存生效");
 }
 
 // 保存提示词
@@ -199,9 +199,9 @@ async function savePrompt() {
       promptList.value[index].customValue = customVal;
     }
 
-    message.success("保存成功");
+    ElMessage.success("保存成功");
   } catch (error) {
-    message.error("保存失败");
+    ElMessage.error("保存失败");
   } finally {
     saving.value = false;
   }
@@ -217,7 +217,7 @@ async function fetchPrompts() {
       selectPrompt(promptList.value[0]);
     }
   } catch (error) {
-    message.error("获取提示词列表失败");
+    ElMessage.error("获取提示词列表失败");
   }
 }
 

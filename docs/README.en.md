@@ -41,7 +41,7 @@
 >
 > 🎉 **If you are a regular user wishing to use Toonflow directly, please go to the main repository to download the full client:**
 >
-> | Platform                                                                                                         | Link                                                                            |
+> | Platform                                                                                                     | Link                                                                            |
 > | ------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------- |
 > | <img src="https://img.shields.io/badge/GitHub-181717?style=flat&logo=github&logoColor=white" alt="GitHub" /> | 👉 [github.com/HBAI-Ltd/Toonflow-app](https://github.com/HBAI-Ltd/Toonflow-app) |
 > | <img src="https://img.shields.io/badge/Gitee-C71D23?style=flat&logo=gitee&logoColor=white" alt="Gitee" />    | 👉 [gitee.com/HBAI-Ltd/Toonflow-app](https://gitee.com/HBAI-Ltd/Toonflow-app)   |
@@ -120,10 +120,10 @@ Toonflow Web provides a complete frontend for short drama creation, including th
 
 ## 💡 What kind of user are you?
 
-| User Type                                    | Recommended Solution | GitHub                                                   | Gitee                                                   |
-| -------------------------------------------- | ------------------- | -------------------------------------------------------- | ------------------------------------------------------- |
-| 🎬 **Regular User** - Want to use Toonflow   | Download full client | [Toonflow-app](https://github.com/HBAI-Ltd/Toonflow-app) | [Toonflow-app](https://gitee.com/HBAI-Ltd/Toonflow-app) |
-| 👨‍💻 **Developer** - Want to modify or extend | Continue reading     | This repository                                           | This repository                                         |
+| User Type                                   | Recommended Solution | GitHub                                                   | Gitee                                                   |
+| ------------------------------------------- | -------------------- | -------------------------------------------------------- | ------------------------------------------------------- |
+| 🎬 **Regular User** - Want to use Toonflow  | Download full client | [Toonflow-app](https://github.com/HBAI-Ltd/Toonflow-app) | [Toonflow-app](https://gitee.com/HBAI-Ltd/Toonflow-app) |
+| 👨‍💻 **Developer** - Want to modify or extend | Continue reading     | This repository                                          | This repository                                         |
 
 ---
 
@@ -395,10 +395,10 @@ VITE_WS_URL=ws://127.0.0.1:60000
 
 # 🔗 Related Repositories
 
-| Repository         | Description                       | GitHub                                             | Gitee                                            |
-| ------------------| --------------------------------- | -------------------------------------------------- | ------------------------------------------------ |
-| **Toonflow-app**  | Complete client (recommended user) | [GitHub](https://github.com/HBAI-Ltd/Toonflow-app) | [Gitee](https://gitee.com/HBAI-Ltd/Toonflow-app) |
-| **Toonflow-web**  | Frontend source code (this repo)   | [GitHub](https://github.com/HBAI-Ltd/Toonflow-web) | [Gitee](https://gitee.com/HBAI-Ltd/Toonflow-web) |
+| Repository       | Description                        | GitHub                                             | Gitee                                            |
+| ---------------- | ---------------------------------- | -------------------------------------------------- | ------------------------------------------------ |
+| **Toonflow-app** | Complete client (recommended user) | [GitHub](https://github.com/HBAI-Ltd/Toonflow-app) | [Gitee](https://gitee.com/HBAI-Ltd/Toonflow-app) |
+| **Toonflow-web** | Frontend source code (this repo)   | [GitHub](https://github.com/HBAI-Ltd/Toonflow-web) | [Gitee](https://gitee.com/HBAI-Ltd/Toonflow-web) |
 
 ---
 
@@ -468,4 +468,3 @@ Thanks to the following organizations/units/individuals for supporting Toonflow:
 </table>
 
 For a complete list of third-party dependencies, please refer to `NOTICES.txt`
-

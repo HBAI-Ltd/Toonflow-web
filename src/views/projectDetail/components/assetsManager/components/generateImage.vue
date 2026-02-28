@@ -113,6 +113,9 @@
                       <div class="resultOverlay">
                         <i-preview-open class="previewBtn" theme="outline" size="20" fill="#fff" @click.stop="previewImage(item.filePath)" />
                       </div>
+                      <div class="del">
+                        <i-delete class="delImage" style="margin-left: 5px" theme="outline" size="20" fill="#d0021b" @click.stop="delImage(item)" />
+                      </div>
                       <div v-if="selectedIndex === index" class="selectedBadge">
                         <i-check theme="outline" size="14" fill="#fff" />
                       </div>
@@ -122,9 +125,21 @@
                         <a-spin />
                         <span>生成中...</span>
                       </div>
+                      <div class="del">
+                        <i-delete class="delImage" style="margin-left: 5px" theme="outline" size="20" fill="#d0021b" @click.stop="delImage(item)" />
+                      </div>
+                    </template>
+                    <template v-else-if="item.state === '生成失败'">
+                      <div class="errorPlaceholder">生成失败</div>
+                      <div class="del">
+                        <i-delete class="delImage" style="margin-left: 5px" theme="outline" size="20" fill="#d0021b" @click.stop="delImage(item)" />
+                      </div>
                     </template>
                     <template v-else>
                       <div class="errorPlaceholder">未知状态</div>
+                      <div class="del">
+                        <i-delete class="delImage" style="margin-left: 5px" theme="outline" size="20" fill="#d0021b" @click.stop="delImage(item)" />
+                      </div>
                     </template>
                   </div>
                 </div>
@@ -152,7 +167,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
 import { storeToRefs } from "pinia";
-import { Empty, message } from "ant-design-vue";
+import { Empty, message, Modal } from "ant-design-vue";
 import { useFileDialog } from "@vueuse/core";
 import errorPictrue from "@/utils/error";
 import axios from "@/utils/axios";
@@ -160,6 +175,7 @@ import store from "@/stores";
 const { projectId } = storeToRefs(store());
 
 interface ImageState {
+  id?: number;
   filePath: string;
   state: string;
 }
@@ -235,9 +251,11 @@ function setPreviewVisible(value: boolean) {
 }
 let timer: number = -1;
 // 获取图片列表
+const assetsId = ref();
 async function fetchImages(id: number) {
   const _id = id;
   const { data } = await axios.post("/assets/getImage", { assetsId: id });
+  assetsId.value = data.id;
   if (data.tempAssets.filter((i: { state: string }) => i.state == "生成中").length > 0) {
     timer = setTimeout(() => {
       if (modalShow.value) fetchImages(_id);
@@ -290,6 +308,32 @@ function previewImage(url: string) {
   previewVisible.value = true;
 }
 
+//删除图片
+async function delImage(item: ImageState) {
+  Modal.confirm({
+    title: "确认删除",
+    content: `确定要删除该图片吗？`,
+    okText: "删除",
+    cancelText: "取消",
+    okButtonProps: { danger: true },
+    onOk: async () => {
+      if (item.id) {
+        await axios.post("/assets/delAssetsImage", {
+          imageId: item.id,
+        });
+      } else {
+        await axios.post("/assets/delAssetsImage", {
+          assetsId: assetsId.value,
+        });
+      }
+      if (props.data?.id) {
+        fetchImages(props.data.id);
+      }
+      message.success("删除成功");
+    },
+  });
+}
+
 // 关闭弹窗
 function close() {
   modalShow.value = false;
@@ -324,7 +368,6 @@ async function generatePrompt() {
 async function startGenerate() {
   if (!formData.value) return;
   const { id, name, sampleImage, prompt } = formData.value;
-  console.log("%c Line:327 🍖 formData.value", "background:#33a5ff", formData.value);
   fakeLoading.value = true;
   generateLoading.value = true;
   try {
@@ -754,6 +797,12 @@ async function blobUrlToBase64(blobUrl: string): Promise<string> {
           background: rgba(255, 255, 255, 0.3);
         }
       }
+    }
+    .del {
+      position: absolute;
+      right: 8px;
+      bottom: 8px;
+      cursor: pointer;
     }
 
     .selectedBadge {

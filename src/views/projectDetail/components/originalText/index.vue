@@ -7,68 +7,73 @@
     </div>
 
     <!-- 操作栏 -->
-    <div class="smSummary jb">
-      <div class="f">
-        <i-file-text :size="24" class="smSummaryIcon mr-3" />
-        <span class="smSummaryTitle">原文管理</span>
+    <t-card :bordered="false" class="summaryCard">
+      <div class="jb ac">
+        <div class="f ac">
+          <i-file-text :size="24" class="summaryIcon mr-3" />
+          <span class="summaryTitle">原文管理</span>
+        </div>
+        <t-button theme="default" variant="outline" @click="purgeNovelShow = true">
+          <template #icon><i-optimize :size="16" /></template>
+          新增
+        </t-button>
       </div>
-      <button class="smSummaryBtn" @click="purgeNovelShow = true">
-        <i-optimize :size="16" />
-        新增
-      </button>
-    </div>
+    </t-card>
 
     <!-- 表格 -->
-    <vxe-table
-      ref="tableRef"
+    <t-table
       :data="originalList"
-      :row-config="{ isHover: true }"
-      :checkbox-config="{ highlight: true, trigger: 'row' }"
-      height="500"
+      :columns="columns"
+      row-key="id"
+      hover
+      max-height="500"
       style="margin-top: 12px">
-      <vxe-column field="index" title="章" width="100" />
-      <vxe-column field="reel" title="卷" width="100" />
-      <vxe-column field="chapter" title="章节名称" width="200" show-overflow="title" />
-      <vxe-column field="chapterData" title="章节内容" show-overflow="title" />
-      <vxe-column title="操作" width="100">
-        <template #default="{ row }">
-          <div class="actionBtns">
-            <i-edit size="21" @click="handleEdit(row)" />
-            <a-popconfirm title="确定要删除吗？" ok-text="确认" cancel-text="取消" @confirm="handleDelete(row)">
-              <i-delete size="21" />
-            </a-popconfirm>
-          </div>
-        </template>
-      </vxe-column>
-    </vxe-table>
+      <template #chapterData="{ row }">
+        <t-tooltip :content="row.chapterData" placement="top">
+          <span class="ellipsis-text">{{ row.chapterData }}</span>
+        </t-tooltip>
+      </template>
+      <template #operation="{ row }">
+        <div class="actionBtns">
+          <t-link theme="primary" hover="color" @click="handleEdit(row)">
+            <i-edit size="18" />
+          </t-link>
+          <t-popconfirm content="确定要删除吗？" @confirm="handleDelete(row)">
+            <t-link theme="danger" hover="color">
+              <i-delete size="18" />
+            </t-link>
+          </t-popconfirm>
+        </div>
+      </template>
+    </t-table>
 
     <!-- 新增弹窗 -->
     <purgeNovel v-model="purgeNovelShow" @select="handleAddChapters" />
 
     <!-- 编辑弹窗 -->
-    <a-modal v-model:open="editModal" width="60vw" title="编辑原文" @ok="handleUpdate">
+    <t-dialog placement="center" v-model:visible="editModal" header="编辑原文" width="60vw" @confirm="handleUpdate">
       <div class="editModalContent">
-        <a-form :model="formData" layout="vertical">
-          <a-form-item label="章" required>
-            <a-input v-model:value="formData.index" type="number" />
-          </a-form-item>
-          <a-form-item label="卷" required>
-            <a-input v-model:value="formData.reel" />
-          </a-form-item>
-          <a-form-item label="章节名称" required>
-            <a-input v-model:value="formData.chapter" />
-          </a-form-item>
-          <a-form-item label="章节内容" required>
-            <a-textarea v-model:value="formData.chapterData" :auto-size="{ minRows: 5, maxRows: 20 }" />
-          </a-form-item>
-        </a-form>
+        <t-form :data="formData" layout="vertical">
+          <t-form-item label="章" name="index">
+            <t-input-number v-model="formData.index" theme="normal" style="width: 100%" />
+          </t-form-item>
+          <t-form-item label="卷" name="reel">
+            <t-input v-model="formData.reel" />
+          </t-form-item>
+          <t-form-item label="章节名称" name="chapter">
+            <t-input v-model="formData.chapter" />
+          </t-form-item>
+          <t-form-item label="章节内容" name="chapterData">
+            <t-textarea v-model="formData.chapterData" :autosize="{ minRows: 5, maxRows: 20 }" />
+          </t-form-item>
+        </t-form>
       </div>
-    </a-modal>
+    </t-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { message } from "ant-design-vue";
+import { MessagePlugin } from "tdesign-vue-next";
 import axios from "@/utils/axios";
 import purgeNovel from "./components/purgeNovel.vue";
 import store from "@/stores";
@@ -88,6 +93,14 @@ interface ChapterItem {
   chapter: string;
   chapterData: string;
 }
+
+const columns = [
+  { colKey: "index", title: "章", width: 100 },
+  { colKey: "reel", title: "卷", width: 100 },
+  { colKey: "chapter", title: "章节名称", width: 200, ellipsis: true },
+  { colKey: "chapterData", title: "章节内容", ellipsis: true },
+  { colKey: "operation", title: "操作", width: 100 },
+];
 
 const originalList = ref<OriginalText[]>([]);
 const purgeNovelShow = ref(false);
@@ -119,7 +132,7 @@ const handleEdit = (row: OriginalText) => {
 const handleUpdate = () => {
   axios.post("/novel/updateNovel", formData.value).then(() => {
     getNovel();
-    message.success("更新成功");
+    MessagePlugin.success("更新成功");
     editModal.value = false;
   });
 };
@@ -140,52 +153,41 @@ onMounted(getNovel);
   .overviewTitle {
     font-size: 22px;
     font-weight: 600;
-    color: #222;
+    color: var(--td-text-color-primary);
     margin-bottom: 8px;
   }
   .overviewSub {
-    color: #888;
+    color: var(--td-text-color-secondary);
   }
 }
 
-.smSummary {
-  display: flex;
-  align-items: center;
-  padding: 15px;
-  background: linear-gradient(90deg, #faf5ff, #eff6ff);
+.summaryCard {
+  background: var(--td-bg-color-secondarycontainer);
   border-radius: 0.75rem;
 
-  .smSummaryIcon {
-    color: #9333ea;
+  .summaryIcon {
+    color: var(--td-brand-color);
   }
-  .smSummaryTitle {
+  .summaryTitle {
     font-weight: 600;
-    color: #111827;
+    color: var(--td-text-color-primary);
     font-size: 1rem;
-  }
-  .smSummaryBtn {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    background: #fff;
-    color: #9333ea;
-    border: none;
-    border-radius: 0.75rem;
-    font-size: 1rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background 0.15s;
-    &:hover {
-      background: #f3f4f6;
-    }
   }
 }
 
 .actionBtns {
   display: flex;
   justify-content: space-around;
-  cursor: pointer;
+  align-items: center;
+  gap: 8px;
+}
+
+.ellipsis-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
+  max-width: 100%;
 }
 
 .editModalContent {

@@ -219,7 +219,7 @@ export default defineStore(
         createdAt: configData.createdAt || new Date().toISOString(),
         audioEnabled: configData.audioEnabled,
       };
-      videoConfigs.value.push(newConfig);
+      videoConfigs.value.unshift(newConfig);
 
       // 更新configIdCounter
       if (newConfig.id > configIdCounter) {

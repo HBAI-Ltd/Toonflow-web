@@ -8,6 +8,7 @@
       <p class="sidebarSubtitle">AI驱动的短剧创作工具</p>
     </header>
     <nav class="sidebarNav">
+      sidebarTitle
       <button
         v-for="item in btnList"
         :key="item.path"

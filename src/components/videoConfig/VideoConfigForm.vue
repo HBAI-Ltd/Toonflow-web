@@ -225,6 +225,7 @@ import {
   getDurationTip,
   getMaxImages,
   getAudioSupport,
+  getModelList
 } from "./manufacturerConfig";
 
 const props = withDefaults(
@@ -241,7 +242,7 @@ const props = withDefaults(
     availableManufacturers: () => [
       { label: "火山引擎(豆包)", value: "volcengine" },
       { label: "RunningHub(Sora)", value: "runninghub" },
-      { label: "Apimart(Sora)", value: "apimart" },
+      // { label: "Apimart(Sora)", value: "apimart" },
     ],
   },
 );
@@ -427,6 +428,9 @@ onMounted(async () => {
     }
   }
 });
+onMounted(() =>{
+  getModelList()
+})
 </script>
 
 <style lang="scss" scoped>

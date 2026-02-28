@@ -1,5 +1,3 @@
-import "./assets/main.css";
-
 import { createApp } from "vue";
 import { createPinia } from "pinia";
 import piniaPluginPersistedstate from "pinia-plugin-persistedstate";
@@ -19,6 +17,12 @@ import zhCn from "element-plus/es/locale/lang/zh-cn";
 import MateChat from "@matechat/core";
 
 import "@devui-design/icons/icomoon/devui-icon.css";
+
+import "tdesign-vue-next/es/style/index.css";
+
+import "./assets/main.css";
+
+import "@/utils/global";
 
 const app = createApp(App);
 install(app, "i");

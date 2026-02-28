@@ -3,6 +3,8 @@ import axios from "@/utils/axios";
 export default defineStore(
   "index",
   () => {
+    const version = ref('v1.0.7')
+
     const activeMenu = ref<string>("");
 
     //当前项目
@@ -23,7 +25,7 @@ export default defineStore(
       currentScriptId.value = scriptData.data?.id || null;
     }
 
-    return { activeMenu, project, projectId, currentScriptId, setProjectById };
+    return { version,activeMenu, project, projectId, currentScriptId, setProjectById };
   },
   { persist: false },
 );

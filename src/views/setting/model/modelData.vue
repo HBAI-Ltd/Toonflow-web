@@ -194,7 +194,7 @@
           <svg viewBox="0 0 24 24" width="24" height="24" fill="#52c41a" style="margin-right: 8px">
             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
           </svg>
-          <span>图像生成测试成功</span>
+          <span style="color: #000">图像生成测试成功</span>
         </div>
       </template>
       <div class="test-result-content">
@@ -203,7 +203,7 @@
           图像模型配置正确，以下是生成的测试图片：
         </p>
         <div class="test-image-wrapper">
-          <a-image :src="testImageResult" :preview="{ src: testImageResult }" class="test-image-preview" />
+          <el-image :src="testImageResult" :preview="{ src: testImageResult }" :preview-src-list="[testImageResult]" class="test-image-preview" />
         </div>
       </div>
     </el-dialog>
@@ -430,15 +430,15 @@ async function testAi(row: RowData) {
   const { model, apiKey, baseUrl, manufacturer } = row;
 
   if (!model) {
-    message.warning("请先填写模型名称");
+    ElMessage.warning("请先填写模型名称");
     return;
   }
   if (!apiKey) {
-    message.warning("请先填写 API Key");
+    ElMessage.warning("请先填写 API Key");
     return;
   }
   if (!manufacturer) {
-    message.warning("请先选择厂商");
+    ElMessage.warning("请先选择厂商");
     return;
   }
   row.load = true;
@@ -454,7 +454,7 @@ async function testAi(row: RowData) {
     }
     if (!queryUrl) {
       row.load = false;
-      return message.warning("type 错误");
+      return ElMessage.warning("type 错误");
     }
     const res = await axios.post(queryUrl, {
       modelName: model,
@@ -482,7 +482,7 @@ async function testAi(row: RowData) {
       }
     }
   } catch (e: any) {
-    message.error(`连接失败: ${e.message}`);
+    ElMessage.error(`连接失败: ${e.message}`);
   } finally {
     row.load = false;
   }
@@ -512,12 +512,12 @@ function delModelBtn(row: RowData) {
   axios
     .post("/setting/delModel", { id: row.id })
     .then(() => {
-      message.success("模型删除成功");
+      ElMessage.success("模型删除成功");
       fetchModelList();
       emit("modelList");
     })
     .catch(() => {
-      message.error("模型删除失败");
+      ElMessage.error("模型删除失败");
     });
 }
 const emit = defineEmits(["modelList"]);
@@ -525,7 +525,7 @@ const emit = defineEmits(["modelList"]);
 async function confirmConfig() {
   const selectedRow = tableRef.value?.getRadioRecord();
   if (!selectedRow) {
-    message.warning("请先选择一个模型");
+    ElMessage.warning("请先选择一个模型");
     return;
   }
   try {
@@ -534,12 +534,12 @@ async function confirmConfig() {
       configId: selectedRow.id,
     });
 
-    message.success("配置成功");
+    ElMessage.success("配置成功");
     tableRef.value?.clearRadioRow();
     modelDataShow.value = false;
     emit("modelList");
   } catch {
-    message.error("配置失败，请重试");
+    ElMessage.error("配置失败，请重试");
   }
 }
 </script>

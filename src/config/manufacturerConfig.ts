@@ -60,25 +60,25 @@ export const MANUFACTURER_CONFIGS: Record<ManufacturerType, ManufacturerConfig> 
     validateImages: (count: number) => count >= 1 && count <= 9,
   },
 
-  apimart: {
-    value: "apimart",
-    label: "apimart",
-    maxImages: 9,
-    minImages: 1,
-    durationOptions: [
-      { value: 10, label: "10秒" },
-      { value: 15, label: "15秒" },
-    ],
-    resolutionOptions: [
-      { value: "16:9", label: "16:9" },
-      { value: "9:16", label: "9:16" },
-    ],
-    defaultDuration: 10,
-    defaultResolution: "16:9",
-    requiresRatio: false,
-    validateDuration: (duration: number) => duration === 10 || duration === 15,
-    validateImages: (count: number) => count >= 1 && count <= 9,
-  },
+  // apimart: {
+  //   value: "apimart",
+  //   label: "apimart",
+  //   maxImages: 9,
+  //   minImages: 1,
+  //   durationOptions: [
+  //     { value: 10, label: "10秒" },
+  //     { value: 15, label: "15秒" },
+  //   ],
+  //   resolutionOptions: [
+  //     { value: "16:9", label: "16:9" },
+  //     { value: "9:16", label: "9:16" },
+  //   ],
+  //   defaultDuration: 10,
+  //   defaultResolution: "16:9",
+  //   requiresRatio: false,
+  //   validateDuration: (duration: number) => duration === 10 || duration === 15,
+  //   validateImages: (count: number) => count >= 1 && count <= 9,
+  // },
 };
 
 // 导出厂商列表

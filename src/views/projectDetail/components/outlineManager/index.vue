@@ -13,14 +13,14 @@
         style="height: 100%"></chat>
     </div>
     <div class="workspace">
-      <a-tabs v-model:activeKey="activeKey">
-        <a-tab-pane key="storyline" tab="故事线">
+      <t-tabs v-model="activeKey">
+        <t-tab-panel value="storyline" label="故事线">
           <storylineDom v-model="storyLine" v-if="activeKey == 'storyline'" @save="saveStoryLine"></storylineDom>
-        </a-tab-pane>
-        <a-tab-pane key="outline" tab="大纲">
+        </t-tab-panel>
+        <t-tab-panel value="outline" label="大纲">
           <outlineDom ref="outlineDomRef" v-model="outline" v-if="activeKey == 'outline'"></outlineDom>
-        </a-tab-pane>
-      </a-tabs>
+        </t-tab-panel>
+      </t-tabs>
     </div>
   </div>
 </template>
@@ -29,7 +29,7 @@
 import { ref, onMounted, onUnmounted } from "vue";
 import { storeToRefs } from "pinia";
 import { useRoute } from "vue-router";
-import { message } from "ant-design-vue";
+import { MessagePlugin } from "tdesign-vue-next";
 import { v4 as uuidv4 } from "uuid";
 import store from "@/stores";
 import outlineDom from "./components/outline.vue";
@@ -168,9 +168,9 @@ async function saveStoryLine() {
       content: storyLine.value,
     });
     await getStoryLine();
-    message.success("保存成功");
+    window.$message.success("保存成功");
   } catch (e) {
-    message.error("保存失败");
+    window.$message.error("保存失败");
   }
 }
 // ==================== WebSocket相关 ====================
@@ -433,10 +433,11 @@ function handleCleanHistory() {
   justify-content: space-between;
   padding: 8px;
   border-radius: 8px;
-  background-color: #f7f5ff;
+  background-color: var(--td-brand-color-light);
   margin-bottom: 8px;
 }
 .originTextBtn {
   cursor: pointer;
+  color: var(--td-text-color-primary);
 }
 </style>

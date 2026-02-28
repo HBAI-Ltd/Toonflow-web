@@ -2,7 +2,7 @@ export interface DurationOption {
   value: number;
   label: string;
 }
-export type ManufacturerType = "volcengine" | "runninghub" | "apimart";
+export type ManufacturerType = "volcengine" | "runninghub";
 export interface ResolutionOption {
   value: string;
   label: string;

@@ -14,18 +14,18 @@
         }">
         <div class="topMenu fc" @mousedown.stop="handleGridMouseDown($event, grid)">
           <div class="gridTitle" :title="grid.title">{{ grid.title }}</div>
-          <div class="fragmentContent">{{ grid.fragmentContent }}</div>
-          <div class="f" style="gap: 6px">
+          <div class="fragmentContent" :title="grid.fragmentContent">{{ grid.fragmentContent }}</div>
+          <div class="f w" style="gap: 6px">
             <el-tag v-for="(sub, index) in grid.assetsTags" :key="index">{{ sub.text }}</el-tag>
           </div>
         </div>
 
         <a-spin :spinning="isGenerating(grid.id)" tip="生成中...">
           <div class="grid" :style="getGridStyle(grid.cells.length)">
-            <div v-for="(cell, index) in grid.cells" :key="index" class="gridItem">
+            <div v-for="(cell, index) in grid.cells" :key="index" class="gridItem" :style="getImageSize">
               <div class="tag">镜头{{ index + 1 }}</div>
               <template v-if="cell.src">
-                <img :src="cell.src" loading="lazy" @click="editImage(cell, grid.segmentId)" />
+                <img :src="cell.src" loading="lazy" @click="editImage(cell, grid.segmentId)" :style="getImageSize" />
                 <div class="cellPrompt" :title="cell.prompt" @click.stop="updateCellPrompt($event, cell, grid.segmentId)">{{ cell.prompt }}</div>
                 <i-preview-open
                   @click="
@@ -63,9 +63,9 @@
 
 <script setup>
 import storyboardEditor from "@/components/storyboardEditor/index.vue";
-
+import mainStore from "@/stores/index";
 const editorRef = ref(null);
-
+const { project } = storeToRefs(mainStore());
 const props = defineProps({
   modelValue: { type: Array, required: true },
   generatingIds: { type: [Array, Set], default: () => [] },
@@ -168,9 +168,29 @@ const getGridStyle = (count) => {
 
   return {
     gridTemplateColumns: `repeat(${cols}, max-content)`,
-    gridTemplateRows: `repeat(${rows}, 150px)`,
+    gridTemplateRows: `repeat(${rows}, max-content)`,
   };
 };
+
+// 根据视频比例计算图片尺寸
+const getImageSize = computed(() => {
+  const ratio = project.value?.videoRatio || "16:9";
+  if (ratio === "9:16") {
+    // 竖屏格式：宽度较小，高度较大
+    return {
+      maxWidth: "120px",
+      maxHeight: "213px", // 约 120 * 16/9
+      minWidth: "100px",
+    };
+  } else {
+    // 横屏格式 16:9：宽度较大，高度较小
+    return {
+      maxWidth: "260px",
+      maxHeight: "146px", // 约 260 * 9/16
+      minWidth: "200px",
+    };
+  }
+});
 
 const viewportStyle = computed(() => {
   const size = 20 * state.value.scale;
@@ -472,6 +492,9 @@ $hoverBg: #e8f4ff;
   transition:
     transform 0.2s,
     box-shadow 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
   &:hover {
     z-index: 10;
@@ -494,8 +517,8 @@ $hoverBg: #e8f4ff;
   }
 
   img {
+    width: 100%;
     height: 100%;
-    max-width: 100%;
     object-fit: contain;
     display: block;
     transition: filter 0.2s;
@@ -522,7 +545,6 @@ $hoverBg: #e8f4ff;
   word-break: break-all;
   overflow: hidden;
   text-overflow: ellipsis;
-  display: flex;
   align-items: center;
   justify-content: center;
   padding: 8px;

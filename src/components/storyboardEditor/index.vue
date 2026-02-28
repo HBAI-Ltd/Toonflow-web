@@ -31,6 +31,11 @@
                 <a-tag color="cyan" class="image-tag">图 1</a-tag>
               </div>
             </a-col>
+            <a-col :span="6">
+              <div class="upload-card" @click="lensImage">
+                <i-upload-picture theme="outline" size="36" fill="#9810fa" />
+              </div>
+            </a-col>
           </a-row>
         </a-card>
 
@@ -255,6 +260,18 @@ function startPreview(imageUrl: string): void {
   previewImageUrl.value = imageUrl;
   setPreviewVisible(true);
 }
+// 文件选择
+async function lensImage() {
+  selectElementModal.value = true;
+  try {
+    const res = await new Promise<{ id: number; filePath: string }>((resolve) => {
+      componentResolve.value = resolve;
+    });
+    mockStoryboard.value.filePath = res.filePath;
+  } catch {
+    // 用户取消
+  }
+}
 
 async function handleSelectOtherImgs(): Promise<void> {
   selectElementModal.value = true;
@@ -343,7 +360,7 @@ function handleSaveFirstFrame(): void {
   emit("save", {
     id: mockStoryboard.value.id,
     filePath: mockStoryboard.value.generateImg[resultSelectedIndex.value].filePath,
-    prompt: mockStoryboard.value.editPrompt,
+    prompt: mockStoryboard.value.prompt,
   });
   modelValue.value = false;
 }

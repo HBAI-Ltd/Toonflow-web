@@ -380,4 +380,7 @@ function handleClick(
     }
   }
 }
+:deep(.hljs) {
+  text-wrap: wrap;
+}
 </style>

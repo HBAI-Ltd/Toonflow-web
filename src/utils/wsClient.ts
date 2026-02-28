@@ -1,3 +1,5 @@
+import settingStore from "@/stores/setting";
+
 // utils/WsClient.ts
 type WsOptions = {
   timeout?: number; // 超时时间（ms）
@@ -17,7 +19,9 @@ class WsClient {
   private retries = 0;
 
   constructor(url: string, options: WsOptions = {}) {
-    const fullUrl = new URL(url, import.meta.env.VITE_WS_URL);
+    const { wsBaseUrl } = storeToRefs(settingStore());
+
+    const fullUrl = new URL(url, wsBaseUrl.value);
     const token = localStorage.getItem("token");
     if (token) fullUrl.searchParams.set("token", token);
     this.url = fullUrl.toString();

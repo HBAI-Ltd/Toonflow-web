@@ -22,7 +22,10 @@
           <div v-for="(item, index) in data" :key="item.id" class="image-card" @click="handleEdit(item)">
             <!-- 序号标签 -->
             <div class="shot-badge">片段{{ item.segmentId }}-{{ item.shotIndex }}镜头</div>
-
+            <!-- 删除分镜图 -->
+            <div class="delStoryboards" @click.stop="delStoryboardsFn(item.id, index, $event)">
+              <i-delete :size="16" />
+            </div>
             <!-- 封面区域 -->
             <div class="cover-wrapper">
               <el-image class="cover-image" :src="item.filePath" fit="cover">
@@ -38,16 +41,14 @@
                   </div>
                 </template>
               </el-image>
-
               <!-- 悬浮操作层 -->
-              <div class="hover-overlay">
+              <!-- <div class="hover-overlay">
                 <div class="action-btn">
                   <i-edit :size="20" />
                   <span>编辑</span>
                 </div>
-              </div>
+              </div> -->
             </div>
-
             <!-- 信息区域 -->
             <div class="info-wrapper">
               <h4 v-if="item.name" class="card-title">{{ item.name }}</h4>
@@ -75,6 +76,7 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
+import { message, Modal } from "ant-design-vue";
 import storyboardChat from "./storyboardImage/storyboardChat.vue";
 import storyboardEditor from "@/components/storyboardEditor/index.vue";
 import axios from "@/utils/axios";
@@ -126,6 +128,21 @@ function handleEdit(item: Storyboard) {
 function handelrEditSave(data: any) {
   axios.post("/storyboard/saveStoryboard", data).then(() => {
     emit("save");
+  });
+}
+function delStoryboardsFn(id: number, index: number, event: MouseEvent) {
+  Modal.confirm({
+    title: "确认删除",
+    content: `确定要删除分镜图吗？`,
+    okText: "删除",
+    cancelText: "取消",
+    okButtonProps: { danger: true },
+    onOk: async () => {
+      axios.post("/storyboard/delStoryboard", { id }).then(() => {
+        emit("save");
+        message.success("删除成功");
+      });
+    },
   });
 }
 </script>
@@ -230,6 +247,10 @@ function handelrEditSave(data: any) {
         box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
         border-color: rgba(147, 51, 234, 0.2);
 
+        .delStoryboards {
+          opacity: 1;
+        }
+
         .hover-overlay {
           opacity: 1;
         }
@@ -251,6 +272,21 @@ function handelrEditSave(data: any) {
         font-size: 13px;
         font-weight: 600;
         box-shadow: 0 2px 8px rgba(147, 51, 234, 0.4);
+      }
+      .delStoryboards {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        z-index: 10;
+        padding: 4px 12px;
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        color: #fff;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+        opacity: 0;
+        transition: opacity 0.3s ease;
       }
 
       .cover-wrapper {
@@ -309,6 +345,7 @@ function handelrEditSave(data: any) {
         .hover-overlay {
           position: absolute;
           inset: 0;
+          z-index: 9999999999;
           background: rgba(0, 0, 0, 0.4);
           display: flex;
           align-items: center;

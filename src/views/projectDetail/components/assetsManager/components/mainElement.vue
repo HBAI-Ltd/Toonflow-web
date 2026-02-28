@@ -130,6 +130,8 @@ import axios from "@/utils/axios";
 import errorPicture from "@/utils/error";
 import store from "@/stores";
 const { projectId, currentScriptId } = storeToRefs(store());
+import settingStore from "@/stores/setting";
+const { otherSetting } = storeToRefs(settingStore());
 import addElementDialog from "./addElementDialog.vue";
 import batchGenereate from "./batchGenereate.vue";
 import generateImage from "./generateImage.vue";
@@ -262,7 +264,7 @@ const batchProcess = async <T,>(list: T[], batchSize: number, processor: (item: 
 const handleBatchSave = async (list: ElementData[]) => {
   if (!list.length) return message.warning("请至少选择一个资产");
 
-  await batchProcess(list, 5, async (item) => {
+  await batchProcess(list, otherSetting.value.assetsBatchGenereateSize || 5, async (item) => {
     await axios.post("/assets/updateAssets", {
       id: item.id,
       name: item.name,

@@ -6,10 +6,10 @@
         <h1 class="page-title">大纲管理</h1>
         <p class="page-desc">每一集的详细内容</p>
       </div>
-      <a-button type="primary" class="add-btn" @click="handleAddOutline">
+      <t-button class="add-btn" @click="handleAddOutline">
         <i-plus :size="16" />
         新增大纲
-      </a-button>
+      </t-button>
     </div>
 
     <!-- 大纲列表 -->
@@ -19,66 +19,66 @@
           <div class="episode-badge">第 {{ item.episodeIndex }} 集</div>
           <div class="card-title">{{ item.title || "未命名" }}</div>
           <div class="card-actions">
-            <a-button type="text" size="small" class="action-btn" @click="startEdit(index)">
+            <t-button variant="text" size="small" class="action-btn" @click="startEdit(index)">
               <i-edit :size="16" />
-            </a-button>
-            <a-button type="text" size="small" class="action-btn danger" @click="handleDelete(item)">
+            </t-button>
+            <t-button variant="text" size="small" class="action-btn danger" @click="handleDelete(item)">
               <i-delete :size="16" />
-            </a-button>
+            </t-button>
           </div>
         </div>
 
         <div class="card-body">
-          <a-row :gutter="[16, 8]">
-            <a-col :span="24">
+          <t-row :gutter="[16, 8]">
+            <t-col :span="12">
               <div class="field-group highlight">
                 <span class="field-icon">📖</span>
                 <span class="field-label">章节范围</span>
                 <span class="field-value">{{ formatChapterIndexes(item.chapterRange) }}</span>
               </div>
-            </a-col>
+            </t-col>
 
-            <a-col :span="8">
+            <t-col :span="4">
               <div class="field-group">
                 <span class="field-icon">🎬</span>
                 <span class="field-label">场景</span>
                 <span class="field-value">{{ formatObjectArray(item.scenes) }}</span>
               </div>
-            </a-col>
+            </t-col>
 
-            <a-col :span="8">
+            <t-col :span="4">
               <div class="field-group">
                 <span class="field-icon">👥</span>
                 <span class="field-label">角色</span>
                 <span class="field-value">{{ formatObjectArray(item.characters) }}</span>
               </div>
-            </a-col>
+            </t-col>
 
-            <a-col :span="8">
+            <t-col :span="4">
               <div class="field-group">
                 <span class="field-icon">🎁</span>
                 <span class="field-label">道具</span>
                 <span class="field-value">{{ formatObjectArray(item.props) }}</span>
               </div>
-            </a-col>
+            </t-col>
 
-            <a-col :span="12">
+            <t-col :span="6">
               <div class="field-group">
                 <span class="field-icon">🎯</span>
                 <span class="field-label">核心冲突</span>
                 <span class="field-value">{{ item.coreConflict || "—" }}</span>
               </div>
-            </a-col>
+            </t-col>
 
-            <a-col :span="12">
+            <t-col :span="6">
               <div class="field-group">
                 <span class="field-icon">⚡</span>
                 <span class="field-label">黄金3秒</span>
                 <span class="field-value">{{ item.openingHook || "—" }}</span>
               </div>
-            </a-col>
+            </t-col>
 
-            <a-col :span="24" v-if="item.outline">
+            <t-col :span="12" v-if="item.outline">
               <div class="field-group outline-field">
                 <div class="field-header">
                   <span class="field-icon">📝</span>
@@ -86,8 +86,8 @@
                 </div>
                 <p class="field-content">{{ item.outline }}</p>
               </div>
-            </a-col>
-          </a-row>
+            </t-col>
+          </t-row>
 
           <!-- 标签展示区 -->
           <div class="tags-section" v-if="item.keyEvents?.length || item.classicQuotes?.length">
@@ -114,151 +114,149 @@
     <div class="empty-state" v-else>
       <div class="empty-icon">📋</div>
       <p class="empty-text">暂无大纲数据</p>
-      <a-button type="primary" class="empty-btn" @click="handleAddOutline">创建第一个大纲</a-button>
+      <t-button theme="primary" class="empty-btn" @click="handleAddOutline">创建第一个大纲</t-button>
     </div>
 
     <!-- 编辑弹窗 -->
-    <a-modal
-      v-model:open="editModalVisible"
-      :title="isAddMode ? '新增大纲' : '编辑大纲'"
+    <t-dialog
+      v-model:visible="editModalVisible"
+      :header="isAddMode ? '新增大纲' : '编辑大纲'"
       width="900px"
-      :bodyStyle="{ maxHeight: '70vh', overflowY: 'auto', padding: '20px' }"
-      @ok="saveEdit"
+      @confirm="saveEdit"
       @cancel="cancelEdit"
-      okText="保存"
-      cancelText="取消"
       class="outline-modal">
-      <a-form v-if="editTemp" layout="vertical" :model="editTemp" class="outline-form">
-        <!-- 基础信息 -->
-        <div class="form-section">
-          <div class="section-title">
-            <span class="section-icon">📌</span>
-            基础信息
-          </div>
-          <a-row :gutter="16">
-            <a-col :span="6">
-              <a-form-item label="集数">
-                <a-input-number v-model:value="editTemp.episodeIndex" :min="1" style="width: 100%" />
-              </a-form-item>
-            </a-col>
-            <a-col :span="18">
-              <a-form-item label="标题">
-                <a-input v-model:value="editTemp.title" :maxlength="100" show-count placeholder="请输入本集标题" />
-              </a-form-item>
-            </a-col>
-            <a-col :span="24">
-              <a-form-item label="章节范围">
-                <div class="chapter-selector">
-                  <a-button class="select-btn" @click="openChapterSelector">
-                    <i-plus :size="14" />
-                    选择章节
-                  </a-button>
-                  <span class="selected-text">{{ formatChapterIndexes(editTemp.chapterRange) || "未选择章节" }}</span>
-                </div>
-              </a-form-item>
-            </a-col>
-          </a-row>
-        </div>
-
-        <!-- 资产关联 -->
-        <div class="form-section">
-          <div class="section-title">
-            <span class="section-icon">🔗</span>
-            资产关联
-          </div>
-          <a-row :gutter="16">
-            <a-col :span="8" v-for="assetField in ['scenes', 'characters', 'props']" :key="assetField">
-              <a-form-item :label="getAssetLabel(assetField)">
-                <div class="asset-box">
-                  <div class="asset-tags">
-                    <span v-for="(obj, idx) in editTemp[assetField as keyof Outline] as ObjectItem[]" :key="idx" class="asset-tag">
-                      {{ obj.name }}
-                      <i-close :size="12" class="close-icon" @click="removeObjectItem(assetField, idx)" />
-                    </span>
+      <div class="modal-body">
+        <t-form v-if="editTemp" layout="vertical" :data="editTemp" class="outline-form">
+          <!-- 基础信息 -->
+          <div class="form-section">
+            <div class="section-title">
+              <span class="section-icon">📌</span>
+              基础信息
+            </div>
+            <t-row :gutter="16">
+              <t-col :span="3">
+                <t-form-item label="集数" name="episodeIndex">
+                  <t-input-number v-model="editTemp.episodeIndex" :min="1" theme="normal" style="width: 100%" />
+                </t-form-item>
+              </t-col>
+              <t-col :span="9">
+                <t-form-item label="标题" name="title">
+                  <t-input v-model="editTemp.title" :maxlength="100" placeholder="请输入本集标题" />
+                </t-form-item>
+              </t-col>
+              <t-col :span="12">
+                <t-form-item label="章节范围" name="chapterRange">
+                  <div class="chapter-selector">
+                    <t-button variant="outline" class="select-btn" @click="openChapterSelector">
+                      <i-plus :size="14" />
+                      选择章节
+                    </t-button>
+                    <span class="selected-text">{{ formatChapterIndexes(editTemp.chapterRange) || "未选择章节" }}</span>
                   </div>
-                  <a-button type="dashed" size="small" class="add-asset-btn" @click="addObjectItem(assetField)">
-                    <i-plus :size="12" />
-                    添加
-                  </a-button>
-                </div>
-              </a-form-item>
-            </a-col>
-          </a-row>
-        </div>
-
-        <!-- 剧情设计 -->
-        <div class="form-section">
-          <div class="section-title">
-            <span class="section-icon">🎭</span>
-            剧情设计
+                </t-form-item>
+              </t-col>
+            </t-row>
           </div>
-          <a-row :gutter="16">
-            <a-col :span="12">
-              <a-form-item label="黄金3秒">
-                <a-input v-model:value="editTemp.openingHook" :maxlength="100" placeholder="开头吸引观众的亮点" />
-              </a-form-item>
-            </a-col>
-            <a-col :span="12">
-              <a-form-item label="结尾悬念">
-                <a-input v-model:value="editTemp.endingHook" :maxlength="100" placeholder="结尾留下的悬念" />
-              </a-form-item>
-            </a-col>
-            <a-col :span="24">
-              <a-form-item label="核心冲突">
-                <a-input v-model:value="editTemp.coreConflict" :maxlength="200" placeholder="本集的核心矛盾点" />
-              </a-form-item>
-            </a-col>
-            <a-col :span="24">
-              <a-form-item label="剧情主干">
-                <a-textarea
-                  v-model:value="editTemp.outline"
-                  :auto-size="{ minRows: 4, maxRows: 8 }"
-                  :maxlength="1000"
-                  show-count
-                  placeholder="详细描述本集剧情走向" />
-              </a-form-item>
-            </a-col>
-          </a-row>
-        </div>
 
-        <!-- 补充信息 -->
-        <div class="form-section">
-          <div class="section-title">
-            <span class="section-icon">💡</span>
-            补充信息
+          <!-- 资产关联 -->
+          <div class="form-section">
+            <div class="section-title">
+              <span class="section-icon">🔗</span>
+              资产关联
+            </div>
+            <t-row :gutter="16">
+              <t-col :span="4" v-for="assetField in ['scenes', 'characters', 'props']" :key="assetField">
+                <t-form-item :label="getAssetLabel(assetField)" :name="assetField">
+                  <div class="asset-box">
+                    <div class="asset-tags">
+                      <span v-for="(obj, idx) in editTemp[assetField as keyof Outline] as ObjectItem[]" :key="idx" class="asset-tag">
+                        {{ obj.name }}
+                        <i-close :size="12" class="close-icon" @click="removeObjectItem(assetField, idx)" />
+                      </span>
+                    </div>
+                    <t-button variant="dashed" size="small" class="add-asset-btn" @click="addObjectItem(assetField)">
+                      <i-plus :size="12" />
+                      添加
+                    </t-button>
+                  </div>
+                </t-form-item>
+              </t-col>
+            </t-row>
           </div>
-          <a-row :gutter="16">
-            <a-col :span="12">
-              <a-form-item label="关键节点">
-                <a-select v-model:value="editTemp.keyEvents" mode="tags" placeholder="输入后回车添加" style="width: 100%" />
-              </a-form-item>
-            </a-col>
-            <a-col :span="12">
-              <a-form-item label="情绪曲线">
-                <a-input v-model:value="editTemp.emotionalCurve" placeholder="如：低开高走、波浪起伏" />
-              </a-form-item>
-            </a-col>
-            <a-col :span="12">
-              <a-form-item label="视觉重点">
-                <a-select v-model:value="editTemp.visualHighlights" mode="tags" placeholder="输入后回车添加" style="width: 100%" />
-              </a-form-item>
-            </a-col>
-            <a-col :span="12">
-              <a-form-item label="金句">
-                <a-select v-model:value="editTemp.classicQuotes" mode="tags" placeholder="输入后回车添加" style="width: 100%" />
-              </a-form-item>
-            </a-col>
-          </a-row>
-        </div>
-      </a-form>
-    </a-modal>
+
+          <!-- 剧情设计 -->
+          <div class="form-section">
+            <div class="section-title">
+              <span class="section-icon">🎭</span>
+              剧情设计
+            </div>
+            <t-row :gutter="16">
+              <t-col :span="6">
+                <t-form-item label="黄金3秒" name="openingHook">
+                  <t-input v-model="editTemp.openingHook" :maxlength="100" placeholder="开头吸引观众的亮点" />
+                </t-form-item>
+              </t-col>
+              <t-col :span="6">
+                <t-form-item label="结尾悬念" name="endingHook">
+                  <t-input v-model="editTemp.endingHook" :maxlength="100" placeholder="结尾留下的悬念" />
+                </t-form-item>
+              </t-col>
+              <t-col :span="12">
+                <t-form-item label="核心冲突" name="coreConflict">
+                  <t-input v-model="editTemp.coreConflict" :maxlength="200" placeholder="本集的核心矛盾点" />
+                </t-form-item>
+              </t-col>
+              <t-col :span="12">
+                <t-form-item label="剧情主干" name="outline">
+                  <t-textarea
+                    v-model="editTemp.outline"
+                    :autosize="{ minRows: 4, maxRows: 8 }"
+                    :maxlength="1000"
+                    placeholder="详细描述本集剧情走向" />
+                </t-form-item>
+              </t-col>
+            </t-row>
+          </div>
+
+          <!-- 补充信息 -->
+          <div class="form-section">
+            <div class="section-title">
+              <span class="section-icon">💡</span>
+              补充信息
+            </div>
+            <t-row :gutter="16">
+              <t-col :span="6">
+                <t-form-item label="关键节点" name="keyEvents">
+                  <t-tag-input v-model="editTemp.keyEvents" placeholder="输入后回车添加" />
+                </t-form-item>
+              </t-col>
+              <t-col :span="6">
+                <t-form-item label="情绪曲线" name="emotionalCurve">
+                  <t-input v-model="editTemp.emotionalCurve" placeholder="如：低开高走、波浪起伏" />
+                </t-form-item>
+              </t-col>
+              <t-col :span="6">
+                <t-form-item label="视觉重点" name="visualHighlights">
+                  <t-tag-input v-model="editTemp.visualHighlights" placeholder="输入后回车添加" />
+                </t-form-item>
+              </t-col>
+              <t-col :span="6">
+                <t-form-item label="金句" name="classicQuotes">
+                  <t-tag-input v-model="editTemp.classicQuotes" placeholder="输入后回车添加" />
+                </t-form-item>
+              </t-col>
+            </t-row>
+          </div>
+        </t-form>
+      </div>
+    </t-dialog>
 
     <!-- 资产选择弹窗 -->
-    <a-modal v-model:open="assetsSelectorVisible" @ok="handleAssetSelected" width="60vw" title="选择资产" class="asset-modal">
+    <t-dialog v-model:visible="assetsSelectorVisible" @confirm="handleAssetSelected" width="60vw" header="选择资产" class="asset-modal">
       <div style="height: 600px; overflow-y: auto">
         <mainElement ref="mainElementRef" way="checkbox" :radio="currentRadio" v-if="assetsSelectorVisible" />
       </div>
-    </a-modal>
+    </t-dialog>
   </div>
 </template>
 
@@ -266,7 +264,7 @@
 import { ref, computed, onMounted } from "vue";
 import { storeToRefs } from "pinia";
 import axios from "@/utils/axios";
-import { message, Modal } from "ant-design-vue";
+import { MessagePlugin, DialogPlugin } from "tdesign-vue-next";
 import mainElement from "@/views/projectDetail/components/assetsManager/components/mainElement.vue";
 import store from "@/stores";
 
@@ -381,7 +379,7 @@ async function getData() {
     const res = await axios.post("/outline/getOutline", { projectId: projectId.value });
     rawData.value = res.data || [];
   } catch {
-    message.error("获取大纲数据失败");
+    MessagePlugin.error("获取大纲数据失败");
   }
 }
 
@@ -390,7 +388,7 @@ async function getChapterList() {
     const res = await axios.post("/novel/getNovel", { projectId: projectId.value });
     chapterList.value = res.data || [];
   } catch {
-    message.error("获取章节列表失败");
+    MessagePlugin.error("获取章节列表失败");
   }
 }
 
@@ -421,29 +419,30 @@ async function saveEdit() {
     const data = JSON.stringify(editTemp.value);
     if (isAddMode.value) {
       await axios.post("/outline/addOutline", { projectId: projectId.value, data });
-      message.success("新增成功");
+      MessagePlugin.success("新增成功");
     } else {
       await axios.post("/outline/updateOutline", { id: editTemp.value.id, projectId: projectId.value, data });
-      message.success("保存成功");
+      MessagePlugin.success("保存成功");
     }
     getData();
     cancelEdit();
   } catch {
-    message.error(isAddMode.value ? "新增失败" : "保存失败");
+    MessagePlugin.error(isAddMode.value ? "新增失败" : "保存失败");
   }
 }
 
 function handleDelete(outline: Outline) {
-  Modal.warning({
-    title: "高危操作",
-    content: "删除大纲将会删除该大纲下的剧本和独有资产",
-    okText: "确定",
-    cancelText: "取消",
-    closable: true,
-    onOk: async () => {
+  const dialog = DialogPlugin.confirm({
+    header: "高危操作",
+    body: "删除大纲将会删除该大纲下的剧本和独有资产",
+    theme: "warning",
+    confirmBtn: "确定",
+    cancelBtn: "取消",
+    onConfirm: async () => {
       await axios.post("/outline/delOutline", { id: outline.id, projectId: projectId.value });
-      message.success("删除成功");
+      MessagePlugin.success("删除成功");
       getData();
+      dialog.destroy();
     },
   });
 }
@@ -486,7 +485,7 @@ defineExpose({ getData });
   max-width: 100%;
   margin: 0 auto;
   padding: 20px;
-  background: #f8f9fc;
+  background: var(--td-bg-color-page);
   min-height: 100%;
 }
 
@@ -544,16 +543,16 @@ defineExpose({ getData });
 }
 
 .outline-card {
-  background: #fff;
+  background: var(--td-bg-color-container);
   border-radius: 14px;
   overflow: hidden;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
-  border: 1px solid #f0f0f0;
+  box-shadow: var(--td-shadow-1);
+  border: 1px solid var(--td-component-stroke);
   transition: all 0.3s ease;
 
   &:hover {
-    box-shadow: 0 6px 24px rgba(152, 16, 250, 0.12);
-    border-color: var(--mainColorLight);
+    box-shadow: var(--td-shadow-2);
+    border-color: var(--td-brand-color-light-hover);
     transform: translateY(-2px);
   }
 
@@ -561,8 +560,8 @@ defineExpose({ getData });
     display: flex;
     align-items: center;
     padding: 16px 20px;
-    background: var(--mainColorLight);
-    border-bottom: 1px solid rgba(152, 16, 250, 0.1);
+    background: var(--td-brand-color-light);
+    border-bottom: 1px solid var(--td-brand-color-light-hover);
 
     .episode-badge {
       background: var(--mainGradient);
@@ -579,7 +578,7 @@ defineExpose({ getData });
       flex: 1;
       font-size: 16px;
       font-weight: 600;
-      color: #1a1a1a;
+      color: var(--td-text-color-primary);
     }
 
     .card-actions {
@@ -593,17 +592,17 @@ defineExpose({ getData });
         display: flex;
         align-items: center;
         justify-content: center;
-        color: #666;
+        color: var(--td-text-color-secondary);
         transition: all 0.2s;
 
         &:hover {
-          background: var(--mainColorLight);
-          color: var(--mainColor);
+          background: var(--td-brand-color-light);
+          color: var(--td-brand-color);
         }
 
         &.danger:hover {
-          background: #fff1f0;
-          color: #ff4d4f;
+          background: var(--td-error-color-light);
+          color: var(--td-error-color);
         }
       }
     }
@@ -619,18 +618,18 @@ defineExpose({ getData });
   display: flex;
   align-items: center;
   padding: 10px 14px;
-  background: #fafbfc;
+  background: var(--td-bg-color-secondarycontainer);
   border-radius: 10px;
   font-size: 13px;
   transition: all 0.2s;
 
   &:hover {
-    background: #f5f6f8;
+    background: var(--td-bg-color-secondarycontainer-hover);
   }
 
   &.highlight {
-    background: linear-gradient(135deg, var(--mainColorLight) 0%, #f5f0ff 100%);
-    border: 1px solid rgba(152, 16, 250, 0.1);
+    background: var(--td-brand-color-light);
+    border: 1px solid var(--td-brand-color-light-hover);
   }
 
   .field-icon {
@@ -639,14 +638,14 @@ defineExpose({ getData });
   }
 
   .field-label {
-    color: #888;
+    color: var(--td-text-color-secondary);
     min-width: 65px;
     flex-shrink: 0;
     font-weight: 500;
   }
 
   .field-value {
-    color: #333;
+    color: var(--td-text-color-primary);
     flex: 1;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -665,7 +664,7 @@ defineExpose({ getData });
 
     .field-content {
       margin: 0;
-      color: #444;
+      color: var(--td-text-color-secondary);
       line-height: 1.7;
       display: -webkit-box;
       -webkit-line-clamp: 3;
@@ -679,7 +678,7 @@ defineExpose({ getData });
 .tags-section {
   margin-top: 14px;
   padding-top: 14px;
-  border-top: 1px dashed #e8e8e8;
+  border-top: 1px dashed var(--td-component-stroke);
 
   .tag-group {
     display: flex;
@@ -692,7 +691,7 @@ defineExpose({ getData });
 
     .tag-label {
       font-size: 12px;
-      color: #888;
+      color: var(--td-text-color-secondary);
       min-width: 65px;
       font-weight: 500;
     }
@@ -714,31 +713,31 @@ defineExpose({ getData });
   font-weight: 500;
 
   &.blue {
-    background: #e6f4ff;
-    color: #1677ff;
-    border: 1px solid #91caff;
+    background: var(--td-brand-color-light);
+    color: var(--td-brand-color);
+    border: 1px solid var(--td-brand-color-light-hover);
   }
 
   &.purple {
-    background: var(--mainColorLight);
-    color: var(--mainColor);
-    border: 1px solid rgba(152, 16, 250, 0.3);
+    background: var(--td-brand-color-light);
+    color: var(--td-brand-color);
+    border: 1px solid var(--td-brand-color-light-hover);
   }
 
   &.more {
-    background: #f5f5f5;
-    color: #999;
-    border: 1px solid #e8e8e8;
+    background: var(--td-bg-color-secondarycontainer);
+    color: var(--td-text-color-placeholder);
+    border: 1px solid var(--td-component-stroke);
   }
 }
 
 // 空状态
 .empty-state {
   padding: 80px 20px;
-  background: #fff;
+  background: var(--td-bg-color-container);
   border-radius: 16px;
   text-align: center;
-  border: 2px dashed #e8e8e8;
+  border: 2px dashed var(--td-component-stroke);
 
   .empty-icon {
     font-size: 48px;
@@ -746,7 +745,7 @@ defineExpose({ getData });
   }
 
   .empty-text {
-    color: #999;
+    color: var(--td-text-color-placeholder);
     font-size: 15px;
     margin-bottom: 20px;
   }
@@ -764,13 +763,20 @@ defineExpose({ getData });
   }
 }
 
+// 弹窗内容
+.modal-body {
+  max-height: 70vh;
+  overflow-y: auto;
+  padding: 4px;
+}
+
 // 表单弹窗样式
 .form-section {
   margin-bottom: 20px;
   padding: 20px;
-  background: #fafbfc;
+  background: var(--td-bg-color-secondarycontainer);
   border-radius: 12px;
-  border: 1px solid #f0f0f0;
+  border: 1px solid var(--td-component-stroke);
 
   &:last-child {
     margin-bottom: 0;
@@ -779,7 +785,7 @@ defineExpose({ getData });
   .section-title {
     font-size: 15px;
     font-weight: 600;
-    color: #1a1a1a;
+    color: var(--td-text-color-primary);
     margin-bottom: 18px;
     display: flex;
     align-items: center;
@@ -793,7 +799,7 @@ defineExpose({ getData });
       content: "";
       flex: 1;
       height: 1px;
-      background: linear-gradient(90deg, #e8e8e8 0%, transparent 100%);
+      background: linear-gradient(90deg, var(--td-component-stroke) 0%, transparent 100%);
       margin-left: 12px;
     }
   }
@@ -805,19 +811,19 @@ defineExpose({ getData });
   gap: 14px;
 
   .select-btn {
-    border-color: var(--mainColor);
-    color: var(--mainColor);
+    border-color: var(--td-brand-color);
+    color: var(--td-brand-color);
     display: flex;
     align-items: center;
     gap: 4px;
 
     &:hover {
-      background: var(--mainColorLight);
+      background: var(--td-brand-color-light);
     }
   }
 
   .selected-text {
-    color: #666;
+    color: var(--td-text-color-secondary);
     font-size: 13px;
   }
 }
@@ -825,13 +831,13 @@ defineExpose({ getData });
 .asset-box {
   min-height: 80px;
   padding: 12px;
-  background: #fff;
-  border: 1px dashed #d9d9d9;
+  background: var(--td-bg-color-container);
+  border: 1px dashed var(--td-component-border);
   border-radius: 10px;
   transition: all 0.2s;
 
   &:hover {
-    border-color: var(--mainColor);
+    border-color: var(--td-brand-color);
   }
 
   .asset-tags {
@@ -846,8 +852,8 @@ defineExpose({ getData });
     align-items: center;
     gap: 6px;
     padding: 5px 10px;
-    background: var(--mainColorLight);
-    color: var(--mainColor);
+    background: var(--td-brand-color-light);
+    color: var(--td-brand-color);
     border-radius: 6px;
     font-size: 12px;
     font-weight: 500;
@@ -864,80 +870,13 @@ defineExpose({ getData });
   }
 
   .add-asset-btn {
-    border-color: #d9d9d9;
-    color: #666;
+    border-color: var(--td-component-border);
+    color: var(--td-text-color-secondary);
 
     &:hover {
-      border-color: var(--mainColor);
-      color: var(--mainColor);
+      border-color: var(--td-brand-color);
+      color: var(--td-brand-color);
     }
   }
-}
-
-// 表单项优化
-:deep(.ant-form-item) {
-  margin-bottom: 16px;
-}
-
-:deep(.ant-form-item-label > label) {
-  color: #666;
-  font-weight: 500;
-}
-
-:deep(.ant-input),
-:deep(.ant-input-number),
-:deep(.ant-select-selector),
-:deep(.ant-input-affix-wrapper) {
-  border-radius: 8px !important;
-}
-
-:deep(.ant-input:focus),
-:deep(.ant-input-focused),
-:deep(.ant-input:focus),
-:deep(.ant-input-focused),
-:deep(.ant-input-number:focus),
-:deep(.ant-input-number-focused),
-:deep(.ant-select-focused .ant-select-selector) {
-  border-color: var(--mainColor) !important;
-  box-shadow: 0 0 0 2px rgba(152, 16, 250, 0.1) !important;
-}
-
-:deep(.ant-input:hover),
-:deep(.ant-input-number:hover),
-:deep(.ant-select:not(.ant-select-disabled):hover .ant-select-selector) {
-  border-color: var(--mainColor) !important;
-}
-
-:deep(.ant-btn-primary) {
-  background: var(--mainGradient);
-  border: none;
-
-  &:hover {
-    background: var(--mainGradientHover);
-  }
-}
-
-:deep(.ant-modal-header) {
-  border-bottom: 1px solid #f0f0f0;
-  padding: 16px 20px;
-
-  .ant-modal-title {
-    font-weight: 600;
-    font-size: 16px;
-  }
-}
-
-:deep(.ant-modal-footer) {
-  border-top: 1px solid #f0f0f0;
-  padding: 12px 20px;
-}
-
-:deep(.ant-tag) {
-  border-radius: 6px;
-  padding: 2px 10px;
-}
-
-:deep(.ant-select-selection-item) {
-  border-radius: 4px !important;
 }
 </style>

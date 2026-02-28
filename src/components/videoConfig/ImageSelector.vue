@@ -29,7 +29,8 @@
 import { ref, computed, watch } from "vue";
 import { message } from "ant-design-vue";
 import mainElement from "@/views/projectDetail/components/assetsManager/components/mainElement.vue";
-import type { ImageItem } from "./manufacturerConfig";
+import { getModelList, type ImageItem } from "./manufacturerConfig";
+
 import store from "@/stores";
 import { storeToRefs } from "pinia";
 
@@ -77,6 +78,7 @@ const title = computed(() => {
 // 监听弹窗打开，同步 scriptId 并初始化选中状态
 watch(visible, (v) => {
   if (v) {
+    getModelList();
     // 同步 scriptId 到 store
     if (props.scriptId && props.scriptId !== -1) {
       currentScriptId.value = props.scriptId;
@@ -161,6 +163,9 @@ function handleCancel() {
   emit("cancel");
   visible.value = false;
 }
+onMounted(() => {
+  getModelList();
+});
 </script>
 
 <style lang="scss" scoped>

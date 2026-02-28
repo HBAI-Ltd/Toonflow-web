@@ -89,8 +89,8 @@ function onBack() {
 
   .detailHeader {
     height: 100px;
-    background: #fff;
-    border-bottom: 1px solid #e5e7eb;
+    background: var(--td-bg-color-container);
+    border-bottom: 1px solid var(--td-border-level-1-color);
     padding: 8px 24px 8px 32px;
 
     .headerBar {
@@ -105,13 +105,13 @@ function onBack() {
 
         .backBtn {
           padding: 8px;
-          color: #52525b;
+          color: var(--td-text-color-secondary);
           border-radius: 8px;
           background: none;
           transition: background 0.2s;
 
           &:hover {
-            background: #f3f4f6;
+            background: var(--td-bg-color-secondarycontainer);
           }
           border: none;
           outline: none;
@@ -123,12 +123,12 @@ function onBack() {
           .title {
             font-size: 20px;
             font-weight: 600;
-            color: #18181b;
+            color: var(--td-text-color-primary);
             margin: 0;
           }
           .meta {
             font-size: 13px;
-            color: #71717a;
+            color: var(--td-text-color-secondary);
           }
         }
       }
@@ -147,8 +147,8 @@ function onBack() {
         padding: 8px 16px;
         font-size: 14px;
         border-radius: 8px;
-        background: #f3f4f6;
-        color: #444;
+        background: var(--td-bg-color-secondarycontainer);
+        color: var(--td-text-color-primary);
         white-space: nowrap;
         border: none;
         outline: none;
@@ -156,12 +156,12 @@ function onBack() {
         transition: all 0.18s;
 
         &.navActive {
-          background: var(--mainColor);
-          color: #fff;
+          background: var(--td-brand-color);
+          color: var(--td-text-color-anti);
         }
 
         &:not(.navActive):hover {
-          background: #e5e7eb;
+          background: var(--td-bg-color-secondarycontainer-hover);
         }
 
         .navLabel {

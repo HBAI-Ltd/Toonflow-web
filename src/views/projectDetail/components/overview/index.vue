@@ -20,12 +20,12 @@
       <div class="projectSummary">
         <h3 class="summaryTitle" style="display: flex; justify-content: space-between; align-items: center">
           <div>小说简介</div>
-          <a-button type="text" @click="handleIntroEdit">
+          <t-button variant="text" @click="handleIntroEdit">
             <template #icon>
-              <i-editor theme="outline" size="15" fill="#9810fa" />
+              <i-editor theme="outline" size="15" fill="var(--td-brand-color)" />
             </template>
             编辑
-          </a-button>
+          </t-button>
         </h3>
         <p class="summaryText" v-if="!introEdit">{{ project?.intro || "暂无简介" }}</p>
         <div v-else>
@@ -35,7 +35,7 @@
               padding-right: 16px !important;
               padding-bottom: 12px !important;
               padding-top: 12px !important;
-              background-color: #f9fafb !important;
+              background-color: var(--td-bg-color-secondarycontainer) !important;
               font-size: 1rem !important;
             "
             :autosize="{ minRows: 4, maxRows: 6 }"
@@ -53,12 +53,12 @@
         <div class="jb ac">
           <h3 class="infoTitle">全局设置</h3>
           <div v-show="!globalSettingEdit">
-            <a-button type="text" @click="handleGlobalSettingEdit">
+            <t-button variant="text" @click="handleGlobalSettingEdit">
               <template #icon>
-                <i-editor theme="outline" size="15" fill="#9810fa" />
+                <i-editor theme="outline" size="15" fill="var(--td-brand-color)" />
               </template>
               编辑
-            </a-button>
+            </t-button>
           </div>
         </div>
         <div class="infoGrid">
@@ -79,7 +79,7 @@
                   padding-right: 16px !important;
                   padding-bottom: 12px !important;
                   padding-top: 12px !important;
-                  background-color: #f9fafb !important;
+                  background-color: var(--td-bg-color-secondarycontainer) !important;
                   font-size: 1rem !important;
                 "
                 v-else
@@ -97,7 +97,7 @@
                   padding-right: 16px !important;
                   padding-bottom: 12px !important;
                   padding-top: 12px !important;
-                  background-color: #f9fafb !important;
+                  background-color: var(--td-bg-color-secondarycontainer) !important;
                   font-size: 1rem !important;
                 "
                 v-else
@@ -239,11 +239,11 @@ function updateProject() {
   .overviewTitle {
     font-size: 22px;
     font-weight: 600;
-    color: #222;
+    color: var(--td-text-color-primary);
     margin-bottom: 8px;
   }
   .overviewSub {
-    color: #888;
+    color: var(--td-text-color-secondary);
   }
 }
 .overviewBody {
@@ -261,11 +261,11 @@ function updateProject() {
       grid-template-columns: repeat(4, 1fr);
     }
     .statGridItem {
-      background: #fff;
-      border: 1px solid #ececec;
+      background: var(--td-bg-color-container);
+      border: 1px solid var(--td-border-level-1-color);
       border-radius: 16px;
       padding: 24px;
-      box-shadow: 0 2px 8px 0 #f4f4f4;
+      box-shadow: var(--td-shadow-1);
       .statGridTop {
         display: flex;
         align-items: center;
@@ -279,43 +279,43 @@ function updateProject() {
           align-items: center;
           justify-content: center;
           &.statPurple {
-            background: #f2edfa;
-            color: #9442f0;
+            background: var(--td-brand-color-light);
+            color: var(--td-brand-color);
           }
           &.statBlue {
-            background: #e7f0fd;
+            background: rgba(33, 119, 227, 0.1);
             color: #2177e3;
           }
           &.statGreen {
-            background: #e7f7ec;
-            color: #19b95b;
+            background: var(--td-success-color-light);
+            color: var(--td-success-color);
           }
           &.statOrange {
-            background: #fff7ea;
-            color: #f7a101;
+            background: var(--td-warning-color-light);
+            color: var(--td-warning-color);
           }
         }
         .statValue {
           font-size: 26px;
           font-weight: bold;
-          color: #222;
+          color: var(--td-text-color-primary);
         }
       }
       .statLabel {
         font-size: 13px;
-        color: #888;
+        color: var(--td-text-color-secondary);
       }
     }
   }
   .projectInfo {
-    background: #fff;
+    background: var(--td-bg-color-container);
     border-radius: 16px;
     padding: 24px;
-    border: 1px solid #ececec;
-    box-shadow: 0 2px 8px 0 #f4f4f4;
+    border: 1px solid var(--td-border-level-1-color);
+    box-shadow: var(--td-shadow-1);
     .infoTitle {
       font-weight: 600;
-      color: #222;
+      color: var(--td-text-color-primary);
       margin-bottom: 18px;
     }
     .infoGrid {
@@ -328,7 +328,7 @@ function updateProject() {
       .infoItem {
         .infoLabel {
           font-size: 12px;
-          color: #888;
+          color: var(--td-text-color-secondary);
           margin-bottom: 3px;
           display: block;
         }
@@ -337,41 +337,41 @@ function updateProject() {
           align-items: center;
           gap: 7px;
           .infoValue {
-            color: #222;
+            color: var(--td-text-color-primary);
             font-weight: 500;
           }
           .iconGray {
-            color: #ccc;
+            color: var(--td-text-color-placeholder);
           }
         }
       }
     }
   }
   .projectSummary {
-    background: #fff;
+    background: var(--td-bg-color-container);
     border-radius: 16px;
     padding: 24px;
-    border: 1px solid #ececec;
-    box-shadow: 0 2px 8px 0 #f4f4f4;
+    border: 1px solid var(--td-border-level-1-color);
+    box-shadow: var(--td-shadow-1);
     .summaryTitle {
       font-weight: 600;
-      color: #222;
+      color: var(--td-text-color-primary);
       margin-bottom: 14px;
     }
     .summaryText {
-      color: #555;
+      color: var(--td-text-color-secondary);
       line-height: 1.7;
     }
   }
   .projectEvents {
-    background: #fff;
+    background: var(--td-bg-color-container);
     border-radius: 16px;
     padding: 24px;
-    border: 1px solid #ececec;
-    box-shadow: 0 2px 8px 0 #f4f4f4;
+    border: 1px solid var(--td-border-level-1-color);
+    box-shadow: var(--td-shadow-1);
     .eventsTitle {
       font-weight: 600;
-      color: #222;
+      color: var(--td-text-color-primary);
       margin-bottom: 14px;
     }
     .eventsList {
@@ -385,7 +385,7 @@ function updateProject() {
         align-items: flex-start;
         gap: 16px;
         padding: 14px;
-        background: #f9f9fb;
+        background: var(--td-bg-color-secondarycontainer);
         border-radius: 10px;
         .eventsLeft {
           flex-shrink: 0;
@@ -393,7 +393,7 @@ function updateProject() {
           text-align: center;
           .eventsEp {
             font-size: 10px;
-            color: #aaa;
+            color: var(--td-text-color-placeholder);
             margin-bottom: 2px;
           }
           .eventsScore {
@@ -402,12 +402,12 @@ function updateProject() {
             justify-content: center;
             gap: 3px;
             .scoreIcon {
-              color: #9442f0;
+              color: var(--td-brand-color);
             }
             .scoreVal {
               font-size: 13px;
               font-weight: 600;
-              color: #9442f0;
+              color: var(--td-brand-color);
             }
           }
         }
@@ -417,11 +417,11 @@ function updateProject() {
             font-size: 15px;
             font-weight: 500;
             margin-bottom: 3px;
-            color: #222;
+            color: var(--td-text-color-primary);
           }
           .eventsDesc {
             font-size: 13px;
-            color: #888;
+            color: var(--td-text-color-secondary);
           }
         }
       }

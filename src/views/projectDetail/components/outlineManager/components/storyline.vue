@@ -6,11 +6,11 @@
         <h1 class="page-title">故事线管理</h1>
         <p class="page-desc">根据上传的小说原文生成大纲和故事线</p>
       </div>
-      <a-button type="primary" class="edit-btn" @click="handleAddStoreline">
+      <t-button class="edit-btn" @click="handleAddStoreline">
         <i-edit :size="16" v-if="!storylineChanged" />
         <i-preview-open :size="16" v-else />
         {{ storylineChanged ? "预览模式" : "编辑故事线" }}
-      </a-button>
+      </t-button>
     </div>
 
     <!-- 内容区域 -->
@@ -34,13 +34,12 @@
               <span class="edit-title">编辑故事线</span>
               <span class="edit-tip">支持多行输入，描述完整的故事脉络</span>
             </div>
-            <a-textarea
-              v-model:value="storyLine"
+            <t-textarea
+              v-model="storyLine"
               placeholder="请输入故事线，包括主要情节、角色发展、冲突转折等..."
               class="storyline-textarea"
-              :auto-size="{ minRows: 12, maxRows: 24 }"
+              :autosize="{ minRows: 12, maxRows: 24 }"
               :maxlength="5000"
-              show-count
               @change="handleChange" />
           </div>
         </template>
@@ -50,7 +49,7 @@
           <div class="empty-icon">📝</div>
           <p class="empty-title">暂无故事线</p>
           <p class="empty-desc">点击上方"编辑故事线"开始创作</p>
-          <a-button type="primary" class="empty-btn" @click="handleAddStoreline">开始编辑</a-button>
+          <t-button theme="primary" class="empty-btn" @click="handleAddStoreline">开始编辑</t-button>
         </div>
       </div>
 
@@ -58,11 +57,11 @@
       <div class="action-bar" v-if="storylineChanged">
         <div class="action-tips"></div>
         <div class="action-btns">
-          <a-button class="cancel-btn" @click="handleCancel">取消</a-button>
-          <a-button type="primary" class="save-btn" @click="save">
+          <t-button variant="outline" class="cancel-btn" @click="handleCancel">取消</t-button>
+          <t-button theme="primary" class="save-btn" @click="save">
             <i-check :size="16" />
             保存
-          </a-button>
+          </t-button>
         </div>
       </div>
     </div>
@@ -108,7 +107,7 @@ function save() {
   max-width: 100%;
   margin: 0 auto;
   padding: 20px;
-  background: #f8f9fc;
+  background: var(--td-bg-color-page);
   min-height: 100%;
 }
 
@@ -161,11 +160,11 @@ function save() {
 // 内容区域
 .storyline-content {
   .content-card {
-    background: #fff;
+    background: var(--td-bg-color-container);
     border-radius: 14px;
     overflow: hidden;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
-    border: 1px solid #f0f0f0;
+    box-shadow: var(--td-shadow-1);
+    border: 1px solid var(--td-component-stroke);
   }
 }
 
@@ -179,7 +178,7 @@ function save() {
     gap: 10px;
     margin-bottom: 20px;
     padding-bottom: 16px;
-    border-bottom: 1px solid #f0f0f0;
+    border-bottom: 1px solid var(--td-component-stroke);
 
     .preview-icon {
       font-size: 20px;
@@ -188,7 +187,7 @@ function save() {
     .preview-title {
       font-size: 16px;
       font-weight: 600;
-      color: #1a1a1a;
+      color: var(--td-text-color-primary);
     }
   }
 
@@ -196,7 +195,7 @@ function save() {
     white-space: pre-wrap;
     word-break: break-word;
     line-height: 1.8;
-    color: #444;
+    color: var(--td-text-color-secondary);
     font-size: 14px;
     max-height: 500px;
     overflow-y: auto;
@@ -207,12 +206,12 @@ function save() {
     }
 
     &::-webkit-scrollbar-thumb {
-      background: #e0e0e0;
+      background: var(--td-scrollbar-color);
       border-radius: 3px;
     }
 
     &::-webkit-scrollbar-thumb:hover {
-      background: #d0d0d0;
+      background: var(--td-scrollbar-hover-color);
     }
   }
 }
@@ -234,18 +233,18 @@ function save() {
     .edit-title {
       font-size: 16px;
       font-weight: 600;
-      color: #1a1a1a;
+      color: var(--td-text-color-primary);
     }
 
     .edit-tip {
       margin-left: auto;
       font-size: 12px;
-      color: #999;
+      color: var(--td-text-color-placeholder);
     }
   }
 
   .storyline-textarea {
-    border: 1px solid #e8e8e8;
+    border: 1px solid var(--td-component-stroke);
     border-radius: 12px;
     font-size: 14px;
     line-height: 1.8;
@@ -253,16 +252,12 @@ function save() {
     resize: none;
 
     &:hover {
-      outline: none;
+      border-color: var(--td-brand-color);
     }
 
     &:focus {
       outline: none;
-      box-shadow: 0 0 0 3px rgba(152, 16, 250, 0.1);
-    }
-
-    &::placeholder {
-      color: #bbb;
+      box-shadow: 0 0 0 3px var(--td-brand-color-focus);
     }
   }
 }
@@ -280,13 +275,13 @@ function save() {
   .empty-title {
     font-size: 18px;
     font-weight: 600;
-    color: #333;
+    color: var(--td-text-color-primary);
     margin: 0 0 8px;
   }
 
   .empty-desc {
     font-size: 14px;
-    color: #999;
+    color: var(--td-text-color-placeholder);
     margin: 0 0 24px;
   }
 
@@ -311,16 +306,16 @@ function save() {
   align-items: center;
   margin-top: 16px;
   padding: 16px 20px;
-  background: #fff;
+  background: var(--td-bg-color-container);
   border-radius: 12px;
-  border: 1px solid #f0f0f0;
+  border: 1px solid var(--td-component-stroke);
 
   .action-tips {
     display: flex;
     align-items: center;
     gap: 6px;
     font-size: 13px;
-    color: #999;
+    color: var(--td-text-color-placeholder);
   }
 
   .action-btns {
@@ -334,8 +329,8 @@ function save() {
       font-weight: 500;
 
       &:hover {
-        border-color: var(--mainColor);
-        color: var(--mainColor);
+        border-color: var(--td-brand-color);
+        color: var(--td-brand-color);
       }
     }
 
@@ -355,16 +350,5 @@ function save() {
       }
     }
   }
-}
-
-// 滚动条美化
-:deep(.ant-input-textarea-show-count::after) {
-  font-size: 12px;
-  color: #bbb;
-}
-
-:deep(.ant-input-data-count) {
-  font-size: 12px;
-  color: #bbb;
 }
 </style>
