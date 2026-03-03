@@ -21,31 +21,86 @@ import { storeToRefs } from "pinia";
 const route = useRoute();
 const store = settingStore();
 const { baseUrl, wsBaseUrl } = storeToRefs(store);
+const FALLBACK_HTTP_BASE = "http://localhost:60000";
+const FALLBACK_WS_BASE = "ws://localhost:60000";
 
-// 从 URL query 参数设置请求地址
-const initFromQuery = () => {
+function isFileRuntime(): boolean {
+  const protocol = window.location.protocol || "";
+  const origin = window.location.origin || "";
+  return protocol === "file:" || origin === "null" || !window.location.host;
+}
+
+function getRuntimeBasePath(): string {
+  const pathname = window.location.pathname || "/";
+  const withoutIndex = pathname.replace(/\/index\.html?$/i, "/");
+  const normalized = withoutIndex.replace(/\/+$/, "");
+  return normalized || "/";
+}
+
+function getRuntimeHttpBase(): string {
+  if (isFileRuntime()) return FALLBACK_HTTP_BASE;
+  const basePath = getRuntimeBasePath();
+  return `${window.location.origin}${basePath === "/" ? "" : basePath}`;
+}
+
+function getRuntimeWsBase(): string {
+  if (isFileRuntime()) return FALLBACK_WS_BASE;
+  const basePath = getRuntimeBasePath();
+  const wsProtocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+  return `${wsProtocol}//${window.location.host}${basePath === "/" ? "" : basePath}`;
+}
+
+function shouldResetBaseUrl(value: string): boolean {
+  const normalized = (value || "").trim();
+  return (
+    !normalized ||
+    normalized === "null" ||
+    normalized.startsWith("null/") ||
+    normalized.startsWith("file://") ||
+    normalized === "http://localhost:60000" ||
+    normalized === "http://127.0.0.1:60000"
+  );
+}
+
+function shouldResetWsBaseUrl(value: string): boolean {
+  const normalized = (value || "").trim();
+  return (
+    !normalized ||
+    normalized.startsWith("ws:///") ||
+    normalized.startsWith("wss:///") ||
+    normalized === "ws://localhost:60000" ||
+    normalized === "ws://127.0.0.1:60000"
+  );
+}
+
+function initRuntimeDefaults() {
+  if (shouldResetBaseUrl(baseUrl.value)) {
+    baseUrl.value = getRuntimeHttpBase();
+  }
+  if (shouldResetWsBaseUrl(wsBaseUrl.value)) {
+    wsBaseUrl.value = getRuntimeWsBase();
+  }
+}
+
+function initFromQuery() {
   const query = route.query;
-  console.log('Current query:', query);
-  // 支持通过 ?baseUrl=xxx 设置请求地址
   if (query.baseUrl && typeof query.baseUrl === "string") {
     baseUrl.value = query.baseUrl;
-    console.log('Set baseUrl to:', query.baseUrl);
   }
-  // 支持通过 ?wsBaseUrl=xxx 设置 WebSocket 地址
   if (query.wsBaseUrl && typeof query.wsBaseUrl === "string") {
     wsBaseUrl.value = query.wsBaseUrl;
-    console.log('Set wsBaseUrl to:', query.wsBaseUrl);
   }
-};
-// 监听路由变化，确保 query 参数更新时也能处理
+}
+
 watch(
   () => route.query,
   () => {
+    initRuntimeDefaults();
     initFromQuery();
   },
-  { immediate: true, deep: true }
+  { immediate: true, deep: true },
 );
-// 初始化主题
+
 onMounted(() => {
   initTheme();
 });
@@ -67,9 +122,6 @@ const customConfig: GlobalConfigProvider = {
   pagination: {},
 };
 const globalConfig: GlobalConfigProvider = merge(empty, zhConfig, customConfig);
-
-// document.documentElement.setAttribute('theme-mode', 'dark');
-// document.documentElement.setAttribute('theme-mode', 'light');
 </script>
 
 <style lang="scss">

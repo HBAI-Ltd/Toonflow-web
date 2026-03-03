@@ -1,8 +1,8 @@
 export default defineStore(
   "setting",
   () => {
-    const baseUrl = ref<string>("http://localhost:60000");
-    const wsBaseUrl = ref<string>("ws://localhost:60000");
+    const baseUrl = ref<string>("");
+    const wsBaseUrl = ref<string>("");
 
     const otherSetting = ref({
       axiosTimeOut: 60000 * 10 * 100,

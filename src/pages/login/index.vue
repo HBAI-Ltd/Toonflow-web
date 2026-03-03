@@ -7,10 +7,10 @@
       <a-modal v-model:open="showSettingModal" title="服务器设置" @ok="handleSaveSetting" :width="400">
         <a-form :label-col="{ span: 6 }" :wrapper-col="{ span: 18 }">
           <a-form-item label="请求地址">
-            <a-input v-model:value="tempBaseUrl" placeholder="http://localhost:60000" />
+            <a-input v-model:value="tempBaseUrl" placeholder="例如：https://example.com/toonflow" />
           </a-form-item>
           <a-form-item label="WS地址">
-            <a-input v-model:value="tempWsBaseUrl" placeholder="ws://localhost:60000" />
+            <a-input v-model:value="tempWsBaseUrl" placeholder="例如：wss://example.com/toonflow" />
           </a-form-item>
         </a-form>
       </a-modal>
