@@ -15,6 +15,17 @@ interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
 
+interface BackendRuntimeConfig {
+  baseUrl: string;
+  wsBaseUrl: string;
+}
+
+interface Window {
+  electronRuntime?: {
+    getBackendConfig: () => Promise<BackendRuntimeConfig>;
+  };
+}
+
 /**
  * 项目实体
  */
