@@ -104,7 +104,7 @@
             <div class="resultContent">
               <a-empty v-if="!resultImages.length && !generateLoading" description="暂无生成结果，开始创作吧！" class="emptyState">
                 <template #image>
-                  <i-picture theme="outline" size="64" style="color: var(--td-text-color-placeholder)" />
+                  <i-picture theme="outline" size="64" />
                 </template>
               </a-empty>
               <div v-else class="resultGrid">

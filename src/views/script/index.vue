@@ -22,7 +22,7 @@
         <div v-for="(item, index) in scripts" :key="index" @click="handleScriptClick(item)">
           <t-card :title="item.name" hover-shadow :style="{ width: '400px', cursor: 'pointer' }">
             <template #avatar>
-              <t-image :src="image" shape="square" style="width: 60px; height: 60px" />
+              <i-book-one theme="outline" size="60" />
             </template>
             <span class="content">{{ item.content }}</span>
             <template #actions>
@@ -39,7 +39,6 @@
 
 <script setup lang="ts">
 import axios from "@/utils/axios";
-import image from "@/assets/providers/script.png";
 import Details from "./components/details.vue";
 import AddScript from "./components/addScript.vue";
 import projectStore from "@/stores/project";
@@ -142,6 +141,12 @@ async function handleDeleteScript(scriptId: number) {
         overflow: hidden;
         color: var(--td-text-color-secondary);
       }
+    }
+    .emptyState {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 600px;
     }
   }
 }

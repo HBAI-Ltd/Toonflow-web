@@ -1,8 +1,9 @@
 <template>
   <div class="agent">
     <h2>{{ project?.name }}</h2>
-
-    111
+    <div class="data">
+      12
+    </div>
   </div>
 </template>
 
