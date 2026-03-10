@@ -99,18 +99,16 @@ export default defineStore(
         const { data } = await axios.post("/video/getVideo", reqBodyObj);
 
         if (specifyIds.length > 0) {
-          // 部分更新：只更新指定ID的结果状态
           if (data.length === 0) return;
-          // 创建新数组以触发响应式更新
           const updatedResults = videoResults.value.map((r) => {
-            const updated = data.find((item: any) => item.id === r.id);
+            const updated = data.find((item: any) => Number(item.id) === r.id);
             if (updated) {
               return {
                 ...r,
                 state: updated.state,
                 filePath: updated.filePath || r.filePath,
                 firstFrame: updated.firstFrame || r.firstFrame,
-                duration: updated.duration || r.duration,
+                duration: Number(updated.duration) || r.duration,
                 errorReason: updated.errorReason || r.errorReason,
               };
             }
@@ -137,12 +135,12 @@ export default defineStore(
 
       // 添加新的结果
       const newResults: VideoResult[] = data.map((item: any) => ({
-        id: item.id,
-        configId: item.configId || 0, // 后端应该返回 configId
+        id: Number(item.id),
+        configId: Number(item.configId) || 0,
         state: item.state,
         filePath: item.filePath || "",
         firstFrame: item.firstFrame || "",
-        duration: item.duration || item.time || 0,
+        duration: Number(item.duration) || Number(item.time) || 0,
         prompt: item.prompt || "",
         createdAt: new Date().toISOString(),
         errorReason: item.errorReason || "",
@@ -159,14 +157,19 @@ export default defineStore(
       try {
         const { data } = await axios.post("/video/getVideoConfigs", { scriptId });
         if (data && Array.isArray(data)) {
-          // 过滤掉当前脚本的旧配置
+          const seenIds = new Set<number>();
           videoConfigs.value = [];
-          // 添加从后端获取的配置
           data.forEach((item: any) => {
+            const id = Number(item.id);
+            if (seenIds.has(id)) {
+              console.warn(`[fetchVideoConfigs] 发现重复的配置ID: ${id}，已跳过`);
+              return;
+            }
+            seenIds.add(id);
             const config: VideoConfig = {
-              id: item.id,
-              scriptId: item.scriptId,
-              projectId: item.projectId,
+              id: Number(item.id),
+              scriptId: Number(item.scriptId),
+              projectId: Number(item.projectId),
               model: item.model,
               aiConfigId: item.aiConfigId,
               manufacturer: item.manufacturer,
@@ -175,10 +178,10 @@ export default defineStore(
               endFrame: item.endFrame,
               images: item.images || [],
               resolution: item.resolution,
-              duration: item.duration,
+              duration: Number(item.duration) || 0,
               prompt: item.prompt || "",
-              selectedResultId: item.selectedResultId,
-              storyboardId: item.storyboardId,
+              selectedResultId: item.selectedResultId ? Number(item.selectedResultId) : null,
+              storyboardId: item.storyboardId ? Number(item.storyboardId) : null,
               createdAt: item.createdAt || new Date().toISOString(),
               audioEnabled: item.audioEnabled,
             };
@@ -197,10 +200,16 @@ export default defineStore(
 
     // 从后端返回的数据添加配置（用于新增配置后）
     function addConfigFromBackend(configData: any): VideoConfig {
+      const id = Number(configData.id);
+      const existingIndex = videoConfigs.value.findIndex((c) => c.id === id);
+      if (existingIndex !== -1) {
+        console.warn(`[addConfigFromBackend] 配置ID ${id} 已存在，将更新`);
+        videoConfigs.value.splice(existingIndex, 1);
+      }
       const newConfig: VideoConfig = {
-        id: configData.id,
-        scriptId: configData.scriptId,
-        projectId: configData.projectId,
+        id: id,
+        scriptId: Number(configData.scriptId),
+        projectId: Number(configData.projectId),
         model: configData.model,
         aiConfigId: configData.aiConfigId,
         manufacturer: configData.manufacturer,
@@ -209,10 +218,10 @@ export default defineStore(
         endFrame: configData.endFrame || null,
         images: configData.images || [],
         resolution: configData.resolution,
-        duration: configData.duration,
+        duration: Number(configData.duration) || 0,
         prompt: configData.prompt || "",
-        selectedResultId: configData.selectedResultId || null,
-        storyboardId: configData.storyboardId || null,
+        selectedResultId: configData.selectedResultId ? Number(configData.selectedResultId) : null,
+        storyboardId: configData.storyboardId ? Number(configData.storyboardId) : null,
         createdAt: configData.createdAt || new Date().toISOString(),
         audioEnabled: configData.audioEnabled,
       };
@@ -392,6 +401,11 @@ export default defineStore(
       });
 
       config.prompt = data;
+
+      await axios.post("/video/upDateVideoConfig", {
+        id: configId,
+        prompt: data,
+      });
     }
 
     // 选择一个结果作为最终选择

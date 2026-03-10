@@ -12,14 +12,16 @@
       <div class="configPanel">
         <div class="configHeader">
           <h3>视频生成配置</h3>
-          <t-button theme="default" @click="openBatchConfig">
-            <appstore-add-outlined />
-            批量配置
-          </t-button>
-          <t-button @click="addVideoConfig">
-            <plus-outlined />
-            添加配置
-          </t-button>
+          <div class="headerButtons">
+            <t-button @click="addVideoConfig">
+              <plus-outlined />
+              添加配置
+            </t-button>
+            <t-button theme="primary" variant="outline" @click="openBatchConfig">
+              <appstore-add-outlined />
+              批量配置
+            </t-button>
+          </div>
         </div>
         <!-- 视频配置列表 Grid 布局 -->
         <div class="configList" v-if="videoConfigs.length > 0">
@@ -241,7 +243,10 @@
         <div class="batchForm">
           <div class="batchFormItem">
             <label class="batchLabel">选择分镜头：</label>
-            <t-button variant="text" size="small" @click="openStoryboardSelector">选择分镜头 ({{ selectedStoryboardIds.length }}个)</t-button>
+            <t-button theme="primary" variant="outline" @click="openStoryboardSelector">
+              <template #icon><i-add :size="16" /></template>
+              选择分镜头 ({{ selectedStoryboardIds.length }}个)
+            </t-button>
           </div>
 
           <div class="batchFormItem">
@@ -811,7 +816,7 @@ async function handleBatchConfigOk() {
       font-size: 16px;
       font-weight: 600;
     }
-    .headerBtns {
+    .headerButtons {
       display: flex;
       gap: 8px;
     }

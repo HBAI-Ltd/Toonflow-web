@@ -137,18 +137,17 @@
           <div class="batchFormItem">
             <label class="batchLabel">选择配置：</label>
             <div class="batchCheckboxList">
-              <t-checkbox-group v-model="selectedConfigIds">
-                <div v-for="(config, index) in currentConfigs" :key="config.id" class="batchCheckboxItem">
-                  <t-checkbox :value="config.id">
-                    <div class="checkboxItemContent">
-                      <span class="itemIndex">#{{ index + 1 }}</span>
-                      <span class="itemModel">{{ getManufacturerLabel(config.manufacturer) }}</span>
-                      <span class="itemDuration">{{ config.duration }}s</span>
-                      <span class="itemPrompt">{{ config.prompt || "暂无描述" }}</span>
-                    </div>
-                  </t-checkbox>
-                </div>
-              </t-checkbox-group>
+              <div v-for="(config, index) in currentConfigs" :key="`generate-${index}-${config.id}`" class="batchCheckboxItem">
+                <label class="custom-checkbox">
+                  <input type="checkbox" :value="config.id" v-model="selectedConfigIds" />
+                  <div class="checkboxItemContent">
+                    <span class="itemIndex">#{{ index + 1 }}</span>
+                    <span class="itemModel">{{ getManufacturerLabel(config.manufacturer) }}</span>
+                    <span class="itemDuration">{{ config.duration }}s</span>
+                    <span class="itemPrompt">{{ config.prompt || "暂无描述" }}</span>
+                  </div>
+                </label>
+              </div>
             </div>
           </div>
 
@@ -178,18 +177,17 @@
           <div class="batchFormItem">
             <label class="batchLabel">选择配置：</label>
             <div class="batchCheckboxList">
-              <t-checkbox-group v-model="deleteConfigIds">
-                <div v-for="(config, index) in currentConfigs" :key="config.id" class="batchCheckboxItem">
-                  <t-checkbox :value="config.id">
-                    <div class="checkboxItemContent">
-                      <span class="itemIndex">#{{ index + 1 }}</span>
-                      <span class="itemModel">{{ getManufacturerLabel(config.manufacturer) }}</span>
-                      <span class="itemDuration">{{ config.duration }}s</span>
-                      <span class="itemPrompt">{{ config.prompt || "暂无描述" }}</span>
-                    </div>
-                  </t-checkbox>
-                </div>
-              </t-checkbox-group>
+              <div v-for="(config, index) in currentConfigs" :key="`delete-${index}-${config.id}`" class="batchCheckboxItem">
+                <label class="custom-checkbox">
+                  <input type="checkbox" :value="config.id" v-model="deleteConfigIds" />
+                  <div class="checkboxItemContent">
+                    <span class="itemIndex">#{{ index + 1 }}</span>
+                    <span class="itemModel">{{ getManufacturerLabel(config.manufacturer) }}</span>
+                    <span class="itemDuration">{{ config.duration }}s</span>
+                    <span class="itemPrompt">{{ config.prompt || "暂无描述" }}</span>
+                  </div>
+                </label>
+              </div>
             </div>
           </div>
 
@@ -218,18 +216,17 @@
           <div class="batchFormItem">
             <label class="batchLabel">选择配置：</label>
             <div class="batchCheckboxList">
-              <t-checkbox-group v-model="polishConfigIds">
-                <div v-for="(config, index) in currentConfigs" :key="config.id" class="batchCheckboxItem">
-                  <t-checkbox :value="config.id">
-                    <div class="checkboxItemContent">
-                      <span class="itemIndex">#{{ index + 1 }}</span>
-                      <span class="itemModel">{{ getManufacturerLabel(config.manufacturer) }}</span>
-                      <span class="itemDuration">{{ config.duration }}s</span>
-                      <span class="itemPrompt">{{ config.prompt || "暂无描述" }}</span>
-                    </div>
-                  </t-checkbox>
-                </div>
-              </t-checkbox-group>
+              <div v-for="(config, index) in currentConfigs" :key="`polish-${index}-${config.id}`" class="batchCheckboxItem">
+                <label class="custom-checkbox">
+                  <input type="checkbox" :value="config.id" v-model="polishConfigIds" />
+                  <div class="checkboxItemContent">
+                    <span class="itemIndex">#{{ index + 1 }}</span>
+                    <span class="itemModel">{{ getManufacturerLabel(config.manufacturer) }}</span>
+                    <span class="itemDuration">{{ config.duration }}s</span>
+                    <span class="itemPrompt">{{ config.prompt || "暂无描述" }}</span>
+                  </div>
+                </label>
+              </div>
             </div>
           </div>
 
@@ -891,6 +888,20 @@ async function handleBatchPolishOk() {
 
           &:hover {
             background: var(--td-bg-color-container-hover);
+          }
+
+          .custom-checkbox {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            cursor: pointer;
+
+            input[type="checkbox"] {
+              margin-top: 3px;
+              width: 16px;
+              height: 16px;
+              cursor: pointer;
+            }
           }
 
           .checkboxItemContent {
