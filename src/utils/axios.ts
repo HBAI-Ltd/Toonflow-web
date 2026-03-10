@@ -27,8 +27,22 @@ instance.interceptors.response.use(
       router.push("/login");
       message.error("登录已过期，请重新登录");
     }
-    return Promise.reject(error?.response?.data ?? error);
-  }
+
+    // 处理异常消息
+    let errorMessage = "服务异常";
+    if (error.response?.data?.message) {
+      errorMessage = error.response.data.message;
+    } else if (error.response?.data) {
+      errorMessage = typeof error.response.data === "string" ? error.response.data : JSON.stringify(error.response.data);
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+
+    return Promise.reject({
+      ...error,
+      message: errorMessage,
+    });
+  },
 );
 
 export default instance;

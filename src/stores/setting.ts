@@ -7,6 +7,7 @@ export default defineStore(
     const otherSetting = ref({
       axiosTimeOut: 60 * 10 * 1000,
       assetsBatchGenereateSize: 5,
+      videoBatchGenereateSize: 4,
     });
 
     const themeSetting = ref({

@@ -24,6 +24,7 @@ export interface VideoConfig {
   duration: number;
   prompt: string;
   selectedResultId: number | null; // 选中的生成结果ID
+  storyboardId?: number | null;
   createdAt: string;
   audioEnabled: boolean;
 }
@@ -177,6 +178,7 @@ export default defineStore(
               duration: item.duration,
               prompt: item.prompt || "",
               selectedResultId: item.selectedResultId,
+              storyboardId: item.storyboardId,
               createdAt: item.createdAt || new Date().toISOString(),
               audioEnabled: item.audioEnabled,
             };
@@ -210,6 +212,7 @@ export default defineStore(
         duration: configData.duration,
         prompt: configData.prompt || "",
         selectedResultId: configData.selectedResultId || null,
+        storyboardId: configData.storyboardId || null,
         createdAt: configData.createdAt || new Date().toISOString(),
         audioEnabled: configData.audioEnabled,
       };
@@ -239,6 +242,23 @@ export default defineStore(
       return newConfig;
     }
 
+    // 批量添加配置（调用后端接口）
+    async function batchAddConfig(params: {
+      scriptId: number;
+      projectId: number;
+      configId: number;
+      mode: "startEnd" | "multi" | "single" | "text";
+      resolution: string;
+      audioEnabled: boolean;
+      storyboardIds: number[];
+      endFrame?: ImageItem | null;
+      images?: ImageItem[];
+      prompt?: string;
+    }): Promise<number> {
+      const { data } = await axios.post("/video/batchAddVideoConfig", params);
+      return data?.data?.length || 0;
+    }
+
     // 删除配置
     async function removeConfig(configId: number) {
       // 调用后端接口删除配置（包括文件和视频）
@@ -255,6 +275,23 @@ export default defineStore(
         videoConfigs.value.splice(index, 1);
         // 同时删除关联的结果
         videoResults.value = videoResults.value.filter((r) => r.configId !== configId);
+      }
+    }
+
+    // 批量删除配置
+    async function batchRemoveConfigs(configIds: number[]): Promise<void> {
+      for (const configId of configIds) {
+        try {
+          await axios.post("/video/deleteVideoConfig", { id: configId });
+        } catch (error) {
+          console.error("删除配置失败:", configId, error);
+        }
+        // 删除本地 store 中的数据
+        const index = videoConfigs.value.findIndex((c) => c.id === configId);
+        if (index !== -1) {
+          videoConfigs.value.splice(index, 1);
+          videoResults.value = videoResults.value.filter((r) => r.configId !== configId);
+        }
       }
     }
 
@@ -310,6 +347,51 @@ export default defineStore(
         // 强制开始轮询，确保新添加的结果能被轮询到
         startPolling(true);
       }
+    }
+
+    // 批量生成视频（带并发控制）
+    async function batchGenerateVideos(configIds: number[], batchSize: number): Promise<void> {
+      for (let i = 0; i < configIds.length; i += batchSize) {
+        const batch = configIds.slice(i, i + batchSize);
+        await Promise.allSettled(batch.map((configId) => generateVideo(configId)));
+      }
+    }
+
+    // 批量润色提示词（带并发控制）
+    async function batchPolishPrompts(configIds: number[], batchSize: number): Promise<void> {
+      for (let i = 0; i < configIds.length; i += batchSize) {
+        const batch = configIds.slice(i, i + batchSize);
+        await Promise.allSettled(batch.map((configId) => polishPrompt(configId)));
+      }
+    }
+
+    // 润色单个配置的提示词
+    async function polishPrompt(configId: number): Promise<void> {
+      const config = videoConfigs.value.find((c) => c.id === configId);
+
+      if (!config) {
+        throw new Error("配置不存在");
+      }
+
+      const images: ImageItem[] = [];
+      if (config.mode === "startEnd") {
+        if (config.startFrame) images.push(config.startFrame);
+        if (config.endFrame) images.push(config.endFrame);
+      } else if (config.mode === "single") {
+        if (config.startFrame) images.push(config.startFrame);
+      } else {
+        images.push(...config.images);
+      }
+
+      const { data } = await axios.post("/video/generatePrompt", {
+        prompt: config.prompt || "生成视频",
+        images: images.map((img) => ({ filePath: img.filePath, prompt: img.prompt })),
+        duration: config.duration,
+        type: config.mode,
+        videoConfigId: config.id,
+      });
+
+      config.prompt = data;
     }
 
     // 选择一个结果作为最终选择
@@ -408,10 +490,15 @@ export default defineStore(
       fetchVideoData,
       fetchVideoConfigs,
       addConfig,
+      batchAddConfig,
       addConfigFromBackend,
       removeConfig,
+      batchRemoveConfigs,
       updateConfig,
       updateConfigFull,
+      batchGenerateVideos,
+      batchPolishPrompts,
+      polishPrompt,
       generateVideo,
       selectResult,
       getResultsByConfigId,

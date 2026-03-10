@@ -9,10 +9,24 @@
         <span>视频配置</span>
         <span v-if="currentConfigs.length" class="count">{{ currentConfigs.length }}</span>
       </div>
-      <button v-if="canGenerate" :disabled="!disableBtn" class="generate-btn" @click="modalShow = true">
-        <i-video-two :size="18" />
-        <span>添加配置</span>
-      </button>
+      <div class="header-btns">
+        <button v-if="canGenerate && currentConfigs.length > 0" :disabled="!disableBtn" class="batch-delete-btn" @click="openBatchDelete">
+          <i-delete :size="18" />
+          <span>批量删除</span>
+        </button>
+        <button v-if="canGenerate && currentConfigs.length > 0" :disabled="!disableBtn" class="batch-polish-btn" @click="openBatchPolish">
+          <i-magic :size="18" />
+          <span>批量润色</span>
+        </button>
+        <button v-if="canGenerate && currentConfigs.length > 0" :disabled="!disableBtn" class="batch-generate-btn" @click="openBatchGenerate">
+          <i-video-two :size="18" />
+          <span>批量生成</span>
+        </button>
+        <button v-if="canGenerate" :disabled="!disableBtn" class="generate-btn" @click="modalShow = true">
+          <i-video-two :size="18" />
+          <span>添加配置</span>
+        </button>
+      </div>
     </div>
 
     <!-- 内容区 -->
@@ -105,7 +119,128 @@
     <newVideo v-if="modalShow && scriptId" v-model="modalShow" :scriptId="scriptId" />
 
     <!-- 视频详情弹窗 -->
-    <videoDetail  v-model="detailModalShow" :configId="currentConfigId" />
+    <videoDetail v-model="detailModalShow" :configId="currentConfigId" />
+
+    <!-- 批量生成弹窗 -->
+    <t-dialog
+      v-model:visible="batchGenerateVisible"
+      header="批量生成视频"
+      width="700px"
+      :confirmLoading="batchGenerateLoading"
+      @confirm="handleBatchGenerateOk"
+      @cancel="batchGenerateVisible = false"
+      confirmText="开始生成">
+      <div class="batchConfigContent">
+        <t-alert message="将按顺序为选中的配置生成视频，并发数受设置控制" type="info" style="margin-bottom: 16px" />
+
+        <div class="batchForm">
+          <div class="batchFormItem">
+            <label class="batchLabel">选择配置：</label>
+            <div class="batchCheckboxList">
+              <t-checkbox-group v-model="selectedConfigIds">
+                <div v-for="(config, index) in currentConfigs" :key="config.id" class="batchCheckboxItem">
+                  <t-checkbox :value="config.id">
+                    <div class="checkboxItemContent">
+                      <span class="itemIndex">#{{ index + 1 }}</span>
+                      <span class="itemModel">{{ getManufacturerLabel(config.manufacturer) }}</span>
+                      <span class="itemDuration">{{ config.duration }}s</span>
+                      <span class="itemPrompt">{{ config.prompt || "暂无描述" }}</span>
+                    </div>
+                  </t-checkbox>
+                </div>
+              </t-checkbox-group>
+            </div>
+          </div>
+
+          <div class="batchFormItem batchFormItemFooter">
+            <t-button variant="text" size="small" @click="selectAllConfigs">全选</t-button>
+            <t-button variant="text" size="small" @click="clearSelectedConfigs">清空</t-button>
+            <span class="selectedCount">已选择 {{ selectedConfigIds.length }} 个配置</span>
+          </div>
+        </div>
+      </div>
+    </t-dialog>
+
+    <!-- 批量删除弹窗 -->
+    <t-dialog
+      v-model:visible="batchDeleteVisible"
+      header="批量删除视频配置"
+      width="700px"
+      :confirmLoading="batchDeleteLoading"
+      @confirm="handleBatchDeleteOk"
+      @cancel="batchDeleteVisible = false"
+      confirmText="确认删除"
+      theme="danger">
+      <div class="batchConfigContent">
+        <t-alert message="删除后无法恢复，关联的生成结果也会被删除" type="warning" style="margin-bottom: 16px" />
+
+        <div class="batchForm">
+          <div class="batchFormItem">
+            <label class="batchLabel">选择配置：</label>
+            <div class="batchCheckboxList">
+              <t-checkbox-group v-model="deleteConfigIds">
+                <div v-for="(config, index) in currentConfigs" :key="config.id" class="batchCheckboxItem">
+                  <t-checkbox :value="config.id">
+                    <div class="checkboxItemContent">
+                      <span class="itemIndex">#{{ index + 1 }}</span>
+                      <span class="itemModel">{{ getManufacturerLabel(config.manufacturer) }}</span>
+                      <span class="itemDuration">{{ config.duration }}s</span>
+                      <span class="itemPrompt">{{ config.prompt || "暂无描述" }}</span>
+                    </div>
+                  </t-checkbox>
+                </div>
+              </t-checkbox-group>
+            </div>
+          </div>
+
+          <div class="batchFormItem batchFormItemFooter">
+            <t-button variant="text" size="small" @click="selectAllDeleteConfigs">全选</t-button>
+            <t-button variant="text" size="small" @click="clearDeleteConfigs">清空</t-button>
+            <span class="selectedCount">已选择 {{ deleteConfigIds.length }} 个配置</span>
+          </div>
+        </div>
+      </div>
+    </t-dialog>
+
+    <!-- 批量润色弹窗 -->
+    <t-dialog
+      v-model:visible="batchPolishVisible"
+      header="批量润色提示词"
+      width="700px"
+      :confirmLoading="batchPolishLoading"
+      @confirm="handleBatchPolishOk"
+      @cancel="batchPolishVisible = false"
+      confirmText="开始润色">
+      <div class="batchConfigContent">
+        <t-alert message="将按顺序为选中的配置润色提示词，并发数受设置控制" type="info" style="margin-bottom: 16px" />
+
+        <div class="batchForm">
+          <div class="batchFormItem">
+            <label class="batchLabel">选择配置：</label>
+            <div class="batchCheckboxList">
+              <t-checkbox-group v-model="polishConfigIds">
+                <div v-for="(config, index) in currentConfigs" :key="config.id" class="batchCheckboxItem">
+                  <t-checkbox :value="config.id">
+                    <div class="checkboxItemContent">
+                      <span class="itemIndex">#{{ index + 1 }}</span>
+                      <span class="itemModel">{{ getManufacturerLabel(config.manufacturer) }}</span>
+                      <span class="itemDuration">{{ config.duration }}s</span>
+                      <span class="itemPrompt">{{ config.prompt || "暂无描述" }}</span>
+                    </div>
+                  </t-checkbox>
+                </div>
+              </t-checkbox-group>
+            </div>
+          </div>
+
+          <div class="batchFormItem batchFormItemFooter">
+            <t-button variant="text" size="small" @click="selectAllPolishConfigs">全选</t-button>
+            <t-button variant="text" size="small" @click="clearPolishConfigs">清空</t-button>
+            <span class="selectedCount">已选择 {{ polishConfigIds.length }} 个配置</span>
+          </div>
+        </div>
+      </div>
+    </t-dialog>
   </div>
 </template>
 
@@ -116,6 +251,8 @@ import newVideo from "./generateVideo/newVideo.vue";
 import videoDetail from "./generateVideo/videoDetail.vue";
 import videoStore, { type VideoConfig, type VideoResult } from "@/stores/video";
 import { storeToRefs } from "pinia";
+import settingStore from "@/stores/setting";
+const { otherSetting } = storeToRefs(settingStore());
 
 const props = defineProps<{
   scriptId: number | null;
@@ -136,6 +273,16 @@ const manufacturerLabels: Record<string, string> = {
   runninghub: "Sora",
   openAi: "OpenAI",
 };
+
+const batchGenerateVisible = ref(false);
+const batchGenerateLoading = ref(false);
+const selectedConfigIds = ref<number[]>([]);
+const batchDeleteVisible = ref(false);
+const batchDeleteLoading = ref(false);
+const deleteConfigIds = ref<number[]>([]);
+const batchPolishVisible = ref(false);
+const batchPolishLoading = ref(false);
+const polishConfigIds = ref<number[]>([]);
 
 function getManufacturerLabel(manufacturer: string): string {
   return manufacturerLabels[manufacturer] || manufacturer;
@@ -181,6 +328,87 @@ function handleDeleteConfig(configId: number) {
       message.success("删除成功");
     },
   });
+}
+
+function openBatchGenerate() {
+  selectedConfigIds.value = [];
+  batchGenerateVisible.value = true;
+}
+function selectAllConfigs() {
+  selectedConfigIds.value = currentConfigs.value.map((c) => c.id);
+}
+function clearSelectedConfigs() {
+  selectedConfigIds.value = [];
+}
+async function handleBatchGenerateOk() {
+  if (selectedConfigIds.value.length === 0) {
+    message.warning("请至少选择一个配置");
+    return;
+  }
+  batchGenerateLoading.value = true;
+  try {
+    const batchSize = otherSetting.value.videoBatchGenereateSize || 3;
+    await store.batchGenerateVideos(selectedConfigIds.value, batchSize);
+    message.success(`已提交 ${selectedConfigIds.value.length} 个视频生成任务`);
+    batchGenerateVisible.value = false;
+  } catch (error: any) {
+    message.error(error?.message || "批量生成失败");
+  } finally {
+    batchGenerateLoading.value = false;
+  }
+}
+function openBatchDelete() {
+  deleteConfigIds.value = [];
+  batchDeleteVisible.value = true;
+}
+function selectAllDeleteConfigs() {
+  deleteConfigIds.value = currentConfigs.value.map((c) => c.id);
+}
+function clearDeleteConfigs() {
+  deleteConfigIds.value = [];
+}
+async function handleBatchDeleteOk() {
+  if (deleteConfigIds.value.length === 0) {
+    message.warning("请至少选择一个配置");
+    return;
+  }
+  batchDeleteLoading.value = true;
+  try {
+    await store.batchRemoveConfigs(deleteConfigIds.value);
+    message.success(`已删除 ${deleteConfigIds.value.length} 个视频配置`);
+    batchDeleteVisible.value = false;
+  } catch (error: any) {
+    message.error(error?.message || "批量删除失败");
+  } finally {
+    batchDeleteLoading.value = false;
+  }
+}
+function openBatchPolish() {
+  polishConfigIds.value = [];
+  batchPolishVisible.value = true;
+}
+function selectAllPolishConfigs() {
+  polishConfigIds.value = currentConfigs.value.map((c) => c.id);
+}
+function clearPolishConfigs() {
+  polishConfigIds.value = [];
+}
+async function handleBatchPolishOk() {
+  if (polishConfigIds.value.length === 0) {
+    message.warning("请至少选择一个配置");
+    return;
+  }
+  batchPolishLoading.value = true;
+  try {
+    const batchSize = otherSetting.value.videoBatchGenereateSize || 3;
+    await store.batchPolishPrompts(polishConfigIds.value, batchSize);
+    message.success(`已润色 ${polishConfigIds.value.length} 个视频配置的提示词`);
+    batchPolishVisible.value = false;
+  } catch (error: any) {
+    message.error(error?.message || "批量润色失败");
+  } finally {
+    batchPolishLoading.value = false;
+  }
 }
 </script>
 
@@ -229,7 +457,15 @@ function handleDeleteConfig(configId: number) {
       }
     }
 
-    .generate-btn {
+    .header-btns {
+      display: flex;
+      gap: 12px;
+    }
+
+    .generate-btn,
+    .batch-generate-btn,
+    .batch-delete-btn,
+    .batch-polish-btn {
       display: flex;
       align-items: center;
       gap: 8px;
@@ -262,6 +498,52 @@ function handleDeleteConfig(configId: number) {
         opacity: 0.6;
       }
     }
+
+    .batch-generate-btn {
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
+      box-shadow: 0 4px 14px rgba(59, 130, 246, 0.35);
+
+      &:hover:not(:disabled) {
+        background: linear-gradient(135deg, #2563eb, #1d4ed8);
+        box-shadow: 0 6px 20px rgba(59, 130, 246, 0.45);
+      }
+    }
+
+    .batch-delete-btn {
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+      box-shadow: 0 4px 14px rgba(239, 68, 68, 0.35);
+
+      &:hover:not(:disabled) {
+        background: linear-gradient(135deg, #dc2626, #b91c1c);
+        box-shadow: 0 6px 20px rgba(239, 68, 68, 0.45);
+      }
+    }
+
+    .batch-polish-btn {
+      background: linear-gradient(135deg, #9333ea, #7c3aed);
+      box-shadow: 0 4px 14px rgba(147, 51, 234, 0.35);
+
+      &:hover:not(:disabled) {
+        background: linear-gradient(135deg, #7c3aed, #6d28d9);
+        box-shadow: 0 6px 20px rgba(147, 51, 234, 0.45);
+      }
+    }
+
+    .generate-btn:active:not(:disabled),
+    .batch-generate-btn:active:not(:disabled),
+    .batch-delete-btn:active:not(:disabled),
+    .batch-polish-btn:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    .generate-btn:disabled,
+    .batch-generate-btn:disabled,
+    .batch-delete-btn:disabled,
+    .batch-polish-btn:disabled {
+      background: var(--td-bg-color-component-disabled);
+      box-shadow: none;
+      cursor: not-allowed;
+    }
   }
 
   .content {
@@ -290,7 +572,7 @@ function handleDeleteConfig(configId: number) {
 
         .play-overlay {
           opacity: 1;
-          z-index: 9999999999;
+          z-index: 2;
         }
 
         .cover-image {
@@ -299,7 +581,7 @@ function handleDeleteConfig(configId: number) {
 
         .delete-btn {
           opacity: 1;
-          z-index: 999999999999;
+          z-index: 3;
         }
       }
 
@@ -367,7 +649,7 @@ function handleDeleteConfig(configId: number) {
           height: 100%;
           gap: 8px;
           color: var(--td-text-color-placeholder);
-          
+
           span {
             font-size: 14px;
           }
@@ -571,6 +853,95 @@ function handleDeleteConfig(configId: number) {
         margin: 0;
         font-size: 14px;
         color: var(--td-text-color-placeholder);
+      }
+    }
+  }
+
+  .batchConfigContent {
+    .batchForm {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .batchFormItem {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+
+      .batchLabel {
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--td-text-color-primary);
+      }
+
+      .batchCheckboxList {
+        max-height: 400px;
+        overflow-y: auto;
+        border: 1px solid var(--td-component-border);
+        border-radius: 8px;
+
+        .batchCheckboxItem {
+          padding: 12px 16px;
+          border-bottom: 1px solid var(--td-component-border);
+
+          &:last-child {
+            border-bottom: none;
+          }
+
+          &:hover {
+            background: var(--td-bg-color-container-hover);
+          }
+
+          .checkboxItemContent {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+
+            .itemIndex {
+              min-width: 40px;
+              color: var(--td-brand-color);
+              font-weight: 600;
+            }
+
+            .itemModel {
+              padding: 2px 8px;
+              background: var(--td-brand-color-1);
+              color: var(--td-brand-color);
+              border-radius: 4px;
+              font-size: 12px;
+            }
+
+            .itemDuration {
+              padding: 2px 8px;
+              background: var(--td-success-color-1);
+              color: var(--td-success-color);
+              border-radius: 4px;
+              font-size: 12px;
+            }
+
+            .itemPrompt {
+              flex: 1;
+              color: var(--td-text-color-secondary);
+              font-size: 13px;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              white-space: nowrap;
+            }
+          }
+        }
+      }
+
+      &.batchFormItemFooter {
+        flex-direction: row;
+        align-items: center;
+        gap: 8px;
+
+        .selectedCount {
+          margin-left: auto;
+          color: var(--td-text-color-secondary);
+          font-size: 13px;
+        }
       }
     }
   }

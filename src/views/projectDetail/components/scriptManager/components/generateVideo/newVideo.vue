@@ -12,6 +12,10 @@
       <div class="configPanel">
         <div class="configHeader">
           <h3>视频生成配置</h3>
+          <t-button theme="default" @click="openBatchConfig">
+            <appstore-add-outlined />
+            批量配置
+          </t-button>
           <t-button @click="addVideoConfig">
             <plus-outlined />
             添加配置
@@ -171,7 +175,7 @@
               <!-- 声音开关 -->
               <div class="formRow" v-if="getAudioSupport(config.manufacturer, config.model)">
                 <label>声音</label>
-                <a-switch v-model:checked="config.audioEnabled" size="small" />
+                <t-switch v-model="config.audioEnabled" size="small" />
                 <span class="tip" style="margin-left: 8px">{{ config.audioEnabled ? "开启" : "关闭" }}</span>
               </div>
               <!-- 视频提示词 -->
@@ -192,7 +196,7 @@
             </div>
           </div>
         </div>
-        <a-empty v-else description="请点击上方按钮添加视频配置" />
+        <t-empty v-else description="请点击上方按钮添加视频配置" />
       </div>
     </t-dialog>
     <!-- 分镜图片选择弹窗 -->
@@ -221,13 +225,99 @@
         </div>
       </template>
     </t-dialog>
+
+    <!-- 批量配置弹窗 -->
+    <t-dialog
+      v-model:visible="batchConfigVisible"
+      header="批量配置"
+      width="700px"
+      @confirm="handleBatchConfigOk"
+      @cancel="batchConfigVisible = false"
+      :confirmLoading="batchConfigLoading"
+      confirmText="确认配置">
+      <div class="batchConfigContent">
+        <t-alert message="批量配置将为选中的每个分镜头创建独立的视频配置" type="info" style="margin-bottom: 16px" />
+
+        <div class="batchForm">
+          <div class="batchFormItem">
+            <label class="batchLabel">选择分镜头：</label>
+            <t-button variant="text" size="small" @click="openStoryboardSelector">选择分镜头 ({{ selectedStoryboardIds.length }}个)</t-button>
+          </div>
+
+          <div class="batchFormItem">
+            <label class="batchLabel">视频模型：</label>
+            <t-select v-model="batchConfig.configId" @change="onBatchManufacturerChange" :disabled="allManufacturerDisable" size="small">
+              <t-option v-for="item in availableManufacturers" :value="item.value" :label="item.label" :key="item.value">
+                {{ item.label }}
+              </t-option>
+            </t-select>
+          </div>
+
+          <div class="batchFormItem">
+            <label class="batchLabel">模式：</label>
+            <t-radio-group v-model="batchConfig.mode" size="small">
+              <t-radio v-for="mode in getBatchModeOptions()" :key="mode.value" :value="mode.value">
+                {{ mode.label }}
+              </t-radio>
+            </t-radio-group>
+            <span class="batchTip" v-if="batchConfig.mode === 'startEnd'">首帧图片将自动使用分镜头图片</span>
+          </div>
+
+          <div class="batchFormItem">
+            <label class="batchLabel">{{ getResolutionLabel(batchConfig.manufacturer, batchConfig.model) }}：</label>
+            <t-select v-model="batchConfig.resolution" size="small" style="width: 140px">
+              <t-option v-for="res in getResolutionOptions(batchConfig.manufacturer, batchConfig.model)" :key="res.value" :value="res.value">
+                {{ res.label }}
+              </t-option>
+            </t-select>
+          </div>
+
+          <div class="batchFormItem" v-if="getAudioSupport(batchConfig.manufacturer, batchConfig.model)">
+            <label class="batchLabel">声音：</label>
+            <t-switch v-model="batchConfig.audioEnabled" size="small" />
+            <span class="batchTip">{{ batchConfig.audioEnabled ? "开启" : "关闭" }}</span>
+          </div>
+
+          <div class="batchFormItem">
+            <label class="batchLabel">提示词：</label>
+            <t-textarea v-model="batchConfig.prompt" :rows="2" placeholder="可选，留空则使用分镜头的视频提示词" size="small" style="flex: 1" />
+          </div>
+        </div>
+      </div>
+    </t-dialog>
+
+    <!-- 分镜头选择弹窗 -->
+    <t-dialog
+      v-model:visible="storyboardSelectorVisible"
+      header="选择分镜头"
+      @confirm="confirmStoryboardSelection"
+      @cancel="storyboardSelectorVisible = false"
+      width="80%"
+      :bodyStyle="{ maxHeight: '70vh', overflow: 'auto' }">
+      <mainElement
+        v-if="storyboardSelectorVisible"
+        way="checkbox"
+        radio="storyboard"
+        ref="storyboardSelectorRef"
+        @checkChange="handleStoryboardCheckChange"
+        @check-all="handleStoryboardCheckAll" />
+      <template #footer>
+        <div class="selectorFooter">
+          <span class="selectedCount">已选择 {{ selectedStoryboardIds.length }} 个分镜头</span>
+          <div>
+            <t-button @click="storyboardSelectorVisible = false">取消</t-button>
+            <t-button theme="primary" @click="confirmStoryboardSelection">确定</t-button>
+          </div>
+        </div>
+      </template>
+    </t-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, watch, onMounted, computed } from "vue";
 import { message } from "ant-design-vue";
-import { PlusOutlined, DeleteOutlined, CloseOutlined } from "@ant-design/icons-vue";
+import { PlusOutlined, DeleteOutlined, CloseOutlined, AppstoreAddOutlined } from "@ant-design/icons-vue";
 import draggable from "vuedraggable";
 import mainElement from "@/views/projectDetail/components/assetsManager/components/mainElement.vue";
 import axios from "@/utils/axios";
@@ -254,6 +344,29 @@ import {
 const storeInstance = store();
 const { project, currentScriptId } = storeToRefs(storeInstance);
 const videoStoreInstance = videoStore();
+
+const batchConfigVisible = ref(false);
+const batchConfigLoading = ref(false);
+const storyboardSelectorVisible = ref(false);
+const storyboardSelectorRef = ref<any>(null);
+const selectedStoryboardIds = ref<number[]>([]);
+const batchConfig = ref<{
+  configId: number | undefined;
+  manufacturer: string;
+  model: string;
+  mode: "startEnd" | "multi" | "single" | "text";
+  resolution: string;
+  audioEnabled: boolean;
+  prompt: string;
+}>({
+  configId: undefined,
+  manufacturer: "",
+  model: "",
+  mode: "startEnd",
+  resolution: "",
+  audioEnabled: false,
+  prompt: "",
+});
 
 interface VideoConfig {
   id: number;
@@ -393,20 +506,25 @@ function openImageSelector(config: VideoConfig, type: "start" | "end" | "multi")
   }
   imageSelectorVisible.value = true;
 }
-function handleBatchCheckAll(data: { checked: boolean; records: Storyboard[] }, type: string) {
-  if (type !== "storyboard") return;
+function handleBatchCheckAll(data: { checked: boolean; records: Storyboard[] }, filterType: string, scriptId: number) {
+  if (filterType !== "storyboard") return;
+  if (!data.records || !Array.isArray(data.records)) {
+    return;
+  }
   const isSingleSelect = imageSelectorMode.value !== "multi";
   const maxImages = getMaxImages(currentEditConfig.value?.manufacturer || "", currentEditConfig.value?.model || "");
   if (data.checked) {
     if (isSingleSelect) {
       if (data.records.length > 0) {
         const row = data.records[0];
-        tempSelectedIds.value = [row.id];
-        tempSelectedImages.value = [{ id: row.id, filePath: row.filePath, prompt: row.prompt }];
+        if (row) {
+          tempSelectedIds.value = [row.id];
+          tempSelectedImages.value = [{ id: row.id, filePath: row.filePath, prompt: row.prompt }];
+        }
       }
     } else {
       data.records.forEach((row) => {
-        if (!tempSelectedIds.value.includes(row.id) && tempSelectedImages.value.length < maxImages) {
+        if (row && !tempSelectedIds.value.includes(row.id) && tempSelectedImages.value.length < maxImages) {
           tempSelectedIds.value.push(row.id);
           tempSelectedImages.value.push({ id: row.id, filePath: row.filePath, prompt: row.prompt });
         }
@@ -414,15 +532,20 @@ function handleBatchCheckAll(data: { checked: boolean; records: Storyboard[] }, 
     }
   } else {
     data.records.forEach((row) => {
-      const index = tempSelectedIds.value.indexOf(row.id);
-      if (index > -1) {
-        tempSelectedIds.value.splice(index, 1);
-        tempSelectedImages.value.splice(index, 1);
+      if (row) {
+        const index = tempSelectedIds.value.indexOf(row.id);
+        if (index > -1) {
+          tempSelectedIds.value.splice(index, 1);
+          tempSelectedImages.value.splice(index, 1);
+        }
       }
     });
   }
 }
 function handleCheckedChange(data: { checked: boolean; row: Storyboard }) {
+  if (!data.row) {
+    return;
+  }
   const isSingleSelect = imageSelectorMode.value !== "multi";
   const maxImages = getMaxImages(currentEditConfig.value?.manufacturer || "", currentEditConfig.value?.model || "");
   if (data.checked) {
@@ -552,6 +675,123 @@ async function handleOk() {
 function handleCancel() {
   videoConfigs.value = [];
 }
+
+function openBatchConfig() {
+  if (availableManufacturers.value.length === 0) {
+    message.warning("请先配置视频模型");
+    return;
+  }
+  const defaultItem = availableManufacturers.value[0];
+  const defaultManufacturer = defaultItem?.manufacturer || "volcengine";
+  const defaultModel = manufacturerList.value.find((i) => i.id === defaultItem?.value)?.model || "";
+  batchConfig.value = {
+    configId: defaultItem?.value,
+    manufacturer: defaultManufacturer,
+    model: defaultModel,
+    mode: getDefaultMode(defaultManufacturer, defaultModel) as "startEnd" | "multi" | "single" | "text",
+    resolution: getDefaultResolution(defaultManufacturer, defaultModel),
+    audioEnabled: false,
+    prompt: "",
+  };
+  selectedStoryboardIds.value = [];
+  batchConfigVisible.value = true;
+}
+function onBatchManufacturerChange() {
+  const selectedItem = manufacturerList.value.find((i) => i.id === batchConfig.value.configId);
+  batchConfig.value.manufacturer = selectedItem?.manufacturer || "";
+  batchConfig.value.model = selectedItem?.model || "";
+  const manufacturerConfig = getManufacturerConfig(batchConfig.value.manufacturer, batchConfig.value.model);
+  batchConfig.value.mode = manufacturerConfig.defaultMode as "startEnd" | "multi" | "single" | "text";
+  batchConfig.value.resolution = manufacturerConfig.defaultResolution;
+}
+function getBatchModeOptions() {
+  return getModeOptions(batchConfig.value.manufacturer, batchConfig.value.model);
+}
+function openStoryboardSelector() {
+  if (props.scriptId && props.scriptId !== -1) {
+    currentScriptId.value = props.scriptId;
+  }
+  storyboardSelectorVisible.value = true;
+}
+function handleStoryboardCheckChange(data: { checked: boolean; row: Storyboard }) {
+  console.log("handleStoryboardCheckChange called:", data);
+  if (!data.row) {
+    console.warn("handleStoryboardCheckChange: data.row is undefined");
+    return;
+  }
+  if (data.checked) {
+    if (!selectedStoryboardIds.value.includes(data.row.id)) {
+      selectedStoryboardIds.value.push(data.row.id);
+      console.log("Added storyboard ID:", data.row.id, "Total selected:", selectedStoryboardIds.value);
+    }
+  } else {
+    const index = selectedStoryboardIds.value.indexOf(data.row.id);
+    if (index > -1) {
+      selectedStoryboardIds.value.splice(index, 1);
+      console.log("Removed storyboard ID:", data.row.id, "Total selected:", selectedStoryboardIds.value);
+    }
+  }
+}
+function handleStoryboardCheckAll(data: { checked: boolean; records: Storyboard[] }, filterType: string, scriptId: number) {
+  console.log("handleStoryboardCheckAll called:", { data, filterType, scriptId });
+  if (filterType !== "storyboard") return;
+  if (!data.records || !Array.isArray(data.records)) {
+    console.warn("handleStoryboardCheckAll: data.records is invalid");
+    return;
+  }
+  if (data.checked) {
+    data.records.forEach((row) => {
+      if (row && !selectedStoryboardIds.value.includes(row.id)) {
+        selectedStoryboardIds.value.push(row.id);
+      }
+    });
+    console.log("After check-all, selectedStoryboardIds:", selectedStoryboardIds.value);
+  } else {
+    data.records.forEach((row) => {
+      if (row) {
+        const index = selectedStoryboardIds.value.indexOf(row.id);
+        if (index > -1) {
+          selectedStoryboardIds.value.splice(index, 1);
+        }
+      }
+    });
+    console.log("After uncheck-all, selectedStoryboardIds:", selectedStoryboardIds.value);
+  }
+}
+function confirmStoryboardSelection() {
+  storyboardSelectorVisible.value = false;
+}
+async function handleBatchConfigOk() {
+  if (selectedStoryboardIds.value.length === 0) {
+    message.warning("请选择至少一个分镜头");
+    return;
+  }
+  if (!batchConfig.value.configId) {
+    message.warning("请选择视频模型");
+    return;
+  }
+  batchConfigLoading.value = true;
+  try {
+    const count = await videoStoreInstance.batchAddConfig({
+      scriptId: props.scriptId,
+      projectId: Number(project.value!.id!),
+      configId: batchConfig.value.configId!,
+      mode: batchConfig.value.mode,
+      resolution: batchConfig.value.resolution,
+      audioEnabled: batchConfig.value.audioEnabled,
+      storyboardIds: selectedStoryboardIds.value,
+      prompt: batchConfig.value.prompt || undefined,
+    });
+    message.success(`成功批量创建 ${count} 个视频配置`);
+    batchConfigVisible.value = false;
+    storyboardShow.value = false;
+    await videoStoreInstance.fetchVideoConfigs(props.scriptId);
+  } catch (error: any) {
+    message.error(error?.message || "批量配置失败");
+  } finally {
+    batchConfigLoading.value = false;
+  }
+}
 </script>
 
 <style lang="scss" scoped>
@@ -570,6 +810,10 @@ function handleCancel() {
       margin: 0;
       font-size: 16px;
       font-weight: 600;
+    }
+    .headerBtns {
+      display: flex;
+      gap: 8px;
     }
   }
 }
@@ -847,6 +1091,30 @@ function handleCancel() {
 :deep(.ant-radio-group) {
   .ant-radio-wrapper {
     font-size: 12px;
+  }
+}
+
+.batchConfigContent {
+  .batchForm {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .batchFormItem {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    .batchLabel {
+      width: 80px;
+      flex-shrink: 0;
+      font-size: 14px;
+      color: #333;
+    }
+    .batchTip {
+      font-size: 12px;
+      color: #999;
+      margin-left: 8px;
+    }
   }
 }
 </style>

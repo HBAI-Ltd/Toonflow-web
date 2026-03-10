@@ -361,6 +361,7 @@ const handleSelectChange = (
   value: any[],
   context: { selectedRowData: any[]; type: string; currentRowKey?: string | number; currentRowData?: any },
 ) => {
+  const oldSelectedKeys = [...selectedRowKeys.value];
   selectedRowKeys.value = value;
 
   if (props.way === "radio") {
@@ -368,8 +369,29 @@ const handleSelectChange = (
       emits("checkChange", { checked: true, row: context.currentRowData });
     }
   } else {
-    if (context.type === "check" || context.type === "uncheck") {
-      emits("checkChange", { checked: context.type === "check", row: context.currentRowData! });
+    const isCheckAll = context.currentRowKey === "CHECK_ALL_BOX";
+
+    if (isCheckAll) {
+      emits("checkAll", { checked: context.type === "check", records: context.selectedRowData }, currentFilter.value, currentScriptId.value ?? -1);
+    } else if (context.type === "check" || context.type === "uncheck") {
+      let rowData = context.currentRowData;
+
+      if (!rowData) {
+        const addedKeys = value.filter((key) => !oldSelectedKeys.includes(key));
+        const removedKeys = oldSelectedKeys.filter((key) => !value.includes(key));
+
+        if (addedKeys.length === 1) {
+          const key = addedKeys[0];
+          rowData = projectElements.value.find((item) => item.id === key);
+        } else if (removedKeys.length === 1) {
+          const key = removedKeys[0];
+          rowData = projectElements.value.find((item) => item.id === key);
+        }
+      }
+
+      if (rowData) {
+        emits("checkChange", { checked: context.type === "check", row: rowData });
+      }
     } else if (context.type === "check-all" || context.type === "uncheck-all") {
       emits(
         "checkAll",

@@ -429,16 +429,22 @@ onMounted(async () => {
   const res = await axios.post("/video/getManufacturer", {
     userId: Number(localStorage.getItem("userId")),
   });
-  manufacturerList.value = res.data;
+  manufacturerList.value = res.data || [];
 
   if (!localConfig.model) {
     localConfig.aiConfigId = undefined;
     selectManfactDis.value = false;
   } else {
-    // 如果已有 model，确保 manufacturer 和其他配置正确
-    const selectedManufacturer = manufacturerList.value.find((i) => i.manufacturer === localConfig.manufacturer && i.model == localConfig.model);
+    // 优先使用 aiConfigId 匹配，如果没有匹配到再按 manufacturer 匹配
+    let selectedManufacturer = manufacturerList.value.find((i) => !!localConfig.aiConfigId && i.id === localConfig.aiConfigId);
+    if (!selectedManufacturer) {
+      selectedManufacturer = manufacturerList.value.find((i) => i.manufacturer === localConfig.manufacturer && i.model === localConfig.model);
+    }
     if (selectedManufacturer) {
       localConfig.aiConfigId = selectedManufacturer.id;
+    } else {
+      localConfig.aiConfigId = undefined;
+      selectManfactDis.value = false;
     }
   }
 });

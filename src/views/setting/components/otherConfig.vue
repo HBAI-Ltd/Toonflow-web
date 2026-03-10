@@ -7,6 +7,9 @@
       <t-form-item label="资产生成并发数" name="assetsBatchGenereateSize">
         <t-input-number auto-width suffix="个" :min="1" v-model="otherSetting.assetsBatchGenereateSize" placeholder="请输入个数" />
       </t-form-item>
+      <t-form-item label="视频生成并发数" name="videoBatchGenereateSize">
+        <t-input-number auto-width suffix="个" :min="1" v-model="otherSetting.videoBatchGenereateSize" placeholder="请输入个数" />
+      </t-form-item>
     </t-form>
   </div>
 </template>
