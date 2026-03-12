@@ -27,6 +27,8 @@
     "dayjs": "^1.11.19",
     "element-plus": "^2.13.0",
     "mammoth": "^1.11.0",
+    "monaco-editor": "^0.55.1",
+    "monaco-editor-vue3": "^1.0.5",
     "pinia": "^2.2.6",
     "pinia-plugin-persistedstate": "^4.7.1",
     "sass": "^1.97.0",

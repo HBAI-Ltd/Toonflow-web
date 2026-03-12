@@ -77,8 +77,7 @@ function handleAddScript() {
   addScriptShow.value = true;
 }
 //导出剧本
-function handleExportScript() {
-}
+function handleExportScript() {}
 const selectedScript = ref<Script>({
   id: 0,
   name: "",
