@@ -8,8 +8,8 @@
       :maskClosable="false"
       wrapClassName="no-header-margin"
       dialogClass="custom-modal"
-      :close-btn="false"
       @confirm="onConfirm"
+      @close-btn-click="closeModal"
       :afterClose="handleClose"
       @cancel="closeModal">
       <template #header>
@@ -34,7 +34,6 @@
               </template>
             </a-button>
           </a-flex>
-          <i-close theme="outline" size="18" @click="closeModal" />
         </a-flex>
       </template>
       <div class="data">

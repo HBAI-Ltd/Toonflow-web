@@ -91,7 +91,7 @@ const handleLogin = () => {
   state.value.loginLoading = true;
   const obj = { ...state.value.user };
   axios
-    .post("/other/login", obj)
+    .post("/login/login", obj)
     .then(({ data }) => {
       localStorage.setItem("token", data.token);
       localStorage.setItem("userId", data.id);

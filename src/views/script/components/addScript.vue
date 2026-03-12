@@ -4,20 +4,12 @@
       :visible.sync="addScriptShow"
       width="60vw"
       top="1vh"
+      header="新增剧本"
       :closable="false"
       :maskClosable="false"
       wrapClassName="no-header-margin"
       dialogClass="custom-modal"
-      :close-btn="false"
       @close-btn-click="handleCancel">
-      <template #header>
-        <div class="titHeader">
-          <div class="titleWrapper">
-            <span class="title">新增剧本</span>
-          </div>
-          <i-close theme="outline" size="18" @click="close" />
-        </div>
-      </template>
       <div class="data">
         <div class="name">
           <t-input v-model="scriptName" placeholder="请输入剧本名称" />

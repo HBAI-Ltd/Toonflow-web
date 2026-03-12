@@ -3,15 +3,19 @@
     <h2>{{ project?.name }}</h2>
     <div class="actionBar">
       <div class="searchWrapper">
-        <t-input placeholder="搜索剧本名称..." v-model="searchQuery" @change="onChange" size="large" class="searchInput">
+        <t-input placeholder="搜索剧本名称..." v-model="searchQuery" @change="onChange" class="searchInput">
           <template #suffixIcon>
             <i-search :size="18" class="searchIcon" />
           </template>
         </t-input>
       </div>
-      <t-button theme="primary" @click="handleAddScript" size="large">
+      <t-button theme="primary" @click="handleAddScript">
         <template #icon><i-plus :size="18" /></template>
         新建剧本
+      </t-button>
+      <t-button theme="primary" @click="handleExportScript">
+        <template #icon><i-plus :size="18" /></template>
+        导出剧本
       </t-button>
     </div>
     <div class="contentArea">
@@ -21,9 +25,6 @@
       <div v-else class="scriptsList f w">
         <div v-for="(item, index) in scripts" :key="index" @click="handleScriptClick(item)">
           <t-card :title="item.name" hover-shadow :style="{ width: '400px', cursor: 'pointer' }">
-            <template #avatar>
-              <i-book-one theme="outline" size="60" />
-            </template>
             <span class="content">{{ item.content }}</span>
             <template #actions>
               <i-delete theme="outline" size="20" @click.stop="handleDeleteScript(item.id)" style="cursor: pointer" />
@@ -74,6 +75,9 @@ function onChange() {
 // 新增剧本
 function handleAddScript() {
   addScriptShow.value = true;
+}
+//导出剧本
+function handleExportScript() {
 }
 const selectedScript = ref<Script>({
   id: 0,

@@ -21,6 +21,7 @@
           <dbConfig v-else-if="activeMenu === 'db'" />
           <about v-else-if="activeMenu === 'about'" />
           <logoutConfig v-else-if="activeMenu === 'logout'" />
+          <modelServe v-else-if="activeMenu === 'serve'" />
         </div>
       </div>
     </div>
@@ -41,8 +42,10 @@ import dbConfig from "./components/dbConfig.vue";
 import otherConfig from "./components/otherConfig.vue";
 import about from "./components/about.vue";
 import logoutConfig from "./components/logoutConfig.vue";
+import modelServe from "./components/modelServe.vue";
 
 const menuItems = [
+  { key: "serve", label: "模型服务", icon: "logo-codesandbox" },
   { key: "theme", label: "主题", icon: "palette" },
   { key: "request", label: "请求地址配置", icon: "link" },
   { key: "login", label: "登录配置", icon: "lock-on" },
@@ -54,7 +57,7 @@ const menuItems = [
   { key: "logout", label: "退出登录", icon: "poweroff" },
 ];
 
-const activeMenu = ref("theme");
+const activeMenu = ref("serve");
 const currentMenuItem = computed(() => menuItems.find((item) => item.key === activeMenu.value));
 </script>
 
