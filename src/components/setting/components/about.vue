@@ -7,7 +7,7 @@
           <div class="name">ToonFlow</div>
           <div class="data">开源的AI驱动漫画 / 分镜创作工具</div>
           <div class="version">
-            <t-tag theme="primary" shape="round" size="small">{{ version }} · 当前为最新版本</t-tag>
+            <t-tag theme="primary" shape="round" size="small" style="padding: 10px">{{ version }} · 当前为最新版本</t-tag>
           </div>
         </div>
         <div class="renew ac">
