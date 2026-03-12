@@ -441,7 +441,6 @@ const currentAssetData = ref<{
   filePath: "",
 });
 function generate(row: any) {
-  console.log("%c Line:444 🍤 row", "background:#4fff4B", row);
   currentAssetData.value = {
     id: row.id,
     name: row.name,

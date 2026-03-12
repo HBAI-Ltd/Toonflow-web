@@ -194,9 +194,15 @@ function editModel(model: { modelName: string }) {
   };
 }
 // 测试模型
-function testModel(modelId: string) {}
+function testModel(modelName: string) {
+  const key = currentModel.value?.apiKey || "";
+  const baseUrl = currentModel.value?.baseUrl || "";
+  if (!key) return MessagePlugin.error("请先输入 API Key");
+  if (!baseUrl) return MessagePlugin.error("请先输入 API 地址");
+  MessagePlugin.success(`正在测试 ${modelName} 模型...`);
+}
 // 删除模型
-function confirmDelete(modelId: string) {}
+function confirmDelete(modelName: string) {}
 
 onMounted(() => {
   loadFromLocalStorage();
