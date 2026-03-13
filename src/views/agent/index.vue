@@ -801,6 +801,22 @@ function handleOutlineUpdate(updatedOutline: Outline) {
 
 //添加数据
 function addOutline() {
+  selectedOutline.value = {
+    episodeIndex: outlineData.value.length + 1,
+    title: "",
+    chapterRange: [],
+    scenes: [],
+    characters: [],
+    props: [],
+    coreConflict: "",
+    outline: "",
+    openingHook: "",
+    keyEvents: [],
+    emotionalCurve: "",
+    visualHighlights: [],
+    endingHook: "",
+    classicQuotes: [],
+  };
   outlineShow.value = true;
 }
 //故事线数据

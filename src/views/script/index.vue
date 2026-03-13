@@ -13,7 +13,9 @@
         新建剧本
       </t-button>
       <t-button theme="primary" @click="handleExportScript">
-        <template #icon><i-plus /></template>
+        <template #icon>
+          <i-export />
+        </template>
         导出剧本
       </t-button>
     </div>
@@ -76,7 +78,28 @@ function handleAddScript() {
   addScriptShow.value = true;
 }
 //导出剧本
-function handleExportScript() {}
+function handleExportScript() {
+  const script = scripts.value?.map((item) => {
+    return {
+      name: item.name,
+      content: item.content,
+    };
+  });
+  if (!script || !script.length) {
+    MessagePlugin.warning("暂无剧本可导出");
+    return;
+  }
+  //生成txt文件
+  const blob = new Blob([script.map((s) => `${s.name}\n\n${s.content}\n\n`).join("")], { type: "text/plain;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `剧本_${new Date().toISOString().slice(0, 10)}.txt`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
 const selectedScript = ref<Script>({
   id: 0,
   name: "",
