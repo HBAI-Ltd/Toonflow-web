@@ -4,7 +4,7 @@
       v-model:visible="outlineShow"
       :closable="false"
       top="3vh"
-      header="编辑剧情大纲"
+      header="剧情大纲"
       width="70vw"
       :maskClosable="false"
       wrapClassName="no-header-margin"
