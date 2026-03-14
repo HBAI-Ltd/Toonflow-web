@@ -2,7 +2,9 @@
   <div class="agent">
     <div class="data f">
       <div class="operate">
-        <agent />
+        <div class="box">
+          <agent v-model="openShowVisible" :chatList="chatList" @sendData="handleSendData" />
+        </div>
       </div>
       <div class="data">
         <div class="title jb ac"></div>
@@ -129,8 +131,31 @@ import editOutline from "./components/editOutline.vue";
 import projectStore from "@/stores/project";
 const { project } = storeToRefs(projectStore());
 
-//输入内容
-const dialogueInput = ref("");
+const openShowVisible = ref(true);
+
+//类型
+interface ChatList {
+  role: string;
+  content: string;
+  identity?: string[];
+}
+//agent聊天记录
+const chatList = ref<ChatList[]>([
+  {
+    role: "user",
+    content: "你好，请介绍一下你自己。",
+  },
+  {
+    role: "assistant",
+    identity: ["大纲师", "情节设计师"],
+    content:
+      "你好！我是一个智能助手，专门为你提供帮助和解答问题。无论你有什么疑问或者需要什么帮助，我都会尽力为你提供准确和有用的信息。请随时告诉我你需要什么帮助！",
+  },
+]);
+//发送
+function handleSendData(data: string) {
+  console.log("发送的数据：", data);
+}
 
 const options = ref(1);
 
@@ -857,20 +882,24 @@ function cancelEditStoryLine() {
     gap: 20px;
     overflow: hidden;
     .operate {
-      width: 35%;
-      .head {
-        height: 40px;
-        line-height: 40px;
-        padding: 0 10px;
-        .text {
-          font-size: 30px;
-          font-weight: 900;
-        }
+      width: 25%;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      .box {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        border-radius: 10px;
+        border: 1px solid #e6e3e3;
+        background-color: #fff;
+        overflow: hidden;
+        position: relative;
       }
     }
     .data {
       border-left: 1px solid #e7e7e7;
-      width: 35%;
       display: flex;
       flex-direction: column;
       position: relative;

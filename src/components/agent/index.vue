@@ -16,18 +16,18 @@
       </div>
     </div>
     <div class="caht">
-      <div v-for="(item, index) in chatList" :key="index" class="item" :class="item.role">
+      <div v-for="(item, index) in props.chatList" :key="index" class="item" :class="item.role">
         <div class="user frr" v-if="item.role == 'user'">{{ item.content }}</div>
-        <div v-else>
-          <div class="divider c">
-            <div v-for="(items, indexs) in item.identity" :key="indexs">
-              <t-tag shape="round">{{ items }}</t-tag>
+        <div class="assistant" v-else>
+          <div class="divider">
+            <t-tag v-for="(items, indexs) in item.identity" :key="indexs" shape="round">{{ items }}</t-tag>
+          </div>
+          <div class="ai fr">
+            <div class="identity c">
+              <span>{{ item.identity?.join(", ") }}</span>
             </div>
+            {{ item.content }}
           </div>
-          <div class="identity c">
-            <span>{{ item.identity?.join(", ") }}</span>
-          </div>
-          <div class="ai fr">{{ item.content }}</div>
         </div>
       </div>
     </div>
@@ -44,99 +44,56 @@
 </template>
 
 <script setup lang="ts">
+import { ref } from "vue";
+const openShowVisible = defineModel({
+  type: Boolean,
+  default: false,
+});
 //类型
 interface ChatList {
   role: string;
   content: string;
   identity?: string[];
 }
-const openShowVisible = defineModel({
-  type: Boolean,
-  default: false,
-});
-//agent聊天记录
-const chatList = ref<ChatList[]>([
-  {
-    role: "user",
-    content: "你好，请介绍一下你自己。",
-  },
-  {
-    role: "assistant",
-    identity: ["大纲师", "情节设计师"],
-    content:
-      "你好！我是一个智能助手，专门为你提供帮助和解答问题。无论你有什么疑问或者需要什么帮助，我都会尽力为你提供准确和有用的信息。请随时告诉我你需要什么帮助！",
-  },
-  {
-    role: "user",
-    content: "你好，请介绍一下你自己。",
-  },
-  {
-    role: "assistant",
-    identity: ["大纲师", "情节设计师"],
-    content:
-      "你好！我是一个智能助手，专门为你提供帮助和解答问题。无论你有什么疑问或者需要什么帮助，我都会尽力为你提供准确和有用的信息。请随时告诉我你需要什么帮助！",
-  },
-  {
-    role: "user",
-    content: "你好，请介绍一下你自己。",
-  },
-  {
-    role: "assistant",
-    identity: ["大纲师", "情节设计师"],
-    content:
-      "你好！我是一个智能助手，专门为你提供帮助和解答问题。无论你有什么疑问或者需要什么帮助，我都会尽力为你提供准确和有用的信息。请随时告诉我你需要什么帮助！",
-  },
-  {
-    role: "user",
-    content: "你好，请介绍一下你自己。",
-  },
-  {
-    role: "assistant",
-    identity: ["大纲师", "情节设计师"],
-    content:
-      "你好！我是一个智能助手，专门为你提供帮助和解答问题。无论你有什么疑问或者需要什么帮助，我都会尽力为你提供准确和有用的信息。请随时告诉我你需要什么帮助！",
-  },
-  {
-    role: "user",
-    content: "你好，请介绍一下你自己。",
-  },
-  {
-    role: "assistant",
-    identity: ["大纲师", "情节设计师"],
-    content:
-      "你好！我是一个智能助手，专门为你提供帮助和解答问题。无论你有什么疑问或者需要什么帮助，我都会尽力为你提供准确和有用的信息。请随时告诉我你需要什么帮助！",
-  },
-]);
 const needData = ref("");
-function sendFn() {}
-function settingFn() {
-  console.log("设置");
+const props = defineProps({
+  chatList: {
+    type: Array as () => ChatList[],
+    default: () => [],
+  },
+});
+const emit = defineEmits(["sendData"]);
+function sendFn() {
+  emit("sendData", needData.value);
 }
+//设置
+function settingFn() {}
 </script>
 
 <style lang="scss" scoped>
 .agent {
-  padding: 10px;
-  font-size: 14px;
   height: 100%;
+  display: flex;
+  flex-direction: column;
   position: relative;
   .head {
     height: 40px;
     line-height: 40px;
     padding: 0 10px;
+    flex-shrink: 0;
     .text {
       font-size: 30px;
       font-weight: 900;
     }
   }
   .caht {
-    height: calc(100% - 170px);
-    overflow-y: auto;
     flex: 1;
     display: flex;
     flex-direction: column;
     gap: 12px;
     overflow-y: auto;
+    padding: 10px;
+    margin-bottom: 130px;
     .item {
       display: flex;
       &.user {
@@ -152,33 +109,34 @@ function settingFn() {
       }
       &.assistant {
         position: relative;
-        margin-top: 30px;
         justify-content: flex-start;
         .divider {
           gap: 8px;
-          position: absolute;
-          top: -30px;
-          left: 0;
-          width: 100%;
           font-size: 13px;
-        }
-        .identity {
-          padding: 5px 10px;
-          position: absolute;
-          top: -15px;
-          left: 20px;
-          color: #fff;
-          font-size: 12px;
-          border-radius: 25px;
-          background-color: #000;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          margin: 0 auto;
         }
         .ai {
+          margin-top: 10px;
           background-color: #ececec;
           color: #000;
-          padding: 12px 16px;
+          padding: 24px 16px 16px;
           border-radius: 16px 16px 16px 4px;
           min-width: 10%;
           word-wrap: break-word;
+          position: relative;
+          .identity {
+            padding: 5px 10px;
+            position: absolute;
+            top: -10px;
+            left: 12px;
+            color: #fff;
+            font-size: 12px;
+            border-radius: 25px;
+            background-color: #000;
+          }
         }
       }
     }
