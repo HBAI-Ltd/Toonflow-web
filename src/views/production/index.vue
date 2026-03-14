@@ -1,31 +1,24 @@
 <template>
-  <VueFlow class="flowMain" v-model="flowData" :min-zoom="0.01">
+  <VueFlow class="flowMain" :nodes="nodes" :edges="edges" :min-zoom="0.01">
     <template #node-script="props">
       <scriptNode :id="props.id" :data="props.data" />
     </template>
-    <template #node-assets="props">
-      <div>2</div>
-    </template>
     <template #node-storyboardTable="props">
-      <div>3</div>
+      <storyboardTable :id="props.id" :data="props.data" />
+    </template>
+    <template #node-assets="props">
+      <asserts :id="props.id" :data="props.data" />
     </template>
     <template #node-storyboard="props">
-      <div>4</div>
+      <storyboard :id="props.id" :data="props.data" />
     </template>
-    <template #node-preview="props">
-      <div>5</div>
+    <template #node-workbench="props">
+      <workbench :id="props.id" :data="props.data" />
     </template>
     <template #node-poster="props">
-      <div>6</div>
+      <poster :id="props.id" :data="props.data" />
     </template>
-    <!-- <Background :gap="100">
-        <template #pattern>
-          <svg :width="24 * viewport.zoom" :height="24 * viewport.zoom" viewBox="0 0 48 48">
-            <path d="M14 14L34 34" :stroke="getCssColor('--mainColor')" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
-            <path d="M14 34L34 14" :stroke="getCssColor('--mainColor')" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
-          </svg>
-        </template>
-      </Background> -->
+    <Background></Background>
     <Background></Background>
     <Controls />
   </VueFlow>
@@ -40,70 +33,262 @@ import "@vue-flow/core/dist/theme-default.css";
 import "@vue-flow/controls/dist/style.css";
 //子node组件
 import scriptNode from "./node/script.vue";
+import asserts from "./node/assets.vue";
+import storyboardTable from "./node/storyboardTable.vue";
+import storyboard from "./node/storyboard.vue";
+import workbench from "./node/workbench.vue";
+import poster from "./node/poster.vue";
+
+import { useFlowBuilder } from "./utils/flowBuilder";
 
 const { viewport } = useVueFlow();
 
-const flowData = ref([
-  {
-    id: "1",
-    type: "script",
-    position: {
-      x: 237,
-      y: 79,
+onMounted(() => {});
+
+// ==================== AI 操作数据区 ====================
+// AI 只需修改此对象即可控制整个故事线流程
+const flowData = ref({
+  // 剧本
+  script: {
+    id: "script-1",
+    position: { x: 10, y: 0 },
+    blocks: [
+      {
+        id: "b1",
+        content: `# 第2集：真相大白，背叛之心
+※ 青云宗，宗门大殿
+△ 凌玄心脏猛地一缩，瞳孔骤缩
+苏晚卿冷笑：「还有你当宝贝的青云令」
+「若不是我趁你养伤时，偷偷在令牌上动了手脚」
+「让你没法引动令牌力量，我们怎么能这么容易逼你交出来？」
+△ 凌玄盯着她，声音在抖：「你什么意思？」
+苏晚卿语气平静，像在说别人的事
+「当年是我故意把妖兽引去黑风岭，又假装被困」
+「让你不得不为了救我，硬接妖兽三道致命攻击」
+「清辞当时修炼遇到瓶颈，需要你的青云宗本源灵力」
+「可你修为太高，只有让你重伤废修，他才能取走本源」
+「至于青云令，我早就用秘法削弱了令牌和你的感应」
+「你以为你还能靠这令牌反抗？」
+△ 凌玄气血逆流，再次一口鲜血喷出`,
+        connectTo: "st-1",
+      },
+      {
+        id: "b2",
+        content: `【特效】鲜血在青石上晕开刺目的红
+「苏晚卿！！！」
+「我待你掏心掏肺，你为什么要这么害我？」
+「连我视若性命的青云令，你都要算计！」
+△ 苏晚卿像是听到大笑话
+「清辞才是真心对我，他能给我想要的大道」
+「而你只会让我困在这宗门里，做个有名无实的夫人！」
+△ 几个以前受过凌玄恩惠的长老突然开口
+长老甲：「凌玄，识时务者为俊杰！」
+长老乙：「你现在修为全废，青云令也没用了」
+长老丙：「早就不配管青云宗，不如乖乖交出令牌，还能保住一条命！」`,
+        connectTo: "st-2",
+      },
+      {
+        id: "b3",
+        content: `△ 凌玄看着这些人，心里凉得厉害
+△ 沈清辞搂住苏晚卿的腰，笑得更加嚣张
+「听到了吗？现在宗门上下都站在我们这边」
+「你识相点，就现在把青云令交出来」
+「要是敢反抗，我就废了你最后一点修为」
+「把你扔去妖兽谷，让你尝尝被妖兽分食的滋味！」
+△ 凌玄浑身颤抖，眼中血丝密布
+△ 指着苏晚卿，指尖疯狂颤抖
+【独白】她的真面目...我全看清楚了
+【卡黑】`,
+        connectTo: "st-3",
+      },
+    ],
+  },
+  // 资产
+  assets: {
+    id: "assets-1",
+    position: { x: -70, y: 1400 },
+    characters: [
+      { name: "凌玄", desc: "男主 · 青云宗宗主 · 重伤废修", bgColor: "#e0f2fe" },
+      { name: "苏晚卿", desc: "女配 · 凌玄未婚妻 · 背叛者", bgColor: "#ffe4e6" },
+      { name: "沈清辞", desc: "反派 · 夺舍者 · 苏晚卿真爱", bgColor: "#fef08a" },
+      { name: "长老甲", desc: "配角 · 墙头草 · 见风使舵", bgColor: "#e0e7ff" },
+    ],
+    scenes: [
+      { name: "青云宗大殿", desc: "主场景 · 庄严肃穆 · 冷色调", bgColor: "#d1fae5" },
+      { name: "黑风岭", desc: "回忆场景 · 阴森危险", bgColor: "#7b91b5" },
+      { name: "妖兽谷", desc: "威胁场景 · 凶险之地", bgColor: "#fca5a5" },
+    ],
+  },
+  // 分镜表
+  storyboardTables: [
+    {
+      id: "st-1",
+      position: { x: 804, y: 0 },
+      connectTo: "sb-1",
+      items: [
+        { id: 1, scene: "大殿内景", description: "凌玄跪在地上，面色苍白，嘴角带血", camera: "中景，缓慢推近", duration: "4s" },
+        { id: 2, scene: "苏晚卿特写", description: "冷笑的面容，眼神中满是算计", camera: "特写，浅景深", duration: "3s" },
+        { id: 3, scene: "青云令", description: "令牌在苏晚卿手中，表面光芒黯淡", camera: "微距特写", duration: "2s" },
+        { id: 4, scene: "回忆闪回", description: "黑风岭妖兽袭击，凌玄护住苏晚卿", camera: "快速剪辑，手持晃动", duration: "5s" },
+        { id: 5, scene: "凌玄反应", description: "瞳孔骤缩，难以置信的表情", camera: "眼部特写推至大特写", duration: "3s" },
+        { id: 6, scene: "吐血", description: "鲜血喷出，滴落在青石板上", camera: "慢动作，跟随血滴", duration: "4s" },
+      ],
     },
-  },
-  {
-    id: "2",
-    type: "assets",
-    position: {
-      x: 368,
-      y: 227,
+    {
+      id: "st-2",
+      position: { x: 791, y: 592 },
+      connectTo: "sb-2",
+      items: [
+        { id: 1, scene: "血迹特写", description: "鲜血在青石上晕开，形成刺目的红", camera: "俯拍，缓慢拉远", duration: "3s" },
+        { id: 2, scene: "凌玄嘶吼", description: "愤怒到极致的表情，青筋暴起", camera: "仰拍，增加压迫感", duration: "4s" },
+        { id: 3, scene: "苏晚卿讥讽", description: "轻蔑的笑容，毫无愧疚", camera: "中景，冷色调", duration: "3s" },
+        { id: 4, scene: "长老群像", description: "三位长老面面相觑，随即附和", camera: "横移，依次扫过", duration: "5s" },
+        { id: 5, scene: "沈清辞得意", description: "搂着苏晚卿，志得意满的笑", camera: "双人中景", duration: "3s" },
+      ],
     },
-  },
-  {
-    id: "3",
-    type: "storyboardTable",
-    position: {
-      x: 68,
-      y: 345,
+    {
+      id: "st-3",
+      position: { x: 791, y: 1084 },
+      connectTo: "sb-3",
+      items: [
+        { id: 1, scene: "血迹特写", description: "鲜血在青石上晕开，形成刺目的红", camera: "俯拍，缓慢拉远", duration: "3s" },
+        { id: 2, scene: "凌玄嘶吼", description: "愤怒到极致的表情，青筋暴起", camera: "仰拍，增加压迫感", duration: "4s" },
+        { id: 3, scene: "苏晚卿讥讽", description: "轻蔑的笑容，毫无愧疚", camera: "中景，冷色调", duration: "3s" },
+        { id: 4, scene: "长老群像", description: "三位长老面面相觑，随即附和", camera: "横移，依次扫过", duration: "5s" },
+        { id: 5, scene: "沈清辞得意", description: "搂着苏晚卿，志得意满的笑", camera: "双人中景", duration: "3s" },
+      ],
     },
-  },
-  {
-    id: "4",
-    type: "storyboard",
-    position: {
-      x: 190,
-      y: 155,
+  ],
+  // 分镜
+  storyboards: [
+    {
+      id: "sb-1",
+      position: { x: 1500, y: 24 },
+      connectTo: "wb-1",
+      frames: [
+        { id: 1, description: "大殿全景，庄严肃穆" },
+        { id: 2, description: "凌玄跪地特写" },
+        { id: 3, description: "苏晚卿冷笑" },
+        { id: 4, description: "青云令微距" },
+        { id: 5, description: "黑风岭闪回" },
+        { id: 6, description: "妖兽袭击" },
+        { id: 7, description: "凌玄瞳孔骤缩" },
+        { id: 8, description: "鲜血滴落" },
+      ],
     },
-  },
-  {
-    id: "5",
-    type: "preview",
-    position: {
-      x: 301,
-      y: 328,
+    {
+      id: "sb-2",
+      position: { x: 1500, y: 624 },
+      connectTo: "wb-2",
+      frames: [
+        { id: 1, description: "血迹晕开" },
+        { id: 2, description: "凌玄嘶吼" },
+        { id: 3, description: "苏晚卿讥讽" },
+        { id: 4, description: "长老甲附和" },
+        { id: 5, description: "长老乙劝降" },
+        { id: 6, description: "沈清辞得意" },
+      ],
     },
-  },
-  {
-    id: "6",
-    type: "poster",
-    position: {
-      x: 92,
-      y: 212,
+    {
+      id: "sb-3",
+      position: { x: 1500, y: 1224 },
+      connectTo: "wb-3",
+      frames: [
+        { id: 1, description: "凌玄颤抖" },
+        { id: 2, description: "沈清辞威胁" },
+        { id: 3, description: "众人逼迫" },
+        { id: 4, description: "凌玄血丝密布" },
+        { id: 5, description: "指向苏晚卿" },
+        { id: 6, description: "独白浮现" },
+        { id: 7, description: "真面目揭示" },
+        { id: 8, description: "画面卡黑" },
+      ],
     },
-  },
-  {
-    id: "e1-2",
-    source: "1",
-    sourceHandle: "blockScript-0",
-    target: "2",
-    animated: true,
-    style: { stroke: "#10b981", strokeWidth: 4 },
-  },
-]);
+  ],
+  // 工作台
+  workbenches: [
+    {
+      id: "wb-1",
+      position: { x: 2100, y: 24 },
+      name: "第一幕 - 真相揭露",
+      status: "已完成",
+      duration: "00:21",
+      resolution: "1920×1080",
+      fps: "30fps",
+      gradient: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+    },
+    {
+      id: "wb-2",
+      position: { x: 2100, y: 624 },
+      name: "第二幕 - 愤怒嘶吼",
+      status: "渲染中",
+      duration: "00:18",
+      resolution: "1920×1080",
+      fps: "30fps",
+      gradient: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
+    },
+    {
+      id: "wb-3",
+      position: { x: 2100, y: 1224 },
+      name: "第三幕 - 心寒绝望",
+      status: "待处理",
+      duration: "00:24",
+      resolution: "1920×1080",
+      fps: "30fps",
+      gradient: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
+    },
+  ],
+  // 封面
+  posters: [
+    {
+      id: "poster-1",
+      position: { x: 2500, y: 24 },
+      workbenchId: "wb-1",
+      posters: [
+        { id: 1, name: "封面方案A", size: "1080×1920", gradient: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)", selected: true },
+        { id: 2, name: "封面方案B", size: "1080×1920", gradient: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)" },
+        { id: 3, name: "封面方案C", size: "1080×1920", gradient: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)" },
+      ],
+    },
+    {
+      id: "poster-2",
+      position: { x: 2500, y: 524 },
+      workbenchId: "wb-2",
+      posters: [
+        { id: 1, name: "愤怒特写", size: "1080×1920", gradient: "linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%)", selected: true },
+        { id: 2, name: "嘶吼瞬间", size: "1080×1920", gradient: "linear-gradient(135deg, #d63031 0%, #e17055 100%)" },
+      ],
+    },
+    {
+      id: "poster-3",
+      position: { x: 2500, y: 1024 },
+      workbenchId: "wb-3",
+      posters: [
+        { id: 1, name: "绝望眼神", size: "1080×1920", gradient: "linear-gradient(135deg, #636e72 0%, #2d3436 100%)" },
+        { id: 2, name: "卡黑前帧", size: "1080×1920", gradient: "linear-gradient(135deg, #0c0c0c 0%, #434343 100%)", selected: true },
+        { id: 3, name: "对峙场景", size: "1080×1920", gradient: "linear-gradient(135deg, #74b9ff 0%, #0984e3 100%)" },
+        { id: 4, name: "群像构图", size: "1080×1920", gradient: "linear-gradient(135deg, #a29bfe 0%, #6c5ce7 100%)" },
+      ],
+    },
+  ],
+});
+// ==================== AI 操作数据区结束 ====================
+
+// 自动构建 nodes 和 edges
+const { nodes, edges } = useFlowBuilder(flowData);
 </script>
 <style lang="scss" scoped>
 .flowMain {
   height: 100%;
+}
+$handelSize: 12px;
+
+:deep(.source) {
+  height: $handelSize;
+  width: $handelSize;
+}
+:deep(.target) {
+  height: $handelSize;
+  width: $handelSize;
 }
 </style>
