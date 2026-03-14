@@ -1,5 +1,16 @@
 <template>
-  <t-dialog :footer="false" v-model:visible="visible" attach="body" width="80vw" placement="center">
+  <t-dialog
+    :footer="false"
+    :header="false"
+    :closeBtn="false"
+    v-model:visible="visible"
+    attach="body"
+    width="80vw"
+    placement="center"
+    class="fullscreenDialog">
+    <div class="closure">
+      <i-close-small theme="outline" size="24" fill="#4a4a4a" @click="visible = false" />
+    </div>
     <VueFlow id="editStoryboard" class="editStoryboard" :nodes="nodes" :edges="edges" :min-zoom="0.01" fit-view-on-init @connect="onConnect">
       <template #node-upload="{ id, data }">
         <uploadNode :id="id" :data="data" />
@@ -7,6 +18,9 @@
 
       <template #node-generated="{ id, data }">
         <generatedNode :id="id" :data="data" @generate="handleGenerate" />
+      </template>
+      <template #node-results="{ id, data }">
+        <results :id="id" :data="data" />
       </template>
 
       <Background></Background>
@@ -27,6 +41,7 @@ import { Background } from "@vue-flow/background";
 import { Controls } from "@vue-flow/controls";
 import uploadNode from "./uploadNode.vue";
 import generatedNode from "./generatedNode.vue";
+import results from "./results.vue";
 import "@vue-flow/core/dist/style.css";
 import "@vue-flow/core/dist/theme-default.css";
 import "@vue-flow/controls/dist/style.css";
@@ -72,11 +87,20 @@ const nodes = ref([
       steps: 49,
     },
   },
+  {
+    id: "results-1",
+    type: "results",
+    position: { x: 100, y: 400 },
+    data: {
+      generateResults: "https://picsum.photos/300/200?random=1",
+    },
+  },
 ]);
 
 const edges = ref([
   { id: "e-upload1-gen1", source: "upload-1", target: "generated-1", animated: true, style: { stroke: "#a3e635" } },
   { id: "e-upload2-gen1", source: "upload-2", target: "generated-1", animated: true, style: { stroke: "#a3e635" } },
+  { id: "e-gen1-results1", source: "generated-1", target: "results-1", animated: true, style: { stroke: "#a3e635" } },
 ]);
 
 // 连接处理
@@ -108,22 +132,29 @@ const handleGenerate = (id: string) => {
 </script>
 
 <style lang="scss" scoped>
-.editStoryboard {
-  width: 100%;
-  height: 75vh;
+.fullscreenDialog {
+  .closure {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 9999;
+    cursor: pointer;
+  }
+  .editStoryboard {
+    width: 100%;
+    height: 75vh;
+  }
 }
 
-// Vue Flow Handle 样式
-:deep(.vue-flow__handle) {
-  width: 12px;
-  height: 12px;
-  background: #a3e635;
-  border: 2px solid #fff;
-}
-
-// Edge 样式
-:deep(.vue-flow__edge-path) {
-  stroke: #a3e635;
-  stroke-width: 2px;
+:deep(.fullscreenDialog) {
+  .t-dialog__header {
+    display: none !important;
+  }
+  .t-dialog__body {
+    padding: 0 !important;
+  }
+  .t-dialog__wrap {
+    padding: 0 !important;
+  }
 }
 </style>

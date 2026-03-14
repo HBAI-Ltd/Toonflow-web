@@ -16,12 +16,6 @@
 
     <!-- 生成的图片 -->
     <div class="content">
-      <div class="generatedImageWrapper">
-        <img v-if="data.generatedImage" :src="data.generatedImage" class="generatedImage" />
-        <div v-else class="placeholder">等待生成</div>
-        <t-tag v-if="data.generatedImage" class="imageTag">生成结果</t-tag>
-      </div>
-
       <!-- 参考图缩略图 -->
       <div class="referenceThumbnails" v-if="data.references?.length">
         <div v-for="(ref, index) in data.references" :key="index" class="thumbnailItem">
@@ -57,6 +51,7 @@
         </t-button>
       </div>
     </div>
+    <Handle type="source" :position="Position.Right" />
   </t-card>
 </template>
 
@@ -130,38 +125,6 @@ const handleGenerate = () => {
   }
 
   .content {
-    .generatedImageWrapper {
-      position: relative;
-      margin-bottom: 12px;
-      border-radius: 8px;
-      overflow: hidden;
-
-      .generatedImage {
-        width: 100%;
-        display: block;
-      }
-
-      .placeholder {
-        width: 100%;
-        height: 200px;
-        background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #999;
-        font-size: 14px;
-      }
-
-      .imageTag {
-        position: absolute;
-        right: 8px;
-        bottom: 8px;
-        background: rgba(0, 0, 0, 0.6);
-        color: #fff;
-        border: none;
-      }
-    }
-
     .referenceThumbnails {
       display: flex;
       gap: 8px;
