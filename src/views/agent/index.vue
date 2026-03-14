@@ -3,7 +3,7 @@
     <div class="data f">
       <div class="operate">
         <div class="box">
-          <agent v-model="openShowVisible" />
+          <agent v-model="openShowVisible" :chatList="chatList" />
         </div>
       </div>
       <div class="data">
@@ -132,6 +132,62 @@ import projectStore from "@/stores/project";
 const { project } = storeToRefs(projectStore());
 
 const openShowVisible = ref(true);
+
+//类型
+interface ChatList {
+  role: string;
+  content: string;
+  identity?: string[];
+}
+//agent聊天记录
+const chatList = ref<ChatList[]>([
+  {
+    role: "user",
+    content: "你好，请介绍一下你自己。",
+  },
+  {
+    role: "assistant",
+    identity: ["大纲师", "情节设计师"],
+    content:
+      "你好！我是一个智能助手，专门为你提供帮助和解答问题。无论你有什么疑问或者需要什么帮助，我都会尽力为你提供准确和有用的信息。请随时告诉我你需要什么帮助！",
+  },
+  {
+    role: "assistant",
+    identity: ["大纲师", "情节设计师"],
+    content:
+      "你好！我是一个智能助手，专门为你提供帮助和解答问题。无论你有什么疑问或者需要什么帮助，我都会尽力为你提供准确和有用的信息。请随时告诉我你需要什么帮助！",
+  },
+  {
+    role: "assistant",
+    identity: ["大纲师", "情节设计师"],
+    content:
+      "你好！我是一个智能助手，专门为你提供帮助和解答问题。无论你有什么疑问或者需要什么帮助，我都会尽力为你提供准确和有用的信息。请随时告诉我你需要什么帮助！",
+  },
+  {
+    role: "assistant",
+    identity: ["大纲师", "情节设计师"],
+    content:
+      "你好！我是一个智能助手，专门为你提供帮助和解答问题。无论你有什么疑问或者需要什么帮助，我都会尽力为你提供准确和有用的信息。请随时告诉我你需要什么帮助！",
+  },
+  {
+    role: "assistant",
+    identity: ["大纲师", "情节设计师"],
+    content:
+      "你好！我是一个智能助手，专门为你提供帮助和解答问题。无论你有什么疑问或者需要什么帮助，我都会尽力为你提供准确和有用的信息。请随时告诉我你需要什么帮助！",
+  },
+  {
+    role: "assistant",
+    identity: ["大纲师", "情节设计师"],
+    content:
+      "你好！我是一个智能助手，专门为你提供帮助和解答问题。无论你有什么疑问或者需要什么帮助，我都会尽力为你提供准确和有用的信息。请随时告诉我你需要什么帮助！",
+  },
+  {
+    role: "assistant",
+    identity: ["大纲师", "情节设计师"],
+    content:
+      "你好！我是一个智能助手，专门为你提供帮助和解答问题。无论你有什么疑问或者需要什么帮助，我都会尽力为你提供准确和有用的信息。请随时告诉我你需要什么帮助！",
+  },
+]);
 
 //输入内容
 const dialogueInput = ref("");
@@ -871,7 +927,7 @@ function cancelEditStoryLine() {
         flex-direction: column;
         min-height: 0;
         border-radius: 10px;
-        border: 1px solid #919191;
+        border: 1px solid #e6e3e3;
         background-color: #fff;
         overflow: hidden;
         position: relative;
