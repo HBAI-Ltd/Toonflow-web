@@ -202,7 +202,6 @@ const resSvg = async () => {
     padding: 2px 10px;
     border-radius: 4px;
     font-family: "Monaco", "Menlo", monospace;
-    color: var(--mainColor);
     font-weight: 500;
     font-size: 13px;
     border: 1px solid #e8d5ff;

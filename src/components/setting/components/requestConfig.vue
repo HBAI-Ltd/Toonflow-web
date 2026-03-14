@@ -90,6 +90,5 @@ onMounted(() => {
 
 <style lang="scss" scoped>
 .request-config {
-  padding: 10px 0;
 }
 </style>

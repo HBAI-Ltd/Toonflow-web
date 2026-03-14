@@ -242,7 +242,6 @@
 import { CodeEditor } from "monaco-editor-vue3";
 import { DialogPlugin } from "tdesign-vue-next";
 import axios from "@/utils/axios";
-import dayjs from "dayjs";
 import VENDOR_CODE_TEMPLATE from "@/lib/vendorTemplate.ts?raw";
 
 // ── 类型 ──
@@ -442,15 +441,14 @@ function getInputIcon(type: VendorInput["type"]) {
 function getInputPlaceholder(input: VendorInput) {
   return input.placeholder?.trim() || "";
 }
-
 async function handleUpdateVendor() {
   if (!currentVendor.value) return;
 
   updating.value = true;
   axios
     .post("/setting/vendorConfig/updateVendor", {
-      code: currentVendor.value.code,
       id: currentVendor.value.id,
+      tsCode: JSON.parse(currentVendor.value.code),
     })
     .then(() => {
       MessagePlugin.success("供应商配置更新成功");
@@ -463,47 +461,87 @@ async function handleUpdateVendor() {
       updating.value = false;
     });
 }
-
+const id = ref<number>();
 function handleAddVendor() {
+  id.value = undefined;
   vendorCode.value = VENDOR_CODE_TEMPLATE;
   vendorDialogVisible.value = true;
 }
-
 function handleConfirmVendor() {
-  const firstConfirm = DialogPlugin.confirm({
-    theme: "danger",
-    header: "高风险操作确认",
-    body: "服务端将直接执行当前代码以新增厂商。若代码包含恶意逻辑，可能导致秘钥泄露、服务异常或权限滥用。请仅使用可信代码，并建议先使用 AI 检查代码安全性。",
-    confirmBtn: { content: "我已知晓风险", theme: "danger" },
-    cancelBtn: "取消",
-    onConfirm: () => {
-      firstConfirm.destroy();
-      const secondConfirm = DialogPlugin.confirm({
-        theme: "danger",
-        header: "再次确认执行",
-        body: "请再次确认：系统将执行当前代码并尝试新增厂商。是否继续？",
-        confirmBtn: { content: "确认执行并新增", theme: "danger" },
-        cancelBtn: "返回检查",
-        onConfirm: async () => {
-          axios
-            .post("/setting/vendorConfig/addVendor", { tsCode: vendorCode.value })
-            .then((res) => {
-              MessagePlugin.success("供应商添加成功");
-              vendorDialogVisible.value = false;
-              getVendorList();
-            })
-            .catch((err) => {
-              MessagePlugin.error(`添加失败：${err.message}`);
-            })
-            .finally(() => {
-              secondConfirm.destroy();
-            });
-        },
-        onClose: () => secondConfirm.hide(),
-      });
-    },
-    onClose: () => firstConfirm.hide(),
-  });
+  if (!id.value) {
+    const firstConfirm = DialogPlugin.confirm({
+      theme: "danger",
+      header: "高风险操作确认",
+      body: "服务端将直接执行当前代码以新增厂商。若代码包含恶意逻辑，可能导致秘钥泄露、服务异常或权限滥用。请仅使用可信代码，并建议先使用 AI 检查代码安全性。",
+      confirmBtn: { content: "我已知晓风险", theme: "danger" },
+      cancelBtn: "取消",
+      onConfirm: () => {
+        firstConfirm.destroy();
+        const secondConfirm = DialogPlugin.confirm({
+          theme: "danger",
+          header: "再次确认执行",
+          body: "请再次确认：系统将执行当前代码并尝试新增厂商。是否继续？",
+          confirmBtn: { content: "确认执行并新增", theme: "danger" },
+          cancelBtn: "返回检查",
+          onConfirm: async () => {
+            axios
+              .post("/setting/vendorConfig/addVendor", { tsCode: vendorCode.value })
+              .then((res) => {
+                MessagePlugin.success("供应商添加成功");
+                vendorDialogVisible.value = false;
+                getVendorList();
+              })
+              .catch((err) => {
+                MessagePlugin.error(`添加失败：${err.message}`);
+              })
+              .finally(() => {
+                secondConfirm.destroy();
+              });
+          },
+          onClose: () => secondConfirm.hide(),
+        });
+      },
+      onClose: () => firstConfirm.hide(),
+    });
+  } else {
+    const firstConfirm = DialogPlugin.confirm({
+      theme: "danger",
+      header: "高风险操作确认",
+      body: "服务端将直接执行当前代码以更新厂商。若代码包含恶意逻辑，可能导致秘钥泄露、服务异常或权限滥用。请仅使用可信代码，并建议先使用 AI 检查代码安全性。",
+      confirmBtn: { content: "我已知晓风险", theme: "danger" },
+      cancelBtn: "取消",
+      onConfirm: () => {
+        firstConfirm.destroy();
+        const secondConfirm = DialogPlugin.confirm({
+          theme: "danger",
+          header: "再次确认执行",
+          body: "请再次确认：系统将执行当前代码并尝试更新厂商。是否继续？",
+          confirmBtn: { content: "确认执行并更新", theme: "danger" },
+          cancelBtn: "返回检查",
+          onConfirm: async () => {
+            axios
+              .post("/setting/vendorConfig/updateVendor", {
+                id: id.value,
+                tsCode: vendorCode.value,
+              })
+              .then((res) => {
+                MessagePlugin.success("更新成功");
+                vendorDialogVisible.value = false;
+                getVendorList();
+              })
+              .catch((err) => {
+                MessagePlugin.error(`更新失败：${err.message}`);
+              })
+              .finally(() => {
+                secondConfirm.destroy();
+              });
+          },
+          onClose: () => secondConfirm.hide(),
+        });
+      },
+      onClose: () => firstConfirm.hide(),
+    });
+  }
 }
 
 function handleFileChange(e: Event) {
@@ -783,12 +821,13 @@ function handleDeleteModel(modelName: string) {
 }
 function handleEditVendorCode() {
   if (!currentVendor.value) return;
-  vendorCode.value = currentVendor.value.code;
+  id.value = currentVendor.value.id;
+  vendorCode.value = JSON.parse(currentVendor.value.code);
   vendorDialogVisible.value = true;
 }
 function handleDeleteVendor() {
   if (!currentVendor.value) return;
-  DialogPlugin.confirm({
+  const confirmDialog = DialogPlugin.confirm({
     theme: "danger",
     header: "删除供应商确认",
     body: `您确定要删除供应商 "${currentVendor.value.name}" 吗？此操作不可恢复。`,
@@ -796,13 +835,14 @@ function handleDeleteVendor() {
     cancelBtn: "取消",
     onConfirm: () => {
       axios
-        .post("/setting/vendorConfig/deleteVendor", { name: currentVendor.value?.name })
+        .post("/setting/vendorConfig/deleteVendor", { id: currentVendor.value?.id })
         .then(() => {
           MessagePlugin.success("供应商删除成功");
           if (activeVendorName.value === currentVendor.value?.name) {
             activeVendorName.value = "";
           }
           getVendorList();
+          confirmDialog.destroy();
         })
         .catch((err) => {
           MessagePlugin.error(`删除失败：${err.message}`);
@@ -814,23 +854,18 @@ function handleDeleteVendor() {
 
 <style lang="scss" scoped>
 .modelServe {
-  display: flex;
+  width: 100%;
   height: 100%;
-  min-height: 0;
-  border-radius: 8px;
-  overflow: hidden;
-
+  display: flex;
   .modelList {
-    width: 280px;
-    height: 100%;
+    width: 300px;
+    height: 90%;
     min-height: 0;
-    display: flex;
-    flex-direction: column;
-
     .listContent {
       flex: 1;
       min-height: 0;
       overflow: auto;
+      height: 100%;
     }
 
     .listFooter {
@@ -841,10 +876,10 @@ function handleDeleteVendor() {
 
   .modelParameter {
     flex: 1;
+    width: 100%;
     height: 100%;
     min-height: 0;
     overflow-y: auto;
-    margin-left: 30px;
     .modelCard {
       width: 100%;
       margin-top: 10px;

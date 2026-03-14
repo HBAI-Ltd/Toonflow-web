@@ -9,7 +9,7 @@
     "lib": ["ES2023"],
     "module": "ESNext",
     "moduleResolution": "Bundler",
-    "types": ["node", "vite/client", "element-plus/global"],
+    "types": ["node", "vite/client"],
     "verbatimModuleSyntax": false,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,

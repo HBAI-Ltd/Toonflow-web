@@ -1,18 +1,12 @@
 <template>
   <t-config-provider :global-config="globalConfig">
-    <el-config-provider>
-      <a-config-provider :theme="theme" :locale="zhCN">
-        <router-view></router-view>
-        <UpdateDialog />
-      </a-config-provider>
-    </el-config-provider>
+    <router-view></router-view>
+    <UpdateDialog />
   </t-config-provider>
 </template>
 
 <script setup lang="ts">
-import { onMounted } from "vue";
 import { useRoute } from "vue-router";
-import zhCN from "ant-design-vue/es/locale/zh_CN";
 import UpdateDialog from "@/components/update.vue";
 import { initTheme } from "@/utils/theme";
 import settingStore from "@/stores/setting";
@@ -28,12 +22,12 @@ const initFromQuery = () => {
   // 支持通过 ?baseUrl=xxx 设置请求地址
   if (query.baseUrl && typeof query.baseUrl === "string") {
     baseUrl.value = query.baseUrl;
-    console.log('Set baseUrl to:', query.baseUrl);
+    console.log("Set baseUrl to:", query.baseUrl);
   }
   // 支持通过 ?wsBaseUrl=xxx 设置 WebSocket 地址
   if (query.wsBaseUrl && typeof query.wsBaseUrl === "string") {
     wsBaseUrl.value = query.wsBaseUrl;
-    console.log('Set wsBaseUrl to:', query.wsBaseUrl);
+    console.log("Set wsBaseUrl to:", query.wsBaseUrl);
   }
 };
 // 监听路由变化，确保 query 参数更新时也能处理
@@ -42,7 +36,7 @@ watch(
   () => {
     initFromQuery();
   },
-  { immediate: true, deep: true }
+  { immediate: true, deep: true },
 );
 // 初始化主题
 onMounted(() => {
@@ -72,12 +66,4 @@ const globalConfig: GlobalConfigProvider = merge(empty, zhConfig, customConfig);
 </script>
 
 <style lang="scss">
-:root {
-  --mainColor: #9810fa;
-  --mainColorLight: #faf5ff;
-  --mainColorHover: #7c0dd4;
-  --mainColorActive: #6a0bb5;
-  --mainGradient: linear-gradient(135deg, #9810fa 0%, #7c3aed 100%);
-  --mainGradientHover: linear-gradient(135deg, #a020fb 0%, #8b5cf6 100%);
-}
 </style>

@@ -1,785 +1,313 @@
 <template>
-  <div class="production">
-    <t-tabs v-model="setData">
-      <t-tab-panel v-for="(item, index) in setContent" :key="index" :value="index + ''" :label="item.title">
-        <div class="storyboard">
-          <div class="head ac jb">
-            <div class="headLeft">
-              <t-icon name="image" size="20px" style="margin-right: 8px" />
-              <span class="title">分镜图</span>
-              <t-tag theme="primary" size="small" style="margin-left: 8px">{{ item.storyboard.length }}</t-tag>
-            </div>
-            <t-button theme="primary">
-              <template #icon><t-icon name="add" /></template>
-              生成分镜图
-            </t-button>
-          </div>
-          <div class="data">
-            <div v-if="item.storyboard.length === 0" class="emptyState">
-              <t-icon name="image" size="64px" style="color: #dcdcdc" />
-              <p>暂无分镜图</p>
-            </div>
-            <div v-else class="storyboardGrid">
-              <div v-for="(items, indexs) in item.storyboard" :key="indexs" class="storyboardItem" @click="storyboardFn(items)">
-                <t-image :src="items.imageUrl" fit="cover" class="storyboardImage" />
-                <div class="itemBadge">{{ indexs + 1 }}</div>
-                <div class="deleteBtn" @click.stop="delStoryboard">
-                  <i-delete theme="outline" size="20" fill="#d0021b" />
-                </div>
-                <div class="promptInfo">
-                  <t-tooltip :content="items.prompt" placement="bottom">
-                    <div class="promptText">{{ items.prompt }}</div>
-                  </t-tooltip>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="video">
-          <div class="head ac jb">
-            <div class="headLeft">
-              <t-icon name="video" size="20px" style="margin-right: 8px" />
-              <span class="title">视频</span>
-              <t-tag theme="primary" size="small" style="margin-left: 8px">{{ item.video.length }}</t-tag>
-            </div>
-            <t-button theme="primary" @click="addVideoDeployShow = true">
-              <template #icon><t-icon name="add" /></template>
-              添加视频配置
-            </t-button>
-          </div>
-          <div class="data">
-            <div v-if="item.video.length === 0" class="emptyState">
-              <t-icon name="video" size="64px" style="color: #dcdcdc" />
-              <p>暂无视频</p>
-            </div>
-            <div v-else class="videoGrid">
-              <div v-for="(items, indexs) in item.video" :key="indexs" class="videoItem" @click="editVideoFn(items, indexs)">
-                <div class="videoCover">
-                  <template v-if="items.videoUrl && items.images?.filter(Boolean).length > 0">
-                    <t-image :src="items.images[0]" fit="cover" class="videoImage" />
-                    <div class="playIcon">
-                      <t-icon name="play-circle" size="48px" />
-                    </div>
-                  </template>
-                  <template v-else>
-                    <div class="pendingState">
-                      <t-icon name="time" size="32px" />
-                      <span>待生成</span>
-                    </div>
-                  </template>
-                </div>
-                <div class="itemBadge">{{ indexs + 1 }}</div>
-                <div class="deleteBtn" @click.stop="delVideo">
-                  <i-delete theme="outline" size="20" fill="#d0021b" />
-                </div>
-                <div class="videoInfo">
-                  <div class="infoRow">
-                    <t-tag size="small" variant="light">{{ items.model }}</t-tag>
-                    <t-tag size="small" variant="light" theme="primary">{{ items.duration }}s</t-tag>
-                  </div>
-                  <t-tooltip :content="items.prompt" placement="bottom" :disabled="!items.prompt">
-                    <div class="promptText">{{ items.prompt || "暂无提示词" }}</div>
-                  </t-tooltip>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="download">
-          <div class="head ac jb">
-            <div class="headLeft">
-              <i-folder-download theme="outline" size="20" fill="#4a4a4a" style="margin-right: 8px" />
-              <span class="title">视频下载</span>
-              <t-tag theme="primary" size="small" style="margin-left: 8px">{{ item.video.filter((v) => v.videoUrl).length }}</t-tag>
-            </div>
-            <div class="headRight">
-              <t-checkbox v-model="selectAll" :indeterminate="isIndeterminate" @change="handleSelectAll">全选</t-checkbox>
-              <t-button
-                theme="primary"
-                :disabled="selectedVideos.length === 0 || isDownloading"
-                :loading="isDownloading"
-                @click="downloadSelectedVideos">
-                <template #icon><i-to-bottom theme="outline" size="18" /></template>
-                {{ isDownloading ? `打包中 ${downloadProgress}%` : `下载选中 (${selectedVideos.length})` }}
-              </t-button>
-            </div>
-          </div>
-          <div class="data">
-            <div v-if="item.video.filter((v) => v.videoUrl).length === 0" class="emptyState">
-              <t-icon name="video" size="64px" style="color: #dcdcdc" />
-              <p>暂无可下载的视频</p>
-            </div>
-            <div v-else class="downloadGrid">
-              <div
-                v-for="(videoItem, videoIndex) in item.video.filter((v) => v.videoUrl)"
-                :key="videoIndex"
-                class="downloadItem"
-                :class="{ selected: selectedVideos.includes(videoItem.videoUrl) }"
-                @click="toggleSelectVideo(videoItem.videoUrl)">
-                <div class="selectOverlay" @click.stop>
-                  <t-checkbox :checked="selectedVideos.includes(videoItem.videoUrl)" @change="toggleSelectVideo(videoItem.videoUrl)" />
-                </div>
-                <div class="videoCover">
-                  <video
-                    :ref="(el) => setDownloadVideoRef(el, videoItem.videoUrl)"
-                    :src="videoItem.videoUrl"
-                    class="videoElement"
-                    controls
-                    preload="metadata"
-                    @click.stop></video>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </t-tab-panel>
-    </t-tabs>
-    <editStoryboard v-model="editStoryboardShow" :storyboardForm="storyboardForm" />
-    <addVideoDeploy v-model="addVideoDeployShow" :modelList="modelList" />
-    <editVideo v-model="editVideoShow" :videoForm="videoForm" :modelList="modelList" @select="onVideoSelect" />
-  </div>
+  <VueFlow class="flowMain" :nodes="nodes" :edges="edges" :min-zoom="0.01">
+    <template #node-script="props">
+      <scriptNode :id="props.id" :data="props.data" />
+    </template>
+    <template #node-storyboardTable="props">
+      <storyboardTable :id="props.id" :data="props.data" />
+    </template>
+    <template #node-assets="props">
+      <asserts :id="props.id" :data="props.data" />
+    </template>
+    <template #node-storyboard="props">
+      <storyboard :id="props.id" :data="props.data" />
+    </template>
+    <template #node-workbench="props">
+      <workbench :id="props.id" :data="props.data" />
+    </template>
+    <template #node-poster="props">
+      <poster :id="props.id" :data="props.data" />
+    </template>
+    <Background></Background>
+    <Background></Background>
+    <Controls />
+    <div class="floatingWindow">
+      <div class="openBtn c" v-if="!openShowVisible && !isLeaving">
+        <i-menu-unfold-one
+          theme="outline"
+          size="24"
+          fill="#000000"
+          @click="
+            () => {
+              openShowVisible = true;
+            }
+          " />
+      </div>
+      <transition name="slide" @before-leave="isLeaving = true" @after-leave="isLeaving = false">
+        <floatingTaskBox v-model="openShowVisible" v-if="openShowVisible" />
+      </transition>
+    </div>
+  </VueFlow>
 </template>
 
 <script setup lang="ts">
-import editStoryboard from "./components/editStoryboard.vue";
-import addVideoDeploy from "./components/addVideoDeploy.vue";
-import editVideo from "./components/editVideo.vue";
-import JSZip from "jszip";
-import projectStore from "@/stores/project";
-const { project } = storeToRefs(projectStore());
+import { VueFlow, useVueFlow } from "@vue-flow/core";
+import { Background } from "@vue-flow/background";
+import { Controls } from "@vue-flow/controls";
+import "@vue-flow/core/dist/style.css";
+import "@vue-flow/core/dist/theme-default.css";
+import "@vue-flow/controls/dist/style.css";
+//子node组件
+import scriptNode from "./node/script.vue";
+import asserts from "./node/assets.vue";
+import storyboardTable from "./node/storyboardTable.vue";
+import storyboard from "./node/storyboard.vue";
+import workbench from "./node/workbench.vue";
+import poster from "./node/poster.vue";
+import floatingTaskBox from "./components/floatingTaskBox.vue";
 
-//视频模型列表类型
-interface ModelItem {
-  manufacturer: string;
-  model: string;
-  durationResolutionMap: { duration: number[]; resolution: string[] }[];
-  aspectRatio: string[];
-  type: string[];
-  audio: boolean;
-}
+import { useFlowBuilder } from "./utils/flowBuilder";
 
-//集标题
-const setData = ref("0");
-//集内容
-const setContent = ref([
-  {
-    title: "第一集",
-    storyboard: [
+const { viewport } = useVueFlow();
+const openShowVisible = ref(false);
+const isLeaving = ref(false);
+
+onMounted(() => {});
+
+// ==================== AI 操作数据区 ====================
+// AI 只需修改此对象即可控制整个故事线流程
+const flowData = ref({
+  // 剧本
+  script: {
+    id: "script-1",
+    position: { x: 10, y: 0 },
+    blocks: [
       {
-        prompt: "这个是一个提示词1阿瑟地方撒放到水电费水电费水电费水电费水电费水电费水电撒旦法士大夫水电费水电费水电费费水电费",
-        imageUrl: "https://tdesign.gtimg.com/demo/demo-image-1.png",
+        id: "b1",
+        content: `# 第2集：真相大白，背叛之心
+※ 青云宗，宗门大殿
+△ 凌玄心脏猛地一缩，瞳孔骤缩
+苏晚卿冷笑：「还有你当宝贝的青云令」
+「若不是我趁你养伤时，偷偷在令牌上动了手脚」
+「让你没法引动令牌力量，我们怎么能这么容易逼你交出来？」
+△ 凌玄盯着她，声音在抖：「你什么意思？」
+苏晚卿语气平静，像在说别人的事
+「当年是我故意把妖兽引去黑风岭，又假装被困」
+「让你不得不为了救我，硬接妖兽三道致命攻击」
+「清辞当时修炼遇到瓶颈，需要你的青云宗本源灵力」
+「可你修为太高，只有让你重伤废修，他才能取走本源」
+「至于青云令，我早就用秘法削弱了令牌和你的感应」
+「你以为你还能靠这令牌反抗？」
+△ 凌玄气血逆流，再次一口鲜血喷出`,
+        connectTo: "st-1",
       },
       {
-        prompt: "这个是一个提示词2",
-        imageUrl: "https://tdesign.gtimg.com/demo/demo-image-1.png",
+        id: "b2",
+        content: `【特效】鲜血在青石上晕开刺目的红
+「苏晚卿！！！」
+「我待你掏心掏肺，你为什么要这么害我？」
+「连我视若性命的青云令，你都要算计！」
+△ 苏晚卿像是听到大笑话
+「清辞才是真心对我，他能给我想要的大道」
+「而你只会让我困在这宗门里，做个有名无实的夫人！」
+△ 几个以前受过凌玄恩惠的长老突然开口
+长老甲：「凌玄，识时务者为俊杰！」
+长老乙：「你现在修为全废，青云令也没用了」
+长老丙：「早就不配管青云宗，不如乖乖交出令牌，还能保住一条命！」`,
+        connectTo: "st-2",
       },
       {
-        prompt: "这个是一个提示词2",
-        imageUrl: "https://tdesign.gtimg.com/demo/demo-image-1.png",
-      },
-      {
-        prompt: "这个是一个提示词2",
-        imageUrl: "https://tdesign.gtimg.com/demo/demo-image-1.png",
-      },
-    ],
-    video: [
-      {
-        model: "doubao-seedance-1-5-pro-251215",
-        mode: "endFrameOptional",
-        images: [""],
-        resolution: "1920x1080",
-        aspectRatio: "16:9",
-        duration: 5,
-        prompt: "",
-        videoUrl: "//v2.cri.cn/M00/02/C3/rBABDmblg6eADAXKBZHO91F1HZ0889.mp4",
-        generateUrl: [
-          "http://202508W24.ban.tools.codebook.ltd/js/player/CodeBookCore.html?url=https%3A%2F%2Fwww.lingyuzhao.top%2Fb%2Fshare%2Fdownload2%2FnoLogin%2Fshare%2F17c8d054513ae15059080dd0725df371c9145569eb1cb0a84c036d4cdd9acea5.mp4",
-          "http://202508W24.ban.tools.codebook.ltd/js/player/CodeBookCore.html?url=https%3A%2F%2Fwww.lingyuzhao.top%2Fb%2Fshare%2Fdownload2%2FnoLogin%2Fshare%2F17c8d054513ae15059080dd0725df371c9145569eb1cb0a84c036d4cdea5.mp4",
-        ],
-      },
-      {
-        model: "doubao-seedance-1-0-lite-i2v-250428",
-        mode: "endFrameOptional",
-        images: [""],
-        resolution: "1920x1080",
-        aspectRatio: "16:9",
-        duration: 5,
-        prompt: "",
-        videoUrl: "https://cms-emer-res.cctvnews.cctv.com/cctv/video/20240502/7d889b4dce894c60b26a96e3e9c6ee51_H264_3000K_MP4/20240502230635275.m3u8",
-        generateUrl: [
-          "http://202508W24.ban.tools.codebook.ltd/js/player/CodeBookCore.html?url=https%3A%2F%2Fwww.lingyuzhao.top%2Fb%2Fshare%2Fdownload2%2FnoLogin%2Fshare%2F17c8d054513ae15059080dd0725df371c9145569eb1cb0a84c036d4cdd9acea5.mp4",
-        ],
-      },
-      {
-        model: "doubao-seedance-1-5-pro-251215",
-        mode: "endFrameOptional",
-        images: [],
-        resolution: "1920x1080",
-        aspectRatio: "16:9",
-        duration: 5,
-        prompt: "",
-        videoUrl: "",
-        generateUrl: [],
+        id: "b3",
+        content: `△ 凌玄看着这些人，心里凉得厉害
+△ 沈清辞搂住苏晚卿的腰，笑得更加嚣张
+「听到了吗？现在宗门上下都站在我们这边」
+「你识相点，就现在把青云令交出来」
+「要是敢反抗，我就废了你最后一点修为」
+「把你扔去妖兽谷，让你尝尝被妖兽分食的滋味！」
+△ 凌玄浑身颤抖，眼中血丝密布
+△ 指着苏晚卿，指尖疯狂颤抖
+【独白】她的真面目...我全看清楚了
+【卡黑】`,
+        connectTo: "st-3",
       },
     ],
   },
-  {
-    title: "第二集",
-    storyboard: [],
-    video: [],
+  // 资产
+  assets: {
+    id: "assets-1",
+    position: { x: -70, y: 1400 },
+    characters: [
+      { name: "凌玄", desc: "男主 · 青云宗宗主 · 重伤废修", bgColor: "#e0f2fe" },
+      { name: "苏晚卿", desc: "女配 · 凌玄未婚妻 · 背叛者", bgColor: "#ffe4e6" },
+      { name: "沈清辞", desc: "反派 · 夺舍者 · 苏晚卿真爱", bgColor: "#fef08a" },
+      { name: "长老甲", desc: "配角 · 墙头草 · 见风使舵", bgColor: "#e0e7ff" },
+    ],
+    scenes: [
+      { name: "青云宗大殿", desc: "主场景 · 庄严肃穆 · 冷色调", bgColor: "#d1fae5" },
+      { name: "黑风岭", desc: "回忆场景 · 阴森危险", bgColor: "#7b91b5" },
+      { name: "妖兽谷", desc: "威胁场景 · 凶险之地", bgColor: "#fca5a5" },
+    ],
   },
-]);
-onMounted(() => {
-  getModelList();
+  // 分镜表
+  storyboardTables: [
+    {
+      id: "st-1",
+      position: { x: 804, y: 0 },
+      connectTo: "sb-1",
+      items: [
+        { id: 1, scene: "大殿内景", description: "凌玄跪在地上，面色苍白，嘴角带血", camera: "中景，缓慢推近", duration: "4s" },
+        { id: 2, scene: "苏晚卿特写", description: "冷笑的面容，眼神中满是算计", camera: "特写，浅景深", duration: "3s" },
+        { id: 3, scene: "青云令", description: "令牌在苏晚卿手中，表面光芒黯淡", camera: "微距特写", duration: "2s" },
+        { id: 4, scene: "回忆闪回", description: "黑风岭妖兽袭击，凌玄护住苏晚卿", camera: "快速剪辑，手持晃动", duration: "5s" },
+        { id: 5, scene: "凌玄反应", description: "瞳孔骤缩，难以置信的表情", camera: "眼部特写推至大特写", duration: "3s" },
+        { id: 6, scene: "吐血", description: "鲜血喷出，滴落在青石板上", camera: "慢动作，跟随血滴", duration: "4s" },
+      ],
+    },
+    {
+      id: "st-2",
+      position: { x: 791, y: 592 },
+      connectTo: "sb-2",
+      items: [
+        { id: 1, scene: "血迹特写", description: "鲜血在青石上晕开，形成刺目的红", camera: "俯拍，缓慢拉远", duration: "3s" },
+        { id: 2, scene: "凌玄嘶吼", description: "愤怒到极致的表情，青筋暴起", camera: "仰拍，增加压迫感", duration: "4s" },
+        { id: 3, scene: "苏晚卿讥讽", description: "轻蔑的笑容，毫无愧疚", camera: "中景，冷色调", duration: "3s" },
+        { id: 4, scene: "长老群像", description: "三位长老面面相觑，随即附和", camera: "横移，依次扫过", duration: "5s" },
+        { id: 5, scene: "沈清辞得意", description: "搂着苏晚卿，志得意满的笑", camera: "双人中景", duration: "3s" },
+      ],
+    },
+    {
+      id: "st-3",
+      position: { x: 791, y: 1084 },
+      connectTo: "sb-3",
+      items: [
+        { id: 1, scene: "血迹特写", description: "鲜血在青石上晕开，形成刺目的红", camera: "俯拍，缓慢拉远", duration: "3s" },
+        { id: 2, scene: "凌玄嘶吼", description: "愤怒到极致的表情，青筋暴起", camera: "仰拍，增加压迫感", duration: "4s" },
+        { id: 3, scene: "苏晚卿讥讽", description: "轻蔑的笑容，毫无愧疚", camera: "中景，冷色调", duration: "3s" },
+        { id: 4, scene: "长老群像", description: "三位长老面面相觑，随即附和", camera: "横移，依次扫过", duration: "5s" },
+        { id: 5, scene: "沈清辞得意", description: "搂着苏晚卿，志得意满的笑", camera: "双人中景", duration: "3s" },
+      ],
+    },
+  ],
+  // 分镜
+  storyboards: [
+    {
+      id: "sb-1",
+      position: { x: 1500, y: 24 },
+      connectTo: "wb-1",
+      frames: [
+        { id: 1, description: "大殿全景，庄严肃穆" },
+        { id: 2, description: "凌玄跪地特写" },
+        { id: 3, description: "苏晚卿冷笑" },
+        { id: 4, description: "青云令微距" },
+        { id: 5, description: "黑风岭闪回" },
+        { id: 6, description: "妖兽袭击" },
+        { id: 7, description: "凌玄瞳孔骤缩" },
+        { id: 8, description: "鲜血滴落" },
+      ],
+    },
+    {
+      id: "sb-2",
+      position: { x: 1500, y: 624 },
+      connectTo: "wb-2",
+      frames: [
+        { id: 1, description: "血迹晕开" },
+        { id: 2, description: "凌玄嘶吼" },
+        { id: 3, description: "苏晚卿讥讽" },
+        { id: 4, description: "长老甲附和" },
+        { id: 5, description: "长老乙劝降" },
+        { id: 6, description: "沈清辞得意" },
+      ],
+    },
+    {
+      id: "sb-3",
+      position: { x: 1500, y: 1224 },
+      connectTo: "wb-3",
+      frames: [
+        { id: 1, description: "凌玄颤抖" },
+        { id: 2, description: "沈清辞威胁" },
+        { id: 3, description: "众人逼迫" },
+        { id: 4, description: "凌玄血丝密布" },
+        { id: 5, description: "指向苏晚卿" },
+        { id: 6, description: "独白浮现" },
+        { id: 7, description: "真面目揭示" },
+        { id: 8, description: "画面卡黑" },
+      ],
+    },
+  ],
+  // 工作台
+  workbenches: [
+    {
+      id: "wb-1",
+      position: { x: 2100, y: 24 },
+      name: "第一幕 - 真相揭露",
+      status: "已完成",
+      duration: "00:21",
+      resolution: "1920×1080",
+      fps: "30fps",
+      gradient: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+    },
+    {
+      id: "wb-2",
+      position: { x: 2100, y: 624 },
+      name: "第二幕 - 愤怒嘶吼",
+      status: "渲染中",
+      duration: "00:18",
+      resolution: "1920×1080",
+      fps: "30fps",
+      gradient: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
+    },
+    {
+      id: "wb-3",
+      position: { x: 2100, y: 1224 },
+      name: "第三幕 - 心寒绝望",
+      status: "待处理",
+      duration: "00:24",
+      resolution: "1920×1080",
+      fps: "30fps",
+      gradient: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
+    },
+  ],
+  // 封面
+  posters: [
+    {
+      id: "poster-1",
+      position: { x: 2500, y: 24 },
+      workbenchId: "wb-1",
+      posters: [
+        { id: 1, name: "封面方案A", size: "1080×1920", gradient: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)", selected: true },
+        { id: 2, name: "封面方案B", size: "1080×1920", gradient: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)" },
+        { id: 3, name: "封面方案C", size: "1080×1920", gradient: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)" },
+      ],
+    },
+    {
+      id: "poster-2",
+      position: { x: 2500, y: 524 },
+      workbenchId: "wb-2",
+      posters: [
+        { id: 1, name: "愤怒特写", size: "1080×1920", gradient: "linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%)", selected: true },
+        { id: 2, name: "嘶吼瞬间", size: "1080×1920", gradient: "linear-gradient(135deg, #d63031 0%, #e17055 100%)" },
+      ],
+    },
+    {
+      id: "poster-3",
+      position: { x: 2500, y: 1024 },
+      workbenchId: "wb-3",
+      posters: [
+        { id: 1, name: "绝望眼神", size: "1080×1920", gradient: "linear-gradient(135deg, #636e72 0%, #2d3436 100%)" },
+        { id: 2, name: "卡黑前帧", size: "1080×1920", gradient: "linear-gradient(135deg, #0c0c0c 0%, #434343 100%)", selected: true },
+        { id: 3, name: "对峙场景", size: "1080×1920", gradient: "linear-gradient(135deg, #74b9ff 0%, #0984e3 100%)" },
+        { id: 4, name: "群像构图", size: "1080×1920", gradient: "linear-gradient(135deg, #a29bfe 0%, #6c5ce7 100%)" },
+      ],
+    },
+  ],
 });
-//视频模型列表
-const modelList = ref<ModelItem[]>([]);
-//获取视频模型列表
-function getModelList() {
-  modelList.value = [
-    // doubao-seedance-1-5-pro 文生视频/图生视频
-    {
-      manufacturer: "volcengine",
-      model: "doubao-seedance-1-5-pro-251215",
-      durationResolutionMap: [{ duration: [4, 5, 6, 7, 8, 9, 10, 11, 12], resolution: ["480p", "720p", "1080p"] }],
-      aspectRatio: ["16:9", "4:3", "1:1", "3:4", "9:16", "21:9"],
-      type: ["text", "endFrameOptional"],
-      audio: true,
-    },
-    // doubao-seedance-1-0-pro 文生视频/图生视频
-    {
-      manufacturer: "volcengine",
-      model: "doubao-seedance-1-0-pro-250528",
-      durationResolutionMap: [{ duration: [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], resolution: ["480p", "720p", "1080p"] }],
-      aspectRatio: ["16:9", "4:3", "1:1", "3:4", "9:16", "21:9"],
-      type: ["text", "endFrameOptional"],
-      audio: false,
-    },
-    // doubao-seedance-1-0-pro-fast 文生视频/图生视频
-    {
-      manufacturer: "volcengine",
-      model: "doubao-seedance-1-0-pro-fast-251015",
-      durationResolutionMap: [{ duration: [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], resolution: ["480p", "720p", "1080p"] }],
-      aspectRatio: ["16:9", "4:3", "1:1", "3:4", "9:16", "21:9"],
-      type: ["text", "singleImage"],
-      audio: false,
-    },
-    // doubao-seedance-1-0-lite-i2v 图生视频（仅支持图片模式）
-    {
-      manufacturer: "volcengine",
-      model: "doubao-seedance-1-0-lite-i2v-250428",
-      durationResolutionMap: [{ duration: [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], resolution: ["480p", "720p", "1080p"] }],
-      aspectRatio: [],
-      type: ["endFrameOptional", "reference"],
-      audio: false,
-    },
-  ];
-}
+// ==================== AI 操作数据区结束 ====================
 
-const storyboardForm = ref<{ prompt: string; imageUrl: string }>();
-const editStoryboardShow = ref(false);
-//编辑分镜
-function storyboardFn(item: { prompt: string; imageUrl: string }) {
-  storyboardForm.value = {
-    ...item,
-  };
-  editStoryboardShow.value = true;
-}
-//删除分镜
-function delStoryboard() {}
-//添加视频配置
-const addVideoDeployShow = ref(false);
-
-//编辑视频
-interface VideoItem {
-  model: string;
-  mode: string;
-  images: string[];
-  resolution: string;
-  aspectRatio?: string;
-  duration: number;
-  prompt: string;
-  videoUrl: string;
-  generateUrl: string[];
-}
-const editVideoShow = ref(false);
-const videoForm = ref<VideoItem>();
-// 当前编辑的视频索引
-const currentVideoIndex = ref<number>(-1);
-
-function editVideoFn(item: VideoItem, index: number) {
-  videoForm.value = {
-    ...item,
-  };
-  currentVideoIndex.value = index;
-  editVideoShow.value = true;
-}
-
-// 视频选择回调，更新videoUrl
-function onVideoSelect(videoUrl: string) {
-  const setIndex = parseInt(setData.value);
-  if (currentVideoIndex.value >= 0 && setContent.value[setIndex]?.video[currentVideoIndex.value]) {
-    setContent.value[setIndex].video[currentVideoIndex.value].videoUrl = videoUrl;
-  }
-}
-
-//删除视频配置
-function delVideo() {}
-
-// 已选中的视频URL列表
-const selectedVideos = ref<string[]>([]);
-
-// 全选状态
-const selectAll = ref(false);
-
-// 半选状态（部分选中）
-const isIndeterminate = computed(() => {
-  const setIndex = parseInt(setData.value);
-  const availableVideos = setContent.value[setIndex]?.video.filter((v) => v.videoUrl) || [];
-  const selectedCount = selectedVideos.value.length;
-  return selectedCount > 0 && selectedCount < availableVideos.length;
-});
-
-// 监听当前集切换，清空选择
-watch(setData, () => {
-  selectedVideos.value = [];
-  selectAll.value = false;
-});
-
-// 处理全选/取消全选
-function handleSelectAll(checked: boolean) {
-  const setIndex = parseInt(setData.value);
-  const availableVideos = setContent.value[setIndex]?.video.filter((v) => v.videoUrl) || [];
-  if (checked) {
-    selectedVideos.value = availableVideos.map((v) => v.videoUrl);
-  } else {
-    selectedVideos.value = [];
-  }
-}
-
-// 切换单个视频选中状态
-function toggleSelectVideo(videoUrl: string) {
-  const index = selectedVideos.value.indexOf(videoUrl);
-  if (index > -1) {
-    selectedVideos.value.splice(index, 1);
-  } else {
-    selectedVideos.value.push(videoUrl);
-  }
-  // 更新全选状态
-  const setIndex = parseInt(setData.value);
-  const availableVideos = setContent.value[setIndex]?.video.filter((v) => v.videoUrl) || [];
-  selectAll.value = selectedVideos.value.length === availableVideos.length && availableVideos.length > 0;
-}
-
-// 下载状态
-const isDownloading = ref(false);
-const downloadProgress = ref(0);
-
-// 下载选中的视频到压缩包
-async function downloadSelectedVideos() {
-  if (selectedVideos.value.length === 0) return;
-  isDownloading.value = true;
-  downloadProgress.value = 0;
-  try {
-    const zip = new JSZip();
-    const total = selectedVideos.value.length;
-    for (let i = 0; i < selectedVideos.value.length; i++) {
-      const videoUrl = selectedVideos.value[i];
-      try {
-        const response = await fetch(videoUrl);
-        const blob = await response.blob();
-        // 从URL提取文件名或使用序号命名
-        const fileName = `video_${i + 1}.mp4`;
-        zip.file(fileName, blob);
-        downloadProgress.value = Math.round(((i + 1) / total) * 100);
-      } catch (error) {
-        console.error(`下载视频失败: ${videoUrl}`, error);
-      }
-    }
-    // 生成压缩包并下载
-    const content = await zip.generateAsync({ type: "blob" });
-    const url = window.URL.createObjectURL(content);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `${project.value?.name || "视频"}.zip`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    window.URL.revokeObjectURL(url);
-  } catch (error) {
-    console.error("打包下载失败:", error);
-  } finally {
-    isDownloading.value = false;
-    downloadProgress.value = 0;
-  }
-}
-
-// 播放视频
-const downloadVideoRefs = ref<Record<string, HTMLVideoElement | null>>({});
-function setDownloadVideoRef(el: Element | ComponentPublicInstance | null, url: string) {
-  if (el && el instanceof HTMLVideoElement) {
-    downloadVideoRefs.value[url] = el;
-  }
-}
+// 自动构建 nodes 和 edges
+const { nodes, edges } = useFlowBuilder(flowData);
 </script>
-
 <style lang="scss" scoped>
-.production {
-  .storyboard {
-    margin-top: 20px;
-    background: #fff;
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+.flowMain {
+  height: 100%;
+}
+$handelSize: 12px;
 
-    .head {
-      border-bottom: 1px solid #e7e7e7;
-      height: 60px;
-      padding: 0 20px;
-      background: linear-gradient(to bottom, #fafafa, #fff);
-
-      .headLeft {
-        display: flex;
-        align-items: center;
-
-        .title {
-          font-size: 16px;
-          font-weight: 600;
-          color: #1f2937;
-        }
-      }
-    }
-
-    .data {
-      padding: 20px;
-      min-height: 300px;
-
-      .emptyState {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: 60px 20px;
-        color: #9ca3af;
-        p {
-          margin: 16px 0 24px;
-          font-size: 14px;
-        }
-      }
-
-      .storyboardGrid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-        gap: 20px;
-        .storyboardItem {
-          position: relative;
-          background: #f3f4f6;
-          border-radius: 12px;
-          overflow: hidden;
-          border: 1px solid #e5e7eb;
-          transition: all 0.3s ease;
-          cursor: pointer;
-          padding-top: 66.67%;
-
-          &:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
-            .deleteBtn {
-              opacity: 1;
-            }
-          }
-
-          .storyboardImage {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-          }
-
-          .itemBadge {
-            position: absolute;
-            top: 12px;
-            left: 12px;
-            z-index: 10;
-            background: rgba(0, 0, 0, 0.7);
-            color: white;
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 600;
-            backdrop-filter: blur(8px);
-          }
-
-          .deleteBtn {
-            position: absolute;
-            top: 12px;
-            right: 12px;
-            z-index: 10;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-          }
-
-          .promptInfo {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            padding: 16px 12px;
-            background: linear-gradient(to top, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.4), transparent);
-            z-index: 9;
-
-            .promptText {
-              font-size: 13px;
-              line-height: 1.6;
-              color: white;
-              display: -webkit-box;
-              -webkit-line-clamp: 1;
-              -webkit-box-orient: vertical;
-              overflow: hidden;
-              text-overflow: ellipsis;
-              word-break: break-all;
-            }
-          }
-        }
-      }
-    }
-  }
-
-  .video {
-    margin-top: 20px;
-    background: #fff;
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-
-    .head {
-      border-bottom: 1px solid #e7e7e7;
-      height: 60px;
-      padding: 0 20px;
-      background: linear-gradient(to bottom, #fafafa, #fff);
-
-      .headLeft {
-        display: flex;
-        align-items: center;
-
-        .title {
-          font-size: 16px;
-          font-weight: 600;
-          color: #1f2937;
-        }
-      }
-    }
-
-    .data {
-      padding: 20px;
-      min-height: 300px;
-      .emptyState {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: 60px 20px;
-        color: #9ca3af;
-      }
-
-      .videoGrid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-        gap: 20px;
-        .videoItem {
-          position: relative;
-          background: #f3f4f6;
-          border-radius: 12px;
-          overflow: hidden;
-          border: 1px solid #e5e7eb;
-          transition: all 0.3s ease;
-          cursor: pointer;
-          &:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
-            .deleteBtn {
-              opacity: 1;
-            }
-          }
-          .videoCover {
-            position: relative;
-            width: 100%;
-            padding-top: 60%;
-            .videoImage {
-              position: absolute;
-              top: 0;
-              left: 0;
-              width: 100%;
-              height: 100%;
-              object-fit: cover;
-            }
-
-            .playIcon {
-              position: absolute;
-              top: 50%;
-              left: 50%;
-              transform: translate(-50%, -50%);
-              color: rgba(255, 255, 255, 0.9);
-              border-radius: 50%;
-              transition: transform 0.3s ease;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-            }
-
-            .pendingState {
-              position: absolute;
-              top: 0;
-              left: 0;
-              width: 100%;
-              height: 100%;
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              justify-content: center;
-              background: #dddbdb;
-              color: #000;
-              span {
-                margin-top: 8px;
-                font-size: 14px;
-                font-weight: 500;
-              }
-            }
-          }
-
-          .itemBadge {
-            position: absolute;
-            top: 12px;
-            left: 12px;
-            z-index: 10;
-            background: rgba(0, 0, 0, 0.7);
-            color: white;
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 600;
-            backdrop-filter: blur(8px);
-          }
-
-          .deleteBtn {
-            position: absolute;
-            top: 12px;
-            right: 12px;
-            z-index: 10;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-          }
-
-          .videoInfo {
-            padding: 12px;
-            background: #fff;
-
-            .infoRow {
-              display: flex;
-              flex-wrap: wrap;
-              gap: 6px;
-              margin-bottom: 8px;
-            }
-
-            .promptText {
-              font-size: 13px;
-              line-height: 1.5;
-              color: #6b7280;
-              white-space: nowrap;
-              overflow: hidden;
-              text-overflow: ellipsis;
-            }
-          }
-        }
-      }
-    }
-  }
-  .download {
-    margin-top: 20px;
-    background: #fff;
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-
-    .head {
-      border-bottom: 1px solid #e7e7e7;
-      height: 60px;
-      padding: 0 20px;
-      background: linear-gradient(to bottom, #fafafa, #fff);
-
-      .headLeft {
-        display: flex;
-        align-items: center;
-
-        .title {
-          font-size: 16px;
-          font-weight: 600;
-          color: #1f2937;
-        }
-      }
-
-      .headRight {
-        display: flex;
-        align-items: center;
-        gap: 16px;
-      }
-    }
-
-    .data {
-      padding: 20px;
-      min-height: 300px;
-
-      .emptyState {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: 60px 20px;
-        color: #9ca3af;
-
-        p {
-          margin: 16px 0 0;
-          font-size: 14px;
-        }
-      }
-
-      .downloadGrid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-        gap: 20px;
-        .downloadItem {
-          position: relative;
-          background: #000;
-          border-radius: 12px;
-          overflow: hidden;
-          transition: all 0.3s ease;
-          cursor: pointer;
-          &:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
-          }
-
-          .selectOverlay {
-            position: absolute;
-            top: 10px;
-            right: 5px;
-            z-index: 15;
-            border-radius: 4px;
-          }
-
-          .videoCover {
-            width: 100%;
-            .videoElement {
-              width: 100%;
-              height: 100%;
-              object-fit: contain;
-            }
-          }
-        }
-      }
-    }
-  }
+:deep(.source) {
+  height: $handelSize;
+  width: $handelSize;
+}
+:deep(.target) {
+  height: $handelSize;
+  width: $handelSize;
 }
 </style>

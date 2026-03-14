@@ -51,6 +51,10 @@ const router = createRouter({
           path: "/assets",
           component: () => import("@/views/assets/index.vue"),
         },
+        {
+          path: "/test",
+          component: () => import("@/views/test/index.vue"),
+        },
       ],
     },
     {

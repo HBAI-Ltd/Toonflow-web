@@ -2,35 +2,7 @@
   <div class="agent">
     <div class="data f">
       <div class="operate">
-        <div class="title jb ac">
-          <span class="text">剧本 Agent</span>
-          <i-robot-one theme="outline" size="24" />
-        </div>
-        <div class="chat">
-          <div v-for="(item, index) in chatList" :key="index" class="item" :class="item.role">
-            <div class="user frr" v-if="item.role == 'user'">{{ item.content }}</div>
-            <div v-else>
-              <div class="divider c">
-                <div v-for="(items, indexs) in item.identity" :key="indexs">
-                  <t-tag shape="round">{{ items }}</t-tag>
-                </div>
-              </div>
-              <div class="identity c">
-                <span>{{ item.identity?.join(", ") }}</span>
-              </div>
-              <div class="ai fr">{{ item.content }}</div>
-            </div>
-          </div>
-        </div>
-        <div class="send c">
-          <t-input v-model="dialogueInput" placeholder="输入消息...">
-            <template #suffixIcon>
-              <div class="sendBtn c">
-                <i-arrow-right theme="outline" size="20" fill="#fff" />
-              </div>
-            </template>
-          </t-input>
-        </div>
+        <agent />
       </div>
       <div class="data">
         <div class="title jb ac"></div>
@@ -152,73 +124,13 @@
 </template>
 
 <script setup lang="ts">
+import agent from "@/components/agent/index.vue";
 import editOutline from "./components/editOutline.vue";
 import projectStore from "@/stores/project";
 const { project } = storeToRefs(projectStore());
 
 //输入内容
 const dialogueInput = ref("");
-//类型
-interface ChatList {
-  role: string;
-  content: string;
-  identity?: string[];
-}
-//agent聊天记录
-const chatList = ref<ChatList[]>([
-  {
-    role: "user",
-    content: "你好，请介绍一下你自己。",
-  },
-  {
-    role: "assistant",
-    identity: ["大纲师", "情节设计师"],
-    content:
-      "你好！我是一个智能助手，专门为你提供帮助和解答问题。无论你有什么疑问或者需要什么帮助，我都会尽力为你提供准确和有用的信息。请随时告诉我你需要什么帮助！",
-  },
-  {
-    role: "assistant",
-    identity: ["大纲师"],
-    content:
-      "我可以帮助你解答各种问题，提供信息，或者协助你完成一些任务。无论是学习、工作还是日常生活中的问题，我都会尽力为你提供支持和帮助。请随时告诉我你需要什么帮助！",
-  },
-  {
-    role: "assistant",
-    identity: ["助手"],
-    content:
-      "我可以帮助你解答各种问题，提供信息，或者协助你完成一些任务。无论是学习、工作还是日常生活中的问题，我都会尽力为你提供支持和帮助。请随时告诉我你需要什么帮助！",
-  },
-  {
-    role: "assistant",
-    identity: ["大纲师"],
-    content:
-      "我可以帮助你解答各种问题，提供信息，或者协助你完成一些任务。无论是学习、工作还是日常生活中的问题，我都会尽力为你提供支持和帮助。请随时告诉我你需要什么帮助！",
-  },
-  {
-    role: "assistant",
-    identity: ["大纲师"],
-    content:
-      "我可以帮助你解答各种问题，提供信息，或者协助你完成一些任务。无论是学习、工作还是日常生活中的问题，我都会尽力为你提供支持和帮助。请随时告诉我你需要什么帮助！",
-  },
-  {
-    role: "assistant",
-    identity: ["大纲师"],
-    content:
-      "我可以帮助你解答各种问题，提供信息，或者协助你完成一些任务。无论是学习、工作还是日常生活中的问题，我都会尽力为你提供支持和帮助。请随时告诉我你需要什么帮助！",
-  },
-  {
-    role: "assistant",
-    identity: ["大纲师"],
-    content:
-      "我可以帮助你解答各种问题，提供信息，或者协助你完成一些任务。无论是学习、工作还是日常生活中的问题，我都会尽力为你提供支持和帮助。请随时告诉我你需要什么帮助！",
-  },
-  {
-    role: "assistant",
-    identity: ["大纲师"],
-    content:
-      "我可以帮助你解答各种问题，提供信息，或者协助你完成一些任务。无论是学习、工作还是日常生活中的问题，我都会尽力为你提供支持和帮助。请随时告诉我你需要什么帮助！",
-  },
-]);
 
 const options = ref(1);
 
@@ -946,78 +858,13 @@ function cancelEditStoryLine() {
     overflow: hidden;
     .operate {
       width: 35%;
-      display: flex;
-      flex-direction: column;
-      .title {
-        padding: 20px;
-        flex-shrink: 0;
+      .head {
+        height: 40px;
+        line-height: 40px;
+        padding: 0 10px;
         .text {
           font-size: 30px;
           font-weight: 900;
-        }
-      }
-      .chat {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-        padding: 20px;
-        overflow-y: auto;
-        .item {
-          display: flex;
-          &.user {
-            justify-content: flex-end;
-            .user {
-              background-color: #000;
-              color: #fff;
-              padding: 12px 16px;
-              border-radius: 16px 16px 4px 16px;
-              min-width: 30%;
-              word-wrap: break-word;
-            }
-          }
-          &.assistant {
-            position: relative;
-            margin-top: 30px;
-            justify-content: flex-start;
-            .divider {
-              gap: 8px;
-              position: absolute;
-              top: -30px;
-              left: 0;
-              width: 100%;
-              font-size: 13px;
-            }
-            .identity {
-              padding: 5px 10px;
-              position: absolute;
-              top: -15px;
-              left: 20px;
-              color: #fff;
-              font-size: 12px;
-              border-radius: 25px;
-              background-color: #000;
-            }
-            .ai {
-              background-color: #ececec;
-              color: #000;
-              padding: 12px 16px;
-              border-radius: 16px 16px 16px 4px;
-              min-width: 10%;
-              word-wrap: break-word;
-            }
-          }
-        }
-      }
-      .send {
-        flex-shrink: 0;
-        padding: 15px;
-        .sendBtn {
-          width: 25px;
-          height: 25px;
-          background-color: #000;
-          border-radius: 50%;
-          cursor: pointer;
         }
       }
     }

@@ -73,7 +73,7 @@
 </template>
 
 <script setup lang="ts">
-import { ElLoading } from "element-plus";
+import { LoadingPlugin } from "tdesign-vue-next";
 import axios from "@/utils/axios";
 import parseNovel from "@/utils/parseNovel";
 import mammoth from "mammoth";
@@ -181,13 +181,17 @@ async function handleBeforeUpload(file: UploadFile) {
     return false;
   }
 
-  const loading = ElLoading.service({ lock: true, text: "文件解析中...", background: "rgba(0,0,0,0.7)" });
+  LoadingPlugin({
+    fullscreen: true,
+    attach: "body",
+    text: "文件解析中...",
+  });
   try {
     content.value = await readFile(rawFile);
   } catch {
     MessagePlugin.error("文件解析失败，请重新上传");
   } finally {
-    loading.close();
+    LoadingPlugin(false);
   }
   return false;
 }

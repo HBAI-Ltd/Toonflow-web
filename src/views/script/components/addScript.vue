@@ -58,7 +58,7 @@
 
 <script setup lang="ts">
 import { ref, watch, nextTick } from "vue";
-import { ElLoading } from "element-plus";
+import { LoadingPlugin } from "tdesign-vue-next";
 import mammoth from "mammoth";
 import { MessagePlugin } from "tdesign-vue-next";
 import type { UploadFile } from "tdesign-vue-next";
@@ -118,7 +118,12 @@ async function handleBeforeUpload(file: UploadFile): Promise<boolean> {
     return false;
   }
 
-  const loading = ElLoading.service({ lock: true, text: "文件解析中...", background: "rgba(0,0,0,0.7)" });
+  
+  LoadingPlugin({
+    fullscreen: true,
+    attach: "body",
+    text: "文件解析中...",
+  });
   try {
     content.value = await readFile(rawFile);
     scriptData.value = content.value;
@@ -132,7 +137,7 @@ async function handleBeforeUpload(file: UploadFile): Promise<boolean> {
     MessagePlugin.error("文件解析失败，请重新上传");
     fileList.value = [];
   } finally {
-    loading.close();
+    LoadingPlugin(false);
   }
   return false;
 }

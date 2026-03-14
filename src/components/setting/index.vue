@@ -10,10 +10,10 @@
         </t-menu-item>
       </t-menu>
       <div class="settingRight">
-        <h3 class="sectionTitle">{{ currentMenuItem?.label }}</h3>
+        <div class="sectionTitle">{{ currentMenuItem?.label }}</div>
         <div class="settingContent">
-          <vendorConfig v-if="activeMenu === 'vendorConfig'" />
           <themeConfig v-if="activeMenu === 'themeConfig'" />
+          <vendorConfig v-if="activeMenu === 'vendorConfig'" />
           <requestConfig v-if="activeMenu === 'requestConfig'" />
           <loginConfig v-if="activeMenu === 'loginConfig'" />
           <agentConfog v-if="activeMenu === 'agentConfog'" />
@@ -21,6 +21,7 @@
           <dbConfig v-if="activeMenu === 'dbConfig'" />
           <about v-if="activeMenu === 'about'" />
           <logoutConfig v-if="activeMenu === 'logoutConfig'" />
+          <memoryConfig v-if="activeMenu === 'memoryConfig'" />
         </div>
       </div>
     </div>
@@ -41,11 +42,13 @@ import otherConfig from "./components/otherConfig.vue";
 import about from "./components/about.vue";
 import logoutConfig from "./components/logoutConfig.vue";
 import vendorConfig from "./components/vendorConfig.vue";
+import memoryConfig from "./components/memoryConfig.vue";
 
 const menuItems = [
   { key: "themeConfig", label: "主题", icon: "i-platte" },
   { key: "vendorConfig", label: "模型服务", icon: "i-computer" },
   { key: "agentConfog", label: "Agent配置", icon: "i-color-filter" },
+  { key: "memoryConfig", label: "AI记忆配置", icon: "i-memory-card-one" },
   { key: "loginConfig", label: "登录配置", icon: "i-lock" },
   { key: "dbConfig", label: "数据库操作", icon: "i-data" },
   { key: "otherConfig", label: "其他配置", icon: "i-application-menu" },
@@ -77,23 +80,27 @@ const currentMenuItem = computed(() => menuItems.find((item) => item.key === act
 
   .settingRight {
     flex: 1;
-    padding: 16px 32px;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    height: 70vh;
     overflow-y: auto;
 
     .sectionTitle {
-      margin: 0 0 20px 0;
       font-size: 16px;
       font-weight: 600;
       padding-bottom: 12px;
       border-bottom: 1px solid var(--td-component-border);
+      margin-bottom: 1vh;
+      height: 4vh;
     }
 
     .settingContent {
       width: 100%;
+      height: calc(70vh - 5vh);
     }
   }
 }
-:deep(.t-menu){
+:deep(.t-menu) {
   padding: 0;
   padding-right: 8px;
 }

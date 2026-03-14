@@ -49,14 +49,18 @@
           </t-tooltip>
         </div>
       </div>
-      <router-view />
+      <div class="viewBox">
+        <router-view />
+      </div>
     </div>
   </div>
   <setting />
+  <migrateShow />
 </template>
 
 <script setup lang="ts">
 import setting from "@/components/setting/index.vue";
+import migrateShow from "@/components/migrateShow.vue";
 
 import projectStore from "@/stores/project";
 const { project } = storeToRefs(projectStore());
@@ -73,6 +77,7 @@ const rightBtnList = ref([
   { type: "btn", path: "/novel", label: "小说原文", icon: "i-notebook" },
   { type: "btn", path: "/agent", label: "剧本Agent", icon: "i-color-filter" },
   { type: "btn", path: "/script", label: "剧本管理", icon: "i-document-folder" },
+  { type: "btn", path: "/cornerScape", label: "塑角造景", icon: "i-peoples-two" },
   { type: "btn", path: "/production", label: "视频生产", icon: "i-carousel-video" },
   { type: "divider" },
   { type: "btn", path: "/assets", label: "资产中心", icon: "i-receive" },
@@ -171,13 +176,14 @@ function handleClick(menu: any) {
     background-color: #fff;
     border-radius: 16px;
     width: 100%;
-    height: 100%;
+    height: calc(100vh - 2rem);
     overflow-x: hidden;
     overflow-y: auto;
     scrollbar-gutter: stable;
     padding-left: 2rem;
     padding-right: 2rem;
     .topMenu {
+      height: 6vh;
       .rightBtnList {
         .item {
           margin-bottom: 0px !important;
@@ -185,13 +191,17 @@ function handleClick(menu: any) {
           margin-right: 4px;
           margin-left: 4px;
         }
-        .divider{
+        .divider {
           width: 1px;
           height: 24px;
           background-color: #ecedef;
           margin: 0 4px;
         }
       }
+    }
+    .viewBox {
+      width: 100%;
+      height: calc(94vh - 2rem);
     }
   }
 }

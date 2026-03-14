@@ -13,19 +13,6 @@
       </t-button>
     </t-card>
 
-    <t-card class="actionItem">
-      <div class="actionInfo">
-        <h4>删除数据库</h4>
-        <p>删除所有数据表，此操作不可恢复</p>
-      </div>
-      <t-button theme="danger" @click="clearDatabase">
-        <template #icon>
-          <i-delete theme="outline" size="14" fill="currentColor" />
-        </template>
-        删除数据库
-      </t-button>
-    </t-card>
-
     <!-- 第一次确认对话框 -->
     <t-dialog
       v-model:visible="firstConfirmVisible"
@@ -62,7 +49,7 @@ import axios from "@/utils/axios";
 const firstConfirmVisible = ref(false);
 const secondConfirmVisible = ref(false);
 const confirmInput = ref("");
-const currentAction = ref<"deleteAll" | "clearDb" | null>(null);
+const currentAction = ref<"deleteAll" | null>(null);
 
 const confirmConfigs = {
   deleteAll: {
@@ -70,12 +57,6 @@ const confirmConfigs = {
     firstMessage: "确定要清空所有数据表吗？数据清空后无法恢复！",
     secondMessage: "这是最后一次确认，清空后所有数据将永久丢失！",
     keyword: "清空",
-  },
-  clearDb: {
-    title: "删除数据库",
-    firstMessage: "确定要删除整个数据库吗？此操作将删除所有表结构和数据！",
-    secondMessage: "这是最后一次确认，删除后数据库将完全销毁！",
-    keyword: "删除",
   },
 };
 
@@ -97,12 +78,6 @@ function deleteAllData() {
   firstConfirmVisible.value = true;
 }
 
-function clearDatabase() {
-  currentAction.value = "clearDb";
-  confirmInput.value = "";
-  firstConfirmVisible.value = true;
-}
-
 function handleFirstConfirm() {
   firstConfirmVisible.value = false;
   secondConfirmVisible.value = true;
@@ -114,13 +89,8 @@ async function handleSecondConfirm() {
   secondConfirmVisible.value = false;
 
   try {
-    if (currentAction.value === "deleteAll") {
-      await axios.post("/other/deleteAllData");
-      window.$message.success("所有数据表已清空");
-    } else if (currentAction.value === "clearDb") {
-      await axios.post("/other/clearDatabase");
-      window.$message.success("所有数据表已删除，请重新打开页面");
-    }
+    await axios.post("/other/deleteAllData");
+    window.$message.success("所有数据表已清空");
   } catch {
     window.$message.error("操作失败，请重试");
   } finally {

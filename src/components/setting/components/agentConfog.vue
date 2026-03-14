@@ -19,7 +19,7 @@
     </div>
 
     <div class="cardGrid">
-      <div v-for="item in modelData" :key="item.key" class="skillCard" @click="startConfig(item)">
+      <t-card hoverShadow v-for="item in modelData" :key="item.key" class="skillCard" @click="startConfig(item)">
         <div class="skillCardHeader">
           <div class="headerLeft">
             <t-avatar size="32px" v-if="getProviderLogo(item.manufacturer)" :image="getProviderLogo(item.manufacturer)!" />
@@ -32,7 +32,7 @@
           <t-tag v-else theme="warning" variant="light" size="small">未配置</t-tag>
         </div>
         <div class="skillCardBody">{{ item.desc }}</div>
-      </div>
+      </t-card>
     </div>
   </div>
 </template>
@@ -115,18 +115,9 @@ function startConfig(item: ModelType) {
 
 .skillCard {
   cursor: pointer;
-  border: 1px solid var(--td-component-border);
-  border-radius: 12px;
-  padding: 16px 20px;
+  padding: 4px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  transition: all 0.2s ease;
-  background: var(--td-bg-color-container);
-  &:hover {
-    box-shadow: var(--td-shadow-2);
-    border-color: var(--td-brand-color-light);
-  }
 }
 
 .skillCardHeader {
