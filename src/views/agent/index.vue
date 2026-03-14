@@ -2,7 +2,9 @@
   <div class="agent">
     <div class="data f">
       <div class="operate">
-        <agent />
+        <div class="box">
+          <agent v-model="openShowVisible" />
+        </div>
       </div>
       <div class="data">
         <div class="title jb ac"></div>
@@ -128,6 +130,8 @@ import agent from "@/components/agent/index.vue";
 import editOutline from "./components/editOutline.vue";
 import projectStore from "@/stores/project";
 const { project } = storeToRefs(projectStore());
+
+const openShowVisible = ref(true);
 
 //输入内容
 const dialogueInput = ref("");
@@ -858,19 +862,23 @@ function cancelEditStoryLine() {
     overflow: hidden;
     .operate {
       width: 35%;
-      .head {
-        height: 40px;
-        line-height: 40px;
-        padding: 0 10px;
-        .text {
-          font-size: 30px;
-          font-weight: 900;
-        }
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      .box {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        border-radius: 10px;
+        border: 1px solid #919191;
+        background-color: #fff;
+        overflow: hidden;
+        position: relative;
       }
     }
     .data {
       border-left: 1px solid #e7e7e7;
-      width: 35%;
       display: flex;
       flex-direction: column;
       position: relative;

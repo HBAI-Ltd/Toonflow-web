@@ -44,16 +44,17 @@
 </template>
 
 <script setup lang="ts">
+import { ref } from "vue";
+const openShowVisible = defineModel({
+  type: Boolean,
+  default: false,
+});
 //类型
 interface ChatList {
   role: string;
   content: string;
   identity?: string[];
 }
-const openShowVisible = defineModel({
-  type: Boolean,
-  default: false,
-});
 //agent聊天记录
 const chatList = ref<ChatList[]>([
   {
@@ -67,8 +68,10 @@ const chatList = ref<ChatList[]>([
       "你好！我是一个智能助手，专门为你提供帮助和解答问题。无论你有什么疑问或者需要什么帮助，我都会尽力为你提供准确和有用的信息。请随时告诉我你需要什么帮助！",
   },
   {
-    role: "user",
-    content: "你好，请介绍一下你自己。",
+    role: "assistant",
+    identity: ["大纲师", "情节设计师"],
+    content:
+      "你好！我是一个智能助手，专门为你提供帮助和解答问题。无论你有什么疑问或者需要什么帮助，我都会尽力为你提供准确和有用的信息。请随时告诉我你需要什么帮助！",
   },
   {
     role: "assistant",
@@ -77,8 +80,10 @@ const chatList = ref<ChatList[]>([
       "你好！我是一个智能助手，专门为你提供帮助和解答问题。无论你有什么疑问或者需要什么帮助，我都会尽力为你提供准确和有用的信息。请随时告诉我你需要什么帮助！",
   },
   {
-    role: "user",
-    content: "你好，请介绍一下你自己。",
+    role: "assistant",
+    identity: ["大纲师", "情节设计师"],
+    content:
+      "你好！我是一个智能助手，专门为你提供帮助和解答问题。无论你有什么疑问或者需要什么帮助，我都会尽力为你提供准确和有用的信息。请随时告诉我你需要什么帮助！",
   },
   {
     role: "assistant",
@@ -87,18 +92,10 @@ const chatList = ref<ChatList[]>([
       "你好！我是一个智能助手，专门为你提供帮助和解答问题。无论你有什么疑问或者需要什么帮助，我都会尽力为你提供准确和有用的信息。请随时告诉我你需要什么帮助！",
   },
   {
-    role: "user",
-    content: "你好，请介绍一下你自己。",
-  },
-  {
     role: "assistant",
     identity: ["大纲师", "情节设计师"],
     content:
       "你好！我是一个智能助手，专门为你提供帮助和解答问题。无论你有什么疑问或者需要什么帮助，我都会尽力为你提供准确和有用的信息。请随时告诉我你需要什么帮助！",
-  },
-  {
-    role: "user",
-    content: "你好，请介绍一下你自己。",
   },
   {
     role: "assistant",
@@ -116,27 +113,28 @@ function settingFn() {
 
 <style lang="scss" scoped>
 .agent {
-  padding: 10px;
-  font-size: 14px;
   height: 100%;
+  display: flex;
+  flex-direction: column;
   position: relative;
   .head {
     height: 40px;
     line-height: 40px;
     padding: 0 10px;
+    flex-shrink: 0;
     .text {
       font-size: 30px;
       font-weight: 900;
     }
   }
   .caht {
-    height: calc(100% - 170px);
-    overflow-y: auto;
     flex: 1;
     display: flex;
     flex-direction: column;
     gap: 12px;
     overflow-y: auto;
+    padding: 10px;
+    margin-bottom: 130px;
     .item {
       display: flex;
       &.user {

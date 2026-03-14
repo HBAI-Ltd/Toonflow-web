@@ -7,7 +7,6 @@
 </template>
 
 <script setup lang="ts">
-import agent from "@/components/agent/index.vue";
 const openShowVisible = defineModel({
   type: Boolean,
   default: false,

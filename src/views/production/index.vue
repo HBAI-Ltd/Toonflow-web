@@ -34,7 +34,7 @@
           " />
       </div>
       <transition name="slide" @before-leave="isLeaving = true" @after-leave="isLeaving = false">
-        <floatingTaskBox v-model="openShowVisible" v-if="openShowVisible" />
+        <floatingTaskBox v-if="openShowVisible" v-model="openShowVisible" />
       </transition>
     </div>
   </VueFlow>
@@ -54,6 +54,7 @@ import storyboardTable from "./node/storyboardTable.vue";
 import storyboard from "./node/storyboard.vue";
 import workbench from "./node/workbench.vue";
 import poster from "./node/poster.vue";
+//悬浮窗组件
 import floatingTaskBox from "./components/floatingTaskBox.vue";
 
 import { useFlowBuilder } from "./utils/flowBuilder";
