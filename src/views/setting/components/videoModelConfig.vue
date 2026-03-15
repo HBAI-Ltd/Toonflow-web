@@ -70,9 +70,7 @@ const editForm = ref<VideoModelType | undefined>(undefined);
 const videoModelDialogShow = ref(false);
 
 // 获取厂商标签主题
-function getManufacturerTheme(
-  manufacturer: string
-): "primary" | "warning" | "success" | "danger" | "default" | undefined {
+function getManufacturerTheme(manufacturer: string): "primary" | "warning" | "success" | "danger" | "default" | undefined {
   const themes: Record<string, "primary" | "warning" | "success" | "danger" | "default"> = {
     deepSeek: "primary",
     volcengine: "warning",
@@ -85,6 +83,7 @@ function getManufacturerTheme(
     anthropic: "warning",
     runninghub: "warning",
     gemini: "success",
+    formal: "primary",
   };
   return themes[manufacturer] || "default";
 }
@@ -104,6 +103,7 @@ function getManufacturerName(manufacturer: string): string {
     runninghub: "RunningHUB",
     gemini: "Gemini",
     other: "其他",
+    formal: "官方中转",
   };
   return names[manufacturer] || manufacturer;
 }

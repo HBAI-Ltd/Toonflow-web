@@ -146,16 +146,16 @@
     :src="previewImageUrl || ''" />
 
   <!-- 素材选择弹窗 -->
-  <a-modal v-model:open="selectElementModal" width="60%" :closable="false" @ok="handleSelectElementOk" @cancel="handleSelectElementCancel">
+  top="1vh"
+  <t-dialog v-model:visible="selectElementModal" width="60%" :closable="false" @confirm="handleSelectElementOk" @cancel="handleSelectElementCancel">
     <div style="height: 700px; overflow-y: auto">
       <mainElement way="radio" ref="mainElementRef" v-if="selectElementModal" />
     </div>
-  </a-modal>
+  </t-dialog>
 </template>
 
 <script setup lang="ts">
 import { useFileDialog } from "@vueuse/core";
-import { ref, computed, watch } from "vue";
 import { storeToRefs } from "pinia";
 import { message } from "ant-design-vue";
 import mainElement from "@/views/projectDetail/components/assetsManager/components/mainElement.vue";
