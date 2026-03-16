@@ -17,7 +17,37 @@
 import { BaseEdge, EdgeLabelRenderer, getBezierPath, useVueFlow } from "@vue-flow/core";
 const { removeEdges } = useVueFlow();
 
-const props = defineProps(["id", "sourceX", "sourceY", "targetX", "targetY", "sourcePosition", "targetPosition", "data", "markerEnd", "style"]);
+const props = defineProps([
+  "id",
+  "sourceX",
+  "sourceY",
+  "targetX",
+  "targetY",
+  "sourcePosition",
+  "targetPosition",
+  "sourceNode",
+  "targetNode",
+  "source",
+  "target",
+  "type",
+  "updatable",
+  "data",
+  "markerEnd",
+  "markerStart",
+  "style",
+  "selected",
+  "animated",
+  "label",
+  "labelStyle",
+  "labelShowBg",
+  "labelBgStyle",
+  "labelBgPadding",
+  "labelBgBorderRadius",
+  "events",
+  "sourceHandleId",
+  "targetHandleId",
+  "interactionWidth",
+]);
 const path = computed(() => getBezierPath(props));
 
 function remove(id) {

@@ -50,7 +50,7 @@ const visible = defineModel("visible", {
   default: false,
 });
 
-const { addEdges } = useVueFlow();
+const { addEdges } = useVueFlow({ id: "editStoryboard" });
 
 // 节点ID计数器
 let nodeIdCounter = 3;
@@ -112,19 +112,19 @@ const edges = ref([
 // 连接处理
 const onConnect = (params: any) => {
   // 检查是否已存在相同的连接
-  const isDuplicate = edges.value.some(
-    (edge) => edge.source === params.source && edge.target === params.target
-  );
-  
-  if (!isDuplicate) {
-    addEdges([{ 
-      ...params, 
+  // const isDuplicate = edges.value.some(
+  //   (edge) => edge.source === params.source && edge.target === params.target
+  // );
+  addEdges([
+    {
       id: `e-${edgeIdCounter++}`,
+      source: params.source,
+      target: params.target,
       type: "removeLine",
-      animated: true, 
-      style: { stroke: "#a3e635" } 
-    }]);
-  }
+      animated: true,
+      style: { stroke: "#a3e635" },
+    },
+  ]);
 };
 
 // 添加新的上传节点
