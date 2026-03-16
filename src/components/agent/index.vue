@@ -1,7 +1,7 @@
 <template>
   <div class="agent">
     <div class="head jb ac">
-      <span>Untitled</span>
+      <span style="font-size: 18px; color: #000">{{ props.anthology }}</span>
       <div>
         <i-click-to-fold
           theme="outline"
@@ -61,6 +61,10 @@ interface ChatList {
 }
 const needData = ref("");
 const props = defineProps({
+  anthology: {
+    type: String,
+    default: "",
+  },
   chatList: {
     type: Array as () => ChatList[],
     default: () => [],

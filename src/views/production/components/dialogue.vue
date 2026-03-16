@@ -1,7 +1,7 @@
 <template>
   <div class="floatingTaskBox">
     <div class="box">
-      <agent v-model="openShowVisible" :chatList="chatList" @sendData="handleSendData" />
+      <agent v-model="openShowVisible" :chatList="chatList" :anthology="props.anthology" @sendData="handleSendData" />
     </div>
   </div>
 </template>
@@ -17,6 +17,12 @@ interface ChatList {
   content: string;
   identity?: string[];
 }
+const props = defineProps({
+  anthology: {
+    type: String,
+    default: "",
+  },
+});
 //agent聊天记录
 const chatList = ref<ChatList[]>([
   {

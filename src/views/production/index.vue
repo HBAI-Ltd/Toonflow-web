@@ -30,7 +30,7 @@
     <div class="floatingWindow">
       <div class="anthology">
         <t-select
-          label="属性："
+          label="剧本："
           v-model="anthology"
           placeholder="-请选择-"
           :options="anthologyOptions"
@@ -50,7 +50,7 @@
           " />
       </div>
       <transition name="slide" @before-leave="isLeaving = true" @after-leave="isLeaving = false">
-        <dialogue v-if="openShowVisible" v-model="openShowVisible" />
+        <dialogue v-if="openShowVisible" v-model="openShowVisible" :anthology="anthology" />
       </transition>
     </div>
   </VueFlow>
@@ -78,14 +78,14 @@ import { useFlowBuilder } from "./utils/flowBuilder";
 const { viewport } = useVueFlow();
 const openShowVisible = ref(false);
 const isLeaving = ref(false);
-const anthology = ref("");
+const anthology = ref("第1集");
 const anthologyOptions = [
-  { label: "第1集 - 绝境求生", value: "anthology-1" },
-  { label: "第2集 - 真相大白", value: "anthology-2" },
-  { label: "第3集 - 反击之路", value: "anthology-3" },
+  { label: "第1集", value: "第1集" },
+  { label: "第2集", value: "第2集" },
+  { label: "第3集", value: "第3集" },
 ];
 function changeFn(value: any) {
-  console.log("选择了", value);
+  anthology.value = value;
 }
 
 onMounted(() => {});
@@ -295,7 +295,7 @@ const { nodes, edges } = useFlowBuilder(flowData);
     .anthology {
       position: absolute;
       top: 10px;
-      left: 10px;
+      left: 0px;
       z-index: 9999;
       cursor: pointer;
     }

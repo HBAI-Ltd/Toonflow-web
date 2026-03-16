@@ -3,7 +3,7 @@
     <div class="data f">
       <div class="operate">
         <div class="box">
-          <agent v-model="openShowVisible" :chatList="chatList" @sendData="handleSendData" />
+          <agent v-model="openShowVisible" :chatList="chatList" :anthology="anthology" @sendData="handleSendData" />
         </div>
       </div>
       <div class="data">
@@ -132,6 +132,7 @@ import projectStore from "@/stores/project";
 const { project } = storeToRefs(projectStore());
 
 const openShowVisible = ref(true);
+const anthology = ref("剧本创作");
 
 //类型
 interface ChatList {
