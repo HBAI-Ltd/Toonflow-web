@@ -14,17 +14,24 @@
             <div class="itemContent">
               <div class="jb ac">
                 <div class="itemTitle">{{ item.scene }} — {{ item.description }}</div>
-                <t-popup :content="item.role.join('，')" theme="light" placement="top">
-                  <t-tag size="small" theme="primary">角色</t-tag>
-                </t-popup>
+                <div>
+                  <t-tag size="small" theme="warning" style="cursor: pointer">{{ item.duration || "3s" }}</t-tag>
+                  <t-popup :content="item.frameMode" theme="light" placement="top">
+                    <t-tag size="small" theme="success" style="margin-left: 5px; cursor: pointer">{{ item.frameMode }}</t-tag>
+                  </t-popup>
+                  <t-popup :content="item.role.join('，')" theme="light" placement="top">
+                    <t-tag size="small" theme="primary" style="margin-left: 5px; cursor: pointer">角</t-tag>
+                  </t-popup>
+                </div>
               </div>
               <div class="itemSubtitle">
-                景别：{{ item.camera.split("，")[0] }} -- 时长：{{ item.duration || "3s"
-                }}{{ item.camera.includes("，") ? " -- 运镜：" + item.camera.split("，").slice(1).join("，") : "" }} -- 帧模：{{ item.frameMode }}·
-                情绪目的：{{ item.mooPurpose }} -- 运镜：{{ item.luck }} -- 首帧描述：{{ item.firstFrameDescribe }} -- 尾帧描述：{{
-                  item.endFrameDescription
+                景别：{{ item.camera.split("，")[0] }}
+                {{ item.camera.includes("，") ? " -- 运镜：" + item.camera.split("，").slice(1).join("，") : "" }} -- 情绪目的：{{
+                  item.mooPurpose
                 }}
-                -- 台词/音效：{{ item.linesSoundEffects }}
+                -- 运镜：{{ item.luck }} -- 首帧描述：{{ item.firstFrameDescribe }} -- 尾帧描述：{{ item.endFrameDescription }} -- 台词/音效：{{
+                  item.linesSoundEffects
+                }}
               </div>
             </div>
           </div>
@@ -36,7 +43,6 @@
 
 <script setup lang="ts">
 import { Handle, Position } from "@vue-flow/core";
-import type { s } from "vue-router/dist/router-CWoNjPRp.mjs";
 
 interface StoryboardItem {
   id: number;
