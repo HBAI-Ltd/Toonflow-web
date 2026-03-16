@@ -83,7 +83,6 @@ function getManufacturerTheme(manufacturer: string): "primary" | "warning" | "su
     anthropic: "warning",
     runninghub: "warning",
     gemini: "success",
-    formal: "primary",
   };
   return themes[manufacturer] || "default";
 }
@@ -103,7 +102,6 @@ function getManufacturerName(manufacturer: string): string {
     runninghub: "RunningHUB",
     gemini: "Gemini",
     other: "其他",
-    formal: "官方中转",
   };
   return names[manufacturer] || manufacturer;
 }

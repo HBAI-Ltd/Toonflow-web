@@ -143,7 +143,6 @@ const websites = ref<Record<string, string>>({
   runninghub: "https://www.runninghub.cn/enterprise-api/consumerApi",
   gemini: "https://ai.google.dev/gemini-api/docs/api-key?hl=zh-cn",
   grsai: "https://tf.grsai.ai/zh/dashboard/api-keys",
-  formal: "https://api.toonflow.net",
 });
 
 const currentWebsite = computed(() => {
@@ -167,7 +166,6 @@ const manufacturerNames: Record<string, string> = {
   xai: "XAI",
   grsai: "Grsai",
   other: "其他",
-  formal: "官方中转",
 };
 
 // 获取厂商颜色
@@ -188,7 +186,6 @@ function getManufacturerColor(manufacturer: string): string {
     xai: "red",
     grsai: "#2B7FFF",
     other: "default",
-    formal: "#9810fa",
   };
   return colors[manufacturer] || "default";
 }
@@ -262,11 +259,6 @@ const manufacturerDefaultBaseUrls: Record<string, Record<string, string>> = {
     text: "https://grsai.dakka.com.cn/v1",
     image: "https://grsai.dakka.com.cn/v1/draw/nano-banana|https://grsai.dakka.com.cn/v1/draw/result",
     video: "https://grsai.dakka.com.cn/v1/video/{model}|https://grsai.dakka.com.cn/v1/draw/result",
-  },
-  formal: {
-    text: "https://api.toonflow.net/v1",
-    image: "https://api.toonflow.net",
-    video: "https://api.toonflow.net",
   },
   other: {
     text: "",

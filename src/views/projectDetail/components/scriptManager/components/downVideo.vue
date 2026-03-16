@@ -220,11 +220,6 @@ async function handleDownload() {
   }
 
   const loadingKey = "download";
-  message.loading({
-    content: `正在打包 ${selectedVideos.length} 个视频...`,
-    key: loadingKey,
-    duration: 0,
-  });
 
   try {
     const zip = new JSZip();
@@ -233,12 +228,6 @@ async function handleDownload() {
     for (let i = 0; i < reveserVideo.length; i++) {
       const video = reveserVideo[i];
       const filename = `视频_${i + 1}.mp4`;
-
-      message.loading({
-        content: `正在处理 ${i + 1}/${reveserVideo.length}: ${filename}`,
-        key: loadingKey,
-        duration: 0,
-      });
 
       try {
         const response = await fetch(video.filePath);
@@ -251,13 +240,6 @@ async function handleDownload() {
         // 继续处理其他视频
       }
     }
-
-    // 生成压缩包
-    message.loading({
-      content: "正在生成压缩包...",
-      key: loadingKey,
-      duration: 0,
-    });
 
     const zipBlob = await zip.generateAsync({
       type: "blob",

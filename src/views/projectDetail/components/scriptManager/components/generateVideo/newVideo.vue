@@ -821,7 +821,6 @@ function handleCancel() {
     top: 2px;
     font-size: 12px;
     padding: 0 4px;
-    color: var(--mainColor);
   }
 
   :deep(.ant-input) {
