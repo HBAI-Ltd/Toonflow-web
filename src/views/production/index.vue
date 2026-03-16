@@ -29,14 +29,11 @@
     <Controls />
     <div class="floatingWindow">
       <div class="anthology">
-        <t-select
-          label="剧本："
-          v-model="anthology"
-          placeholder="-请选择-"
-          :options="anthologyOptions"
-          style="width: 200px"
-          filterable
-          @change="changeFn" />
+        <t-select v-model="anthology" placeholder="-请选择-" autoWidth :options="anthologyOptions" filterable @change="changeFn">
+          <template #label>
+            <i-document-folder size="24" />
+          </template>
+        </t-select>
       </div>
       <div class="openBtn c" v-if="!openShowVisible && !isLeaving">
         <i-menu-unfold-one
