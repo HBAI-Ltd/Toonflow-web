@@ -11,23 +11,23 @@
           <div class="loadingSpinner"></div>
           <span class="loadingText">生成中...</span>
         </div>
-        <t-image
-          v-else
-          :src="data.generatedImage"
-          fit="cover"
-          :style="{
-            width: '100%',
-            height: '100%',
-            borderRadius: '10px',
-            border: selected ? '3px solid #000' : '3px solid transparent',
-            boxSizing: 'border-box',
-          }" />
+        <div v-else class="imageWrapper">
+          <t-image
+            :src="data.generatedImage"
+            fit="cover"
+            :style="{
+              width: '100%',
+              height: '100%',
+              borderRadius: '10px',
+              border: selected ? '3px solid #000' : '3px solid transparent',
+              boxSizing: 'border-box',
+            }" />
+        </div>
       </div>
     </div>
     <div class="parameter" v-if="selected">
       <div class="iamge f">
-   
-        <div v-for="(item, index) in data.references" :key="index" style="   margin-left: 8px;">
+        <div v-for="(item, index) in data.references" :key="index" style="margin-left: 8px">
           <t-image :src="item.image" fit="cover" :style="{ width: '45px', height: '45px', borderRadius: '10px' }" />
         </div>
       </div>
@@ -300,6 +300,12 @@ function handleGenerate() {
           font-size: 14px;
           color: #666;
         }
+      }
+
+      .imageWrapper {
+        position: relative;
+        width: 100%;
+        height: 100%;
       }
     }
   }
