@@ -140,9 +140,6 @@
 </template>
 
 <script setup>
-import { computed, reactive, ref } from "vue";
-import { MessagePlugin } from "tdesign-vue-next";
-
 const checkboxValue = ref([]);
 
 const STATES = ["pending", "generating", "done", "error"];
@@ -242,7 +239,7 @@ function regenerateItem() {
   item.prompts = editForm.prompts;
   item.state = "generating";
   item.src = null;
-  MessagePlugin.success("已提交重新生成");
+  window.$message.success("已提交重新生成");
   drawerVisible.value = false;
 }
 
@@ -250,7 +247,7 @@ function regenerateItem() {
 const polishing = ref(false);
 async function polishPrompts() {
   if (!editForm.prompts.trim()) {
-    MessagePlugin.warning("请先输入提示词");
+    window.$message.warning("请先输入提示词");
     return;
   }
   polishing.value = true;
@@ -258,9 +255,9 @@ async function polishPrompts() {
     // TODO: 替换为实际 AI 润色 API 调用
     await new Promise((resolve) => setTimeout(resolve, 1500));
     editForm.prompts = `[AI润色] ${editForm.prompts}`;
-    MessagePlugin.success("润色完成");
+    window.$message.success("润色完成");
   } catch {
-    MessagePlugin.error("润色失败，请重试");
+    window.$message.error("润色失败，请重试");
   } finally {
     polishing.value = false;
   }
@@ -467,7 +464,7 @@ async function polishPrompts() {
       color: var(--td-brand-color);
     }
   }
-  .imageToolsWrap.show {
+  .imageToolsWrap {
     opacity: 1;
     pointer-events: auto;
   }

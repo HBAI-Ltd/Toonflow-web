@@ -13,6 +13,9 @@ import "./assets/main.scss";
 
 import "@/utils/global";
 
+import { Log } from "@webav/av-cliper";
+Log.setLogLevel(Log.warn);
+
 const app = createApp(App);
 install(app, "i");
 app.use(createPinia().use(piniaPluginPersistedstate));
