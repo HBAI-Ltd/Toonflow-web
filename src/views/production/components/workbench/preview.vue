@@ -494,7 +494,6 @@ const onDragEnd = () => nextTick(() => (isDragging.value = false));
           max-width: 100%;
           max-height: 100%;
           object-fit: contain;
-          border-radius: 8px;
         }
 
         .placeholderImage {

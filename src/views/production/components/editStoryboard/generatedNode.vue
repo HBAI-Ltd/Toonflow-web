@@ -64,9 +64,18 @@
           <t-option value="1K" label="1K" />
           <t-option value="2K" label="2K" />
         </t-select>
-        <t-button theme="primary" size="small" class="generateBtn" :disabled="generating" :loading="generating" @click="handleGenerate">
-          <template #icon><i-arrow-up /></template>
-        </t-button>
+        <div class="f" style="gap: 5px; margin-left: auto">
+          <t-popup content="生成">
+            <t-button theme="primary" size="small" class="generateBtn" :disabled="generating" :loading="generating" @click="handleGenerate">
+              <template #icon><i-arrow-up /></template>
+            </t-button>
+          </t-popup>
+          <t-popup content="保存">
+            <t-button theme="primary" size="small" class="keepBtn" :disabled="generating" :loading="generating" @click="kepp">
+              <template #icon><i-save /></template>
+            </t-button>
+          </t-popup>
+        </div>
       </div>
     </div>
   </div>
@@ -282,6 +291,9 @@ function handleGenerate() {
     generating.value = false;
     props.data.generatedImage = "https://tdesign.gtimg.com/demo/demo-image-1.png";
   }, 3000);
+}
+function kepp() {
+  console.log("keep", props.data.generatedImage);
 }
 </script>
 
@@ -512,6 +524,8 @@ function handleGenerate() {
         margin-left: auto;
         --td-brand-color: #5bccb3;
         --td-brand-color-hover: #4ab8a0;
+      }
+      .keepBtn {
       }
     }
   }

@@ -67,7 +67,7 @@ function handleSendData(data: string) {
     border: 1px solid #e0e0e0;
     background-color: #fff;
     overflow-y: auto;
-    box-shadow: 0 4px 10px rgba(53, 53, 53, 0.25);
+    box-shadow: -4px 2px 10px rgba(53, 53, 53, 0.1);
   }
 }
 </style>

@@ -25,7 +25,7 @@
       </div>
       <div v-else class="scriptsList f w">
         <div v-for="(item, index) in scripts" :key="index" @click="handleScriptClick(item)">
-          <t-card :title="item.name" hover-shadow :style="{ width: '400px', cursor: 'pointer' }">
+          <t-card shadow :title="item.name" hover-shadow :style="{ width: '400px', cursor: 'pointer' }">
             <span class="content">{{ item.content }}</span>
             <template #actions>
               <i-delete theme="outline" @click.stop="handleDeleteScript(item.id)" style="cursor: pointer" />

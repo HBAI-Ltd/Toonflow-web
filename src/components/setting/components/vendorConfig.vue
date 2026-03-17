@@ -443,12 +443,17 @@ function getInputPlaceholder(input: VendorInput) {
 }
 async function handleUpdateVendor() {
   if (!currentVendor.value) return;
-
   updating.value = true;
   axios
     .post("/setting/vendorConfig/updateVendor", {
       id: currentVendor.value.id,
       tsCode: currentVendor.value.code,
+      name: currentVendor.value.name,
+      version: currentVendor.value.version,
+      icon: currentVendor.value.icon,
+      inputs: currentVendor.value.inputs,
+      inputValues: currentVendor.value.inputValues,
+      models: currentVendor.value.models,
     })
     .then(() => {
       MessagePlugin.success("供应商配置更新成功");
@@ -781,7 +786,7 @@ async function handleTestModel(item: (typeof vendorModels.value)[number]) {
 
   MessagePlugin.success(`正在测试 ${item.modelName} 模型...`);
   try {
-    const { data } = await axios.post(`/modelTest/testAi`, {
+    const { data } = await axios.post(`/setting/vendorConfig/modelTest`, {
       type: item.type,
       modelName: item.modelName,
       apiKey: currentVendor.value.inputValues.apiKey,
@@ -804,7 +809,7 @@ async function handleTestModel(item: (typeof vendorModels.value)[number]) {
 
 function handleDeleteModel(modelName: string) {
   if (!currentVendor.value) return;
-  DialogPlugin.confirm({
+  const confirmDialog = DialogPlugin.confirm({
     theme: "danger",
     header: "删除模型确认",
     body: `您确定要删除模型 \"${modelName}\" 吗？此操作不可恢复。`,
@@ -816,6 +821,7 @@ function handleDeleteModel(modelName: string) {
       currentVendor.value!.models = nextList;
       currentVendor.value!.model = nextList;
       MessagePlugin.success("模型删除成功");
+      confirmDialog.destroy();
     },
   });
 }
@@ -823,7 +829,6 @@ function handleEditVendorCode() {
   if (!currentVendor.value) return;
   id.value = currentVendor.value.id;
   vendorCode.value = currentVendor.value.code;
-  console.log("%c Line:826 🥤 vendorCode.value", "background:#42b983", vendorCode.value);
   vendorDialogVisible.value = true;
 }
 function handleDeleteVendor() {

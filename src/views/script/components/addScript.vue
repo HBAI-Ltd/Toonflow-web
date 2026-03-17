@@ -32,13 +32,6 @@
           </div>
         </div>
         <div class="content">
-          <!-- <textarea
-            v-model="scriptData"
-            class="notebook-textarea"
-            placeholder="请上传剧本内容..."
-            spellcheck="false"
-            @input="handleInput"
-            :ref="setTextareaRef"></textarea> -->
           <t-textarea
             v-model="scriptData"
             placeholder="请上传剧本内容..."

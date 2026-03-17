@@ -26,9 +26,16 @@
       <Controls />
 
       <Panel position="top-right">
-        <t-button theme="primary" shape="circle" @click="addUploadNode">
-          <template #icon><i-plus /></template>
-        </t-button>
+        <t-dropdown
+          :options="[
+            { content: '上传', value: 1 },
+            { content: '生成', value: 2 },
+          ]"
+          @click="clickHandler">
+          <t-button theme="primary" shape="circle">
+            <template #icon><i-plus /></template>
+          </t-button>
+        </t-dropdown>
       </Panel>
     </VueFlow>
   </t-dialog>
@@ -122,16 +129,24 @@ const onConnect = (params: any) => {
     },
   ]);
 };
-
+function clickHandler(value: any) {
+  const type = value.value === 1 ? "upload" : "generated";
+  addUploadNode(type);
+}
 // 添加新的上传节点
-const addUploadNode = () => {
-  const newNodeId = `upload-${nodeIdCounter++}`;
+const addUploadNode = (type: string) => {
+  let newNodeId;
+  if (type === "generated") {
+    newNodeId = `generated-${nodeIdCounter++}`;
+  } else {
+    newNodeId = `upload-${nodeIdCounter++}`;
+  }
   const lastUploadNode = nodes.value.filter((n) => n.type === "upload").pop();
   const newY = lastUploadNode ? lastUploadNode.position.y + 350 : 100;
 
   nodes.value.push({
     id: newNodeId,
-    type: "upload",
+    type: type,
     position: { x: 100, y: newY },
     data: {
       image: `https://picsum.photos/300/200?random=${nodeIdCounter}`,

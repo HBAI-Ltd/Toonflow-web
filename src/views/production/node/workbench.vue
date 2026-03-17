@@ -52,7 +52,17 @@ const props = defineProps<{
 
 <style lang="scss" scoped>
 .workbench {
+  cursor: pointer;
   min-width: 280px;
+  transition: filter 0.1s;
+  &:hover {
+    .playButton {
+      transform: scale(1.1);
+    }
+  }
+  &:active {
+    filter: brightness(0.9);
+  }
 
   .titleBar {
     display: flex;
@@ -95,12 +105,7 @@ const props = defineProps<{
   .playButton {
     position: absolute;
     color: rgba(255, 255, 255, 0.9);
-    cursor: pointer;
     transition: transform 0.2s;
-
-    &:hover {
-      transform: scale(1.1);
-    }
   }
 
   .videoInfo {

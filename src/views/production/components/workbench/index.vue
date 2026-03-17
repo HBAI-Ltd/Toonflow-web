@@ -30,10 +30,10 @@
       </t-tooltip>
     </div>
     <div class="content">
-      <preview v-show="activeMenu === 'preview'" />
+      <preview v-if="activeMenu === 'preview'" />
       <!-- <generate v-show="activeMenu === 'generate'" /> -->
       <editVideo
-        v-show="activeMenu === 'editVideo'"
+        v-if="activeMenu === 'editVideo'"
         :initial-tracks="mockTracks"
         :initial-media-items="mockMediaItems"
         :initial-audio-items="mockAudioItems"

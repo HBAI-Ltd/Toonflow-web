@@ -65,7 +65,7 @@
       <template #footer>
         <t-space>
           <t-button theme="default" @click="handleCancel">取消</t-button>
-          <t-button theme="primary" @click="onConfirm" :disabled="selectedRowKeys.length === 0">保存选中</t-button>
+          <t-button theme="primary" @click="onConfirm" :disabled="selectedRowKeys.length === 0">选中</t-button>
         </t-space>
       </template>
     </t-dialog>

@@ -88,11 +88,7 @@ interface WorkbenchData {
 
 interface PosterItem {
   id: number;
-  name: string;
-  size: string;
-  image?: string;
-  gradient?: string;
-  selected?: boolean;
+  image: string;
 }
 
 interface PosterData {

@@ -12,14 +12,20 @@
               <t-tag class="frameTag" :style="{ backgroundColor: tagColors[(groupIndex * 10 + index) % tagColors.length] }">
                 S{{ String(index + 1).padStart(2, "0") }}
               </t-tag>
-              <t-image v-if="frame.image" :src="frame.image" fit="cover" class="frameImg" />
+              <t-image v-if="frame.image" :src="frame.image" fit="contain" class="frameImg">
+                <template #overlayContent>
+                  <div class="imageToolsWrap show">
+                    <ImageTools :src="frame.image" position="br" />
+                  </div>
+                </template>
+              </t-image>
             </div>
             <div class="frameInfo">{{ frame.description }}</div>
           </div>
         </div>
       </div>
     </div>
-    <editStoryboard v-model:visible="visible" v-if="visible"/>
+    <editStoryboard v-model:visible="visible" v-if="visible" />
   </t-card>
 </template>
 
@@ -121,7 +127,8 @@ const getDefaultGradient = (index: number) => gradients[index % gradients.length
   .frameImage {
     position: relative;
     width: 100%;
-    aspect-ratio: 16 / 9;
+    max-width: 100px;
+    max-height: 100px;
     border-radius: 8px;
     overflow: hidden;
   }
@@ -130,6 +137,18 @@ const getDefaultGradient = (index: number) => gradients[index % gradients.length
     width: 100%;
     height: 100%;
     object-fit: cover;
+    .imageToolsWrap {
+      zoom: 0.6;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+    &:hover {
+      .imageToolsWrap {
+        opacity: 1;
+        pointer-events: auto;
+      }
+    }
   }
 
   .frameTag {

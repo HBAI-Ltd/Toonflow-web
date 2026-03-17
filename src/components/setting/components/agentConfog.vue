@@ -28,8 +28,9 @@
             </t-avatar>
             <span class="skillName">{{ item.name }}</span>
           </div>
-          <t-tag v-if="item.modelId" theme="primary" variant="light" size="small">{{ item.modelId }}</t-tag>
-          <t-tag v-else theme="warning" variant="light" size="small">未配置</t-tag>
+          <t-tag v-if="item.modelId && !item.disabled" theme="primary" variant="light" size="small">{{ item.modelId }}</t-tag>
+          <t-tag v-else-if="item.disabled" variant="light" size="small">未开放</t-tag>
+          <t-tag v-else-if="!item.disabled && !item.modelId" theme="warning" variant="light" size="small">未配置</t-tag>
         </div>
         <div class="skillCardBody">{{ item.desc }}</div>
       </t-card>
@@ -46,14 +47,16 @@
       <div class="dialogContent">
         <t-form label-align="left" :label-width="80">
           <t-form-item label="选择模型">
-            <t-select
-              v-model="currentModelId"
-              :options="vendorList"
-              placeholder="请选择模型"
-              filterable
-              clearable
-              style="width: 100%"
-              @change="onModelChange" />
+            <t-select v-model="currentModelId" placeholder="请选择">
+              <t-option-group v-for="(list, index) in vendorList" :key="index" :label="list.group">
+                <t-option v-for="item in list.children" :value="item.value" :key="item.value">
+                  <div class="jb">
+                    <div>{{ item.label }}</div>
+                    <span>{{ item.type }}</span>
+                  </div>
+                </t-option>
+              </t-option-group>
+            </t-select>
           </t-form-item>
         </t-form>
       </div>
@@ -74,12 +77,14 @@ interface ModelType {
   key: string;
   manufacturer: string;
   desc: string;
+  disabled?: boolean;
 }
 
 interface VendorChild {
   label: string;
   value: string;
   vendorId: number;
+  type: string;
 }
 
 interface VendorOption {
@@ -88,48 +93,7 @@ interface VendorOption {
   children: VendorChild[];
 }
 const vendorList = ref<VendorOption[]>([]);
-const modelData = ref<ModelType[]>([
-  {
-    id: 1,
-    model: "deepseek-v3",
-    modelId: "",
-    vendorId: null,
-    name: "剧本Agent",
-    key: "storyboardAgent",
-    manufacturer: "deepSeek",
-    desc: "根据剧本自动生成分镜描述，将文字转化为画面指令",
-  },
-  {
-    id: 2,
-    model: "qwen-max",
-    modelId: "",
-    vendorId: null,
-    name: "分镜Agent",
-    key: "outlineScriptAgent",
-    manufacturer: "qwen",
-    desc: "从小说原文提取关键情节，生成结构化剧本大纲",
-  },
-  {
-    id: 3,
-    model: "glm-4-plus",
-    modelId: "",
-    vendorId: null,
-    name: "资产AI",
-    key: "assetsPrompt",
-    manufacturer: "zhipu",
-    desc: "根据角色和场景要素，生成精准的素材提示词",
-  },
-  {
-    id: 4,
-    model: "gpt-4o",
-    modelId: "",
-    vendorId: null,
-    name: "润色AI",
-    key: "generateScript",
-    manufacturer: "openai",
-    desc: "将大纲扩展为完整剧本脚本，包含对话和场景描写",
-  },
-]);
+const modelData = ref<ModelType[]>([]);
 
 const modelDataShow = ref(false);
 const currentItem = ref<ModelType | null>(null);
@@ -142,6 +106,7 @@ function getProviderLogo(manufacturer: string) {
 }
 
 function startConfig(item: ModelType) {
+  if (item.disabled) return MessagePlugin.warning("该功能暂未开放，敬请期待");
   currentItem.value = item;
   currentModelId.value = item.modelId;
   modelDataShow.value = true;
@@ -180,6 +145,7 @@ async function getVendorList() {
               label: j.name,
               vendorId: i.id,
               value: j.modelName,
+              type: j.type == "video" ? "视频模型" : j.type === "text" ? "文本模型" : "图片模型",
             };
           }),
         };
@@ -190,8 +156,32 @@ async function getVendorList() {
     })
     .finally(() => {});
 }
+//查询Agent配置列表
+function getAgentDeploy() {
+  axios
+    .post("/setting/agentDeploy/getAgentDeploy")
+    .then((res) => {
+      modelData.value = res.data.map((item: any) => {
+        return {
+          id: item.id,
+          modelId: item.modelId,
+          vendorId: item.vendorId,
+          name: item.name,
+          key: item.key,
+          manufacturer: item.manufacturer,
+          desc: item.desc,
+          disabled: item.disabled,
+        };
+      });
+    })
+    .catch((err) => {
+      MessagePlugin.error(`获取Agent配置列表失败：${err.message}`);
+    })
+    .finally(() => {});
+}
 onMounted(() => {
   getVendorList();
+  getAgentDeploy();
 });
 </script>
 
@@ -255,5 +245,10 @@ onMounted(() => {
 
 .dialogContent {
   padding: 8px 0;
+}
+</style>
+<style lang="scss">
+.t-select-option {
+  display: block !important;
 }
 </style>

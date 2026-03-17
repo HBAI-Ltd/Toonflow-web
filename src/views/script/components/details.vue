@@ -13,37 +13,30 @@
       :afterClose="handleClose"
       @cancel="closeModal">
       <template #header>
-        <a-flex justify="space-between" align="center" class="modal-header">
-          <a-flex align="center" gap="8">
-            <a-input
+        <t-space align="center" class="modal-header" style="justify-content: space-between; width: 100%;">
+          <t-space align="center" :size="8">
+            <t-input
               v-if="isEditingTitle"
-              v-model:value="editableTitle"
+              v-model="editableTitle"
               class="title-input"
-              @pressEnter="saveTitle"
+              @enter="saveTitle"
               @blur="saveTitle"
               :maxlength="50"
               placeholder="请输入标题"
               ref="titleInputRef" />
-            <a-typography-title v-else :level="4" style="margin: 0">
+            <t-typography-title v-else level="h4" style="margin: 0">
               {{ props.item.name || "剧本详情" }}
-            </a-typography-title>
-            <a-button type="text" size="small" @click="toggleEditTitle">
+            </t-typography-title>
+            <t-button theme="default" variant="text" size="small" @click="toggleEditTitle">
               <template #icon>
                 <i-edit v-if="!isEditingTitle" theme="outline" size="16" />
                 <i-check v-else theme="outline" size="16" />
               </template>
-            </a-button>
-          </a-flex>
-        </a-flex>
+            </t-button>
+          </t-space>
+        </t-space>
       </template>
       <div class="data">
-        <!-- <textarea
-          v-model="props.item.content"
-          class="notebook-textarea"
-          placeholder="请输入剧本内容..."
-          spellcheck="false"
-          @input="handleInput"
-          :ref="setTextareaRef"></textarea> -->
         <t-textarea v-model="props.item.content" placeholder="请输入剧本内容..." name="description" :autosize="{ minRows: 30, maxRows: 30 }" />
       </div>
     </t-dialog>

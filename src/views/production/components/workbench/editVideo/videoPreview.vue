@@ -22,7 +22,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed, watch, provide, reactive } from "vue";
 import { AVCanvas } from "@webav/av-canvas";
 import { MP4Clip, AudioClip, ImgClip, VisibleSprite, renderTxt2ImgBitmap } from "@webav/av-cliper";
 import { usePlaybackStore, useTracksStore } from "vue-clip-track";
@@ -372,14 +371,9 @@ function detectTransitions(): void {
         afterTransitions.push(transitionInfo);
         clipTransitionsMap.set(afterClip.id, afterTransitions);
 
-        console.log(
-          `[Transition] Detected: ${transitionClip.transitionType} between ${beforeClip.id}(ends@${beforeClip.endTime}s) and ${afterClip.id}(starts@${afterClip.startTime}s), transition: ${transStart}s - ${transEnd}s`,
-        );
+        // console.log( `[Transition] Detected: ${transitionClip.transitionType} between ${beforeClip.id}(ends@${beforeClip.endTime}s) and ${afterClip.id}(starts@${afterClip.startTime}s), transition: ${transStart}s - ${transEnd}s`, );
       } else {
-        console.warn(`[Transition] Could not find valid video clips for transition ${transitionClip.id}`, {
-          beforeClip: beforeClip?.id,
-          afterClip: afterClip?.id,
-        });
+        // console.warn(`[Transition] Could not find valid video clips for transition ${transitionClip.id}`, { beforeClip: beforeClip?.id, afterClip: afterClip?.id, });
       }
     }
   }
@@ -435,7 +429,7 @@ function getActiveTransitionAtTime(
 async function getOtherClipFrame(clipId: string, globalTimeInSeconds: number): Promise<ImageBitmap | null> {
   const sprite = clipSpriteMap.get(clipId);
   if (!sprite) {
-    console.warn(`[Transition] Cannot find sprite for clip ${clipId}`);
+    // console.warn(`[Transition] Cannot find sprite for clip ${clipId}`);
     return null;
   }
 
@@ -453,7 +447,7 @@ async function getOtherClipFrame(clipId: string, globalTimeInSeconds: number): P
     // 这里暂时返回 null，实际帧数据会在渲染时直接获取
     return null;
   } catch (error) {
-    console.warn(`[Transition] Failed to get frame for clip ${clipId}:`, error);
+    // console.warn(`[Transition] Failed to get frame for clip ${clipId}:`, error);
     return null;
   }
 }
@@ -555,7 +549,7 @@ function createFilteredTickInterceptor(originalClip: Clip): ((time: number, tick
             // 创建混合后的帧
             const transitionedFrame = await createImageBitmap(transitionCanvas);
 
-            console.log(`[Transition] Rendered ${transition.transitionType} at progress ${progress.toFixed(2)}`);
+            // console.log(`[Transition] Rendered ${transition.transitionType} at progress ${progress.toFixed(2)}`);
 
             return {
               ...tickRet,
@@ -563,7 +557,7 @@ function createFilteredTickInterceptor(originalClip: Clip): ((time: number, tick
             };
           }
         } catch (error) {
-          console.warn("[Transition] Failed to render transition:", error);
+          // console.warn("[Transition] Failed to render transition:", error);
           // 失败时继续正常渲染
         }
       }
@@ -693,7 +687,7 @@ function createFilteredTickInterceptor(originalClip: Clip): ((time: number, tick
         video: newFrame,
       };
     } catch (error) {
-      console.warn("Failed to apply filters/effects:", error);
+      // console.warn("Failed to apply filters/effects:", error);
       return tickRet;
     }
   };
@@ -780,10 +774,7 @@ function syncSpriteToClip(clipId: string, sprite: VisibleSprite) {
     zIndex: sprite.zIndex,
   });
 
-  console.log(`[Sync] Sprite -> Clip ${clipId}:`, {
-    rect: { x: sprite.rect.x, y: sprite.rect.y, w: sprite.rect.w, h: sprite.rect.h, angle: sprite.rect.angle },
-    opacity: sprite.opacity,
-  });
+  // console.log(`[Sync] Sprite -> Clip ${clipId}:`, { rect: { x: sprite.rect.x, y: sprite.rect.y, w: sprite.rect.w, h: sprite.rect.h, angle: sprite.rect.angle }, opacity: sprite.opacity, });
 
   setTimeout(() => {
     isUpdatingFromCanvas = false;
@@ -801,14 +792,14 @@ function setupSpriteListeners(clipId: string, sprite: VisibleSprite) {
   // 监听 rect 属性变化
   const unsubscribeRect = sprite.rect.on("propsChange", (changedProps) => {
     if (isUpdatingFromStore) return;
-    console.log(`[Event] Sprite rect changed for clip ${clipId}:`, changedProps);
+    // console.log(`[Event] Sprite rect changed for clip ${clipId}:`, changedProps);
     syncSpriteToClip(clipId, sprite);
   });
 
   // 监听 sprite 属性变化（zIndex 等）
   const unsubscribeSprite = sprite.on("propsChange", (changedProps) => {
     if (isUpdatingFromStore) return;
-    console.log(`[Event] Sprite props changed for clip ${clipId}:`, changedProps);
+    // console.log(`[Event] Sprite props changed for clip ${clipId}:`, changedProps);
     syncSpriteToClip(clipId, sprite);
   });
 
@@ -835,7 +826,7 @@ async function createSpriteFromClip(clip: Clip, track: Track): Promise<VisibleSp
       // 创建视频 Sprite
       const response = await fetch(mediaClip.sourceUrl);
       if (!response.ok) {
-        console.warn(`Failed to fetch video: ${mediaClip.sourceUrl}`);
+        // console.warn(`Failed to fetch video: ${mediaClip.sourceUrl}`);
         return null;
       }
       // 获取视频音量设置（默认为 1）
@@ -858,15 +849,15 @@ async function createSpriteFromClip(clip: Clip, track: Track): Promise<VisibleSp
       // trimEnd: 播放到视频的第 trimEnd 秒
       // 只有当 trimStart > 安全边界 时才需要分割前面的部分
       if (trimStart > SPLIT_SAFETY_MARGIN && trimStart < originalDuration - SPLIT_SAFETY_MARGIN) {
-        console.log(`[Video] Splitting at trimStart=${trimStart}s (${trimStart * 1e6} us)`);
+        // console.log(`[Video] Splitting at trimStart=${trimStart}s (${trimStart * 1e6} us)`);
         try {
           const [beforePart, afterPart] = await mp4Clip.split(trimStart * 1e6);
           beforePart.destroy(); // 销毁前面不需要的部分
           mp4Clip = afterPart;
           await mp4Clip.ready;
-          console.log(`[Video] After trimStart split, new duration=${mp4Clip.meta.duration / 1e6}s`);
+          // console.log(`[Video] After trimStart split, new duration=${mp4Clip.meta.duration / 1e6}s`);
         } catch (splitError) {
-          console.warn(`[Video] Failed to split at trimStart, using original clip:`, splitError);
+          // console.warn(`[Video] Failed to split at trimStart, using original clip:`, splitError);
         }
       }
 
@@ -875,15 +866,15 @@ async function createSpriteFromClip(clip: Clip, track: Track): Promise<VisibleSp
       const currentDuration = mp4Clip.meta.duration / 1e6;
       // 只有当需要裁剪的时长明显小于当前时长时才分割（留出安全边界）
       if (keepDuration > SPLIT_SAFETY_MARGIN && keepDuration < currentDuration - SPLIT_SAFETY_MARGIN) {
-        console.log(`[Video] Splitting to keep duration=${keepDuration}s`);
+        // console.log(`[Video] Splitting to keep duration=${keepDuration}s`);
         try {
           const [keepPart, discardPart] = await mp4Clip.split(keepDuration * 1e6);
           discardPart.destroy(); // 销毁后面不需要的部分
           mp4Clip = keepPart;
           await mp4Clip.ready;
-          console.log(`[Video] After trimEnd split, final duration=${mp4Clip.meta.duration / 1e6}s`);
+          // console.log(`[Video] After trimEnd split, final duration=${mp4Clip.meta.duration / 1e6}s`);
         } catch (splitError) {
-          console.warn(`[Video] Failed to split at trimEnd, using current clip:`, splitError);
+          // console.warn(`[Video] Failed to split at trimEnd, using current clip:`, splitError);
         }
       }
 
@@ -901,14 +892,12 @@ async function createSpriteFromClip(clip: Clip, track: Track): Promise<VisibleSp
       sprite.time.duration = (clip.endTime - clip.startTime) * 1e6;
       sprite.time.playbackRate = playbackRate;
 
-      console.log(
-        `[Video] Clip ${clip.id}: trimStart=${trimStart}s, trimEnd=${trimEnd}s, playbackRate=${playbackRate}, effective duration=${mp4Clip.meta.duration / 1e6}s`,
-      );
+      // console.log( `[Video] Clip ${clip.id}: trimStart=${trimStart}s, trimEnd=${trimEnd}s, playbackRate=${playbackRate}, effective duration=${mp4Clip.meta.duration / 1e6}s`, );
     } else if (clip.type === "audio" && mediaClip.sourceUrl) {
       // 创建音频 Sprite（音频无可视区域）
       const response = await fetch(mediaClip.sourceUrl);
       if (!response.ok) {
-        console.warn(`Failed to fetch audio: ${mediaClip.sourceUrl}`);
+        // console.warn(`Failed to fetch audio: ${mediaClip.sourceUrl}`);
         return null;
       }
       // 获取音量设置（默认为 1）
@@ -930,7 +919,7 @@ async function createSpriteFromClip(clip: Clip, track: Track): Promise<VisibleSp
           audioClip = afterPart;
           await audioClip.ready;
         } catch (splitError) {
-          console.warn(`[Audio] Failed to split at trimStart, using original clip:`, splitError);
+          // console.warn(`[Audio] Failed to split at trimStart, using original clip:`, splitError);
         }
       }
 
@@ -943,7 +932,7 @@ async function createSpriteFromClip(clip: Clip, track: Track): Promise<VisibleSp
           audioClip = keepPart;
           await audioClip.ready;
         } catch (splitError) {
-          console.warn(`[Audio] Failed to split at trimEnd, using current clip:`, splitError);
+          // console.warn(`[Audio] Failed to split at trimEnd, using current clip:`, splitError);
         }
       }
 
@@ -953,12 +942,12 @@ async function createSpriteFromClip(clip: Clip, track: Track): Promise<VisibleSp
       sprite.time.duration = (clip.endTime - clip.startTime) * 1e6;
       sprite.time.playbackRate = playbackRate;
 
-      console.log(`[Audio] Clip ${clip.id}: trimStart=${trimStart}s, trimEnd=${trimEnd}s, effective duration=${audioClip.meta.duration / 1e6}s`);
+      // console.log(`[Audio] Clip ${clip.id}: trimStart=${trimStart}s, trimEnd=${trimEnd}s, effective duration=${audioClip.meta.duration / 1e6}s`);
     } else if (clip.type === "sticker" && mediaClip.sourceUrl) {
       // 创建图片/贴纸 Sprite
       const response = await fetch(mediaClip.sourceUrl);
       if (!response.ok) {
-        console.warn(`Failed to fetch image: ${mediaClip.sourceUrl}`);
+        // console.warn(`Failed to fetch image: ${mediaClip.sourceUrl}`);
         return null;
       }
       const blob = await response.blob();
@@ -982,7 +971,7 @@ async function createSpriteFromClip(clip: Clip, track: Track): Promise<VisibleSp
       // 创建图片 Sprite
       const response = await fetch(mediaClip.sourceUrl);
       if (!response.ok) {
-        console.warn(`Failed to fetch image: ${mediaClip.sourceUrl}`);
+        // console.warn(`Failed to fetch image: ${mediaClip.sourceUrl}`);
         return null;
       }
       const blob = await response.blob();
@@ -1003,7 +992,7 @@ async function createSpriteFromClip(clip: Clip, track: Track): Promise<VisibleSp
       sprite.time.offset = clip.startTime * 1e6;
       sprite.time.duration = (clip.endTime - clip.startTime) * 1e6;
 
-      console.log(`[Image] Created sprite for clip ${clip.id}: ${originalWidth}x${originalHeight}`);
+      // console.log(`[Image] Created sprite for clip ${clip.id}: ${originalWidth}x${originalHeight}`);
     } else if (clip.type === "subtitle" || clip.type === "text") {
       // 创建字幕/文本 Sprite
       const textClip = clip as SubtitleClip | TextClip;
@@ -1050,9 +1039,9 @@ async function createSpriteFromClip(clip: Clip, track: Track): Promise<VisibleSp
         sprite.time.offset = clip.startTime * 1e6;
         sprite.time.duration = (clip.endTime - clip.startTime) * 1e6;
 
-        console.log(`[Subtitle] Created for clip ${clip.id}: "${text.substring(0, 20)}..." at ${sprite.rect.x}, ${sprite.rect.y}`);
+        // console.log(`[Subtitle] Created for clip ${clip.id}: "${text.substring(0, 20)}..." at ${sprite.rect.x}, ${sprite.rect.y}`);
       } catch (error) {
-        console.error(`Failed to render text for clip ${clip.id}:`, error);
+        // console.error(`Failed to render text for clip ${clip.id}:`, error);
         return null;
       }
     }
@@ -1072,7 +1061,7 @@ async function createSpriteFromClip(clip: Clip, track: Track): Promise<VisibleSp
       if (extClip.rect.fixedScaleCenter !== undefined) {
         sprite.rect.fixedScaleCenter = extClip.rect.fixedScaleCenter;
       }
-      console.log(`[Sprite] Using saved rect for clip ${clip.id}:`, extClip.rect);
+      // console.log(`[Sprite] Using saved rect for clip ${clip.id}:`, extClip.rect);
     } else if (originalWidth > 0 && originalHeight > 0 && clip.type !== "subtitle" && clip.type !== "text") {
       // 非字幕类型：根据原始尺寸计算默认 rect（居中显示）
       const rect = calculateSpriteRect(originalWidth, originalHeight);
@@ -1080,9 +1069,7 @@ async function createSpriteFromClip(clip: Clip, track: Track): Promise<VisibleSp
       sprite.rect.y = rect.y;
       sprite.rect.w = rect.w;
       sprite.rect.h = rect.h;
-      console.log(
-        `[Sprite] Created default rect for clip ${clip.id}: original ${originalWidth}x${originalHeight}, display ${rect.w}x${rect.h} at (${rect.x}, ${rect.y})`,
-      );
+      // console.log( `[Sprite] Created default rect for clip ${clip.id}: original ${originalWidth}x${originalHeight}, display ${rect.w}x${rect.h} at (${rect.x}, ${rect.y})`, );
     }
 
     // 设置其他属性
@@ -1111,11 +1098,11 @@ async function createSpriteFromClip(clip: Clip, track: Track): Promise<VisibleSp
     // 记录 clip 和轨道的映射关系
     clipTrackMap.set(clip.id, { trackId: track.id, trackOrder: track.order });
 
-    console.log(`[Sprite] Set zIndex for clip ${clip.id}: ${sprite.zIndex} (track order: ${track.order})`);
+    // console.log(`[Sprite] Set zIndex for clip ${clip.id}: ${sprite.zIndex} (track order: ${track.order})`);
 
     return sprite;
   } catch (error) {
-    console.error(`Failed to create sprite for clip ${clip.id}:`, error);
+    // console.error(`Failed to create sprite for clip ${clip.id}:`, error);
     return null;
   }
 }
@@ -1165,7 +1152,7 @@ async function syncClipsToCanvas() {
       clipSpriteMap.delete(clipId);
       clipSnapshotMap.delete(clipId);
       clipTrackMap.delete(clipId);
-      console.log(`Removed sprite for clip: ${clipId}`);
+      // console.log(`Removed sprite for clip: ${clipId}`);
     }
   }
 
@@ -1179,7 +1166,7 @@ async function syncClipsToCanvas() {
 
     if (shouldRebuild && existingSprite) {
       // 需要重建 sprite：移除旧的
-      console.log(`[Rebuild] Clip ${clip.id} needs rebuild due to trim/playback changes`);
+      // console.log(`[Rebuild] Clip ${clip.id} needs rebuild due to trim/playback changes`);
       const unsubscribe = spriteListenerMap.get(clip.id);
       if (unsubscribe) {
         unsubscribe();
@@ -1225,9 +1212,7 @@ async function syncClipsToCanvas() {
           const newZIndex = extClip.zIndex !== undefined ? extClip.zIndex : calculateZIndexFromTrackOrder(track.order);
           currentSprite.zIndex = newZIndex;
           clipTrackMap.set(clip.id, { trackId: track.id, trackOrder: track.order });
-          console.log(
-            `[Sprite] Updated zIndex for clip ${clip.id}: ${newZIndex} (track order changed: ${oldTrackInfo.trackOrder} -> ${track.order})`,
-          );
+          // console.log( `[Sprite] Updated zIndex for clip ${clip.id}: ${newZIndex} (track order changed: ${oldTrackInfo.trackOrder} -> ${track.order})`, );
         } else if (extClip.zIndex !== undefined) {
           currentSprite.zIndex = extClip.zIndex;
         }
@@ -1246,7 +1231,7 @@ async function syncClipsToCanvas() {
         clipSnapshotMap.set(clip.id, getClipSnapshot(clip));
         // 设置属性变化监听
         setupSpriteListeners(clip.id, sprite);
-        console.log(`Added sprite for clip: ${clip.id}`);
+        // console.log(`Added sprite for clip: ${clip.id}`);
       }
     }
   }
@@ -1324,7 +1309,7 @@ onMounted(async () => {
           // 查找对应的 clipId
           for (const [clipId, s] of clipSpriteMap) {
             if (s === sprite) {
-              console.log(`[Event] Active sprite changed to clip: ${clipId}`);
+              // console.log(`[Event] Active sprite changed to clip: ${clipId}`);
               // 同步最新属性到 clip
               syncSpriteToClip(clipId, sprite);
               // 选中对应的轨道 clip
@@ -1338,7 +1323,7 @@ onMounted(async () => {
         }
       });
 
-      console.log("AVCanvas initialized successfully");
+      // console.log("AVCanvas initialized successfully");
       avCanvasDebugData.initialized = true;
 
       // 初始化时同步现有的 clips
@@ -1349,7 +1334,7 @@ onMounted(async () => {
         avCanvas.previewFrame(0);
       }
     } catch (error) {
-      console.error("Failed to initialize AVCanvas:", error);
+      // console.error("Failed to initialize AVCanvas:", error);
     }
   }
 });
@@ -1407,7 +1392,7 @@ watch(
       // 开始播放
       const effectiveDuration = getEffectiveDuration();
       if (effectiveDuration <= 0) {
-        console.warn("[Playback] No valid duration, cannot play");
+        // console.warn("[Playback] No valid duration, cannot play");
         return;
       }
 
@@ -1497,10 +1482,10 @@ function handleSeek(event: Event) {
 // 导出视频
 async function exportVideo() {
   if (!avCanvas) {
-    throw new Error('AVCanvas 尚未初始化');
+    throw new Error("AVCanvas 尚未初始化");
   }
   if (clipSpriteMap.size === 0) {
-    throw new Error('没有可导出的内容');
+    throw new Error("没有可导出的内容");
   }
 
   // 导出前暂停播放
@@ -1518,9 +1503,9 @@ async function exportVideo() {
     if (done) break;
     chunks.push(value);
   }
-  const blob = new Blob(chunks as BlobPart[], { type: 'video/mp4' });
+  const blob = new Blob(chunks as BlobPart[], { type: "video/mp4" });
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
+  const a = document.createElement("a");
   a.href = url;
   a.download = `WebAV-export-${Date.now()}.mp4`;
   a.click();
