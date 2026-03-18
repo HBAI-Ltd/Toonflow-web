@@ -63,7 +63,7 @@ function handleModelChange() {
           label: item.label,
           value: item.value,
           vendorId: item.vendorId,
-          type: item.type,
+          type: item.type == 'image' ? "图像生成" : item.type == 'text' ? "文本生成" : item.type,
         });
       });
       optionsData.value = Array.from(groupMap.values());

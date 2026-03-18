@@ -205,12 +205,13 @@ async function handleGenerate() {
         });
       }
     }
-    const _promise = axios.post("/assets/generateAssets", {
+    const _promise = axios.post("/assetsGenerate/generateAssets", {
       type: props.formData.type ?? "props",
       projectId: project.value?.id,
       name: props.formData.name ?? "未命名",
       base64: referenceImageBase64,
       prompt: props.formData.prompt,
+      model: selectValue.value,
       id: props.formData.id,
     });
 

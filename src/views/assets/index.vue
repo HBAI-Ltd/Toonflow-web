@@ -206,7 +206,7 @@ const props = withDefaults(
     /** 是否作为选择器弹窗使用 */
     selectorMode?: boolean;
     /** 限制显示的资产类型 */
-    allowedTypes?: ("role" | "tool" | "scene" | "clip")[];
+    allowedTypes?: ("角色" | "道具" | "场景" | "剪辑素材")[];
     /** 是否多选 */
     multiple?: boolean;
   }>(),
