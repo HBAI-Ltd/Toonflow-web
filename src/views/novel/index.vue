@@ -160,8 +160,6 @@ function handleBatchDelete() {
     header: "批量删除",
     body: `确定要删除选中的 ${selectedRowKeys.value.length} 条数据吗?`,
     onConfirm: async () => {
-      console.log("%c Line:163 🎂 selectedRowKeys.value", "background:#ed9ec7", selectedRowKeys.value);
-
       await axios.post("/novel/batchDeleteNovel", {
         ids: selectedRowKeys.value,
       });

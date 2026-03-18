@@ -1,17 +1,27 @@
 <template>
   <div class="event">
-    <t-button v-if="eventData.length > 0" theme="primary" @click="regenerateEvents">
-      <template #icon>
-        <i-flash-payment theme="outline" />
-      </template>
-      重新生成事件
-    </t-button>
+    <t-space>
+      <t-button v-if="eventData.length > 0" theme="primary" @click="regenerateEvents">
+        <template #icon>
+          <i-flash-payment theme="outline" />
+        </template>
+        重新生成事件
+      </t-button>
+      <t-button theme="danger" :disabled="selectedRowKeys.length === 0" @click="handleBatchDelete">
+        <template #icon>
+          <t-icon name="delete" />
+        </template>
+        批量删除 {{ selectedRowKeys.length > 0 ? `(${selectedRowKeys.length})` : "" }}
+      </t-button>
+    </t-space>
+
     <div class="data">
       <t-table
         style="margin-top: 10px"
         :columns="columns"
         :data="eventData"
         :max-height="600"
+        :selected-row-keys="selectedRowKeys"
         row-key="id"
         hover
         stripe
@@ -20,6 +30,7 @@
         :loading="loading"
         lazy-load
         table-layout="fixed"
+        @select-change="handleSelectChange"
         @page-change="handlePageChange">
         <template #empty>
           <div class="empty c" style="flex-direction: column; gap: 12px">
@@ -72,11 +83,18 @@ const pagination = ref({
 });
 // 加载状态
 const loading = ref(false);
-
+// 选中行
+const selectedRowKeys = ref<Array<string | number>>([]);
 // 事件数据
 const eventData = ref<{ id: number; eventName: string; chapters: string; detail: string; createTime: number }[]>([]);
 //表格表头
 const columns = ref<Record<string, unknown>[]>([
+  {
+    colKey: "row-select",
+    type: "multiple",
+    width: 50,
+    align: "center",
+  },
   { colKey: "id", title: "事件ID", width: 50, align: "center" },
   { colKey: "eventName", title: "事件名称", width: 150, align: "center" },
   { colKey: "chapters", title: "来源章节", width: 150, align: "center" },
@@ -156,7 +174,26 @@ function regenerateEvents() {
 onMounted(() => {
   getEvents();
 });
-
+//处理选择变化
+function handleSelectChange(value: Array<string | number>, context: { selectedRowData: any[] }) {
+  selectedRowKeys.value = value.filter(Boolean);
+}
+// 批量删除
+function handleBatchDelete() {
+  if (selectedRowKeys.value.length === 0) return;
+  const dialog = DialogPlugin.confirm({
+    header: "批量删除",
+    body: `确定要删除选中的 ${selectedRowKeys.value.length} 条数据吗?`,
+    onConfirm: async () => {
+      await axios.post("/novel/event/batchDeleteEvent", {
+        ids: selectedRowKeys.value,
+      });
+      getEvents();
+      MessagePlugin.success("批量删除成功");
+      dialog.destroy();
+    },
+  });
+}
 </script>
 
 <style lang="scss" scoped>
