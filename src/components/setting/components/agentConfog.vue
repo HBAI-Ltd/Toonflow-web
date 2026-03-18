@@ -19,18 +19,18 @@
     </div>
 
     <div class="cardGrid">
-      <t-card hoverShadow v-for="item in modelData" :key="item.key" class="skillCard" @click="startConfig(item)">
+      <t-card hoverShadow v-for="(item, index) in modelData" :key="index" class="skillCard" @click="startConfig(item)">
         <div class="skillCardHeader">
           <div class="headerLeft">
-            <t-avatar size="32px" v-if="getProviderLogo(item.manufacturer)" :image="getProviderLogo(item.manufacturer)!" />
+            <t-avatar size="32px" v-if="getProviderLogo(item.icon)" :image="getProviderLogo(item.icon)!" />
             <t-avatar size="32px" v-else shape="round">
-              <template #icon><i-robot theme="outline" size="18" fill="currentColor" /></template>
+              <template #icon><i-help theme="outline" size="18" fill="currentColor" /></template>
             </t-avatar>
             <span class="skillName">{{ item.name }}</span>
           </div>
-          <t-tag v-if="item.modelId && !item.disabled" theme="primary" variant="light" size="small">{{ item.modelId }}</t-tag>
+          <t-tag v-if="item.modelName && !item.disabled" theme="primary" variant="light" size="small">{{ item.modelName }}</t-tag>
           <t-tag v-else-if="item.disabled" variant="light" size="small">未开放</t-tag>
-          <t-tag v-else-if="!item.disabled && !item.modelId" theme="warning" variant="light" size="small">未配置</t-tag>
+          <t-tag v-else-if="!item.disabled && !item.modelName" theme="warning" variant="light" size="small">未配置</t-tag>
         </div>
         <div class="skillCardBody">{{ item.desc }}</div>
       </t-card>
@@ -47,9 +47,9 @@
       <div class="dialogContent">
         <t-form label-align="left" :label-width="80">
           <t-form-item label="选择模型">
-            <t-select v-model="currentModelId" placeholder="请选择">
+            <t-select v-model="currentModelId" placeholder="请选择" @change="onModelChange">
               <t-option-group v-for="(list, index) in vendorList" :key="index" :label="list.group">
-                <t-option v-for="item in list.children" :value="item.value" :key="item.value">
+                <t-option v-for="item in list.children" :value="item.value" :id="item" :key="item.value">
                   <div class="jb">
                     <div>{{ item.label }}</div>
                     <span>{{ item.type }}</span>
@@ -71,11 +71,10 @@ import axios from "@/utils/axios";
 interface ModelType {
   id: number;
   model: string;
-  modelId: string;
+  modelName: string;
   vendorId: number | null;
   name: string;
-  key: string;
-  manufacturer: string;
+  icon: string;
   desc: string;
   disabled?: boolean;
 }
@@ -108,24 +107,43 @@ function getProviderLogo(manufacturer: string) {
 function startConfig(item: ModelType) {
   if (item.disabled) return MessagePlugin.warning("该功能暂未开放，敬请期待");
   currentItem.value = item;
-  currentModelId.value = item.modelId;
+  currentModelId.value = item.modelName;
   modelDataShow.value = true;
 }
 
 const currentVendorId = ref<number | null>(null);
-
-function onModelChange(value: string, context: any) {
+const model = ref<string>("");
+function onModelChange(value: any, context: any) {
   // context.option 即选中的子项，其上直接携带 vendorId
-  currentVendorId.value = context?.option?.vendorId ?? null;
+  currentVendorId.value = context?.option?.id.vendorId ?? null;
+  model.value = context?.option?.id.label ?? "";
 }
 
 function confirmConfig() {
   if (currentItem.value) {
-    currentItem.value.modelId = currentModelId.value;
+    currentItem.value.modelName = currentModelId.value;
     currentItem.value.vendorId = currentVendorId.value;
   }
-  window.$message.success("配置成功");
-  modelDataShow.value = false;
+  const data = {
+    id: currentItem.value?.id,
+    name: currentItem.value?.name,
+    model: model.value,
+    modelName: currentItem.value?.modelName,
+    vendorId: currentItem.value?.vendorId,
+    desc: currentItem.value?.desc,
+  };
+  axios
+    .post("/setting/agentDeploy/deployAgentModel", data)
+    .then(() => {
+      window.$message.success("配置成功");
+      getAgentDeploy();
+    })
+    .catch((err) => {
+      MessagePlugin.error(`更新配置失败：${err.message}`);
+    })
+    .finally(() => {
+      modelDataShow.value = false;
+    });
 }
 //跳转官方网站
 function jumpToWebsite() {
@@ -164,11 +182,10 @@ function getAgentDeploy() {
       modelData.value = res.data.map((item: any) => {
         return {
           id: item.id,
-          modelId: item.modelId,
+          modelName: item.modelName,
           vendorId: item.vendorId,
           name: item.name,
-          key: item.key,
-          manufacturer: item.manufacturer,
+          icon: item.icon,
           desc: item.desc,
           disabled: item.disabled,
         };
