@@ -86,10 +86,10 @@
                   </template>
                 </t-image>
                 <div class="preview" v-show="hoveredImageIndex === index && img.state === '生成成功'">
-                  <i-preview-open theme="outline" size="22" fill="#000000" @click.stop="handlePreview(img.filePath)" />
+                  <i-preview-open theme="outline" size="25" fill="#ffffff" @click.stop="handlePreview(img.filePath)" />
                 </div>
                 <div class="selected" v-show="selectedImageIndex === index && img.state === '生成成功'">
-                  <i-check-one theme="filled" size="20" fill="#000000" />
+                  <i-check-one theme="filled" size="25" fill="#000" />
                 </div>
                 <div class="delImage" v-show="hoveredImageIndex === index">
                   <i-delete theme="outline" size="20" fill="#d0021b" @click.stop="deleteImage(index)" />
