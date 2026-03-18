@@ -200,10 +200,54 @@ import addAssets from "./components/addAssets.vue";
 import batchGeneration from "./components/batchGeneration.vue";
 import generateImage from "./components/generateImage.vue";
 import projectStore from "@/stores/project";
+
+const props = withDefaults(
+  defineProps<{
+    /** 是否作为选择器弹窗使用 */
+    selectorMode?: boolean;
+    /** 限制显示的资产类型 */
+    allowedTypes?: ("role" | "tool" | "scene" | "clip")[];
+    /** 是否多选 */
+    multiple?: boolean;
+  }>(),
+  {
+    selectorMode: false,
+    multiple: true,
+  },
+);
+
 const { project } = storeToRefs(projectStore());
-const assetOptions = ref<TabValue>("role");
+
+const allThemeData = [
+  {
+    name: "角色",
+    value: "role",
+    icon: "i-permissions",
+  },
+  {
+    name: "道具",
+    value: "tool",
+    icon: "i-tool",
+  },
+  {
+    name: "场景",
+    value: "scene",
+    icon: "i-landscape",
+  },
+  {
+    name: "剪辑素材",
+    value: "clip",
+    icon: "i-editing",
+  },
+];
+const themeData = ref(props.allowedTypes?.length ? allThemeData.filter((item) => props.allowedTypes!.includes(item.value as any)) : allThemeData);
+
+const initialTab = themeData.value[0]?.value || "role";
+const assetOptions = ref<TabValue>(initialTab as TabValue);
 const searchText = ref("");
-const activeTab = ref("角色");
+
+const tabNameMap: Record<string, string> = { role: "角色", tool: "道具", scene: "场景", clip: "剪辑素材" };
+const activeTab = ref(tabNameMap[initialTab] || "角色");
 const selectedRowKeys = ref<Array<string | number>>([]);
 const expandedRowKeys = ref<Array<string | number>>([]);
 const loading = ref(false);
@@ -226,28 +270,6 @@ const pagination = ref({
   total: 0,
   showJumper: true,
 });
-const themeData = ref([
-  {
-    name: "角色",
-    value: "role",
-    icon: "i-permissions",
-  },
-  {
-    name: "道具",
-    value: "tool",
-    icon: "i-tool",
-  },
-  {
-    name: "场景",
-    value: "scene",
-    icon: "i-landscape",
-  },
-  {
-    name: "剪辑素材",
-    value: "clip",
-    icon: "i-editing",
-  },
-]);
 async function getFilteredData(type: string) {
   try {
     loading.value = true;
@@ -367,8 +389,9 @@ function handleBatchDelete() {
   });
 }
 // 父资产表格列配置
+const selectType = props.multiple ? "multiple" : "single";
 const columns: TableProps["columns"] = [
-  { colKey: "row-select", type: "multiple", width: 50, align: "center", fixed: "left" },
+  { colKey: "row-select", type: selectType, width: 50, align: "center", fixed: "left" },
   {
     colKey: "filePath",
     title: "预览",
@@ -511,7 +534,11 @@ const clipColumns: TableProps["columns"] = [
 
 // 选择行
 function handleSelectChange(value: Array<string | number>) {
-  selectedRowKeys.value = value;
+  if (!props.multiple) {
+    selectedRowKeys.value = value.length > 0 ? [value[value.length - 1]] : [];
+  } else {
+    selectedRowKeys.value = value;
+  }
 }
 function handleExpandChange(value: Array<string | number>) {
   if (value.length > 3) {
@@ -584,6 +611,11 @@ function handleDelete(row: any) {
     },
   });
 }
+
+defineExpose({
+  selectedRowKeys,
+  tableData,
+});
 </script>
 
 <style lang="scss" scoped>

@@ -3,7 +3,8 @@
     class="flowMain"
     :nodes="nodes"
     :edges="edges"
-    :min-zoom="0.01"
+    :max-zoom="5"
+    :min-zoom="0.1"
     fit-view-on-init
     :selection-key-code="null"
     :multi-selection-key-code="null">
@@ -85,9 +86,6 @@ onMounted(() => {});
 const flowData = ref({
   // 剧本
   script: {
-    id: "script-1",
-    position: { x: 10, y: 0 },
-    connectTo: "storyboard-table",
     blocks: [
       {
         id: "b1",
@@ -138,8 +136,6 @@ const flowData = ref({
   },
   // 资产
   assets: {
-    id: "assets-1",
-    position: { x: -70, y: 1400 },
     characters: [
       { name: "凌玄", desc: "男主 · 青云宗宗主 · 重伤废修", bgColor: "#e0f2fe" },
       { name: "苏晚卿", desc: "女配 · 凌玄未婚妻 · 背叛者", bgColor: "#ffe4e6" },
@@ -154,14 +150,9 @@ const flowData = ref({
   },
   // 分镜表（合并为一个 node）
   storyboardTable: {
-    id: "storyboard-table",
-    position: { x: 620, y: 0 },
-    connectTo: "storyboard",
     groups: [
       {
-        id: "st-1",
         name: "第一幕",
-        blockId: "b1",
         items: [
           {
             id: 1,
@@ -169,13 +160,13 @@ const flowData = ref({
             description: "凌玄跪在地上，面色苍白，嘴角带血",
             camera: "中景，缓慢推近",
             duration: "4s",
-            frameMode: "尾",
+            frameMode: "首",
             mooPurpose: "地狱感建立",
             luck: "缓慢推进-被捣药声节奏吸入",
             firstFrameDescribe: "溶洞洞口，石壁渗水，火把跳动，前景残缺人影模糊，李火旺背影远处，暗橙+焦褐",
             endFrameDescription: "推近后背影占50%高度，压迫感加重",
             linesSoundEffects: "[音效】捣药声沉闷",
-            role: ["凌玄", "苏晚卿"],
+            assets: ["凌玄", "苏晚卿"],
           },
           {
             id: 2,
@@ -183,13 +174,13 @@ const flowData = ref({
             description: "冷笑的面容，眼神中满是算计",
             camera: "特写，浅景深",
             duration: "3s",
-            frameMode: "尾",
+            frameMode: "首",
             mooPurpose: "地狱感建立",
             luck: "缓慢推进-被捣药声节奏吸入",
             firstFrameDescribe: "溶洞洞口，石壁渗水，火把跳动，前景残缺人影模糊，李火旺背影远处，暗橙+焦褐",
             endFrameDescription: "推近后背影占50%高度，压迫感加重",
             linesSoundEffects: "[音效】捣药声沉闷",
-            role: ["凌玄"],
+            assets: ["凌玄"],
           },
           {
             id: 3,
@@ -197,13 +188,13 @@ const flowData = ref({
             description: "令牌在苏晚卿手中，表面光芒黯淡",
             camera: "微距特写",
             duration: "2s",
-            frameMode: "尾",
+            frameMode: "首",
             mooPurpose: "地狱感建立",
             luck: "缓慢推进-被捣药声节奏吸入",
             firstFrameDescribe: "溶洞洞口，石壁渗水，火把跳动，前景残缺人影模糊，李火旺背影远处，暗橙+焦褐",
             endFrameDescription: "推近后背影占50%高度，压迫感加重",
             linesSoundEffects: "[音效】捣药声沉闷",
-            role: ["凌玄"],
+            assets: ["凌玄"],
           },
           {
             id: 4,
@@ -217,7 +208,7 @@ const flowData = ref({
             firstFrameDescribe: "溶洞洞口，石壁渗水，火把跳动，前景残缺人影模糊，李火旺背影远处，暗橙+焦褐",
             endFrameDescription: "推近后背影占50%高度，压迫感加重",
             linesSoundEffects: "[音效】捣药声沉闷",
-            role: ["凌玄"],
+            assets: ["凌玄"],
           },
           {
             id: 5,
@@ -225,13 +216,13 @@ const flowData = ref({
             description: "瞳孔骤缩，难以置信的表情",
             camera: "眼部特写推至大特写",
             duration: "3s",
-            frameMode: "尾",
+            frameMode: "首",
             mooPurpose: "地狱感建立",
             luck: "缓慢推进-被捣药声节奏吸入",
             firstFrameDescribe: "溶洞洞口，石壁渗水，火把跳动，前景残缺人影模糊，李火旺背影远处，暗橙+焦褐",
             endFrameDescription: "推近后背影占50%高度，压迫感加重",
             linesSoundEffects: "[音效】捣药声沉闷",
-            role: ["凌玄"],
+            assets: ["凌玄"],
           },
           {
             id: 6,
@@ -245,14 +236,12 @@ const flowData = ref({
             firstFrameDescribe: "溶洞洞口，石壁渗水，火把跳动，前景残缺人影模糊，李火旺背影远处，暗橙+焦褐",
             endFrameDescription: "推近后背影占50%高度，压迫感加重",
             linesSoundEffects: "[音效】捣药声沉闷",
-            role: ["凌玄"],
+            assets: ["凌玄"],
           },
         ],
       },
       {
-        id: "st-2",
         name: "第二幕",
-        blockId: "b2",
         items: [
           {
             id: 1,
@@ -266,7 +255,7 @@ const flowData = ref({
             firstFrameDescribe: "溶洞洞口，石壁渗水，火把跳动，前景残缺人影模糊，李火旺背影远处，暗橙+焦褐",
             endFrameDescription: "推近后背影占50%高度，压迫感加重",
             linesSoundEffects: "[音效】捣药声沉闷",
-            role: ["凌玄"],
+            assets: ["凌玄"],
           },
           {
             id: 2,
@@ -280,7 +269,7 @@ const flowData = ref({
             firstFrameDescribe: "溶洞洞口，石壁渗水，火把跳动，前景残缺人影模糊，李火旺背影远处，暗橙+焦褐",
             endFrameDescription: "推近后背影占50%高度，压迫感加重",
             linesSoundEffects: "[音效】捣药声沉闷",
-            role: ["凌玄"],
+            assets: ["凌玄"],
           },
           {
             id: 3,
@@ -288,13 +277,13 @@ const flowData = ref({
             description: "轻蔑的笑容，毫无愧疚",
             camera: "中景，冷色调",
             duration: "3s",
-            frameMode: "尾",
+            frameMode: "首",
             mooPurpose: "地狱感建立",
             luck: "缓慢推进-被捣药声节奏吸入",
             firstFrameDescribe: "溶洞洞口，石壁渗水，火把跳动，前景残缺人影模糊，李火旺背影远处，暗橙+焦褐",
             endFrameDescription: "推近后背影占50%高度，压迫感加重",
             linesSoundEffects: "[音效】捣药声沉闷",
-            role: ["凌玄"],
+            assets: ["凌玄"],
           },
           {
             id: 4,
@@ -302,13 +291,13 @@ const flowData = ref({
             description: "三位长老面面相觑，随即附和",
             camera: "横移，依次扫过",
             duration: "5s",
-            frameMode: "尾",
+            frameMode: "首",
             mooPurpose: "地狱感建立",
             luck: "缓慢推进-被捣药声节奏吸入",
             firstFrameDescribe: "溶洞洞口，石壁渗水，火把跳动，前景残缺人影模糊，李火旺背影远处，暗橙+焦褐",
             endFrameDescription: "推近后背影占50%高度，压迫感加重",
             linesSoundEffects: "[音效】捣药声沉闷",
-            role: ["凌玄"],
+            assets: ["凌玄"],
           },
           {
             id: 5,
@@ -316,20 +305,18 @@ const flowData = ref({
             description: "搂着苏晚卿，志得意满的笑",
             camera: "双人中景",
             duration: "3s",
-            frameMode: "尾",
+            frameMode: "首",
             mooPurpose: "地狱感建立",
             luck: "缓慢推进-被捣药声节奏吸入",
             firstFrameDescribe: "溶洞洞口，石壁渗水，火把跳动，前景残缺人影模糊，李火旺背影远处，暗橙+焦褐",
             endFrameDescription: "推近后背影占50%高度，压迫感加重",
             linesSoundEffects: "[音效】捣药声沉闷",
-            role: ["凌玄"],
+            assets: ["凌玄"],
           },
         ],
       },
       {
-        id: "st-3",
         name: "第三幕",
-        blockId: "b3",
         items: [
           {
             id: 1,
@@ -337,13 +324,13 @@ const flowData = ref({
             description: "鲜血在青石上晕开，形成刺目的红",
             camera: "俯拍，缓慢拉远",
             duration: "3s",
-            frameMode: "尾",
+            frameMode: "首",
             mooPurpose: "地狱感建立",
             luck: "缓慢推进-被捣药声节奏吸入",
             firstFrameDescribe: "溶洞洞口，石壁渗水，火把跳动，前景残缺人影模糊，李火旺背影远处，暗橙+焦褐",
             endFrameDescription: "推近后背影占50%高度，压迫感加重",
             linesSoundEffects: "[音效】捣药声沉闷",
-            role: ["凌玄"],
+            assets: ["凌玄"],
           },
           {
             id: 2,
@@ -351,13 +338,13 @@ const flowData = ref({
             description: "愤怒到极致的表情，青筋暴起",
             camera: "仰拍，增加压迫感",
             duration: "4s",
-            frameMode: "尾",
+            frameMode: "首",
             mooPurpose: "地狱感建立",
             luck: "缓慢推进-被捣药声节奏吸入",
             firstFrameDescribe: "溶洞洞口，石壁渗水，火把跳动，前景残缺人影模糊，李火旺背影远处，暗橙+焦褐",
             endFrameDescription: "推近后背影占50%高度，压迫感加重",
             linesSoundEffects: "[音效】捣药声沉闷",
-            role: ["凌玄"],
+            assets: ["凌玄"],
           },
           {
             id: 3,
@@ -371,7 +358,7 @@ const flowData = ref({
             firstFrameDescribe: "溶洞洞口，石壁渗水，火把跳动，前景残缺人影模糊，李火旺背影远处，暗橙+焦褐",
             endFrameDescription: "推近后背影占50%高度，压迫感加重",
             linesSoundEffects: "[音效】捣药声沉闷",
-            role: ["凌玄"],
+            assets: ["凌玄"],
           },
           {
             id: 4,
@@ -385,7 +372,7 @@ const flowData = ref({
             firstFrameDescribe: "溶洞洞口，石壁渗水，火把跳动，前景残缺人影模糊，李火旺背影远处，暗橙+焦褐",
             endFrameDescription: "推近后背影占50%高度，压迫感加重",
             linesSoundEffects: "[音效】捣药声沉闷",
-            role: ["凌玄"],
+            assets: ["凌玄"],
           },
           {
             id: 5,
@@ -399,7 +386,7 @@ const flowData = ref({
             firstFrameDescribe: "溶洞洞口，石壁渗水，火把跳动，前景残缺人影模糊，李火旺背影远处，暗橙+焦褐",
             endFrameDescription: "推近后背影占50%高度，压迫感加重",
             linesSoundEffects: "[音效】捣药声沉闷",
-            role: ["凌玄"],
+            assets: ["凌玄"],
           },
         ],
       },
@@ -407,57 +394,42 @@ const flowData = ref({
   },
   // 分镜（合并为一个 node）
   storyboard: {
-    id: "storyboard",
-    position: { x: 1500, y: 24 },
-    connectTo: "workbench",
     groups: [
       {
-        id: "sb-1",
-        name: "第一幕",
         frames: [
-          { id: 1, description: "大殿全景，庄严肃穆", image: "https://picsum.photos/seed/sb1-1/600/360" },
-          { id: 2, description: "凌玄跪地特写", image: "https://picsum.photos/seed/sb1-2/600/360" },
-          { id: 3, description: "苏晚卿冷笑", image: "https://picsum.photos/seed/sb1-3/600/360" },
-          { id: 4, description: "青云令微距", image: "https://picsum.photos/seed/sb1-4/600/360" },
-          { id: 5, description: "黑风岭闪回", image: "https://picsum.photos/seed/sb1-5/600/360" },
-          { id: 6, description: "妖兽袭击", image: "https://picsum.photos/seed/sb1-6/600/360" },
-          { id: 7, description: "凌玄瞳孔骤缩", image: "https://picsum.photos/seed/sb1-7/600/360" },
-          { id: 8, description: "鲜血滴落", image: "https://picsum.photos/seed/sb1-8/600/360" },
+          { id: 1, itemId: 1, description: "大殿全景，凌玄跪地，面色苍白", frameType: "首帧", image: "https://picsum.photos/seed/sb1-1/600/360" },
+          { id: 2, itemId: 2, description: "苏晚卿冷笑特写，眼神算计", frameType: "首帧", image: "https://picsum.photos/seed/sb1-2/600/360" },
+          { id: 3, itemId: 3, description: "青云令微距，表面光芒黯淡", frameType: "首帧", image: "https://picsum.photos/seed/sb1-3/600/360" },
+          { id: 4, itemId: 4, description: "黑风岭妖兽来袭，暗橙焦褐色调", frameType: "首帧", image: "https://picsum.photos/seed/sb1-4/600/360" },
+          { id: 5, itemId: 4, description: "凌玄护住苏晚卿，背影占画面50%", frameType: "尾帧", image: "https://picsum.photos/seed/sb1-5/600/360" },
+          { id: 6, itemId: 5, description: "凌玄瞳孔骤缩，难以置信", frameType: "首帧", image: "https://picsum.photos/seed/sb1-6/600/360" },
+          { id: 7, itemId: 6, description: "鲜血喷出，滴落青石板", frameType: "首帧", image: "https://picsum.photos/seed/sb1-7/600/360" },
         ],
       },
       {
-        id: "sb-2",
-        name: "第二幕",
         frames: [
-          { id: 1, description: "血迹晕开", image: "https://picsum.photos/seed/sb2-1/600/360" },
-          { id: 2, description: "凌玄嘶吼", image: "https://picsum.photos/seed/sb2-2/600/360" },
-          { id: 3, description: "苏晚卿讥讽", image: "https://picsum.photos/seed/sb2-3/600/360" },
-          { id: 4, description: "长老甲附和", image: "https://picsum.photos/seed/sb2-4/600/360" },
-          { id: 5, description: "长老乙劝降", image: "https://picsum.photos/seed/sb2-5/600/360" },
-          { id: 6, description: "沈清辞得意", image: "https://picsum.photos/seed/sb2-6/600/360" },
+          { id: 1, itemId: 1, description: "鲜血在青石上开始晕开", frameType: "首帧", image: "https://picsum.photos/seed/sb2-1/600/360" },
+          { id: 2, itemId: 1, description: "血迹蔓延形成刺目红色", frameType: "尾帧", image: "https://picsum.photos/seed/sb2-2/600/360" },
+          { id: 3, itemId: 2, description: "凌玄愤怒表情，仰拍", frameType: "首帧", image: "https://picsum.photos/seed/sb2-3/600/360" },
+          { id: 4, itemId: 2, description: "青筋暴起，极致压迫感", frameType: "尾帧", image: "https://picsum.photos/seed/sb2-4/600/360" },
+          { id: 5, itemId: 3, description: "苏晚卿讥讽，轻蔑笑容", frameType: "首帧", image: "https://picsum.photos/seed/sb2-5/600/360" },
+          { id: 6, itemId: 4, description: "长老群像，面面相觑", frameType: "首帧", image: "https://picsum.photos/seed/sb2-6/600/360" },
+          { id: 7, itemId: 5, description: "沈清辞搂苏晚卿，志得意满", frameType: "首帧", image: "https://picsum.photos/seed/sb2-7/600/360" },
         ],
       },
       {
-        id: "sb-3",
-        name: "第三幕",
         frames: [
-          { id: 1, description: "凌玄颤抖", image: "https://picsum.photos/seed/sb3-1/600/360" },
-          { id: 2, description: "沈清辞威胁", image: "https://picsum.photos/seed/sb3-2/600/360" },
-          { id: 3, description: "众人逼迫", image: "https://picsum.photos/seed/sb3-3/600/360" },
-          { id: 4, description: "凌玄血丝密布", image: "https://picsum.photos/seed/sb3-4/600/360" },
-          { id: 5, description: "指向苏晚卿", image: "https://picsum.photos/seed/sb3-5/600/360" },
-          { id: 6, description: "独白浮现", image: "https://picsum.photos/seed/sb3-6/600/360" },
-          { id: 7, description: "真面目揭示", image: "https://picsum.photos/seed/sb3-7/600/360" },
-          { id: 8, description: "画面卡黑", image: "https://picsum.photos/seed/sb3-8/600/360" },
+          { id: 1, itemId: 1, description: "血迹特写，俯拍拉远", frameType: "首帧", image: "https://picsum.photos/seed/sb3-1/600/360" },
+          { id: 2, itemId: 2, description: "凌玄愤怒，青筋暴起", frameType: "首帧", image: "https://picsum.photos/seed/sb3-2/600/360" },
+          { id: 3, itemId: 3, description: "苏晚卿轻蔑笑容", frameType: "首帧", image: "https://picsum.photos/seed/sb3-3/600/360" },
+          { id: 4, itemId: 4, description: "长老群像横移扫过", frameType: "首帧", image: "https://picsum.photos/seed/sb3-4/600/360" },
+          { id: 5, itemId: 5, description: "沈清辞得意双人中景", frameType: "首帧", image: "https://picsum.photos/seed/sb3-5/600/360" },
         ],
       },
     ],
   },
   // 工作台（单个 node）
   workbench: {
-    id: "workbench",
-    position: { x: 2100, y: 24 },
-    connectTo: "poster",
     name: "第2集 - 真相大白",
     duration: "01:03",
     resolution: "1920×1080",
@@ -466,20 +438,28 @@ const flowData = ref({
   },
   // 封面（单个 node）
   poster: {
-    id: "poster",
-    position: { x: 2500, y: 24 },
     items: [
-      { id: 1,  image:"https://picsum.photos/seed/1/600/360" },
-      { id: 2,  image:"https://picsum.photos/seed/2/600/360" },
-      { id: 3,  image:"https://picsum.photos/seed/3/600/360" },
-      { id: 4,  image:"https://picsum.photos/seed/4/600/360" },
+      { id: 1, image: "https://picsum.photos/seed/1/600/360" },
+      { id: 2, image: "https://picsum.photos/seed/2/600/360" },
+      { id: 3, image: "https://picsum.photos/seed/3/600/360" },
+      { id: 4, image: "https://picsum.photos/seed/4/600/360" },
     ],
   },
 });
 // ==================== AI 操作数据区结束 ====================
 
+// 节点位置（独立于 AI 数据，由用户拖拽控制）
+const nodePositions = ref<Record<string, { x: number; y: number }>>({
+  "script": { x: 10, y: 0 },
+  "assets": { x: -70, y: 1400 },
+  "storyboardTable": { x: 620, y: 0 },
+  storyboard: { x: 1500, y: 24 },
+  workbench: { x: 2100, y: 24 },
+  poster: { x: 2500, y: 24 },
+});
+
 // 自动构建 nodes 和 edges
-const { nodes, edges } = useFlowBuilder(flowData);
+const { nodes, edges } = useFlowBuilder(flowData, nodePositions);
 </script>
 <style lang="scss" scoped>
 .flowMain {

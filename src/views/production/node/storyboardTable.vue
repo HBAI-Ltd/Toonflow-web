@@ -2,7 +2,9 @@
   <t-card class="storyboardTable">
     <Handle :id="props.data.handleIds.target" type="target" :position="Position.Left" />
     <Handle :id="props.data.handleIds.source" type="source" :position="Position.Right" />
-    <div class="title c">分镜表</div>
+    <div class="titleBar dragHandle">
+      <div class="title c">分镜表</div>
+    </div>
     <div class="content">
       <div v-for="(group, groupIndex) in props.data.groups" :key="group.id" class="groupSection">
         <div class="groupHeader">{{ group.name }}</div>
@@ -19,7 +21,7 @@
                   <t-popup :content="item.frameMode" theme="light" placement="top">
                     <t-tag size="small" theme="success" style="margin-left: 5px; cursor: pointer">{{ item.frameMode }}</t-tag>
                   </t-popup>
-                  <t-popup :content="item.role.join('，')" theme="light" placement="top">
+                  <t-popup :content="item.assets.join('，')" theme="light" placement="top">
                     <t-tag size="small" theme="primary" style="margin-left: 5px; cursor: pointer">角</t-tag>
                   </t-popup>
                 </div>
@@ -56,7 +58,7 @@ interface StoryboardItem {
   firstFrameDescribe: string;
   endFrameDescription: string;
   linesSoundEffects: string;
-  role: string[];
+  assets: string[];
 }
 
 interface StoryboardGroup {
@@ -85,7 +87,13 @@ const tagColors = ["#9c7cfc", "#5b9afc", "#5bccb3", "#e8a855", "#e86b6b", "#7cb8
   max-width: 40vw;
   width: fit-content;
   min-width: 300px;
+  user-select: text;
+  cursor: default;
 
+  .titleBar {
+    cursor: grab;
+    user-select: none;
+  }
   .title {
     background-color: #000;
     width: fit-content;

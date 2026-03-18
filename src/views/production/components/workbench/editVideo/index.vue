@@ -426,16 +426,6 @@ onMounted(() => {
     });
     resizeObserver.observe(previewWrapperRef.value);
   }
-
-  nextTick(() => {
-    const cursorLine = document.querySelector(".ruler__cursor-line") as HTMLElement;
-    if (cursorLine) {
-      cursorLine.style.display = "none";
-      setTimeout(() => {
-        cursorLine.style.display = "";
-      }, 1000);
-    }
-  });
 });
 
 const theme = {

@@ -33,6 +33,7 @@ interface VideoModel {
   audio: "optional" | false | true; // 音频配置
   durationResolutionMap: { duration: number[]; resolution: string[] }[];
 }
+
 interface TTSModel {
   name: string; // 显示名称
   modelName: string;

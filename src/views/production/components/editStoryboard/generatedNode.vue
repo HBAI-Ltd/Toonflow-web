@@ -12,7 +12,13 @@
           <span class="loadingText">生成中...</span>
         </div>
         <div v-else class="imageWrapper">
-          <t-image :src="data.generatedImage" fit="cover" :class="['nodeImage', { selected }]" />
+          <t-image class="image" :src="data.generatedImage" fit="cover" :class="['nodeImage', { selected }]">
+            <template #overlayContent>
+              <div class="imageToolsWrap">
+                <ImageTools :src="data.generatedImage ?? ''" position="br" />
+              </div>
+            </template>
+          </t-image>
         </div>
       </div>
     </div>
@@ -363,6 +369,18 @@ function kepp() {
           &.selected {
             border-color: #000;
           }
+        }
+      }
+      .imageToolsWrap {
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s ease;
+      }
+
+      &:hover {
+        .imageToolsWrap {
+          opacity: 1;
+          pointer-events: auto;
         }
       }
     }

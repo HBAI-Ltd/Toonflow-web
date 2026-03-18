@@ -1,6 +1,16 @@
 import type { Ref } from "vue";
 import { computed } from "vue";
 
+// ==================== 固定节点 ID ====================
+const NODE_IDS = {
+  script: "script",
+  assets: "assets",
+  storyboardTable: "storyboardTable",
+  storyboard: "storyboard",
+  workbench: "workbench",
+  poster: "poster",
+} as const;
+
 // ==================== 类型定义 ====================
 interface Block {
   id: string;
@@ -25,59 +35,34 @@ interface StoryboardItem {
   description: string;
   camera: string;
   duration?: string;
-  act?: string;
-  prompt?: string;
+  frameMode?: string;
+  mooPurpose?: string;
+  luck?: string;
+  firstFrameDescribe?: string;
+  endFrameDescription?: string;
+  linesSoundEffects?: string;
+  assets?: string[];
 }
 
-interface ScriptData {
-  id: string;
-  position: { x: number; y: number };
-  connectTo: string | null;
-  blocks: Block[];
-}
-
-interface AssetsData {
-  id: string;
-  position: { x: number; y: number };
-  characters: Character[];
-  scenes: Scene[];
-}
-
-// 分镜表分组
 interface StoryboardTableGroup {
-  id: string;
   name: string;
-  blockId: string;
   items: StoryboardItem[];
 }
 
-// 合并后的分镜表数据（单个 node）
-interface StoryboardTableData {
-  id: string;
-  position: { x: number; y: number };
-  connectTo: string | null;
-  groups: StoryboardTableGroup[];
+interface StoryboardFrame {
+  id: number;
+  itemId: number; // 关联 storyboardTable 同组内的 item.id
+  description: string;
+  frameType: string;
+  image?: string;
+  gradient?: string;
 }
 
-// 分镜分组
 interface StoryboardGroup {
-  id: string;
-  name: string;
-  frames: any[];
-}
-
-// 合并后的分镜数据（单个 node）
-interface StoryboardData {
-  id: string;
-  position: { x: number; y: number };
-  connectTo: string | null;
-  groups: StoryboardGroup[];
+  frames: StoryboardFrame[];
 }
 
 interface WorkbenchData {
-  id: string;
-  position: { x: number; y: number };
-  connectTo?: string | null;
   name: string;
   duration: string;
   resolution: string;
@@ -91,20 +76,27 @@ interface PosterItem {
   image: string;
 }
 
-interface PosterData {
-  id: string;
-  position: { x: number; y: number };
-  items: PosterItem[];
+export interface FlowData {
+  script: {
+    blocks: Block[];
+  };
+  assets: {
+    characters: Character[];
+    scenes: Scene[];
+  };
+  storyboardTable: {
+    groups: StoryboardTableGroup[];
+  };
+  storyboard: {
+    groups: StoryboardGroup[];
+  };
+  workbench: WorkbenchData;
+  poster: {
+    items: PosterItem[];
+  };
 }
 
-export interface FlowData {
-  script: ScriptData;
-  assets: AssetsData;
-  storyboardTable: StoryboardTableData;
-  storyboard: StoryboardData;
-  workbench: WorkbenchData;
-  poster: PosterData;
-}
+export type NodePositions = Record<string, { x: number; y: number }>;
 
 // 边样式
 const edgeStyle = {
@@ -113,170 +105,161 @@ const edgeStyle = {
 };
 
 // ==================== 构建函数 ====================
-export function useFlowBuilder(flowData: Ref<FlowData>) {
+export function useFlowBuilder(flowData: Ref<FlowData>, nodePositions: Ref<NodePositions>) {
   const nodes = computed(() => {
-    const result: any[] = [];
     const data = flowData.value;
+    const positions = nodePositions.value;
+    const ids = NODE_IDS;
 
-    // 1. Script 节点
-    result.push({
-      id: data.script.id,
-      type: "script",
-      position: data.script.position,
-      data: {
-        blocks: data.script.blocks,
-        handleIds: {
-          assets: `${data.script.id}-assets`,
-          source: `${data.script.id}-source`,
+    return [
+      // 1. Script 节点
+      {
+        id: ids.script,
+        type: "script",
+        dragHandle: '.dragHandle',
+        position: positions[ids.script] || { x: 0, y: 0 },
+        data: {
+          blocks: data.script.blocks,
+          handleIds: {
+            assets: `${ids.script}-assets`,
+            source: `${ids.script}-source`,
+          },
         },
       },
-    });
-
-    // 2. Assets 节点
-    result.push({
-      id: data.assets.id,
-      type: "assets",
-      position: data.assets.position,
-      data: {
-        characters: data.assets.characters,
-        scenes: data.assets.scenes,
-        handleIds: {
-          target: `${data.assets.id}-target`,
+      // 2. Assets 节点
+      {
+        id: ids.assets,
+        type: "assets",
+        dragHandle: '.dragHandle',
+        position: positions[ids.assets] || { x: 0, y: 0 },
+        data: {
+          characters: data.assets.characters,
+          scenes: data.assets.scenes,
+          handleIds: {
+            target: `${ids.assets}-target`,
+          },
         },
       },
-    });
-
-    // 3. StoryboardTable 节点（单个合并节点）
-    result.push({
-      id: data.storyboardTable.id,
-      type: "storyboardTable",
-      position: data.storyboardTable.position,
-      data: {
-        groups: data.storyboardTable.groups,
-        handleIds: {
-          target: `${data.storyboardTable.id}-target`,
-          source: `${data.storyboardTable.id}-source`,
+      // 3. StoryboardTable 节点
+      {
+        id: ids.storyboardTable,
+        type: "storyboardTable",
+        dragHandle: '.dragHandle',
+        position: positions[ids.storyboardTable] || { x: 0, y: 0 },
+        data: {
+          groups: data.storyboardTable.groups.map((g, i) => ({
+            ...g,
+            id: `st-${i + 1}`,
+          })),
+          handleIds: {
+            target: `${ids.storyboardTable}-target`,
+            source: `${ids.storyboardTable}-source`,
+          },
         },
       },
-    });
-
-    // 4. Storyboard 节点（单个合并节点）
-    result.push({
-      id: data.storyboard.id,
-      type: "storyboard",
-      position: data.storyboard.position,
-      data: {
-        groups: data.storyboard.groups,
-        handleIds: {
-          target: `${data.storyboard.id}-target`,
-          source: `${data.storyboard.id}-source`,
+      // 4. Storyboard 节点
+      {
+        id: ids.storyboard,
+        type: "storyboard",
+        dragHandle: '.dragHandle',
+        position: positions[ids.storyboard] || { x: 0, y: 0 },
+        data: {
+          groups: data.storyboard.groups.map((g, i) => ({
+            ...g,
+            id: `sb-${i + 1}`,
+            name: data.storyboardTable.groups[i]?.name || `第${i + 1}幕`,
+          })),
+          handleIds: {
+            target: `${ids.storyboard}-target`,
+            source: `${ids.storyboard}-source`,
+          },
         },
       },
-    });
-
-    // 5. Workbench 节点（单个）
-    result.push({
-      id: data.workbench.id,
-      type: "workbench",
-      position: data.workbench.position,
-      data: {
-        name: data.workbench.name,
-        duration: data.workbench.duration,
-        resolution: data.workbench.resolution,
-        fps: data.workbench.fps,
-        cover: data.workbench.cover,
-        gradient: data.workbench.gradient,
-        handleIds: {
-          target: `${data.workbench.id}-target`,
-          source: `${data.workbench.id}-source`,
+      // 5. Workbench 节点
+      {
+        id: ids.workbench,
+        type: "workbench",
+        dragHandle: '.dragHandle',
+        position: positions[ids.workbench] || { x: 0, y: 0 },
+        data: {
+          ...data.workbench,
+          handleIds: {
+            target: `${ids.workbench}-target`,
+            source: `${ids.workbench}-source`,
+          },
         },
       },
-    });
-
-    // 6. Poster 节点（单个）
-    result.push({
-      id: data.poster.id,
-      type: "poster",
-      position: data.poster.position,
-      data: {
-        items: data.poster.items,
-        handleIds: {
-          target: `${data.poster.id}-target`,
+      // 6. Poster 节点
+      {
+        id: ids.poster,
+        type: "poster",
+        dragHandle: '.dragHandle',
+        position: positions[ids.poster] || { x: 0, y: 0 },
+        data: {
+          items: data.poster.items,
+          handleIds: {
+            target: `${ids.poster}-target`,
+          },
         },
       },
-    });
-
-    return result;
+    ];
   });
 
   const edges = computed(() => {
-    const result: any[] = [];
-    const data = flowData.value;
+    const ids = NODE_IDS;
 
-    // 1. Script -> Assets 连线
-    result.push({
-      id: `${data.script.id}-${data.assets.id}`,
-      source: data.script.id,
-      target: data.assets.id,
-      sourceHandle: `${data.script.id}-assets`,
-      targetHandle: `${data.assets.id}-target`,
-      animated: true,
-      style: edgeStyle,
-    });
-
-    // 2. Script -> StoryboardTable 连线（单条连线）
-    if (data.script.connectTo) {
-      result.push({
-        id: `${data.script.id}-${data.script.connectTo}`,
-        source: data.script.id,
-        target: data.script.connectTo,
-        sourceHandle: `${data.script.id}-source`,
-        targetHandle: `${data.script.connectTo}-target`,
+    return [
+      // Script -> Assets
+      {
+        id: `${ids.script}-${ids.assets}`,
+        source: ids.script,
+        target: ids.assets,
+        sourceHandle: `${ids.script}-assets`,
+        targetHandle: `${ids.assets}-target`,
         animated: true,
         style: edgeStyle,
-      });
-    }
-
-    // 3. StoryboardTable -> Storyboard 连线（单条连线）
-    if (data.storyboardTable.connectTo) {
-      result.push({
-        id: `${data.storyboardTable.id}-${data.storyboardTable.connectTo}`,
-        source: data.storyboardTable.id,
-        target: data.storyboardTable.connectTo,
-        sourceHandle: `${data.storyboardTable.id}-source`,
-        targetHandle: `${data.storyboardTable.connectTo}-target`,
+      },
+      // Script -> StoryboardTable
+      {
+        id: `${ids.script}-${ids.storyboardTable}`,
+        source: ids.script,
+        target: ids.storyboardTable,
+        sourceHandle: `${ids.script}-source`,
+        targetHandle: `${ids.storyboardTable}-target`,
         animated: true,
         style: edgeStyle,
-      });
-    }
-
-    // 4. Storyboard -> Workbench 连线（单条连线）
-    if (data.storyboard.connectTo) {
-      result.push({
-        id: `${data.storyboard.id}-${data.storyboard.connectTo}`,
-        source: data.storyboard.id,
-        target: data.storyboard.connectTo,
-        sourceHandle: `${data.storyboard.id}-source`,
-        targetHandle: `${data.storyboard.connectTo}-target`,
+      },
+      // StoryboardTable -> Storyboard
+      {
+        id: `${ids.storyboardTable}-${ids.storyboard}`,
+        source: ids.storyboardTable,
+        target: ids.storyboard,
+        sourceHandle: `${ids.storyboardTable}-source`,
+        targetHandle: `${ids.storyboard}-target`,
         animated: true,
         style: edgeStyle,
-      });
-    }
-
-    // 5. Workbench -> Poster 连线（单条连线）
-    if (data.workbench.connectTo) {
-      result.push({
-        id: `${data.workbench.id}-${data.workbench.connectTo}`,
-        source: data.workbench.id,
-        target: data.workbench.connectTo,
-        sourceHandle: `${data.workbench.id}-source`,
-        targetHandle: `${data.workbench.connectTo}-target`,
+      },
+      // Storyboard -> Workbench
+      {
+        id: `${ids.storyboard}-${ids.workbench}`,
+        source: ids.storyboard,
+        target: ids.workbench,
+        sourceHandle: `${ids.storyboard}-source`,
+        targetHandle: `${ids.workbench}-target`,
         animated: true,
         style: edgeStyle,
-      });
-    }
-
-    return result;
+      },
+      // Workbench -> Poster
+      {
+        id: `${ids.workbench}-${ids.poster}`,
+        source: ids.workbench,
+        target: ids.poster,
+        sourceHandle: `${ids.workbench}-source`,
+        targetHandle: `${ids.poster}-target`,
+        animated: true,
+        style: edgeStyle,
+      },
+    ];
   });
 
   return { nodes, edges };

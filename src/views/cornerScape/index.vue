@@ -321,7 +321,6 @@ async function polishPrompts() {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
     gap: 1rem;
-    padding-right: 1rem;
     .card {
       cursor: pointer;
       width: 100%;

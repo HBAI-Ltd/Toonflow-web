@@ -88,7 +88,7 @@
         <div class="infoSection">
           <div class="sectionTitle">
             <span class="titleIndicator" />
-            提示词
+            图片提示词
           </div>
           <div class="shootingTips">
             <div v-if="currentCharacters.length" class="tipItem">

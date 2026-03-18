@@ -31,7 +31,7 @@
     </div>
     <div class="content">
       <preview v-if="activeMenu === 'preview'" />
-      <!-- <generate v-show="activeMenu === 'generate'" /> -->
+      <generate v-show="activeMenu === 'generate'" />
       <editVideo
         v-if="activeMenu === 'editVideo'"
         :initial-tracks="mockTracks"
@@ -46,6 +46,7 @@
 
 <script setup lang="ts">
 import preview from "./preview.vue";
+import generate from "./generate.vue";
 import editVideo from "./editVideo/index.vue";
 import { generateId, type Track, type MediaClip, type SubtitleClip, type FilterClip, type TransitionClip, type Clip } from "vue-clip-track";
 import type { MediaItem, AudioItem } from "./editVideo/utils/mediaData";

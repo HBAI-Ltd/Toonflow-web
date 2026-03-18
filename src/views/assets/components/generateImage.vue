@@ -160,8 +160,6 @@ const generateLoading = ref(false);
 const selectValue = ref(""); //选择的模型
 
 const value2 = ref("");
-//生图提示词
-const { id, name, describe, type, prompt, filePath } = props.formData;
 //智能生成提示词
 const promptLoading = ref(false);
 async function generatePrompt() {
@@ -169,10 +167,10 @@ async function generatePrompt() {
   try {
     const { data } = await axios.post("/assetsGenerate/polishAssetsPrompt", {
       projectId: project.value?.id,
-      assetsId: id,
-      type: type ?? "props",
-      name,
-      describe: describe ? describe : "无描述",
+      assetsId: props.formData.id,
+      type: props.formData.type ?? "props",
+      name: props.formData.name,
+      describe: props.formData.describe ? props.formData.describe : "无描述",
     });
     MessagePlugin.success("提示词生成成功");
     if (data.assetsId === props.formData.id) {
@@ -208,12 +206,12 @@ async function handleGenerate() {
       }
     }
     const _promise = axios.post("/assets/generateAssets", {
-      type: type,
+      type: props.formData.type ?? "props",
       projectId: project.value?.id,
-      name: name ?? "未命名",
+      name: props.formData.name ?? "未命名",
       base64: referenceImageBase64,
       prompt: props.formData.prompt,
-      id,
+      id: props.formData.id,
     });
 
     const { data } = await _promise;

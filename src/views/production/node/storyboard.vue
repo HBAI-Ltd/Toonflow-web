@@ -2,17 +2,22 @@
   <t-card class="storyboard">
     <Handle :id="props.data.handleIds.target" type="target" :position="Position.Left" />
     <Handle :id="props.data.handleIds.source" type="source" :position="Position.Right" />
-    <div class="title">分镜列表</div>
+    <div class="titleBar dragHandle">
+      <div class="title">分镜列表</div>
+    </div>
     <div class="content">
       <div v-for="(group, groupIndex) in props.data.groups" :key="group.id" class="groupSection">
         <div class="groupHeader">{{ group.name }}</div>
         <div class="frameGrid">
-          <div v-for="(frame, index) in group.frames" :key="`${group.id}-${frame.id}`" class="frameCard" @click="visible = true">
+          <div v-for="(frame, index) in group.frames" :key="`${group.id}-${frame.id}`" class="frameCard">
             <div class="frameImage" :style="{ background: frame.gradient || getDefaultGradient(groupIndex * 10 + index) }">
+              <t-tag v-if="frame.frameType" class="frameTypeTag" :style="{ backgroundColor: frame.frameType === '首帧' ? '#5bccb3' : '#e86b6b' }">
+                {{ frame.frameType === "首帧" ? "首" : "尾" }}
+              </t-tag>
               <t-tag class="frameTag" :style="{ backgroundColor: tagColors[(groupIndex * 10 + index) % tagColors.length] }">
                 S{{ String(index + 1).padStart(2, "0") }}
               </t-tag>
-              <t-image v-if="frame.image" :src="frame.image" fit="contain" class="frameImg">
+              <t-image v-if="frame.image" :src="frame.image" fit="contain" class="frameImg" @click.stop="visible = true">
                 <template #overlayContent>
                   <div class="imageToolsWrap show">
                     <ImageTools :src="frame.image" position="br" />
@@ -20,7 +25,7 @@
                 </template>
               </t-image>
             </div>
-            <div class="frameInfo">{{ frame.description }}</div>
+            <div class="frameInfo" :title="frame.description">{{ frame.description }}</div>
           </div>
         </div>
       </div>
@@ -38,6 +43,9 @@ interface Frame {
   description: string;
   image?: string;
   gradient?: string;
+  frameType?: "首帧" | "尾帧";
+  storyboardTableGroupId?: string;
+  storyboardTableItemId?: number;
 }
 
 interface StoryboardGroup {
@@ -78,7 +86,13 @@ const getDefaultGradient = (index: number) => gradients[index % gradients.length
 <style lang="scss" scoped>
 .storyboard {
   min-width: 500px;
+  user-select: text;
+  cursor: default;
 
+  .titleBar {
+    cursor: grab;
+    user-select: none;
+  }
   .title {
     background-color: #000;
     width: fit-content;
@@ -151,6 +165,20 @@ const getDefaultGradient = (index: number) => gradients[index % gradients.length
     }
   }
 
+  .frameTypeTag {
+    position: absolute;
+    left: 6px;
+    top: 6px;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 600;
+    border: none;
+    z-index: 2;
+    padding: 0 4px;
+    line-height: 18px;
+    border-radius: 3px;
+  }
+
   .frameTag {
     position: absolute;
     right: 8px;
@@ -166,6 +194,7 @@ const getDefaultGradient = (index: number) => gradients[index % gradients.length
     font-size: 12px;
     color: var(--td-text-color-primary, #333);
     line-height: 1.4;
+    max-width: 100px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;

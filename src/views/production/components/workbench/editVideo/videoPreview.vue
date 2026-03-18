@@ -1262,7 +1262,7 @@ onMounted(async () => {
   if (canvasContainer.value) {
     try {
       avCanvas = new AVCanvas(canvasContainer.value, {
-        bgColor: "#1a1a2e",
+        bgColor: "#000000",
         width: CANVAS_WIDTH.value,
         height: CANVAS_HEIGHT.value,
       });

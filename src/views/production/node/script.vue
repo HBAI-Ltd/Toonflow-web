@@ -1,7 +1,9 @@
 <template>
   <t-card class="script">
     <Handle :id="props.data.handleIds.source" type="source" :position="Position.Right" />
-    <div class="title c">剧本</div>
+    <div class="titleBar dragHandle">
+      <div class="title c">剧本</div>
+    </div>
     <div class="block pr" :style="{ '--block-color': colors[index % colors.length] }" v-for="(item, index) in props.data.blocks" :key="item.id">
       <pre>{{ item.content }}</pre>
     </div>
@@ -35,6 +37,12 @@ const colors = ["#f87171", "#fbbf24", "#34d399", "#60a5fa", "#a78bfa"];
 .script {
   min-width: 300px;
   width: fit-content;
+  user-select: text;
+  cursor: default;
+  .titleBar {
+    cursor: grab;
+    user-select: none;
+  }
   .title {
     background-color: #000;
     width: fit-content;

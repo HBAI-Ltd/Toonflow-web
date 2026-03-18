@@ -1,31 +1,19 @@
 <template>
   <div class="agent">
-    <div class="head jb ac">
-      <span style="font-size: 18px; color: #000">{{ props.anthology }}</span>
-      <div>
-        <i-click-to-fold
-          theme="outline"
-          size="17"
-          fill="#000000"
-          style="cursor: pointer"
-          @click.stop="
-            () => {
-              openShowVisible = false;
-            }
-          " />
-      </div>
+    <div class="head jb ac" v-if="$slots.header">
+      <slot name="header"></slot>
     </div>
     <div class="caht">
-      <div v-for="(item, index) in props.chatList" :key="index" class="item" :class="item.role">
-        <div class="user frr" v-if="item.role == 'user'">{{ item.content }}</div>
+      <div v-for="(item, index) in messageList" :key="index" class="item" :class="item.type === 'message' ? item.role : 'notice'">
+        <div class="noticeRow" v-if="item.type === 'notice'">
+          <t-tag shape="round">{{ item.content }}</t-tag>
+        </div>
+        <div class="user frr" v-else-if="item.role === 'user'">{{ item.content }}</div>
         <div v-else class="assistantWrapper">
-          <div class="divider">
-            <t-tag v-for="(items, indexs) in item.identity" :key="indexs" shape="round">{{ items }}</t-tag>
-          </div>
           <div class="assistant">
             <div class="ai fr">
               <div class="identity c">
-                <span>{{ item.identity?.join(", ") }}</span>
+                <span>{{ item.identity || '助手' }}</span>
               </div>
               {{ item.content }}
             </div>
@@ -34,41 +22,60 @@
       </div>
     </div>
     <div class="inputBox">
-      <t-textarea v-model="needData" placeholder="请输入你的设计需求" name="description" :autosize="{ minRows: 3, maxRows: 3 }" />
+      <t-textarea v-model="needData" :placeholder="props.placeholder" name="description" :autosize="{ minRows: 3, maxRows: 3 }" />
       <div class="send c" @click="sendFn">
         <t-button shape="circle" theme="primary" :disabled="!needData">
           <i-arrow-up theme="outline" size="16" fill="#fff" />
         </t-button>
       </div>
-      <div class="setting c">
-        <i-setting-config theme="outline" size="16" fill="#b6b9bf" @click="settingFn" />
+      <div class="toolList c" v-if="$slots.toolList">
+        <slot name="toolList"></slot>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
-const openShowVisible = defineModel({
-  type: Boolean,
-  default: false,
-});
+import { computed, ref } from "vue";
 //类型
-interface ChatList {
-  role: string;
+type ChatRole = "user" | "assistant";
+
+interface ChatMessageItem {
+  type: "message";
+  role: ChatRole;
+  identity?: string;
   content: string;
-  identity?: string[];
 }
+
+interface ChatNoticeItem {
+  type: "notice";
+  content: string;
+}
+
+type ChatItem = ChatMessageItem | ChatNoticeItem;
+
+const modelValue = defineModel<ChatItem[] | boolean>({
+  default: () => [],
+});
+
 const needData = ref("");
 const props = defineProps({
-  anthology: {
-    type: String,
-    default: "",
-  },
   chatList: {
-    type: Array as () => ChatList[],
+    type: Array as () => ChatItem[],
     default: () => [],
   },
+  placeholder: {
+    type: String,
+    default: "请输文本与Agent进行对话",
+  },
+});
+
+const messageList = computed<ChatItem[]>(() => {
+  if (Array.isArray(modelValue.value)) {
+    return modelValue.value;
+  }
+
+  return props.chatList;
 });
 const emit = defineEmits(["sendData"]);
 function sendFn() {
@@ -89,8 +96,6 @@ onMounted(() => {
 onBeforeUnmount(() => {
   window.removeEventListener("keydown", handleKeydown);
 });
-//设置
-function settingFn() {}
 </script>
 
 <style lang="scss" scoped>
@@ -119,6 +124,13 @@ function settingFn() {}
     margin-bottom: 130px;
     .item {
       display: flex;
+      &.notice {
+        justify-content: center;
+        .noticeRow {
+          display: flex;
+          justify-content: center;
+        }
+      }
       &.user {
         justify-content: flex-end;
         .user {
@@ -135,14 +147,6 @@ function settingFn() {}
         display: flex;
         flex-direction: column;
         align-items: center;
-        .divider {
-          gap: 8px;
-          font-size: 13px;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          margin-bottom: 10px;
-        }
         .assistant {
           width: 100%;
           display: flex;
@@ -194,7 +198,7 @@ function settingFn() {}
       bottom: 5px;
       cursor: pointer;
     }
-    .setting {
+    .toolList {
       position: absolute;
       left: 15px;
       bottom: 12px;

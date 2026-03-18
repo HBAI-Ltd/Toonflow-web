@@ -13,7 +13,8 @@
               <i-share theme="outline" />
             </template>
           </t-button>
-          <t-button @click="fillInKey">填入KEY</t-button>
+          <t-button @click="fillInKey" v-if="!fillIn">填入KEY</t-button>
+          <t-button @click="oneClickToFillIn" v-if="fillIn">一键填入</t-button>
         </div>
       </div>
     </div>
@@ -28,9 +29,9 @@
             </t-avatar>
             <span class="skillName">{{ item.name }}</span>
           </div>
-          <t-tag v-if="item.modelName && !item.disabled" theme="primary" variant="light" size="small">{{ item.modelName }}</t-tag>
+          <t-tag v-if="item.model && !item.disabled" theme="primary" variant="light" size="small">{{ item.model }}</t-tag>
           <t-tag v-else-if="item.disabled" variant="light" size="small">未开放</t-tag>
-          <t-tag v-else-if="!item.disabled && !item.modelName" theme="warning" variant="light" size="small">未配置</t-tag>
+          <t-tag v-else-if="!item.disabled && !item.model" theme="warning" variant="light" size="small">未配置</t-tag>
         </div>
         <div class="skillCardBody">{{ item.desc }}</div>
       </t-card>
@@ -45,35 +46,27 @@
       confirm-btn="确认"
       cancel-btn="取消">
       <div class="dialogContent">
-        <t-form label-align="left" :label-width="80">
+        <t-form label-align="left" :label-width="70">
           <t-form-item label="选择模型">
-            <t-select v-model="currentModelId" placeholder="请选择" @change="onModelChange">
-              <t-option-group v-for="(list, index) in vendorList" :key="index" :label="list.group">
-                <t-option v-for="item in list.children" :value="item.value" :id="item" :key="item.value">
-                  <div class="jb">
-                    <div>{{ item.label }}</div>
-                    <span>{{ item.type }}</span>
-                  </div>
-                </t-option>
-              </t-option-group>
-            </t-select>
+            <modelSelect v-model="selectValue" type="all" />
           </t-form-item>
         </t-form>
       </div>
     </t-dialog>
-    <t-dialog v-model:visible="testKeyShow" header="填入Toonflow平台的官方KEY" width="480px" :on-confirm="keep">
+    <t-dialog v-model:visible="testKeyShow" header="填入Toonflow平台的官方KEY" width="480px">
       <div class="testKey">
         <t-input v-model="key" placeholder="请输入 KEY" style="margin-top: 20px" />
       </div>
       <template #footer>
         <t-button variant="outline" @click="testKeyShow = false">取消</t-button>
-        <t-button @click="keep">保存</t-button>
+        <t-button @click="keep" :loading="loading">保存</t-button>
       </template>
     </t-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
+import modelSelect from "@/components/modelSelect.vue";
 import providersLogo from "@/utils/ai/providersLogo";
 import axios from "@/utils/axios";
 
@@ -88,24 +81,11 @@ interface ModelType {
   disabled?: boolean;
 }
 
-interface VendorChild {
-  label: string;
-  value: string;
-  vendorId: number;
-  type: string;
-}
-
-interface VendorOption {
-  group: string;
-  id: number;
-  children: VendorChild[];
-}
-const vendorList = ref<VendorOption[]>([]);
 const modelData = ref<ModelType[]>([]);
 
 const modelDataShow = ref(false);
 const currentItem = ref<ModelType | null>(null);
-const currentModelId = ref<string>("");
+const selectValue = ref<string>("");
 
 function getProviderLogo(manufacturer: string) {
   if (!manufacturer) return null;
@@ -116,29 +96,22 @@ function getProviderLogo(manufacturer: string) {
 function startConfig(item: ModelType) {
   if (item.disabled) return MessagePlugin.warning("该功能暂未开放，敬请期待");
   currentItem.value = item;
-  currentModelId.value = item.modelName;
+  selectValue.value = item.modelName;
   modelDataShow.value = true;
 }
 
 const currentVendorId = ref<number | null>(null);
-const model = ref<string>("");
-function onModelChange(value: any, context: any) {
-  // context.option 即选中的子项，其上直接携带 vendorId
-  currentVendorId.value = context?.option?.id.vendorId ?? null;
-  model.value = context?.option?.id.label ?? "";
-}
-
 function confirmConfig() {
   if (currentItem.value) {
-    currentItem.value.modelName = currentModelId.value;
+    currentItem.value.modelName = selectValue.value;
     currentItem.value.vendorId = currentVendorId.value;
   }
   const data = {
     id: currentItem.value?.id,
     name: currentItem.value?.name,
-    model: model.value,
+    model: selectValue.value.split(":")[1] || currentItem.value?.model,
     modelName: currentItem.value?.modelName,
-    vendorId: currentItem.value?.vendorId,
+    vendorId: Number(selectValue.value.split(":")[0]),
     desc: currentItem.value?.desc,
   };
   axios
@@ -160,60 +133,46 @@ function jumpToWebsite() {
 }
 const testKeyShow = ref(false);
 const key = ref("");
-const manufacturer = ref<{ label: string; value: string; inputValues: { apiKey: string }, code: string }[]>([]);
 //一键填入KEY
 function fillInKey() {
   testKeyShow.value = true;
+}
+const loading = ref(false);
+const fillIn = ref(false);
+//测试模型
+function testModel() {
+  axios
+    .post("/setting/vendorConfig/modelTest", {
+      type: "text",
+      modelName: "gpt-4.1",
+      apiKey: "",
+      id: 1,
+    })
+    .then(() => {
+      loading.value = false;
+      MessagePlugin.success("KEY有效，已成功连接Toonflow平台");
+      testKeyShow.value = false;
+      fillIn.value = true;
+    })
+    .catch((err) => {
+      loading.value = false;
+      MessagePlugin.error(`KEY无效，请检查后重新输入：${err.message}`);
+    });
 }
 function keep() {
   if (!key.value) {
     MessagePlugin.warning("请输入 KEY");
     return false;
   }
-  manufacturer.value[0].inputValues.apiKey = key.value;
-  let code = manufacturer.value[0].code;
-  return
+  loading.value = true;
   axios
-    .post("/setting/agentDeploy/updateKey", { id: 1, inputValues: manufacturer.value[0].inputValues })
+    .post("/setting/agentDeploy/updateKey", { id: 1, key: key.value })
     .then(() => {
-      MessagePlugin.success("已保存");
+      testModel();
     })
     .catch((err) => {
       MessagePlugin.error(`保存失败：${err.message}`);
     });
-}
-
-async function getVendorList() {
-  axios
-    .post("/setting/vendorConfig/getVendorList")
-    .then((res) => {
-      manufacturer.value = res.data.map((i: any) => {
-        return {
-          label: i.name,
-          value: i.id,
-          inputValues: i.inputValues,
-          code: i.code,
-        };
-      });
-      vendorList.value = res.data.map((i: any) => {
-        return {
-          group: i.name,
-          id: i.id,
-          children: i.models.map((j: any) => {
-            return {
-              label: j.name,
-              vendorId: i.id,
-              value: j.modelName,
-              type: j.type == "video" ? "视频模型" : j.type === "text" ? "文本模型" : "图片模型",
-            };
-          }),
-        };
-      });
-    })
-    .catch((err) => {
-      MessagePlugin.error(`获取供应商列表失败：${err.message}`);
-    })
-    .finally(() => {});
 }
 //查询Agent配置列表
 function getAgentDeploy() {
@@ -223,6 +182,7 @@ function getAgentDeploy() {
       modelData.value = res.data.map((item: any) => {
         return {
           id: item.id,
+          model: item.model,
           modelName: item.modelName,
           vendorId: item.vendorId,
           name: item.name,
@@ -238,9 +198,40 @@ function getAgentDeploy() {
     .finally(() => {});
 }
 onMounted(() => {
-  getVendorList();
   getAgentDeploy();
 });
+//一键填入
+function oneClickToFillIn() {
+  const targets = ["剧本Agent", "分镜Agent", "资产AI", "润色AI"];
+  modelData.value.forEach((item) => {
+    if (targets.includes(item.name)) {
+      item.modelName = "1:gpt-4.1";
+      item.model = "gpt-4.1";
+      item.vendorId = 1;
+    }
+  });
+  for (let item of modelData.value) {
+    axios
+      .post("/setting/agentDeploy/deployAgentModel", {
+        id: item.id,
+        name: item.name,
+        model: item.model,
+        modelName: item.modelName,
+        vendorId: item.vendorId,
+        desc: item.desc,
+      })
+      .then(() => {
+        MessagePlugin.success("配置成功");
+        getAgentDeploy();
+      })
+      .catch((err) => {
+        MessagePlugin.error(`更新配置失败：${err.message}`);
+      })
+      .finally(() => {
+        modelDataShow.value = false;
+      });
+  }
+}
 </script>
 
 <style lang="scss" scoped>

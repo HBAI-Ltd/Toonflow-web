@@ -66,6 +66,7 @@ const { applyThemeMode, applyThemeColor, toggleThemeWithTransition } = useTheme(
 
 // 预设主题色
 const themeColors = [
+  { name: "主题黑", value: "#000000" },
   { name: "香芋紫", value: "#9810fa" },
   { name: "活力橙", value: "#ED7B2F" },
   { name: "柠檬黄", value: "#F5BA18" },

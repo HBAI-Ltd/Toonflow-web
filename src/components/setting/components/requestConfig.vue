@@ -1,5 +1,5 @@
 <template>
-  <div class="request-config">
+  <div class="requestConfig">
     <t-alert style="margin-bottom: 1rem" theme="warning" message="如非特殊情况，不需要修改或者配置"></t-alert>
     <t-form :data="formData" labelAlign="top" :rules="formRules">
       <t-form-item label="API 地址" name="baseUrl">
@@ -89,6 +89,4 @@ onMounted(() => {
 </script>
 
 <style lang="scss" scoped>
-.request-config {
-}
 </style>

@@ -2,7 +2,7 @@
   <t-card class="workbench" @click="visible = !visible">
     <Handle :id="props.data.handleIds.target" type="target" :position="Position.Left" />
     <Handle :id="props.data.handleIds.source" type="source" :position="Position.Right" />
-    <div class="titleBar">
+    <div class="titleBar dragHandle">
       <div class="title">视频工作台</div>
     </div>
     <div class="videoPreview">
@@ -54,6 +54,7 @@ const props = defineProps<{
 .workbench {
   cursor: pointer;
   min-width: 280px;
+  user-select: text;
   transition: filter 0.1s;
   &:hover {
     .playButton {
@@ -69,6 +70,8 @@ const props = defineProps<{
     align-items: center;
     justify-content: space-between;
     margin-bottom: 12px;
+    cursor: grab;
+    user-select: none;
   }
 
   .title {

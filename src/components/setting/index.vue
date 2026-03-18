@@ -22,6 +22,7 @@
           <about v-if="activeMenu === 'about'" />
           <logoutConfig v-if="activeMenu === 'logoutConfig'" />
           <memoryConfig v-if="activeMenu === 'memoryConfig'" />
+          <fileManagement v-if="activeMenu === 'fileManagement'" />
         </div>
       </div>
     </div>
@@ -43,6 +44,7 @@ import about from "./components/about.vue";
 import logoutConfig from "./components/logoutConfig.vue";
 import vendorConfig from "./components/vendorConfig.vue";
 import memoryConfig from "./components/memoryConfig.vue";
+import fileManagement from "./components/fileManagement.vue";
 
 const menuItems = [
   { key: "themeConfig", label: "主题", icon: "i-platte" },
@@ -51,6 +53,7 @@ const menuItems = [
   { key: "memoryConfig", label: "AI记忆配置", icon: "i-memory-card-one" },
   { key: "loginConfig", label: "登录配置", icon: "i-lock" },
   { key: "dbConfig", label: "数据库操作", icon: "i-data" },
+  { key: "fileManagement", label: "文件管理", icon: "i-hard-disk" },
   { key: "otherConfig", label: "其他配置", icon: "i-application-menu" },
   { key: "requestConfig", label: "请求地址", icon: "i-api" },
   { key: "about", label: "检查更新", icon: "i-info" },

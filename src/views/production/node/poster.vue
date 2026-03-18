@@ -1,7 +1,7 @@
 <template>
   <t-card class="poster">
     <Handle :id="props.data.handleIds.target" type="target" :position="Position.Left" />
-    <div class="titleBar">
+    <div class="titleBar dragHandle">
       <div class="title">视频封面</div>
       <t-tag size="small" variant="outline">{{ props.data.items.length }}张</t-tag>
     </div>
@@ -43,13 +43,16 @@ const props = defineProps<{
 <style lang="scss" scoped>
 .poster {
   width: fit-content;
+  user-select: text;
+  cursor: default;
 
   .titleBar {
     display: flex;
     align-items: center;
     justify-content: space-between;
     margin-bottom: 12px;
-
+    cursor: grab;
+    user-select: none;
     .title {
       background-color: #000;
       width: fit-content;

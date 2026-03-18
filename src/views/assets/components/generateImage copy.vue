@@ -45,7 +45,7 @@
               </div>
             </div>
             <div class="generate">
-              <t-button theme="primary" size="large" block @click="generateImage">生成图片</t-button>
+              <t-button theme="primary" size="large" block @click="generateAIImage">生成图片</t-button>
             </div>
           </t-card>
         </div>
@@ -64,12 +64,7 @@
                     <i-plus theme="outline" size="32" :strokeWidth="3" />
                     <span>上传图片</span>
                   </div>
-                  <input
-                    ref="uploadInputRef"
-                    type="file"
-                    accept="image/*"
-                    style="display: none"
-                    @change="handleCustomUpload" />
+                  <input ref="uploadInputRef" type="file" accept="image/*" style="display: none" @change="handleCustomUpload" />
                 </div>
                 <div
                   v-for="(img, index) in customUploadImages"
@@ -97,7 +92,8 @@
                   <div class="imageOverlay">
                     <div class="imageStatus">
                       <t-tag v-if="img.state === '生成中'" theme="warning" size="small">
-                        <t-loading size="small" />生成中
+                        <t-loading size="small" />
+                        生成中
                       </t-tag>
                       <t-tag v-else-if="img.state === '生成成功'" theme="success" size="small">生成成功</t-tag>
                       <t-tag v-else-if="img.state === '生成失败'" theme="danger" size="small">生成失败</t-tag>
@@ -181,7 +177,6 @@ const TYPE_MAP: Record<string, string> = {
 
 const simpleImage = Empty.PRESENTED_IMAGE_SIMPLE;
 
-const value = ref<TabValue>("1");
 const modalShow = ref(true);
 const isFirstLoad = ref(true);
 
@@ -222,9 +217,9 @@ const resultImages = ref<ImageState[]>([
     state: "生成成功",
   },
 ]);
-const customUploadImages = ref<Array<{ url: string; name: string; file?: File }>>([]); 
+const customUploadImages = ref<Array<{ url: string; name: string; file?: File }>>([]);
 const selectedIndex = ref(-1);
-const selectedType = ref<'result' | 'custom'>('result');
+const selectedType = ref<"result" | "custom">("result");
 const uploadInputRef = ref<HTMLInputElement | null>(null);
 
 let timer: number | null = null;
@@ -245,22 +240,22 @@ function triggerUpload(): void {
 function handleCustomUpload(event: Event): void {
   const target = event.target as HTMLInputElement;
   const files = target.files;
-  
+
   if (files && files.length > 0) {
     const file = files[0];
-    
+
     // 验证文件类型
-    if (!file.type.startsWith('image/')) {
-      MessagePlugin.warning('请上传图片文件');
+    if (!file.type.startsWith("image/")) {
+      MessagePlugin.warning("请上传图片文件");
       return;
     }
-    
+
     // 验证文件大小(限制10MB)
     if (file.size > 10 * 1024 * 1024) {
-      MessagePlugin.warning('图片大小不能超过10MB');
+      MessagePlugin.warning("图片大小不能超过10MB");
       return;
     }
-    
+
     const reader = new FileReader();
     reader.onload = (e) => {
       const url = e.target?.result as string;
@@ -269,11 +264,11 @@ function handleCustomUpload(event: Event): void {
         name: file.name,
         file,
       });
-      MessagePlugin.success('图片上传成功');
-      
+      MessagePlugin.success("图片上传成功");
+
       // 清空input以便再次选择同一文件
       if (uploadInputRef.value) {
-        uploadInputRef.value.value = '';
+        uploadInputRef.value.value = "";
       }
     };
     reader.readAsDataURL(file);
@@ -281,20 +276,20 @@ function handleCustomUpload(event: Event): void {
 }
 
 // 选择图片
-function selectImage(index: number, type: 'result' | 'custom'): void {
-  if (type === 'result') {
+function selectImage(index: number, type: "result" | "custom"): void {
+  if (type === "result") {
     const img = resultImages.value[index];
     // 如果图片正在生成中或生成失败,不允许选择
-    if (img.state === '生成中' || img.state === '生成失败') {
-      MessagePlugin.warning('请选择生成成功的图片');
+    if (img.state === "生成中" || img.state === "生成失败") {
+      MessagePlugin.warning("请选择生成成功的图片");
       return;
     }
   }
-  
+
   // 如果点击的是已选中的图片,取消选中
   if (selectedIndex.value === index && selectedType.value === type) {
     selectedIndex.value = -1;
-    selectedType.value = 'result';
+    selectedType.value = "result";
   } else {
     selectedIndex.value = index;
     selectedType.value = type;
@@ -320,37 +315,12 @@ function handleReferenceChange(files: any[]): void {
   referenceFileList.value = files;
 }
 
-async function uploadImage(): Promise<void> {
-  if (!fileList.value || fileList.value.length === 0) {
-    MessagePlugin.warning("请先选择要上传的图片");
-    return;
-  }
-
-  uploadLoading.value = true;
-  try {
-    const file = fileList.value[0];
-    const rawFile = file.raw || file;
-
-    // TODO: 实现上传逻辑
-    console.log("上传文件:", URL.createObjectURL(rawFile));
-
-    fileList.value = [];
-    MessagePlugin.success("图片上传成功");
-  } catch (e: any) {
-    MessagePlugin.error(e.message ?? "图片上传失败");
-    console.error("上传失败:", e);
-  } finally {
-    uploadLoading.value = false;
-  }
-}
-
 // 提示词生成
 async function generatePrompt(): Promise<void> {
   if (!props.data?.id) {
     MessagePlugin.warning("缺少资产信息");
     return;
   }
-
   promptLoading.value = true;
   try {
     const { id, type, name, describe } = props.data;
@@ -467,14 +437,6 @@ async function generateAIImage(): Promise<void> {
   }
 }
 
-function generateImage(): void {
-  if (value.value === "1") {
-    uploadImage();
-  } else {
-    generateAIImage();
-  }
-}
-
 // 确认选择并保存
 async function confirmSelection(): Promise<void> {
   if (selectedIndex.value === -1) {
@@ -482,16 +444,16 @@ async function confirmSelection(): Promise<void> {
     return;
   }
 
-  let filePath = '';
-  
-  if (selectedType.value === 'custom') {
+  let filePath = "";
+
+  if (selectedType.value === "custom") {
     // 自定义上传的图片需要先上传到服务器
     const customImg = customUploadImages.value[selectedIndex.value];
     if (!customImg || !customImg.file) {
       MessagePlugin.error("选择的图片无效");
       return;
     }
-    
+
     // TODO: 上传自定义图片到服务器,获取服务器返回的URL
     // 这里暂时使用本地URL,实际应该调用上传接口
     filePath = customImg.url;
@@ -504,7 +466,7 @@ async function confirmSelection(): Promise<void> {
       MessagePlugin.error("选择的图片无效");
       return;
     }
-    filePath = selected.filePath || selected.url || '';
+    filePath = selected.filePath || selected.url || "";
   }
 
   const params = {
@@ -548,7 +510,7 @@ watch(
       customUploadImages.value = [];
       isFirstLoad.value = true;
       selectedIndex.value = -1;
-      selectedType.value = 'result';
+      selectedType.value = "result";
 
       // 加载图片列表
       if (newData.id) {

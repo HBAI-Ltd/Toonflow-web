@@ -6,6 +6,7 @@ import router from "./router";
 import { install } from "@icon-park/vue-next/es/all";
 import "@icon-park/vue-next/styles/index.css";
 
+import TDesignChat from "@tdesign-vue-next/chat";
 import "tdesign-vue-next/es/style/index.css";
 import { LoadingPlugin } from "tdesign-vue-next";
 
@@ -21,4 +22,5 @@ install(app, "i");
 app.use(createPinia().use(piniaPluginPersistedstate));
 app.use(router);
 app.use(LoadingPlugin);
+app.use(TDesignChat);
 app.mount("#app");

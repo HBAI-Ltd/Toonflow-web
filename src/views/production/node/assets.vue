@@ -1,7 +1,9 @@
 <template>
   <t-card class="assets">
     <Handle :id="props.data.handleIds.target" type="target" :position="Position.Top" />
-    <div class="title">衍生资产</div>
+    <div class="titleBar dragHandle">
+      <div class="title">衍生资产</div>
+    </div>
     <div class="content">
       <div class="sectionTitle">人物设定</div>
       <div class="cardList">
@@ -57,6 +59,12 @@ const props = defineProps<{
 <style lang="scss" scoped>
 .assets {
   min-width: 400px;
+  user-select: text;
+  cursor: default;
+  .titleBar {
+    cursor: grab;
+    user-select: none;
+  }
   .title {
     background-color: #000;
     width: fit-content;
