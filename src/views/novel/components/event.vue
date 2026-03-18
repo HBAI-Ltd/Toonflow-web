@@ -38,8 +38,11 @@
             <span v-else>加载中...</span>
           </div>
         </template>
-        <template #startTime="{ row }">
-          <span>{{ dayjs(row.startTime).format("YYYY-MM-DD HH:mm:ss") }}</span>
+        <template #chapters="{ row }">
+          <span>{{ row.chapters.join("，") }}</span>
+        </template>
+        <template #createTime="{ row }">
+          <span>{{ dayjs(row.createTime).format("YYYY-MM-DD HH:mm:ss") }}</span>
         </template>
         <template #operation="{ row }">
           <t-space :size="0">
@@ -69,6 +72,21 @@ const pagination = ref({
 });
 // 加载状态
 const loading = ref(false);
+
+// 事件数据
+const eventData = ref<{ id: number; eventName: string; chapters: string; detail: string; createTime: number }[]>([]);
+//表格表头
+const columns = ref<Record<string, unknown>[]>([
+  { colKey: "id", title: "事件ID", width: 50, align: "center" },
+  { colKey: "eventName", title: "事件名称", width: 150, align: "center" },
+  { colKey: "chapters", title: "来源章节", width: 150, align: "center" },
+  { colKey: "detail", title: "事件过程", width: 400, ellipsis: true },
+  { colKey: "createTime", title: "创建时间", width: 200, align: "center" },
+  { colKey: "operation", title: "操作", width: 150, align: "center" },
+]);
+// 生成状态
+const isGenerating = ref(false);
+
 // 处理分页变化
 function handlePageChange(pageInfo: { current: number; pageSize: number }) {
   pagination.value.page = pageInfo.current;
@@ -82,13 +100,15 @@ async function getEvents() {
     const { data } = await axios.post("/novel/event/getEvent", {
       projectId: project.value?.id,
       page: pagination.value.page,
-      pageSize: pagination.value.pageSize,
+      limit: pagination.value.pageSize,
     });
-    eventData.value = data.records;
+    eventData.value = data.list;
     pagination.value.total = data.total;
   } catch (e) {
+    window.$message.error((e as any).message);
     console.error("获取小说原文列表失败:", e);
   } finally {
+    console.log("%c Line:93 🍰", "background:#7f2b82");
     loading.value = false;
   }
 }
@@ -97,60 +117,27 @@ function handleDelete(row: Record<string, unknown>) {
   const dialog = DialogPlugin.confirm({
     header: "删除事件",
     body: `确定要删除这个事件吗？`,
-    onConfirm: () => {
-      MessagePlugin.success("批量删除成功");
+    onConfirm: async () => {
+      await axios.post("/novel/event/deletEvent", {
+        id: row.id,
+      });
+      getEvents();
+      MessagePlugin.success("删除成功");
       dialog.destroy();
     },
   });
 }
-// 事件数据
-const eventData = ref<{ id: number; name: string; chapter: string; process: string; startTime: number }[]>([]);
-//表格表头
-const columns = ref<Record<string, unknown>[]>([
-  { colKey: "id", title: "事件ID", width: 50, align: "center" },
-  { colKey: "name", title: "事件名称", width: 150, align: "center" },
-  { colKey: "chapter", title: "来源章节", width: 150, align: "center" },
-  { colKey: "process", title: "事件过程", width: 400 },
-  { colKey: "startTime", title: "开始时间", width: 200, align: "center" },
-  { colKey: "operation", title: "操作", width: 150, align: "center" },
-]);
-// 生成状态
-const isGenerating = ref(false);
 
 // 开始生成事件
 function generateEvent() {
   isGenerating.value = true;
   loading.value = true;
-  console.log("开始生成事件");
-  // setTimeout(() => {
-  //   eventData.value = [
-  //     {
-  //       id: 1,
-  //       name: "事件一",
-  //       chapter: "第一章",
-  //       process: "这是事件一的描述",
-  //       startTime: new Date().getTime(),
-  //     },
-  //     {
-  //       id: 2,
-  //       name: "事件二",
-  //       chapter: "第二章",
-  //       process: "这是事件二的描述",
-  //       startTime: new Date().getTime(),
-  //     },
-  //   ];
-  //   pagination.value.total = eventData.value.length;
-  //   isGenerating.value = false;
-  //   loading.value = false;
-  // }, 2000);
-  // // 实际使用时的代码示例：
   axios
     .post("/novel/event/generateEvents", {
       projectId: project.value?.id,
     })
     .then((response) => {
-      eventData.value = response.data.records;
-      pagination.value.total = response.data.total;
+      getEvents();
       MessagePlugin.success("事件生成成功");
     })
     .catch((e) => {
@@ -166,6 +153,13 @@ function regenerateEvents() {
   console.log("重新生成事件");
   eventData.value = [];
   generateEvent();
+}
+onMounted(() => {
+  getEvents();
+});
+
+function handleEdit(row: Record<string, unknown>) {
+  console.log("%c Line:166 🍩", "background:#f5ce50", "编辑");
 }
 </script>
 

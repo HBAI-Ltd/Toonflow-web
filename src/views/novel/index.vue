@@ -151,7 +151,7 @@ function importNovelFn() {
 }
 // 处理选择变化
 function handleSelectChange(value: Array<string | number>, context: { selectedRowData: any[] }) {
-  selectedRowKeys.value = value;
+  selectedRowKeys.value = value.filter(Boolean);
 }
 // 批量删除
 function handleBatchDelete() {
