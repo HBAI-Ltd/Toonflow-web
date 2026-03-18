@@ -90,6 +90,7 @@ function openEdit(item: { id: string; name: string; intro: string; type: string;
 }
 
 function editProjectFn(data: { id: string; name: string; intro: string; type: string; artStyle: string; videoRatio: string }) {
+  console.log("%c Line:93 🥒 data", "background:#b03734", data);
   axios
     .post("/project/editProject", data)
     .then(() => {
@@ -114,7 +115,7 @@ function addProjectFn(data: { projectType: string; name: string; intro: string; 
 }
 
 function delProjcer(projectId: string | undefined) {
-  DialogPlugin.confirm({
+  const dialog = DialogPlugin.confirm({
     header: "删除项目",
     body: "确定要删除该项目吗？",
     confirmBtn: "删除",
@@ -128,6 +129,9 @@ function delProjcer(projectId: string | undefined) {
         })
         .catch((e) => {
           window.$message.error(e.message ?? "删除项目失败");
+        })
+        .finally(() => {
+          dialog.destroy();
         });
     },
   });

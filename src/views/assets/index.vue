@@ -344,10 +344,8 @@ async function handleAdd(type: string) {
     if (!files?.length) return;
 
     const file = files[0];
-    console.log("%c Line:308 🥃 file", "background:#3f7cff", file);
     const reader = new FileReader();
     reader.onload = () => {
-      console.log("%c Line:311 🌰 reader", "background:#42b983", reader);
       const base64 = reader.result as string;
     };
     reader.readAsDataURL(file);

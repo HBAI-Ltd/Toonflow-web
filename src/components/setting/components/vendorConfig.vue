@@ -392,7 +392,6 @@ async function getVendorList() {
   axios
     .post("/setting/vendorConfig/getVendorList")
     .then((res) => {
-      console.log("%c Line:395 🍖 res", "background:#b03734", res);
       vendorList.value = res.data;
 
       if (vendorList.value.length && !vendorList.value.some((v) => v.name === activeVendorName.value)) {

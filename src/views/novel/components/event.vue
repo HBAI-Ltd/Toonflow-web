@@ -108,7 +108,6 @@ async function getEvents() {
     window.$message.error((e as any).message);
     console.error("获取小说原文列表失败:", e);
   } finally {
-    console.log("%c Line:93 🍰", "background:#7f2b82");
     loading.value = false;
   }
 }
@@ -158,9 +157,6 @@ onMounted(() => {
   getEvents();
 });
 
-function handleEdit(row: Record<string, unknown>) {
-  console.log("%c Line:166 🍩", "background:#f5ce50", "编辑");
-}
 </script>
 
 <style lang="scss" scoped>
