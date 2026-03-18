@@ -74,19 +74,19 @@
                 <div v-if="img.state === '生成中'" class="generating-overlay f ac jc">
                   <t-loading text="生成中..." />
                 </div>
-                <div v-else-if="img.state === '生成失败' && !img.url" class="failed-overlay f ac jc">
+                <div v-else-if="img.state === '生成失败' && !img.filePath" class="failed-overlay f ac jc">
                   <div style="text-align: center">
                     <i-close-one theme="filled" size="40" fill="#d0021b" />
                     <div style="margin-top: 10px; color: #d0021b; font-weight: bold">生成失败</div>
                   </div>
                 </div>
-                <t-image v-else :src="img.url" fit="cover" :style="{ width: '100%', height: '100%', borderRadius: '20px' }">
+                <t-image v-else :src="img.filePath" fit="cover" :style="{ width: '100%', height: '100%', borderRadius: '20px' }">
                   <template #loading>
                     <t-loading />
                   </template>
                 </t-image>
                 <div class="preview" v-show="hoveredImageIndex === index && img.state === '生成成功'">
-                  <i-preview-open theme="outline" size="22" fill="#000000" @click.stop="handlePreview(img.url)" />
+                  <i-preview-open theme="outline" size="22" fill="#000000" @click.stop="handlePreview(img.filePath)" />
                 </div>
                 <div class="selected" v-show="selectedImageIndex === index && img.state === '生成成功'">
                   <i-check-one theme="filled" size="20" fill="#000000" />
@@ -205,7 +205,7 @@ async function handleGenerate() {
         });
       }
     }
-    const _promise = axios.post("/assetsGenerate/generateAssets", {
+    const generatePromise = axios.post("/assetsGenerate/generateAssets", {
       type: props.formData.type ?? "props",
       projectId: project.value?.id,
       name: props.formData.name ?? "未命名",
@@ -215,12 +215,22 @@ async function handleGenerate() {
       id: props.formData.id,
     });
 
-    const { data } = await _promise;
-    MessagePlugin.success("资产生成成功");
-    resultImages.value.push({ url: data.path, state: "生成成功" });
+    setTimeout(() => fetchGeneratedImages(), 500);
+
+    generatePromise
+      .then(async () => {
+        MessagePlugin.success("资产生成成功");
+        await fetchGeneratedImages();
+      })
+      .catch((e: any) => {
+        MessagePlugin.error(e.message ?? "资产生成失败");
+        fetchGeneratedImages();
+      })
+      .finally(() => {
+        generateLoading.value = false;
+      });
   } catch (e: any) {
     MessagePlugin.error(e.message ?? "资产生成失败");
-  } finally {
     generateLoading.value = false;
   }
 }
@@ -235,7 +245,7 @@ function handleCustomUpload(files: any[]): void {
       reader.onload = (e) => {
         const base64 = e.target?.result as string;
         resultImages.value.push({
-          url: base64,
+          filePath: base64,
           state: "生成成功",
         });
         MessagePlugin.success("上传成功");
@@ -247,13 +257,13 @@ function handleCustomUpload(files: any[]): void {
 }
 
 //生成结果
-const resultImages = ref<{ url: string; state: string }[]>([]);
+const resultImages = ref<{ filePath: string; state: string }[]>([]);
 //预览图片
 const visible = ref(false);
 const trigger = ref();
-function handlePreview(url: string) {
+function handlePreview(filePath: string) {
   visible.value = true;
-  trigger.value = url;
+  trigger.value = filePath;
 }
 //选择生成的图片
 const selectedImageIndex = ref<number | null>(null);
@@ -271,13 +281,20 @@ watch(
     }
   },
 );
-//获取图片列表
+// 获取图片列表
 async function fetchGeneratedImages() {
   const { data } = await axios.post("/assets/getImage", { assetsId: props.formData.id });
-  // resultImages.value = data.images.map((item: { url: string }) => ({
-  //   url: item.url,
-  //   state: "生成成功",
-  // }));
+  const images = data.tempAssets.map((item: { filePath: string; state: string }) => ({
+    filePath: item.filePath,
+    state: item.state,
+  }));
+  if (data.filePath) {
+    images.unshift({
+      filePath: data.filePath,
+      state: "生成成功",
+    });
+  }
+  resultImages.value = images;
 }
 
 //选择图片
@@ -300,10 +317,10 @@ function deleteImage(index: number) {
   MessagePlugin.success("已删除该图片");
 }
 //确认选择
-function onClick() {
+async function onClick() {
   if (selectedImageIndex.value !== null) {
     const selectedImage = resultImages.value[selectedImageIndex.value];
-    console.log("%c Line:292 🎂 selectedImage", "background:#f5ce50", selectedImage);
+    await axios.post("/assets/saveAssets", { id: props.formData.id, projectId: project.value?.id, filePath: selectedImage.filePath });
   }
 }
 </script>
