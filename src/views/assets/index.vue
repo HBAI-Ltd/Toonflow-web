@@ -32,11 +32,15 @@
                   批量删除
                 </t-button>
               </t-space>
-              <t-input v-model="searchText" placeholder="搜索资产名称..." clearable style="width: 260px">
-                <template #prefix-icon>
-                  <t-icon name="search" />
-                </template>
-              </t-input>
+              <div class="f ac">
+                <t-input v-model="searchText" placeholder="搜索资产名称..." clearable style="width: 260px" />
+                <t-button style="margin-left: 5px" @click="handleSearch">
+                  <template #icon>
+                    <t-icon name="search" />
+                  </template>
+                  搜索
+                </t-button>
+              </div>
             </div>
             <div class="assetsList f w">
               <t-table
@@ -342,6 +346,10 @@ const pagination = ref({
   total: 0,
   showJumper: true,
 });
+function handleSearch() {
+  pagination.value.page = 1;
+  getFilteredData(assetOptions.value);
+}
 async function getFilteredData(type: string) {
   try {
     loading.value = true;
@@ -751,11 +759,60 @@ function closeMediaPreview() {
         justify-content: center;
         align-items: center;
         padding: 4px 0;
-        .imagetrigger {
+        .imageTrigger {
+          position: relative;
           width: 80px;
           height: 80px;
+          border-radius: 4px;
+          overflow: hidden;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.3s ease;
+          &:hover {
+            transform: scale(1.05);
+            .imageHoverOverlay {
+              opacity: 1;
+            }
+          }
+          img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+          }
           .previewImage {
-            object-fit: contain;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+          }
+          .noImage {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            background: var(--td-bg-color-component, #f5f5f5);
+            color: var(--td-text-color-placeholder, #c0c0c0);
+          }
+          .imageHoverOverlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            color: white;
+            .hoverText {
+              font-size: 12px;
+            }
           }
         }
         .mediaTrigger {
