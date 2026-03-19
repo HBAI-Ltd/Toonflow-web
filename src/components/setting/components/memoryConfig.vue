@@ -2,33 +2,48 @@
   <div class="memoryConfig">
     <t-alert theme="warning" class="topAlert" message="以下配置项已预设为推荐值。除非您清楚了解各项配置的含义及影响，否则建议维持现有设置" />
 
-    <t-form :data="formData" labelAlign="top" class="memoryForm" @submit="handleSave">
+    <t-form :data="formData" labelAlign="top" labelWidth="180px" class="memoryForm" @submit="handleSave">
+      <t-card title="向量模型配置" :bordered="true" style="margin-top: 16px">
+        <t-form-item label="模型文件路径" name="modelOnnxFile">
+          <t-tag-input v-model="formData.modelOnnxFile" clearable />
+          <template #help>向量模型文件路径：/data/models/{{ formData.modelOnnxFile ? formData.modelOnnxFile.join("/") : "" }}</template>
+        </t-form-item>
+        <t-form-item label="量化类型" name="modelDtype">
+          <t-input v-model="formData.modelDtype" placeholder="请输入量化类型" />
+          <template #help></template>
+        </t-form-item>
+      </t-card>
       <t-card title="记忆参数" :bordered="true" style="margin-top: 16px">
-        <t-row :gutter="16">
-          <t-col :span="4">
-            <t-form-item label="短期记忆长度" name="shortTermMemoryLength">
-              <t-input-number v-model="formData.shortTermMemoryLength" :min="1" :max="200" />
-              <template #help>保留最近 N 条对话上下文。</template>
-            </t-form-item>
-          </t-col>
-          <t-col :span="4">
-            <t-form-item label="搜索记忆条数" name="searchTopK">
-              <t-input-number v-model="formData.searchTopK" :min="1" :max="100" />
-              <template #help>检索时返回的候选记忆条数。</template>
-            </t-form-item>
-          </t-col>
-          <t-col :span="4">
-            <t-form-item label="记忆相似度阈值" name="similarityThreshold">
-              <t-input-number v-model="formData.similarityThreshold" :min="0" :max="1" :step="0.01" :decimalPlaces="2" />
-              <template #help>范围 0-1，值越大匹配越严格。</template>
-            </t-form-item>
-          </t-col>
-        </t-row>
+        <t-form-item label="触发消息压缩条数" name="messagesPerSummary">
+          <t-input-number v-model="formData.messagesPerSummary" :min="1" :max="200" :allowInputOverLimit="false" />
+          <template #help>保留最近 N 条对话上下文。</template>
+        </t-form-item>
+        <t-form-item label="单次获取未压缩消息条数" name="shortTermLimit">
+          <t-input-number v-model="formData.shortTermLimit" :min="1" :max="100" :allowInputOverLimit="false" />
+          <template #help>检索时返回的候选记忆条数。</template>
+        </t-form-item>
+        <t-form-item label="压缩最大字符" name="summaryMaxLength">
+          <t-input-number v-model="formData.summaryMaxLength" :min="0" :max="1000" :step="1" :allowInputOverLimit="false" />
+          <template #help>消息压缩时允许的最大字符</template>
+        </t-form-item>
+        <t-form-item label="允许查询已压缩消息条数" name="summaryLimit">
+          <t-input-number v-model="formData.summaryLimit" :min="0" :max="100" :step="1" :allowInputOverLimit="false" />
+          <template #help>允许查询已压缩消息条数</template>
+        </t-form-item>
+        <t-form-item label="搜索记忆条数" name="ragLimit">
+          <t-input-number v-model="formData.ragLimit" :min="0" :max="50" :step="1" :allowInputOverLimit="false" />
+          <template #help>检索时获取的消息数。</template>
+        </t-form-item>
+        <t-form-item label="向量召回压缩消息数" name="deepRetrieveSummaryLimit">
+          <t-input-number v-model="formData.deepRetrieveSummaryLimit" :min="0" :max="100" :step="1" :allowInputOverLimit="false" />
+          <template #help>检索压缩消息内容时获取的消息数。</template>
+        </t-form-item>
       </t-card>
 
       <div class="actionRow f frr">
         <t-button theme="primary" type="submit" :loading="saving">保存配置</t-button>
         <t-button theme="danger" variant="outline" :loading="clearing" @click="handleClearMemory">清空记忆</t-button>
+        <t-button theme="warning" variant="outline" :loading="saving" @click="handleRestory">恢复默认配置</t-button>
       </div>
     </t-form>
   </div>
@@ -40,21 +55,25 @@ import { DialogPlugin, MessagePlugin } from "tdesign-vue-next";
 import axios from "@/utils/axios";
 
 interface MemoryConfigForm {
-  shortTermMemoryLength: number;
-  searchTopK: number;
-  similarityThreshold: number;
-}
-
-interface ApiResponse<T = any> {
-  code: number;
-  msg?: string;
-  data?: T;
+  messagesPerSummary: number;
+  shortTermLimit: number;
+  summaryMaxLength: number;
+  summaryLimit: number;
+  ragLimit: number;
+  deepRetrieveSummaryLimit: number;
+  modelOnnxFile: string[];
+  modelDtype: string;
 }
 
 const formData = ref<MemoryConfigForm>({
-  shortTermMemoryLength: 10,
-  searchTopK: 3,
-  similarityThreshold: 0.3,
+  messagesPerSummary: 3,
+  shortTermLimit: 5,
+  summaryMaxLength: 500,
+  summaryLimit: 10,
+  ragLimit: 3,
+  deepRetrieveSummaryLimit: 5,
+  modelOnnxFile: ["all-MiniLM-L6-v2", "onnx", "model_fp16.onnx"], // 模型文件路径
+  modelDtype: "fp16",
 });
 
 const loading = ref(false);
@@ -66,9 +85,14 @@ async function getMemoryConfig() {
   try {
     const { data } = await axios.get("/setting/memoryConfig/getMemory");
     formData.value = {
-      shortTermMemoryLength: data.shortTermMemoryLength ?? 10,
-      searchTopK: data.searchTopK ?? 3,
-      similarityThreshold: data.similarityThreshold ?? 0.3,
+      messagesPerSummary: data.messagesPerSummary ?? 3,
+      shortTermLimit: data.shortTermLimit ?? 5,
+      summaryMaxLength: data.summaryMaxLength ?? 500,
+      summaryLimit: data.summaryLimit ?? 10,
+      ragLimit: data.ragLimit ?? 3,
+      deepRetrieveSummaryLimit: data.deepRetrieveSummaryLimit ?? 5,
+      modelOnnxFile: data.modelOnnxFile ?? ["all-MiniLM-L6-v2", "onnx", "model_fp16.onnx"], // 模型文件路径
+      modelDtype: data.modelDtype ?? "fp16",
     };
   } catch (error: any) {
     MessagePlugin.warning(error?.message);
@@ -110,6 +134,20 @@ async function handleClearMemory() {
       }
     },
   });
+}
+
+function handleRestory() {
+  formData.value = {
+    messagesPerSummary: 3,
+    shortTermLimit: 5,
+    summaryMaxLength: 500,
+    summaryLimit: 10,
+    ragLimit: 3,
+    deepRetrieveSummaryLimit: 5,
+    modelOnnxFile: ["all-MiniLM-L6-v2", "onnx", "model_fp16.onnx"], // 模型文件路径
+    modelDtype: "fp16",
+  };
+  handleSave();
 }
 
 onMounted(() => {
