@@ -161,6 +161,7 @@ const generateImageShow = defineModel({
 //关闭生成图片的弹窗
 function handleCancel() {
   generateImageShow.value = false;
+  emit("update");
 }
 //上传参考图片
 const referenceFileList = ref<any[]>([]);

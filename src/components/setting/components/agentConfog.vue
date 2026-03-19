@@ -202,7 +202,7 @@ onMounted(() => {
 });
 //一键填入
 function oneClickToFillIn() {
-  const targets = ["剧本Agent", "生产Agent", "资产AI", "润色AI"];
+  const targets = ["剧本Agent", "生产Agent", "资产AI", "润色AI", "事件提取AI"];
   modelData.value.forEach((item) => {
     if (targets.includes(item.name)) {
       item.modelName = "1:gpt-4.1";

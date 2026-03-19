@@ -25,13 +25,7 @@
             </t-checkbox-group>
           </t-form-item>
           <t-form-item label="生成模型">
-            <t-select
-              placeholder="请选择模型"
-              :options="[
-                { label: '模型1', value: 'model1' },
-                { label: '模型2', value: 'model2' },
-                { label: '模型3', value: 'model3' },
-              ]"></t-select>
+            <modelSelect v-model="selectValue" :type="`image`" />
           </t-form-item>
           <t-form-item label="分辨率">
             <t-select
@@ -113,7 +107,7 @@
         </div>
         <t-form v-if="currentItem" labelAlign="top">
           <t-form-item label="生成模型">
-            <t-select v-model="editForm.model" placeholder="请选择模型" :options="modelOptions" />
+            <modelSelect v-model="editForm.model" :type="`image`" />
           </t-form-item>
           <t-form-item label="分辨率">
             <t-select v-model="editForm.resolution" placeholder="请选择分辨率" :options="resolutionOptions" />
@@ -140,6 +134,7 @@
 </template>
 
 <script setup>
+import modelSelect from "@/components/modelSelect.vue";
 const checkboxValue = ref([]);
 
 const STATES = ["pending", "generating", "done", "error"];
@@ -147,15 +142,16 @@ const TYPE_NAMES = ["人物", "场景", "道具"];
 const MODELS = ["model1", "model2", "model3"];
 const RESOLUTIONS = ["1k", "2k", "4k"];
 
-const modelOptions = [
-  { label: "模型1", value: "model1" },
-  { label: "模型2", value: "model2" },
-  { label: "模型3", value: "model3" },
-];
+const selectValue = ref("");
 const resolutionOptions = [
   { label: "1K", value: "1k" },
   { label: "2K", value: "2k" },
   { label: "4K", value: "4k" },
+];
+const modelOptions = [
+  { label: "模型1", value: "model1" },
+  { label: "模型2", value: "model2" },
+  { label: "模型3", value: "model3" },
 ];
 
 const modelLabelMap = Object.fromEntries(modelOptions.map((o) => [o.value, o.label]));
