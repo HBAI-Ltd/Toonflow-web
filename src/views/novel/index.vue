@@ -17,11 +17,13 @@
               批量删除 {{ selectedRowKeys.length > 0 ? `(${selectedRowKeys.length})` : "" }}
             </t-button>
           </t-space>
-          <t-input v-model="searchText" placeholder="搜索原文名称..." clearable style="width: 260px">
-            <template #prefix-icon>
-              <t-icon name="search" />
-            </template>
-          </t-input>
+          <div class="f">
+            <t-input v-model="searchText" placeholder="搜索原文名称..." clearable style="width: 260px" />
+            <t-button theme="primary" @click="onChange" style="margin-left: 10px">
+              <template #icon><t-icon name="search" /></template>
+              搜索
+            </t-button>
+          </div>
         </div>
         <t-table
           style="margin-top: 10px"
@@ -115,11 +117,10 @@ const pagination = ref({
   total: 0,
 });
 onMounted(getNovel);
-
-watch(searchText, () => {
+function onChange() {
   pagination.value.page = 1;
   getNovel();
-});
+}
 
 function getNovel() {
   loading.value = true;

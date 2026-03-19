@@ -1,12 +1,12 @@
 <template>
   <div class="script">
     <div class="actionBar">
-      <div class="searchWrapper">
-        <t-input placeholder="搜索剧本名称..." v-model="searchQuery" @change="onChange" class="searchInput">
-          <template #suffixIcon>
-            <i-search class="searchIcon" />
-          </template>
-        </t-input>
+      <div class="searchWrapper f ac">
+        <t-input placeholder="搜索剧本名称..." v-model="searchQuery" class="searchInput" clearable />
+        <t-button theme="primary" @click="onChange" style="margin-left: 10px">
+          <template #icon><i-search /></template>
+          搜索
+        </t-button>
       </div>
       <t-button theme="primary" @click="handleAddScript">
         <template #icon><i-plus /></template>

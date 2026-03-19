@@ -32,11 +32,7 @@
           </div>
         </div>
         <div class="content">
-          <t-textarea
-            v-model="scriptData"
-            placeholder="请上传剧本内容..."
-            name="description"
-            :autosize="{ minRows: 15, maxRows: 15 }" />
+          <t-textarea v-model="scriptData" placeholder="请上传剧本内容..." name="description" :autosize="{ minRows: 15, maxRows: 15 }" />
         </div>
       </div>
       <template #footer>
@@ -111,8 +107,7 @@ async function handleBeforeUpload(file: UploadFile): Promise<boolean> {
     return false;
   }
 
-  
-  LoadingPlugin({
+  const loader = LoadingPlugin({
     fullscreen: true,
     attach: "body",
     text: "文件解析中...",
@@ -120,17 +115,12 @@ async function handleBeforeUpload(file: UploadFile): Promise<boolean> {
   try {
     content.value = await readFile(rawFile);
     scriptData.value = content.value;
-    nextTick(() => {
-      if (textareaRef.value) {
-        adjustTextareaHeight(textareaRef.value);
-      }
-    });
   } catch (error) {
     console.error("文件解析失败:", error);
     MessagePlugin.error("文件解析失败，请重新上传");
     fileList.value = [];
   } finally {
-    LoadingPlugin(false);
+    loader.hide();
   }
   return false;
 }
@@ -155,46 +145,6 @@ function close(): void {
   fileList.value = [];
   addScriptShow.value = false;
 }
-function adjustTextareaHeight(textarea: HTMLTextAreaElement): void {
-  textarea.style.height = "auto";
-  const newHeight = Math.max(textarea.scrollHeight, MIN_LINES * LINE_HEIGHT);
-  textarea.style.height = `${newHeight}px`;
-}
-function handleInput(event: Event): void {
-  const textarea = event.target as HTMLTextAreaElement;
-  adjustTextareaHeight(textarea);
-}
-function setTextareaRef(el: any | null): void {
-  if (el) {
-    textareaRef.value = el;
-    nextTick(() => {
-      adjustTextareaHeight(el);
-    });
-  }
-}
-
-// 监听 content 变化，同步到 scriptData
-watch(content, (newVal) => {
-  if (newVal) {
-    scriptData.value = newVal;
-    nextTick(() => {
-      if (textareaRef.value) {
-        adjustTextareaHeight(textareaRef.value);
-      }
-    });
-  }
-});
-
-// 监听 addScriptShow 变化，在对话框打开时重新调整高度
-watch(addScriptShow, (newVal) => {
-  if (newVal && textareaRef.value) {
-    nextTick(() => {
-      if (textareaRef.value) {
-        adjustTextareaHeight(textareaRef.value);
-      }
-    });
-  }
-});
 const emit = defineEmits(["searchScripts"]);
 async function handleConfirm(): Promise<void> {
   if (!scriptData.value.trim()) {
