@@ -19,7 +19,6 @@
           </div>
         </div>
       </div>
-
       <!-- 右侧信息面板 -->
       <t-card class="infoPanel">
         <!-- 提示词输入 -->
@@ -34,15 +33,17 @@
             :autosize="{ minRows: 4, maxRows: 12 }"
             @change="handlePromptChange" />
         </div>
-
         <!-- 帧配置区域 -->
-        <div class="frameSection" v-if="currentMode !== 'text'">
+        <div class="frameSection" v-if="currentModeKey !== 'text' && mode.length > 0 && (!isMixedRefMode || mixedRefHasUpload)">
           <!-- singleImage: 单图 -->
           <template v-if="currentMode === 'singleImage'">
             <div class="frameItem">
               <div class="frameThumbnail" :class="{ addFrame: !currentShot?.imageUrl }" @click="!currentShot?.imageUrl && handleAddImage()">
                 <img v-if="currentShot?.imageUrl" :src="currentShot.imageUrl" class="frameImage" />
                 <i-plus v-else size="24" fill="#999" />
+                <div v-if="currentShot?.imageUrl" class="frameRemoveBtn" @click.stop="handleRemoveImage()">
+                  <i-close size="12" fill="#fff" />
+                </div>
               </div>
               <span class="frameLabel">参考图</span>
             </div>
@@ -53,6 +54,9 @@
             <div v-for="(img, idx) in currentShot?.imageUrls || []" :key="idx" class="frameItem">
               <div class="frameThumbnail">
                 <img :src="img" class="frameImage" />
+                <div class="frameRemoveBtn" @click.stop="handleRemoveImageAt(idx)">
+                  <i-close size="12" fill="#fff" />
+                </div>
               </div>
             </div>
             <div class="frameItem" @click="handleAddImage">
@@ -63,130 +67,163 @@
             </div>
           </template>
 
+          <!-- VideoMixedRef 混合参考模式 -->
+          <template v-else-if="isMixedRefMode">
+            <template v-for="refType in mixedRefTypes" :key="refType">
+              <!-- videoReference -->
+              <template v-if="refType === 'videoReference'">
+                <div class="frameItem">
+                  <div
+                    class="frameThumbnail"
+                    :class="{ addFrame: !currentShot?.mixedRefs?.videoReference }"
+                    @click="!currentShot?.mixedRefs?.videoReference && handleAddMixedRef('videoReference')">
+                    <video
+                      v-if="currentShot?.mixedRefs?.videoReference"
+                      :src="currentShot.mixedRefs.videoReference.url"
+                      class="frameImage"
+                      muted
+                      preload="metadata" />
+                    <i-plus v-else size="24" fill="#999" />
+                    <div v-if="currentShot?.mixedRefs?.videoReference" class="frameRemoveBtn" @click.stop="handleRemoveMixedRef('videoReference')">
+                      <i-close size="12" fill="#fff" />
+                    </div>
+                  </div>
+                  <span class="frameLabel">参考视频</span>
+                </div>
+              </template>
+              <!-- imageReference -->
+              <template v-else-if="refType === 'imageReference'">
+                <div class="frameItem">
+                  <div
+                    class="frameThumbnail"
+                    :class="{ addFrame: !currentShot?.mixedRefs?.imageReference }"
+                    @click="!currentShot?.mixedRefs?.imageReference && handleAddMixedRef('imageReference')">
+                    <img v-if="currentShot?.mixedRefs?.imageReference" :src="currentShot.mixedRefs.imageReference.url" class="frameImage" />
+                    <i-plus v-else size="24" fill="#999" />
+                    <div v-if="currentShot?.mixedRefs?.imageReference" class="frameRemoveBtn" @click.stop="handleRemoveMixedRef('imageReference')">
+                      <i-close size="12" fill="#fff" />
+                    </div>
+                  </div>
+                  <span class="frameLabel">参考图片</span>
+                </div>
+              </template>
+              <!-- audioReference -->
+              <template v-else-if="refType === 'audioReference'">
+                <div class="frameItem">
+                  <div
+                    class="frameThumbnail"
+                    :class="{ addFrame: !currentShot?.mixedRefs?.audioReference }"
+                    @click="!currentShot?.mixedRefs?.audioReference && handleAddMixedRef('audioReference')">
+                    <div v-if="currentShot?.mixedRefs?.audioReference" class="audioRefIcon">
+                      <i-volume-notice size="24" fill="#3070d6" />
+                    </div>
+                    <i-plus v-else size="24" fill="#999" />
+                    <div v-if="currentShot?.mixedRefs?.audioReference" class="frameRemoveBtn" @click.stop="handleRemoveMixedRef('audioReference')">
+                      <i-close size="12" fill="#fff" />
+                    </div>
+                  </div>
+                  <span class="frameLabel">参考音频</span>
+                </div>
+              </template>
+              <!-- textReference 只显示文本输入，不显示上传 -->
+              <template v-else-if="refType === 'textReference'">
+                <!-- 文本引用仅在 frameSection 内不额外渲染上传，文字已在提示词区域输入 -->
+              </template>
+            </template>
+          </template>
+
           <!-- 首尾帧模式 -->
           <template v-else-if="isDualFrameMode">
             <div class="frameItem">
               <div class="frameThumbnail" :class="{ addFrame: !currentShot?.imageUrl }" @click="!currentShot?.imageUrl && handleAddImage()">
                 <img v-if="currentShot?.imageUrl" :src="currentShot.imageUrl" class="frameImage" />
                 <i-plus v-else size="24" fill="#999" />
+                <div v-if="currentShot?.imageUrl" class="frameRemoveBtn" @click.stop="handleRemoveImage()">
+                  <i-close size="12" fill="#fff" />
+                </div>
               </div>
               <span class="frameLabel">{{ startFrameLabel }}</span>
             </div>
             <div class="frameSwapBtn" @click="handleSwapFrames">
               <i-switch size="16" />
             </div>
-            <div class="frameItem" @click="handleAddEndFrame">
+            <div class="frameItem" @click="!currentShot?.endFrameUrl && handleAddEndFrame()">
               <div class="frameThumbnail" :class="{ addFrame: !currentShot?.endFrameUrl }">
                 <img v-if="currentShot?.endFrameUrl" :src="currentShot.endFrameUrl" class="frameImage" />
                 <i-plus v-else size="24" fill="#999" />
+                <div v-if="currentShot?.endFrameUrl" class="frameRemoveBtn" @click.stop="handleRemoveEndFrame()">
+                  <i-close size="12" fill="#fff" />
+                </div>
               </div>
               <span class="frameLabel">{{ endFrameLabel }}</span>
             </div>
           </template>
-
-          <!-- 混合参考模式 (Array) -->
-          <template v-else-if="Array.isArray(currentMode)">
-            <template v-for="(refType, idx) in currentMode" :key="idx">
-              <div v-if="refType === 'image'" class="frameItem">
-                <div class="frameThumbnail" :class="{ addFrame: !currentShot?.imageUrls?.[idx] }" @click="handleAddImage">
-                  <img v-if="currentShot?.imageUrls?.[idx]" :src="currentShot.imageUrls[idx]" class="frameImage" />
-                  <i-plus v-else size="24" fill="#999" />
-                </div>
-                <span class="frameLabel">图片</span>
-              </div>
-              <div v-else-if="refType === 'video'" class="frameItem">
-                <div class="frameThumbnail" :class="{ addFrame: !currentShot?.videoUrl }" @click="handleAddImage">
-                  <i-video v-if="!currentShot?.videoUrl" size="24" fill="#999" />
-                  <span v-else class="frameImage refVideoThumb">▶</span>
-                </div>
-                <span class="frameLabel">视频</span>
-              </div>
-              <div v-else-if="refType === 'audio'" class="frameItem">
-                <div class="frameThumbnail addFrame">
-                  <i-music size="24" fill="#999" />
-                </div>
-                <span class="frameLabel">音频</span>
-              </div>
-              <div v-else-if="refType === 'text'" class="frameItem">
-                <div class="frameThumbnail addFrame">
-                  <i-text size="24" fill="#999" />
-                </div>
-                <span class="frameLabel">文本</span>
-              </div>
-            </template>
-          </template>
         </div>
-
         <!-- 模型信息与操作栏 -->
         <div class="actionBar">
-          <div class="actionBarLeft">
-            <modelSelect v-model="modelDd" :changeDetail="true" type="video" size="small" @change="handleModelChange" />
-
-            <!-- <t-select
-              :value="currentShot?.model || 'Seedance 1.5 Pro'"
-              size="small"
-              auto-width
-              :popup-props="{ overlayInnerStyle: { width: '200px' } }"
-              @change="handleModelChange"> -->
-            <!-- <t-option v-for="opt in modelOptions" :key="opt.value" :value="opt.value" :label="opt.label" />
-            </t-select> -->
-            <t-popup
-              trigger="click"
-              placement="top"
-              overlay-class-name="resDurPickerPopup"
-              :overlay-inner-style="{ padding: '16px', borderRadius: '8px' }">
-              <t-button size="small" ghost block :disabled="currentAudioConfig === false" @click="currentAudioConfig === 'optional' && toggleAudio()">
-                {{ currentShot?.resolution || availableResolutions[0] || "1280x720" }} ·
-                {{ (currentShot?.duration || availableDurations[0] || 4).toString().padStart(2, "0") }}s
+          <div class="actionBarRow">
+            <div class="actionBarRowLeft">
+              <modelSelect v-model="modelDd" :changeConfig="true" type="video" size="small" @change="handleModelChange" class="modelSelectItem" />
+              <t-select v-if="mode.length > 0" v-model="currentModeKey" style="width: 180px" size="small">
+                <t-option v-for="m in mode" :key="m.value" :label="m.label" :value="m.value" />
+              </t-select>
+              <t-tooltip v-if="audioOptions !== false && mode.length > 0" :content="audioOptions ? '关闭音频' : '开启音频'" placement="top">
+                <t-button :theme="audioOptions ? 'primary' : 'default'" variant="outline" size="small" class="audioBtn" @click="toggleAudio()">
+                  <template #icon>
+                    <i-volume-notice v-if="audioOptions" size="16" />
+                    <i-volume-mute v-else size="16" />
+                  </template>
+                </t-button>
+              </t-tooltip>
+              <t-popup
+                v-if="resolutionOptions.length || durationOptions.length"
+                trigger="click"
+                placement="top"
+                overlay-class-name="resDurPickerPopup"
+                :overlay-inner-style="{ padding: '16px', borderRadius: '8px' }">
+                <t-button size="small" variant="outline" class="resDurBtn">
+                  <template v-if="resolutionOptions.length">{{ currentShot?.resolution || resolutionOptions[0] }}</template>
+                  <template v-if="resolutionOptions.length && durationOptions.length">·</template>
+                  <template v-if="durationOptions.length">{{ (currentShot?.duration || durationOptions[0]).toString().padStart(2, "0") }}s</template>
+                </t-button>
+                <template #content>
+                  <div class="resolutionDurationPicker">
+                    <div v-if="resolutionOptions.length" class="pickerSection">
+                      <div class="pickerLabel">分辨率</div>
+                      <div class="pickerOptions">
+                        <div
+                          v-for="res in resolutionOptions"
+                          :key="res"
+                          class="pickerOption"
+                          :class="{ active: (currentShot?.resolution || resolutionOptions[0]) === res }"
+                          @click="handleResolutionChange(res)">
+                          {{ res }}
+                        </div>
+                      </div>
+                    </div>
+                    <div v-if="durationOptions.length" class="pickerSection">
+                      <div class="pickerLabel">时长</div>
+                      <div class="pickerOptions">
+                        <div
+                          v-for="dur in durationOptions"
+                          :key="dur"
+                          class="pickerOption"
+                          :class="{ active: (currentShot?.duration || durationOptions[0]) === dur }"
+                          @click="handleDurationChange(dur)">
+                          {{ dur }}s
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </template>
+              </t-popup>
+            </div>
+            <div class="actionBarRowRight">
+              <t-button theme="primary" size="small" class="generateBtn" @click="handleGenerate">
+                <template #icon><i-arrow-up size="16" /></template>
+                生成
               </t-button>
-              <template #content>
-                <div class="resolutionDurationPicker">
-                  <div class="pickerSection">
-                    <div class="pickerLabel">分辨率</div>
-                    <div class="pickerOptions">
-                      <div
-                        v-for="res in availableResolutions"
-                        :key="res"
-                        class="pickerOption"
-                        :class="{ active: (currentShot?.resolution || availableResolutions[0]) === res }"
-                        @click="handleResolutionChange(res)">
-                        {{ res }}
-                      </div>
-                    </div>
-                  </div>
-                  <div class="pickerSection">
-                    <div class="pickerLabel">时长</div>
-                    <div class="pickerOptions">
-                      <div
-                        v-for="dur in availableDurations"
-                        :key="dur"
-                        class="pickerOption"
-                        :class="{ active: (currentShot?.duration || availableDurations[0]) === dur }"
-                        @click="handleDurationChange(dur)">
-                        {{ dur }}s
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </template>
-            </t-popup>
-            <!-- 音频按钮: true=常亮, optional=可切换, false=禁用态 -->
-            <t-button
-              :theme="isAudioActive ? 'success' : 'danger'"
-              size="small"
-              :disabled="currentAudioConfig === false"
-              @click="currentAudioConfig === 'optional' && toggleAudio()">
-              <template #icon>
-                <i-volume-notice v-if="isAudioActive" size="16" />
-                <i-volume-mute v-else size="16" />
-              </template>
-            </t-button>
-          </div>
-          <div class="actionBarRight">
-            <t-button theme="primary" size="small" @click="handleGenerate">
-              <template #icon><i-arrow-up size="16" /></template>
-              生成
-            </t-button>
+            </div>
           </div>
         </div>
 
@@ -276,7 +313,11 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, nextTick } from "vue";
+import axios from "@/utils/axios";
+import projectStore from "@/stores/project";
 import modelSelect from "@/components/modelSelect.vue";
+
+type VideoMixedRef = "videoReference" | "imageReference" | "audioReference" | "textReference";
 
 type VideoModelMode =
   | "singleImage"
@@ -286,7 +327,7 @@ type VideoModelMode =
   | "endFrameOptional"
   | "startFrameOptional"
   | "text"
-  | ("video" | "image" | "audio" | "text")[];
+  | VideoMixedRef[];
 
 interface VideoModel {
   name: string;
@@ -296,26 +337,43 @@ interface VideoModel {
   audio: "optional" | false | true;
   durationResolutionMap: { duration: number[]; resolution: string[] }[];
 }
-
 function isDualFrame(mode?: VideoModelMode) {
   return mode === "startEndRequired" || mode === "endFrameOptional" || mode === "startFrameOptional";
 }
 const modelDd = ref();
-function getModeLabel(mode?: VideoModelMode) {
-  if (Array.isArray(mode)) return "混合参考";
-  return (
-    (
-      {
-        singleImage: "单图",
-        multiImage: "多图",
-        gridImage: "网格多图",
-        startEndRequired: "首尾帧",
-        endFrameOptional: "首尾帧",
-        startFrameOptional: "首尾帧",
-        text: "文生视频",
-      } as Record<string, string>
-    )[mode || ""] || mode
-  );
+const MODE_LABEL: Record<string, string> = {
+  singleImage: "单图",
+  multiImage: "多图",
+  gridImage: "网格多图",
+  startEndRequired: "首尾帧",
+  endFrameOptional: "首尾帧",
+  startFrameOptional: "首尾帧",
+  text: "文生视频",
+  ["videoReference"]: "视频参考",
+  ["imageReference"]: "图片参考",
+  ["audioReference"]: "音频参考",
+  ["textReference"]: "文本参考",
+};
+
+function getModeLabel(mode?: VideoModelMode): string {
+  if (!mode) return "";
+  if (Array.isArray(mode)) return mode.map((r) => MODE_LABEL[r] ?? r).join("、");
+  return MODE_LABEL[mode] ?? mode;
+}
+
+/** 将 VideoModelMode 序列化为 radio-group 的字符串 value */
+function modeToKey(m: VideoModelMode): string {
+  return Array.isArray(m) ? JSON.stringify(m) : m;
+}
+
+/** 将字符串 key 还原为 VideoModelMode */
+function keyToMode(key: string): VideoModelMode {
+  if (key.startsWith("[")) {
+    try {
+      return JSON.parse(key) as VideoMixedRef[];
+    } catch {}
+  }
+  return key as VideoModelMode;
 }
 
 interface ShotCharacter {
@@ -330,13 +388,35 @@ interface HistoryItem {
   label: string;
 }
 
+/** 图片/资源来源描述 */
+interface ImageSource {
+  /** 来自分镜原始数据 */
+  type: "storyboard" | "assets";
+  /** 分镜 id 或资产 id */
+  id: number | string;
+  /** 文件路径 / URL */
+  url: string;
+}
+
+interface MixedRefs {
+  videoReference?: ImageSource;
+  imageReference?: ImageSource;
+  audioReference?: ImageSource;
+}
+
 interface Shot {
   id: number | string;
   description: string;
   duration?: number;
   imageUrl?: string;
+  /** imageUrl 对应的来源信息（storyboard 原始 / assets 手动选择） */
+  imageSource?: ImageSource;
   imageUrls?: string[];
+  /** imageUrls 对应的来源信息列表，与 imageUrls 下标一一对应 */
+  imageSources?: ImageSource[];
   endFrameUrl?: string;
+  /** endFrameUrl 对应的来源信息 */
+  endFrameSource?: ImageSource;
   videoUrl?: string;
   characters?: ShotCharacter[];
   sceneDesc?: string;
@@ -347,6 +427,8 @@ interface Shot {
   tokenCost?: number;
   status?: "generating" | "completed" | "failed";
   selected?: boolean;
+  /** VideoMixedRef 模式下各参考资源 */
+  mixedRefs?: MixedRefs;
 }
 
 const shotList = ref<Shot[]>([
@@ -438,7 +520,6 @@ const shotList = ref<Shot[]>([
 ]);
 
 const currentShotIndex = ref(0);
-const previewVideoRef = ref<HTMLVideoElement>();
 const trackListRef = ref<HTMLElement>();
 const historyList = ref<HistoryItem[]>([]);
 const selectAll = ref(false);
@@ -464,90 +545,66 @@ const promptText = computed({
 
 const hasSelected = computed(() => shotList.value.some((s) => s.selected));
 
-const videoModels = ref<VideoModel[]>([
-  {
-    name: "Seedance 1.5 Pro",
-    modelName: "doubao-seedance-1-5-pro",
-    type: "video",
-    mode: ["singleImage", "text", "endFrameOptional"],
-    audio: true,
-    durationResolutionMap: [{ duration: [4, 5, 6, 7, 8, 9, 10, 11, 12], resolution: ["480p", "720p", "1080p"] }],
-  },
-  {
-    name: "Seedance 1.5 Multi",
-    modelName: "doubao-seedance-1-5-multi",
-    type: "video",
-    mode: ["multiImage", "text"],
-    audio: false,
-    durationResolutionMap: [{ duration: [4, 5, 6, 7, 8], resolution: ["480p", "720p", "1080p"] }],
-  },
-  {
-    name: "Kling v1 Pro",
-    modelName: "kling-v1-pro",
-    type: "video",
-    mode: ["singleImage", "text", "startEndRequired"],
-    audio: false,
-    durationResolutionMap: [{ duration: [5, 10], resolution: ["1080p"] }],
-  },
-  {
-    name: "Vidu",
-    modelName: "vidu",
-    type: "video",
-    mode: ["singleImage", "text"],
-    audio: false,
-    durationResolutionMap: [{ duration: [4, 8], resolution: ["720p", "1080p"] }],
-  },
-  {
-    name: "Sora 2",
-    modelName: "Sora-2-I2V",
-    type: "video",
-    mode: ["singleImage", "text"],
-    audio: "optional",
-    durationResolutionMap: [{ duration: [4, 8, 12], resolution: ["720x1280", "1280x720", "1024x1792", "1792x1024"] }],
-  },
-]);
-
-const modelOptions = computed(() => videoModels.value.map((m) => ({ label: m.name, value: m.name })));
 const currentShot = computed(() => shotList.value[currentShotIndex.value] || null);
-const currentMode = computed((): VideoModelMode => currentShot.value?.mode || "singleImage");
 
-const isDualFrameMode = computed(() => isDualFrame(currentMode.value));
-
-const startFrameLabel = computed(() => (currentMode.value === "startFrameOptional" ? "首帧(可选)" : "首帧"));
-const endFrameLabel = computed(() => (currentMode.value === "endFrameOptional" ? "尾帧(可选)" : "尾帧"));
-
-const currentVideoModel = computed(() => {
-  const modelName = currentShot.value?.model || videoModels.value[0]?.name;
-  return videoModels.value.find((m) => m.name === modelName) || videoModels.value[0];
+// currentMode 用字符串 key 表示，方便 radio-group 双向绑定
+const currentModeKey = computed({
+  get: (): string => {
+    const m = currentShot.value?.mode;
+    if (!m) return "";
+    return modeToKey(m);
+  },
+  set: (key: string) => {
+    const shot = shotList.value[currentShotIndex.value];
+    if (!shot) return;
+    const val = keyToMode(key);
+    shot.mode = val;
+    // 切换模式时清空不适用的图片数据
+    if (Array.isArray(val)) {
+      // 混合参考模式：保留 imageUrl，清空其他
+      shot.imageUrls = undefined;
+      shot.endFrameUrl = undefined;
+    } else if (val === "text") {
+      shot.imageUrl = undefined;
+      shot.imageUrls = undefined;
+      shot.endFrameUrl = undefined;
+    } else if (val === "singleImage") {
+      shot.imageUrls = undefined;
+      shot.endFrameUrl = undefined;
+    } else if (val === "multiImage" || val === "gridImage") {
+      shot.endFrameUrl = undefined;
+      if (!shot.imageUrls?.length) shot.imageUrls = shot.imageUrl ? [shot.imageUrl] : [];
+    } else if (isDualFrame(val)) {
+      shot.imageUrls = undefined;
+    } else {
+      shot.imageUrls = undefined;
+      shot.endFrameUrl = undefined;
+    }
+  },
 });
 
-const availableResolutions = computed(() => {
-  const model = currentVideoModel.value;
-  if (!model) return [];
-  const allRes = new Set<string>();
-  model.durationResolutionMap.forEach((m) => m.resolution.forEach((r) => allRes.add(r)));
-  return Array.from(allRes);
+// 当前实际模式（VideoModelMode 类型）
+const currentMode = computed(() => keyToMode(currentModeKey.value));
+
+const isDualFrameMode = computed(() => {
+  const m = currentMode.value;
+  return !Array.isArray(m) && isDualFrame(m);
 });
 
-const availableDurations = computed(() => {
-  const model = currentVideoModel.value;
-  if (!model) return [];
-  const currentRes = currentShot.value?.resolution;
-  if (currentRes) {
-    const matched = model.durationResolutionMap.find((m) => m.resolution.includes(currentRes));
-    if (matched) return matched.duration;
-  }
-  const allDur = new Set<number>();
-  model.durationResolutionMap.forEach((m) => m.duration.forEach((d) => allDur.add(d)));
-  return Array.from(allDur).sort((a, b) => a - b);
+/** 当前模式是否为 VideoMixedRef[] */
+const isMixedRefMode = computed(() => Array.isArray(currentMode.value));
+
+/** 当前混合参考类型列表（只在 isMixedRefMode 时有值）*/
+const mixedRefTypes = computed<VideoMixedRef[]>(() => {
+  const m = currentMode.value;
+  return Array.isArray(m) ? (m as VideoMixedRef[]) : [];
 });
 
-const currentCharacters = computed(() => currentShot.value?.characters || []);
-const currentAudioConfig = computed(() => currentVideoModel.value?.audio ?? false);
+/** 混合模式下是否需要显示上传区域（至少含一个非 textReference 类型）*/
+const mixedRefHasUpload = computed(() => mixedRefTypes.value.some((r) => r !== "textReference"));
 
-const audioEnabled = ref(false);
-
-const isAudioActive = computed(() => currentAudioConfig.value === true || (currentAudioConfig.value === "optional" && audioEnabled.value));
+const startFrameLabel = computed(() => (currentModeKey.value === "startFrameOptional" ? "首帧(可选)" : "首帧"));
+const endFrameLabel = computed(() => (currentModeKey.value === "endFrameOptional" ? "尾帧(可选)" : "尾帧"));
 
 function getStatusLabel(status?: string) {
   return ({ completed: "完成", generating: "生成中", failed: "失败" } as Record<string, string>)[status || ""] || "单图";
@@ -566,15 +623,83 @@ function scrollToCurrentShot() {
 }
 import openAssetsSelector from "@/utils/assetsCheck";
 
+/** 文件后缀过滤辅助 */
+const VIDEO_EXTS = [".mp4", ".mov", ".avi", ".webm", ".mkv"];
+const IMAGE_EXTS = [".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp", ".svg"];
+const AUDIO_EXTS = [".mp3", ".wav", ".aac", ".flac", ".ogg", ".m4a"];
+
+function matchExt(filePath: string, exts: string[]) {
+  const lower = filePath.toLowerCase();
+  return exts.some((ext) => lower.endsWith(ext));
+}
+
 async function handleAddImage() {
-  console.log("%c Line:571 🧀", "background:#fca650");
-  // 添加图片逻辑
   const selectedAssets = await openAssetsSelector({
     multiple: false,
     title: "选择图片",
   });
   if (selectedAssets.length > 0) {
-    console.log("%c Line:60 🌽 selectedAssets", "background:#7f2b82", selectedAssets);
+    const shot = shotList.value[currentShotIndex.value];
+    if (!shot) return;
+    const asset = selectedAssets[0];
+    const filePath = asset.filePath;
+    if (!filePath) return;
+    const srcInfo: ImageSource = { type: "assets", id: asset.id, url: filePath };
+    if (currentMode.value === "multiImage" || currentMode.value === "gridImage") {
+      // 多图模式：追加到 imageUrls / imageSources
+      if (!shot.imageUrls) shot.imageUrls = [];
+      if (!shot.imageSources) shot.imageSources = [];
+      shot.imageUrls.push(filePath);
+      shot.imageSources.push(srcInfo);
+    } else {
+      // 单图 / 首帧模式：赋值到 imageUrl / imageSource
+      shot.imageUrl = filePath;
+      shot.imageSource = srcInfo;
+    }
+  }
+}
+
+/** 混合参考模式：按 refType 打开资产选择器并过滤文件类型 */
+async function handleAddMixedRef(refType: VideoMixedRef) {
+  const titleMap: Record<VideoMixedRef, string> = {
+    videoReference: "选择参考视频",
+    imageReference: "选择参考图片",
+    audioReference: "选择参考音频",
+    textReference: "",
+  };
+  const selectedAssets = await openAssetsSelector({
+    multiple: false,
+    title: titleMap[refType],
+  });
+  if (selectedAssets.length > 0) {
+    const shot = shotList.value[currentShotIndex.value];
+    if (!shot) return;
+    const filePath = selectedAssets[0].filePath;
+    if (!filePath) return;
+
+    // 按 refType 校验后缀
+    if (refType === "videoReference" && !matchExt(filePath, VIDEO_EXTS)) {
+      console.warn("[MixedRef] 仅支持视频文件(.mp4 等)");
+      return;
+    }
+    if (refType === "imageReference" && !matchExt(filePath, IMAGE_EXTS)) {
+      console.warn("[MixedRef] 仅支持图片文件");
+      return;
+    }
+    if (refType === "audioReference" && !matchExt(filePath, AUDIO_EXTS)) {
+      console.warn("[MixedRef] 仅支持音频文件");
+      return;
+    }
+
+    if (!shot.mixedRefs) shot.mixedRefs = {};
+    shot.mixedRefs[refType as keyof MixedRefs] = { type: "assets", id: selectedAssets[0].id, url: filePath };
+  }
+}
+
+function handleRemoveMixedRef(refType: VideoMixedRef) {
+  const shot = shotList.value[currentShotIndex.value];
+  if (shot?.mixedRefs) {
+    delete shot.mixedRefs[refType as keyof MixedRefs];
   }
 }
 
@@ -586,12 +711,104 @@ function handleSwapFrames() {
   shot.endFrameUrl = temp;
 }
 
-function handleAddEndFrame() {
-  // 添加尾帧逻辑
+async function handleAddEndFrame() {
+  const selectedAssets = await openAssetsSelector({
+    multiple: false,
+    title: "选择尾帧",
+  });
+  if (selectedAssets.length > 0) {
+    const shot = shotList.value[currentShotIndex.value];
+    if (!shot) return;
+    const asset = selectedAssets[0];
+    if (!asset.filePath) return;
+    shot.endFrameUrl = asset.filePath;
+    shot.endFrameSource = { type: "assets", id: asset.id, url: asset.filePath };
+  }
 }
 
-function handleGenerate() {
-  // 单个生成逻辑
+function handleRemoveImage() {
+  const shot = shotList.value[currentShotIndex.value];
+  if (shot) {
+    shot.imageUrl = undefined;
+    shot.imageSource = undefined;
+  }
+}
+
+function handleRemoveEndFrame() {
+  const shot = shotList.value[currentShotIndex.value];
+  if (shot) {
+    shot.endFrameUrl = undefined;
+    shot.endFrameSource = undefined;
+  }
+}
+
+function handleRemoveImageAt(idx: number) {
+  const shot = shotList.value[currentShotIndex.value];
+  if (shot?.imageUrls) shot.imageUrls.splice(idx, 1);
+  if (shot?.imageSources) shot.imageSources.splice(idx, 1);
+}
+const { project } = storeToRefs(projectStore());
+async function handleGenerate() {
+  const shot = currentShot.value;
+  //拿到当前镜头id
+  const shotId = shot?.id;
+  //拿到视频提示词
+  const prompt = promptText.value;
+  //拿到模型
+  const model = shot?.model || modelDd.value;
+  //拿到分辨率和时长
+  const resolution = shot?.resolution || resolutionOptions.value[0];
+  const duration = shot?.duration || durationOptions.value[0];
+  //拿到模式
+  const modeData = shot?.mode || (mode.value.length > 0 ? mode.value[0].value : "singleImage");
+
+  // 组装 imageData
+  const imageData: ImageSource[] = [];
+
+  if (isMixedRefMode.value) {
+    // 混合参考模式：按 mixedRefs 中实际存在的项收集
+    const refs = shot?.mixedRefs;
+    if (refs?.videoReference) imageData.push(refs.videoReference);
+    if (refs?.imageReference) imageData.push(refs.imageReference);
+    if (refs?.audioReference) imageData.push(refs.audioReference);
+  } else if (currentMode.value === "multiImage" || currentMode.value === "gridImage") {
+    // 多图模式：从 imageSources 取，如没有来源信息则降级用 imageUrls 构造 storyboard 类型
+    const sources = shot?.imageSources;
+    const urls = shot?.imageUrls || [];
+    urls.forEach((url, idx) => {
+      imageData.push(sources?.[idx] ?? { type: "storyboard", id: shotId!, url });
+    });
+  } else if (isDualFrameMode.value) {
+    // 首尾帧模式
+    if (shot?.imageUrl) {
+      imageData.push(shot.imageSource ?? { type: "storyboard", id: shotId!, url: shot.imageUrl });
+    }
+    if (shot?.endFrameUrl) {
+      imageData.push(shot.endFrameSource ?? { type: "storyboard", id: shotId!, url: shot.endFrameUrl });
+    }
+  } else {
+    // 单图模式（singleImage / text 等）
+    if (shot?.imageUrl) {
+      imageData.push(shot.imageSource ?? { type: "storyboard", id: shotId!, url: shot.imageUrl });
+    }
+  }
+
+  const payload: Record<string, any> = {
+    projectId: project.value?.id,
+    storyboardId: shotId,
+    prompt,
+    imageData,
+    model,
+    resolution,
+    duration,
+    modeData,
+  };
+  if (audioOptions.value !== false) {
+    payload.audio = audioOptions.value === null ? false : true;
+  }
+  console.log("%c Line:747 🎂 payload", "background:#2eafb0", payload);
+
+  // const { data } = await axios.post("/production/workbench/generateVideo", payload);
 }
 
 function handleBatchGenerate() {
@@ -601,38 +818,43 @@ function handleBatchGenerate() {
 function handleBatchDownload() {
   // 批量下载逻辑
 }
+// 分辨率选项
+const resolutionOptions = ref<string[]>([]);
+// 时长选项
+const durationOptions = ref<number[]>([]);
+// 音频：false=不支持，true=开启，null=可切换(optional)
+const audioOptions = ref<boolean | null>(null);
+//模式
+const mode = ref<{ label: string; value: string }[]>([]);
 
-function handleModelChange(value: string, data: any) {
-  console.log("%c Line:597 🍌 data", "background:#f5ce50", data);
+function handleModelChange(value: string, data: VideoModel) {
+  // 去重分辨率
+  resolutionOptions.value = [...new Set(data.durationResolutionMap.flatMap((m) => m.resolution))];
+  // 去重时长并排序
+  durationOptions.value = [...new Set(data.durationResolutionMap.flatMap((m) => m.duration))].sort((a, b) => a - b);
+  // audio: true=常开，optional=可切换(用 null 表示开启状态可切换)，false=不支持
+  audioOptions.value = data.audio === false ? false : data.audio === true ? true : null;
+  // 模式列表，value 统一用 modeToKey 序列化
+  mode.value = data.mode.map((item) => ({
+    label: getModeLabel(item),
+    value: modeToKey(item),
+  }));
+  // 切换模型时重置当前镜头的模式选择
   const shot = shotList.value[currentShotIndex.value];
-  if (!shot) return;
-  shot.model = String(value);
-  const model = videoModels.value.find((m) => m.name === value);
-  if (model) {
-    const firstMap = model.durationResolutionMap[0];
-    if (firstMap) {
-      shot.resolution = firstMap.resolution[0];
-      shot.duration = firstMap.duration[0];
-    }
-    audioEnabled.value = model.audio === true;
+  if (shot) {
+    shot.mode = undefined;
   }
 }
 
 function toggleAudio() {
-  audioEnabled.value = !audioEnabled.value;
+  if (audioOptions.value === false) return;
+  audioOptions.value = audioOptions.value === null ? true : null;
 }
 
 function handleResolutionChange(res: string) {
   const shot = shotList.value[currentShotIndex.value];
   if (!shot) return;
   shot.resolution = res;
-  const model = currentVideoModel.value;
-  if (model) {
-    const matched = model.durationResolutionMap.find((m) => m.resolution.includes(res));
-    if (matched && shot.duration && !matched.duration.includes(shot.duration)) {
-      shot.duration = matched.duration[0];
-    }
-  }
 }
 
 function handleDurationChange(dur: number) {
@@ -644,7 +866,7 @@ function handlePlayVideo(_shot: Shot) {
   // 播放视频逻辑
 }
 
-function handlePromptChange(val: string) {
+function handlePromptChange(val: any) {
   const shot = shotList.value[currentShotIndex.value];
   if (shot) shot.sceneDesc = val;
 }
@@ -759,7 +981,6 @@ watch(
           }
         }
       }
-
       .promptSection {
         padding: 4px 0 8px;
 
@@ -775,7 +996,6 @@ watch(
           .titleIndicator {
             width: 3px;
             height: 14px;
-            background: var(--td-brand-color-10);
             border-radius: 2px;
           }
         }
@@ -794,6 +1014,7 @@ watch(
           align-self: center;
           width: 28px;
           height: 28px;
+          margin-bottom: 20px;
           border-radius: 50%;
           cursor: pointer;
           color: #999;
@@ -802,7 +1023,6 @@ watch(
 
           &:hover {
             background: #f0f0f0;
-            color: var(--td-brand-color);
           }
         }
 
@@ -820,6 +1040,7 @@ watch(
             border: 1px solid #e8e8e8;
             @extend %flexCenter;
             background: #f5f5f5;
+            position: relative;
 
             .frameImage {
               width: 100%;
@@ -827,14 +1048,39 @@ watch(
               object-fit: cover;
             }
 
+            .frameRemoveBtn {
+              position: absolute;
+              top: 3px;
+              right: 3px;
+              width: 18px;
+              height: 18px;
+              border-radius: 50%;
+              background: rgba(0, 0, 0, 0.55);
+              @extend %flexCenter;
+              cursor: pointer;
+              opacity: 0;
+              transition: opacity 0.2s;
+              z-index: 1;
+
+              &:hover {
+                background: rgba(0, 0, 0, 0.8);
+              }
+            }
+
+            &:hover .frameRemoveBtn {
+              opacity: 1;
+            }
+
             &.addFrame {
               border: 1px dashed #ccc;
               cursor: pointer;
               transition: border-color 0.2s;
+            }
 
-              &:hover {
-                border-color: var(--td-brand-color);
-              }
+            .audioRefIcon {
+              @extend %flexCenter;
+              width: 100%;
+              height: 100%;
             }
           }
 
@@ -846,26 +1092,42 @@ watch(
       }
 
       .actionBar {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
         padding: 10px 0;
         border-top: 1px solid #f0f0f0;
-        flex-wrap: nowrap;
 
-        .actionBarLeft {
+        .actionBarRow {
           display: flex;
           align-items: center;
+          justify-content: space-between;
           gap: 8px;
           flex-wrap: nowrap;
-          overflow: hidden;
-          min-width: 0;
-        }
 
-        .actionBarRight {
-          display: flex;
-          align-items: center;
-          gap: 8px;
+          .actionBarRowLeft {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 1;
+            min-width: 0;
+            overflow: hidden;
+            .modelSelectItem {
+              flex-shrink: 0;
+              width: 150px;
+            }
+          }
+
+          .actionBarRowRight {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-shrink: 0;
+            .resDurBtn {
+              white-space: nowrap;
+            }
+
+            .generateBtn {
+              white-space: nowrap;
+            }
+          }
         }
       }
 
@@ -986,7 +1248,7 @@ watch(
 
           &:hover,
           &.active {
-            border-color: var(--td-brand-color);
+            border: 3px solid #000;
           }
 
           .shotCheckbox {
@@ -1070,7 +1332,6 @@ watch(
 .resDurPickerPopup {
   .resolutionDurationPicker {
     min-width: 240px;
-
     .pickerSection {
       margin-bottom: 16px;
 
