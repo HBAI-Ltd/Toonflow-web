@@ -27,6 +27,9 @@
               {{ row.state }}
             </span>
           </template>
+          <template #startTime="{ row }">
+            <span>{{ dayjs(row.startTime).format("YYYY-MM-DD HH:mm:ss") }}</span>
+          </template>
         </t-table>
         <t-pagination
           class="paginationWrap"
@@ -42,6 +45,7 @@
 </template>
 
 <script setup lang="ts">
+import dayjs from "dayjs";
 import axios from "@/utils/axios";
 import projectStore from "@/stores/project";
 

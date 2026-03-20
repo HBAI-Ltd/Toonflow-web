@@ -63,6 +63,7 @@
                 :expanded-row-keys="expandedRowKeys"
                 row-key="id"
                 hover
+                height="calc(100vh - 300px)"
                 stripe
                 size="small"
                 :pagination="pagination"
@@ -974,21 +975,18 @@ function closeMediaPreview() {
           align-items: center;
           gap: 4px;
           .generating-text {
-            color: var(--td-text-color-placeholder, #aaa);
             font-style: italic;
           }
         }
         .generatingImage {
           flex-direction: column;
           gap: 6px;
-          background: var(--td-bg-color-component, #f5f5f5);
           cursor: default;
           &:hover {
             transform: none !important;
           }
           .generatingLabel {
             font-size: 11px;
-            color: var(--td-text-color-placeholder, #aaa);
           }
         }
       }
@@ -1030,8 +1028,7 @@ function closeMediaPreview() {
             justify-content: center;
             width: 100%;
             height: 100%;
-            background: var(--td-bg-color-component, #f5f5f5);
-            color: var(--td-text-color-placeholder, #c0c0c0);
+            background-color: #dad8d8;
           }
           .imageHoverOverlay {
             position: absolute;
@@ -1085,12 +1082,9 @@ function closeMediaPreview() {
             }
           }
           &.audioThumb {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
           }
           &.noMedia {
-            background: var(--td-bg-color-component, #f5f5f5);
-            color: var(--td-text-color-placeholder, #c0c0c0);
             cursor: default;
             &:hover {
               transform: none;
@@ -1123,13 +1117,12 @@ function closeMediaPreview() {
 </style>
 
 <style lang="scss">
-/* t-popup 的 content 插槽会 teleport 到 body，必须用全局样式 */
 .generatePrompt,
 .generateImage {
   cursor: pointer;
   padding: 8px 16px;
   &:hover {
-    background: var(--td-bg-color-hover, #f0f0f0);
+    background-color: #f0f0f0;
   }
 }
 
@@ -1168,7 +1161,6 @@ function closeMediaPreview() {
     .audioName {
       margin: 0;
       font-size: 14px;
-      color: var(--td-text-color-secondary, #666);
       max-width: 400px;
       overflow: hidden;
       text-overflow: ellipsis;
