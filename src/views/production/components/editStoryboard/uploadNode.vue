@@ -64,6 +64,7 @@ async function uploadFn() {
     title: "选择图片",
   });
   if (selectedAssets.length > 0) {
+    currentImageUrl.value = selectedAssets[0].filePath!;
     console.log("%c Line:60 🌽 selectedAssets", "background:#7f2b82", selectedAssets);
   }
 }

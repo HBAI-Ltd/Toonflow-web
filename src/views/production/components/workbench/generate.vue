@@ -12,11 +12,7 @@
             class="previewVideo"
             controls
             preload="metadata" />
-          <img
-            v-else-if="currentShot?.imageUrl"
-            :src="currentShot.imageUrl"
-            :alt="currentShot?.description"
-            class="previewVideo" />
+          <img v-else-if="currentShot?.imageUrl" :src="currentShot.imageUrl" :alt="currentShot?.description" class="previewVideo" />
           <div v-else class="placeholderImage">
             <i-pic size="48" fill="#999" />
             <span>暂无视频</span>
@@ -124,14 +120,16 @@
         <!-- 模型信息与操作栏 -->
         <div class="actionBar">
           <div class="actionBarLeft">
-            <t-select
+            <modelSelect v-model="modelDd" :changeDetail="true" type="video" size="small" @change="handleModelChange" />
+
+            <!-- <t-select
               :value="currentShot?.model || 'Seedance 1.5 Pro'"
               size="small"
               auto-width
               :popup-props="{ overlayInnerStyle: { width: '200px' } }"
-              @change="handleModelChange">
-              <t-option v-for="opt in modelOptions" :key="opt.value" :value="opt.value" :label="opt.label" />
-            </t-select>
+              @change="handleModelChange"> -->
+            <!-- <t-option v-for="opt in modelOptions" :key="opt.value" :value="opt.value" :label="opt.label" />
+            </t-select> -->
             <t-popup
               trigger="click"
               placement="top"
@@ -278,6 +276,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, nextTick } from "vue";
+import modelSelect from "@/components/modelSelect.vue";
 
 type VideoModelMode =
   | "singleImage"
@@ -301,7 +300,7 @@ interface VideoModel {
 function isDualFrame(mode?: VideoModelMode) {
   return mode === "startEndRequired" || mode === "endFrameOptional" || mode === "startFrameOptional";
 }
-
+const modelDd = ref();
 function getModeLabel(mode?: VideoModelMode) {
   if (Array.isArray(mode)) return "混合参考";
   return (
@@ -565,9 +564,18 @@ function scrollToCurrentShot() {
     (items?.[currentShotIndex.value] as HTMLElement)?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
   });
 }
+import openAssetsSelector from "@/utils/assetsCheck";
 
-function handleAddImage() {
+async function handleAddImage() {
+  console.log("%c Line:571 🧀", "background:#fca650");
   // 添加图片逻辑
+  const selectedAssets = await openAssetsSelector({
+    multiple: false,
+    title: "选择图片",
+  });
+  if (selectedAssets.length > 0) {
+    console.log("%c Line:60 🌽 selectedAssets", "background:#7f2b82", selectedAssets);
+  }
 }
 
 function handleSwapFrames() {
@@ -594,7 +602,8 @@ function handleBatchDownload() {
   // 批量下载逻辑
 }
 
-function handleModelChange(value: any) {
+function handleModelChange(value: string, data: any) {
+  console.log("%c Line:597 🍌 data", "background:#f5ce50", data);
   const shot = shotList.value[currentShotIndex.value];
   if (!shot) return;
   shot.model = String(value);
@@ -702,8 +711,6 @@ watch(
           color: #999;
           font-size: 14px;
         }
-
-
       }
     }
 

@@ -12,14 +12,20 @@
         </div>
         <div class="frameGrid">
           <div v-for="(frame, index) in group.frames" :key="`${group.id}-${frame.id}`" class="frameCard">
-            <div class="frameImage" :style="{ background: frame.gradient || getDefaultGradient(groupIndex * 10 + index), maxWidth: `${300 * gridScale}px`, maxHeight: `${300 * gridScale}px` }">
+            <div
+              class="frameImage"
+              :style="{
+                background: frame.gradient || getDefaultGradient(groupIndex * 10 + index),
+                maxWidth: `${300 * gridScale}px`,
+                maxHeight: `${300 * gridScale}px`,
+              }">
               <t-tag v-if="frame.frameType" class="frameTypeTag" :style="{ backgroundColor: frame.frameType === '首帧' ? '#5bccb3' : '#e86b6b' }">
                 {{ frame.frameType === "首帧" ? "首" : "尾" }}
               </t-tag>
               <t-tag class="frameTag" :style="{ backgroundColor: tagColors[(groupIndex * 10 + index) % tagColors.length] }">
                 S{{ String(index + 1).padStart(2, "0") }}
               </t-tag>
-              <t-image v-if="frame.image" :src="frame.image" fit="contain" class="frameImg" @click.stop="visible = true">
+              <t-image v-if="frame.image" :src="frame.image" fit="contain" class="frameImg" @click="visible = true">
                 <template #overlayContent>
                   <div class="imageToolsWrap show">
                     <ImageTools :src="frame.image" position="br" />
@@ -33,7 +39,7 @@
       </div>
       <div class="scaleControl">
         <span>缩放比例</span>
-        <t-input-number v-model="gridScale" :min="0.1" :max="3" :step="0.1" :decimal-places="1" size="small"  style="width: 120px" />
+        <t-input-number v-model="gridScale" :min="0.1" :max="3" :step="0.1" :decimal-places="1" size="small" style="width: 120px" />
       </div>
       <t-button block @click="previewAll">宫格预览</t-button>
     </div>
@@ -44,7 +50,7 @@
 
 <script setup lang="ts">
 import { useLocalStorage } from "@vueuse/core";
-  import editStoryboard from "../components/editStoryboard/index.vue";
+import editStoryboard from "../components/editStoryboard/index.vue";
 import { LoadingPlugin } from "tdesign-vue-next";
 import { Handle, Position } from "@vue-flow/core";
 

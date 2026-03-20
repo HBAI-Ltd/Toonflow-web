@@ -32,7 +32,7 @@ const selectValue = defineModel({
 });
 const props = defineProps({
   type: {
-    type: String as () => "text" | "image" | "all",
+    type: String as () => "text" | "image" | "all" | "video",
     default: "all",
   },
   size: {
@@ -43,14 +43,36 @@ const props = defineProps({
     type: String,
     default: "请选择模型",
   },
+  changeConfig: {
+    //change时是否需要获取模型相关配置
+    type: Boolean,
+    default: false,
+  },
 });
-function onChange(value: any) {
+const emit = defineEmits<{
+  change: [value: string, data?: any];
+}>();
+async function onChange(value: any) {
   selectValue.value = value;
+  if (props.changeConfig) {
+    console.log("%c Line:59 🍻", "background:#93c0a4");
+    const { data } = await axios.post("/modelSelect/getModelDetail", {
+      modelId: value,
+    });
+    emit("change", value, data);
+  } else {
+    emit("change", value);
+  }
 }
 const optionsData = ref<VendorOption[]>([]);
 onMounted(() => {
   handleModelChange();
 });
+const titleMap = {
+  image: "图像",
+  text: "文本",
+  video: "视频",
+};
 //获取模型选择API数据
 function handleModelChange() {
   axios
@@ -71,7 +93,7 @@ function handleModelChange() {
           label: item.label,
           value: item.value,
           vendorId: item.vendorId,
-          type: item.type == "image" ? "图像生成" : item.type == "text" ? "文本生成" : item.type,
+          type: titleMap[item.type as "image" | "text" | "video"],
         });
       });
       optionsData.value = Array.from(groupMap.values());

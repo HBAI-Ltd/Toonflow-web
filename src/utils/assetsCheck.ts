@@ -25,6 +25,7 @@ export interface AssetsSelectOptions {
 }
 
 export default function openAssetsSelector(options: AssetsSelectOptions = {}): Promise<Asset[]> {
+  console.log("%c Line:28 🍕 options", "background:#b03734", options);
   const { types, multiple = true, title = "选择资产" } = options;
   return new Promise((resolve) => {
     const container = document.createElement("div");
