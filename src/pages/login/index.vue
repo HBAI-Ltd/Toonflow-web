@@ -130,10 +130,6 @@ const handleFinish = (values) => {
 };
 
 const resSvg = async () => {
-  return;
-  const { data } = await axios.get("/other/getCaptcha");
-  svgRef.value.innerHTML = data.svg;
-  captcha.value = data.captcha;
 };
 </script>
 
