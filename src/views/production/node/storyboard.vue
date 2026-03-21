@@ -11,29 +11,51 @@
           {{ group.name }}
         </div>
         <div class="frameGrid">
-          <div v-for="(frame, index) in group.frames" :key="`${group.id}-${frame.id}`" class="frameCard">
+          <template v-for="(frame, index) in group.frames" :key="`${group.id}-${frame.id}`">
             <div
-              class="frameImage"
-              :style="{
-                background: frame.gradient || getDefaultGradient(groupIndex * 10 + index),
-                maxWidth: `${300 * gridScale}px`,
-                maxHeight: `${300 * gridScale}px`,
-              }">
-              <t-tag v-if="frame.frameType" class="frameTypeTag" :style="{ backgroundColor: frame.frameType === '首帧' ? '#5bccb3' : '#e86b6b' }">
-                {{ frame.frameType === "首帧" ? "首" : "尾" }}
-              </t-tag>
-              <t-tag class="frameTag" :style="{ backgroundColor: tagColors[(groupIndex * 10 + index) % tagColors.length] }">
-                S{{ String(index + 1).padStart(2, "0") }}
-              </t-tag>
-              <t-image v-if="frame.image" :src="frame.image" fit="contain" class="frameImg" @click="visible = true">
-                <template #overlayContent>
-                  <div class="imageToolsWrap show">
-                    <ImageTools :src="frame.image" position="br" />
-                  </div>
-                </template>
-              </t-image>
+              class="frameItem"
+              @mouseenter="setHoveredFrame(group.id, index)"
+              @mouseleave="setHoveredFrame(null, null)"
+            >
+              <div
+                class="addBetween"
+                :class="{ expanded: isAddBetweenExpanded(group.id, index, 'left') }"
+                @click.stop="editStoryboaryImage([index > 0 ? group.frames[index - 1]?.image || '' : '', frame.image || ''])"
+              >
+                <span>+</span>
+              </div>
+              <div class="frameCard">
+              <div
+                class="frameImage"
+                :style="{
+                  background: frame.gradient || getDefaultGradient(groupIndex * 10 + index),
+                  maxWidth: `${300 * gridScale}px`,
+                  maxHeight: `${300 * gridScale}px`,
+                }">
+                <t-tag v-if="frame.frameType" class="frameTypeTag" :style="{ backgroundColor: frame.frameType === '首帧' ? '#5bccb3' : '#e86b6b' }">
+                  {{ frame.frameType === "首帧" ? "首" : "尾" }}
+                </t-tag>
+                <t-tag class="frameTag" :style="{ backgroundColor: tagColors[(groupIndex * 10 + index) % tagColors.length] }">
+                  S{{ String(index + 1).padStart(2, "0") }}
+                </t-tag>
+                <t-image v-if="frame.image" :src="frame.image" fit="contain" class="frameImg" @click="editStoryboaryImage([frame.image], frame.id)">
+                  <template #overlayContent>
+                    <div class="imageToolsWrap show">
+                      <ImageTools :src="frame.image" position="br" />
+                    </div>
+                  </template>
+                </t-image>
+              </div>
+              <div class="frameInfo" :title="frame.description">{{ frame.description }}</div>
             </div>
-            <div class="frameInfo" :title="frame.description">{{ frame.description }}</div>
+            </div>
+          </template>
+          <div
+            class="addBetween"
+            :class="{ expanded: isAddBetweenExpanded(group.id, group.frames.length, 'right') }"
+            @click="editStoryboaryImage([group.frames[group.frames.length - 1]?.image || '', ''])"
+          >
+            <span>+</span>
           </div>
         </div>
       </div>
@@ -43,7 +65,7 @@
       </div>
       <t-button block @click="previewAll">宫格预览</t-button>
     </div>
-    <editStoryboard v-model:visible="visible" v-if="visible" />
+    <editStoryboard v-model:visible="visible" v-if="visible" :editData="currentRow" />
     <t-image-viewer v-model:visible="previewVisible" :images="previewImages" :imageScale="{ max: 10, min: 0.1 }" />
   </t-card>
 </template>
@@ -85,6 +107,32 @@ const visible = ref(false);
 const previewVisible = ref(false);
 const previewImages = ref<string[]>([]);
 const gridScale = useLocalStorage("storyboardGridScale", 1);
+
+// 当前 hover 的分镜位置
+const hoveredGroupId = ref<string | null>(null);
+const hoveredIndex = ref<number | null>(null);
+
+function setHoveredFrame(groupId: string | null, index: number | null) {
+  hoveredGroupId.value = groupId;
+  hoveredIndex.value = index;
+}
+
+// 判断某个 addBetween 是否应该展开
+// 每个 frameItem[index] 的左侧加号索引为 index，右侧加号索引为 index+1（即下一个 frameItem 的左侧或末尾加号）
+function isAddBetweenExpanded(groupId: string, addIndex: number, _side: string): boolean {
+  if (hoveredGroupId.value !== groupId || hoveredIndex.value === null) return false;
+  const i = hoveredIndex.value;
+  // addIndex === i 时是左侧加号，addIndex === i+1 时是右侧加号
+  return addIndex === i || addIndex === i + 1;
+}
+
+const currentRow = ref<{
+  images: string[];
+  id: number | null;
+}>({
+  images: [],
+  id: null,
+});
 
 const tagColors = ["#5bccb3", "#9c7cfc", "#fbbf24", "#5b9afc", "#e86b6b", "#7cb8fc", "#e8a855", "#34d399"];
 
@@ -176,6 +224,14 @@ async function previewAll() {
     LoadingPlugin(false);
   }
 }
+
+function editStoryboaryImage(images: string[], id: number | null = null) {
+  currentRow.value = {
+    images: images.filter(Boolean),
+    id,
+  };
+  visible.value = true;
+}
 </script>
 
 <style lang="scss" scoped>
@@ -219,9 +275,42 @@ async function previewAll() {
   }
 
   .frameGrid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
     gap: 4px;
+  }
+
+  .frameItem {
+    display: flex;
+    align-items: stretch;
+  }
+
+  .addBetween {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    align-self: stretch;
+    width: 6px;
+    overflow: hidden;
+    cursor: pointer;
+    color: transparent;
+    font-size: 20px;
+    border-radius: 6px;
+    transition:
+      width 0.2s ease,
+      background 0.2s ease,
+      color 0.2s ease;
+    span {
+      line-height: 1;
+      white-space: nowrap;
+    }
+    &:hover,
+    &.expanded {
+      width: 28px;
+      background: rgba(0, 82, 217, 0.08);
+      color: var(--td-brand-color, #0052d9);
+    }
   }
 
   .frameCard {

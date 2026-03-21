@@ -1,6 +1,6 @@
 <template>
   <div class="uploadNode">
-    <Handle type="source" :position="Position.Right" />
+    <Handle type="source" :position="Position.Right" style="z-index: 999999" />
     <div class="data">
       <div class="title ac">
         <i-pic theme="outline" size="16" fill="#000000" />
@@ -42,6 +42,8 @@ const props = defineProps<{
   };
 }>();
 
+const { updateNodeData } = useVueFlow({ id: "editStoryboard" });
+
 const currentImageUrl = ref(props.data?.image || "");
 const currentObjectUrl = ref<string | null>(null);
 
@@ -64,7 +66,10 @@ async function uploadFn() {
     title: "选择图片",
   });
   if (selectedAssets.length > 0) {
-    currentImageUrl.value = selectedAssets[0].filePath!;
+    const filePath = selectedAssets[0].filePath!;
+    currentImageUrl.value = filePath;
+    // 将新图片同步回节点 data，以便 index.vue 可以监听到变化并更新 references
+    updateNodeData(props.id, { image: filePath });
     console.log("%c Line:60 🌽 selectedAssets", "background:#7f2b82", selectedAssets);
   }
 }
@@ -109,7 +114,7 @@ async function uploadFn() {
       .upload {
         position: absolute;
         top: 10px;
-        right: 10px;
+        left: 10px;
         z-index: 9999;
         padding: 5px 10px;
         border-radius: 10px;

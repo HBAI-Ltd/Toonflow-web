@@ -1,6 +1,6 @@
 <template>
   <div class="generatedNode">
-    <Handle type="target" :position="Position.Left" />
+    <Handle type="target" :position="Position.Left" style="z-index: 999999" />
     <div class="data" @click="selectedFn">
       <div class="title ac">
         <i-pic theme="outline" size="16" fill="#000000" />
@@ -57,10 +57,7 @@
         </div>
       </div>
       <div class="operate ac">
-        <t-select v-model="data.model" class="paramSelect" size="small" placeholder="模型">
-          <t-option value="banana-pro" label="Banana Pro" />
-          <t-option value="other" label="Other" />
-        </t-select>
+        <modelSelect v-model="data.model" type="image" size="small" />
         <t-select v-model="data.ratio" class="paramSelect ml-5" size="small" placeholder="比例">
           <t-option value="16:9" label="16:9" />
           <t-option value="9:16" label="9:16" />
@@ -69,6 +66,7 @@
         <t-select v-model="data.quality" class="paramSelect ml-5" size="small" placeholder="质量">
           <t-option value="1K" label="1K" />
           <t-option value="2K" label="2K" />
+          <t-option value="4K" label="4K" />
         </t-select>
         <div class="f" style="gap: 5px; margin-left: auto">
           <t-popup content="生成">
@@ -91,6 +89,8 @@
 import { h, render } from "vue";
 import { Handle, Position } from "@vue-flow/core";
 import { Popup, Tag } from "tdesign-vue-next";
+import modelSelect from "@/components/modelSelect.vue";
+import axios from "@/utils/axios";
 
 const selected = ref(false);
 const editorRef = ref<HTMLDivElement | null>(null);
@@ -113,7 +113,9 @@ const props = defineProps<{
     ratio?: string;
     quality?: string;
     steps?: number;
+    imageId?: number;
   };
+  projectId: number;
 }>();
 
 function selectedFn() {
@@ -290,16 +292,32 @@ function handleBlur() {
 }
 
 // 生成
-function handleGenerate() {
+async function handleGenerate() {
+  if (!props.data.model) return window.$message.error("请先选择模型");
+  if (!props.data.quality) return window.$message.error("请先选择质量");
+  if (!props.data.ratio) return window.$message.error("请先选择比例");
+
   generating.value = true;
-  console.log("%c Line:263 🎂 props.data", "background:#2eafb0", props.data);
-  setTimeout(() => {
+  try {
+    const { data } = await axios.post("/production/editStoryboard/generateStoryboardImage", {
+      model: props.data.model,
+      references: props.data?.references?.map((i) => i.image) ?? [],
+      quality: props.data.quality,
+      ratio: props.data.ratio,
+      prompt: props.data.prompt,
+      projectId: props.projectId,
+    });
+    props.data.generatedImage = data.url;
+    props.data.imageId = data.imageId;
+  } catch (e) {
+    return window.$message.error((e as any)?.message || "生成失败");
+  } finally {
     generating.value = false;
-    props.data.generatedImage = "https://tdesign.gtimg.com/demo/demo-image-1.png";
-  }, 3000);
+  }
 }
+const emit = defineEmits(["keep"]);
 function kepp() {
-  console.log("keep", props.data.generatedImage);
+  emit("keep", props.data.imageId);
 }
 </script>
 

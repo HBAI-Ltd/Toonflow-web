@@ -15,7 +15,7 @@
       <storyboardTable :id="props.id" :data="props.data" />
     </template>
     <template #node-assets="props">
-      <asserts :id="props.id" :data="props.data" />
+      <assets :id="props.id" :data="props.data" />
     </template>
     <template #node-storyboard="props">
       <storyboard :id="props.id" :data="props.data" />
@@ -57,7 +57,7 @@ import "@vue-flow/core/dist/theme-default.css";
 import "@vue-flow/controls/dist/style.css";
 //子node组件
 import scriptNode from "./node/script.vue";
-import asserts from "./node/assets.vue";
+import assets from "./node/assets.vue";
 import storyboardTable from "./node/storyboardTable.vue";
 import storyboard from "./node/storyboard.vue";
 import workbench from "./node/workbench.vue";

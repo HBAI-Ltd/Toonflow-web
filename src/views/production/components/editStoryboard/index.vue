@@ -11,13 +11,22 @@
     <div class="closure">
       <i-close-small theme="outline" size="24" fill="#4a4a4a" @click="visible = false" />
     </div>
-    <VueFlow id="editStoryboard" class="editStoryboard" :nodes="nodes" :edges="edges" :min-zoom="0.01" fit-view-on-init @connect="onConnect">
+    <VueFlow
+      id="editStoryboard"
+      class="editStoryboard"
+      v-model:nodes="nodes"
+      v-model:edges="edges"
+      :min-zoom="0.01"
+      fit-view-on-init
+      @connect="onConnect"
+      @edges-change="syncReferences"
+      @node-data-change="syncReferences">
       <template #node-upload="{ id, data }">
         <uploadNode :id="id" :data="data" />
       </template>
 
       <template #node-generated="{ id, data }">
-        <generatedNode :id="id" :data="data" />
+        <generatedNode :id="id" :data="data" :projectId="projectId" @keep="sureNode" />
       </template>
       <template #edge-removeLine="edgeProps">
         <removeLine v-bind="edgeProps" />
@@ -42,7 +51,7 @@
 </template>
 
 <script setup lang="ts">
-import { VueFlow, useVueFlow, Panel, MarkerType } from "@vue-flow/core";
+import { VueFlow, useVueFlow, Panel, MarkerType, type Node, type Edge } from "@vue-flow/core";
 import { Background } from "@vue-flow/background";
 import { Controls } from "@vue-flow/controls";
 import uploadNode from "./uploadNode.vue";
@@ -51,73 +60,85 @@ import "@vue-flow/core/dist/style.css";
 import "@vue-flow/core/dist/theme-default.css";
 import "@vue-flow/controls/dist/style.css";
 import removeLine from "./removeLine.vue";
-
+import graphlib from "graphlib";
+import store from "@/stores";
+import axios from "@/utils/axios";
+const { projectId } = storeToRefs(store());
+const props = defineProps<{
+  editData: {
+    images: string[];
+    id?: number | null;
+  };
+}>();
+interface NodeUploadData {
+  type: "upload";
+  id: string;
+  position: { x: number; y: number };
+  data: { image: string };
+}
+interface NodeGeneratedData {
+  type: "generated";
+  id: string;
+  position: { x: number; y: number };
+  data: {
+    generatedImage?: string;
+    references: { image: string }[];
+    prompt: string;
+    model?: string;
+    ratio?: string;
+    quality?: string;
+    steps: number;
+    imageId?: number;
+  };
+}
+type NodeType = NodeUploadData | NodeGeneratedData;
 const visible = defineModel("visible", {
   type: Boolean,
   default: false,
 });
-
-const { addEdges } = useVueFlow({ id: "editStoryboard" });
+const { addEdges, getNodes, getEdges, updateNodeData } = useVueFlow({ id: "editStoryboard" });
 
 // 节点ID计数器
 let nodeIdCounter = 3;
 // 边ID计数器
 let edgeIdCounter = 3;
 
-const nodes = ref([
-  {
-    id: "upload-1",
-    type: "upload",
-    position: { x: 100, y: 100 },
-    data: {
-      image: "https://tdesign.gtimg.com/demo/demo-image-1.png",
-    },
-  },
-  {
-    id: "upload-2",
-    type: "upload",
-    position: { x: 100, y: 400 },
-    data: {
-      image: "https://tdesign.gtimg.com/demo/demo-image-1.png",
-    },
-  },
-  {
-    id: "generated-1",
-    type: "generated",
-    position: { x: 500, y: 200 },
-    data: {
-      generatedImage: "https://picsum.photos/400/300?random=3",
-      references: [{ image: "https://tdesign.gtimg.com/demo/demo-image-1.png" }, { image: "https://tdesign.gtimg.com/demo/demo-image-1.png" }],
-      prompt: "将图二左侧的人换成图1",
-      model: "banana-pro",
-      ratio: "16:9",
-      quality: "1K",
-      steps: 49,
-    },
-  },
-]);
+const nodes = ref<NodeType[]>([]);
+const edges = ref<Edge<any, any, string>[]>([]);
 
-const edges = ref([
-  {
-    id: "e-1",
-    source: "upload-1",
-    target: "generated-1",
-    type: "removeLine",
-    animated: true,
-    style: { stroke: "#a3e635" },
-  },
-  {
-    id: "e-2",
-    source: "upload-2",
-    target: "generated-1",
-    type: "removeLine",
-    animated: true,
-    style: { stroke: "#a3e635" },
-  },
-]);
+// 根据当前连线，将 upload 节点的图片同步到 generated 节点的 references
+function syncReferences() {
+  const allNodes = getNodes.value;
+  const allEdges = getEdges.value;
+
+  // 找出所有 generated 节点
+  allNodes
+    .filter((n) => n.type === "generated")
+    .forEach((genNode) => {
+      // 找出所有连接到该 generated 节点的 upload 节点
+      const connectedImages = allEdges
+        .filter((e) => e.target === genNode.id)
+        .map((e) => allNodes.find((n) => n.id === e.source))
+        .filter((n) => n?.type === "upload")
+        .map((n) => ({ image: (n!.data as { image?: string }).image || "" }));
+
+      updateNodeData(genNode.id, { references: connectedImages });
+    });
+}
 
 // 连接处理
 const onConnect = (params: any) => {
+  console.log("%c Line:122 🍊 params", "background:#33a5ff", params);
+  // 禁止重复连线：同一 source → target 已存在则忽略
+  const isDuplicate = getEdges.value.some((e) => e.source === params.source && e.target === params.target);
+  if (isDuplicate) return;
+
+  // 禁止同类节点连接
+  const allNodes = getNodes.value;
+  const sourceNode = allNodes.find((n) => n.id === params.source);
+  const targetNode = allNodes.find((n) => n.id === params.target);
+  if (sourceNode && targetNode && sourceNode.type === targetNode.type) return;
+
   addEdges([
     {
       id: `e-${edgeIdCounter++}`,
@@ -128,13 +149,15 @@ const onConnect = (params: any) => {
       style: { stroke: "#a3e635" },
     },
   ]);
+  // 连线建立后立即同步
+  nextTick(syncReferences);
 };
 function clickHandler(value: any) {
   const type = value.value === 1 ? "upload" : "generated";
   addUploadNode(type);
 }
 // 添加新的上传节点
-const addUploadNode = (type: string) => {
+const addUploadNode = (type: string, image: string = "") => {
   let newNodeId;
   if (type === "generated") {
     newNodeId = `generated-${nodeIdCounter++}`;
@@ -143,16 +166,67 @@ const addUploadNode = (type: string) => {
   }
   const lastUploadNode = nodes.value.filter((n) => n.type === "upload").pop();
   const newY = lastUploadNode ? lastUploadNode.position.y + 350 : 100;
-
-  nodes.value.push({
+  const refeceImage = {
+    generatedImage: "",
+    references: image ? [image] : [],
+    prompt: "",
+    model: "",
+    ratio: "",
+    quality: "",
+    steps: 49,
+  };
+  const newNodeObj = {
     id: newNodeId,
     type: type,
     position: { x: 100, y: newY },
     data: {
-      image: `https://picsum.photos/300/200?random=${nodeIdCounter}`,
+      ...(type == "generated" ? { ...refeceImage } : { image: image }),
     },
-  });
+  };
+
+  nodes.value.push(newNodeObj as NodeType);
 };
+//保存节点
+async function sureNode(imageId: number) {
+  try {
+    if (props.editData.id) {
+      await axios.post("/production/editStoryboard/updateStoryboardFlow", {
+        nodes: nodes.value,
+        edges: edges.value,
+        imageId,
+      });
+      visible.value = false;
+    } else {
+      await axios.post("/production/editStoryboard/saveStoryboardFlow", {
+        id: props.editData.id,
+        nodes: nodes.value,
+        edges: edges.value,
+        imageId,
+      });
+      visible.value = false;
+    }
+  } catch (e) {
+    window.$message.error((e as any).message || "保存失败");
+  } finally {
+  }
+}
+onMounted(async () => {
+  if (props.editData.id) {
+    const { data } = await axios.post("/production/editStoryboard/getStoryboardFlow", {
+      id: 1,
+    });
+    edges.value = data.edges;
+    nodes.value = data.nodes;
+  } else {
+    buildFlow();
+  }
+});
+
+function buildFlow() {
+  props.editData.images.forEach((i) => {
+    addUploadNode("upload", i);
+  });
+}
 </script>
 
 <style lang="scss" scoped>
