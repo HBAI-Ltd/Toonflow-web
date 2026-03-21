@@ -2,8 +2,9 @@ import { ref } from "vue";
 import { io, Socket } from "socket.io-client";
 
 export interface SocketEventMap {
-  getFlowData: (  data: any, callback: (response: any) => void) => void;
+  getFlowData: (data: any, callback: (response: any) => void) => void;
   setFlowData: (data: any) => void;
+  noticeUserGeneratedFlowDataImages: null;
   message: string;
   stop: string;
   textMessage: { type: "start" | "content" | "end"; messageId: string; delta: string | null; role: "assistant"; name: string };
@@ -42,8 +43,10 @@ export function useSocket<T extends SocketEventMap = SocketEventMap>(url = "http
   };
 
   const send = <E extends keyof T & string>(event: E, ...args: T[E] extends void ? [] : [T[E]]) => socket?.emit(event, ...args);
-  const on = <E extends keyof T & string>(event: E, callback: T[E] extends (...args: any[]) => any ? T[E] : (data: T[E]) => void) => socket?.on(event, callback as any);
-  const off = <E extends keyof T & string>(event: E, callback?: T[E] extends (...args: any[]) => any ? T[E] : (data: T[E]) => void) => socket?.off(event, callback as any);
+  const on = <E extends keyof T & string>(event: E, callback: T[E] extends (...args: any[]) => any ? T[E] : (data: T[E]) => void) =>
+    socket?.on(event, callback as any);
+  const off = <E extends keyof T & string>(event: E, callback?: T[E] extends (...args: any[]) => any ? T[E] : (data: T[E]) => void) =>
+    socket?.off(event, callback as any);
 
   return { connected, socket: { connect, disconnect, send, on, off } };
 }

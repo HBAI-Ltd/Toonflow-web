@@ -5,37 +5,34 @@
     <div class="titleBar dragHandle">
       <div class="title c">分镜表</div>
     </div>
-    <div class="content">
-      <div v-for="(group, groupIndex) in props.data.groups" :key="group.id" class="groupSection">
-        <div class="groupHeader">{{ group.name }}</div>
-        <div class="storyboardList">
-          <div v-for="(item, index) in group.items" :key="`${group.id}-${item.id}`" class="storyboardItem">
-            <div class="itemTag" :style="{ backgroundColor: tagColors[(groupIndex * 10 + index) % tagColors.length] }">
-              S{{ String(item.id).padStart(2, "0") }}
+    <div class="storyboardList">
+      <div v-for="(item, index) in props.data.groups" :key="item.id" class="storyboardItem">
+        <div class="itemTag" :style="{ backgroundColor: tagColors[index % tagColors.length] }">
+          S{{ String(item.id).padStart(2, '0') }}
+        </div>
+        <div class="itemContent">
+          <div class="itemHeader">
+            <div class="itemTitle">{{ item.title }} — {{ item.description }}</div>
+            <div class="itemTags">
+              <t-tag size="small" theme="warning">{{ item.duration }}s</t-tag>
+              <t-popup :content="item.frameMode" theme="light" placement="top">
+                <t-tag size="small" theme="success">{{ item.frameMode }}</t-tag>
+              </t-popup>
+              <t-popup v-if="item.associateAssetsIds.length" :content="item.associateAssetsIds.join('，')" theme="light" placement="top">
+                <t-tag size="small" theme="primary">角</t-tag>
+              </t-popup>
             </div>
-            <div class="itemContent">
-              <div class="jb ac">
-                <div class="itemTitle">{{ item.scene }} — {{ item.description }}</div>
-                <div>
-                  <t-tag size="small" theme="warning" style="cursor: pointer">{{ item.duration || "3s" }}</t-tag>
-                  <t-popup :content="item.frameMode" theme="light" placement="top">
-                    <t-tag size="small" theme="success" style="margin-left: 5px; cursor: pointer">{{ item.frameMode }}</t-tag>
-                  </t-popup>
-                  <t-popup :content="item.assets.join('，')" theme="light" placement="top">
-                    <t-tag size="small" theme="primary" style="margin-left: 5px; cursor: pointer">角</t-tag>
-                  </t-popup>
-                </div>
-              </div>
-              <div class="itemSubtitle">
-                景别：{{ item.camera.split("，")[0] }}
-                {{ item.camera.includes("，") ? " -- 运镜：" + item.camera.split("，").slice(1).join("，") : "" }} -- 情绪目的：{{
-                  item.mooPurpose
-                }}
-                -- 运镜：{{ item.luck }} -- 首帧描述：{{ item.firstFrameDescribe }} -- 尾帧描述：{{ item.endFrameDescription }} -- 台词/音效：{{
-                  item.linesSoundEffects
-                }}
-              </div>
-            </div>
+          </div>
+          <div class="itemDetail">
+            <span>景别：{{ item.camera }}</span>
+            <template v-if="item.lines">
+              <span class="sep">|</span>
+              <span>台词：{{ item.lines }}</span>
+            </template>
+            <template v-if="item.sound">
+              <span class="sep">|</span>
+              <span>音效：{{ item.sound }}</span>
+            </template>
           </div>
         </div>
       </div>
@@ -46,32 +43,22 @@
 <script setup lang="ts">
 import { Handle, Position } from "@vue-flow/core";
 
-interface StoryboardItem {
+interface StoryboardTableItem {
   id: number;
-  scene: string;
+  title: string;
   description: string;
   camera: string;
-  duration?: string;
-  frameMode: string;
-  mooPurpose: string;
-  luck: string;
-  firstFrameDescribe: string;
-  endFrameDescription: string;
-  linesSoundEffects: string;
-  assets: string[];
-}
-
-interface StoryboardGroup {
-  id: string;
-  name: string;
-  blockId: string;
-  items: StoryboardItem[];
+  duration: number;
+  frameMode: "firstFrame" | "endFrame" | "linesSoundEffects";
+  lines: string | null;
+  sound: string | null;
+  associateAssetsIds: number[];
 }
 
 const props = defineProps<{
   id: string;
   data: {
-    groups: StoryboardGroup[];
+    groups: StoryboardTableItem[];
     handleIds: {
       target: string;
       source: string;
@@ -94,6 +81,7 @@ const tagColors = ["#9c7cfc", "#5b9afc", "#5bccb3", "#e8a855", "#e86b6b", "#7cb8
     cursor: grab;
     user-select: none;
   }
+
   .title {
     background-color: #000;
     width: fit-content;
@@ -103,31 +91,10 @@ const tagColors = ["#9c7cfc", "#5b9afc", "#5bccb3", "#e8a855", "#e86b6b", "#7cb8
     font-size: 16px;
   }
 
-  .content {
-    margin-top: 8px;
-  }
-
-  .groupSection {
-    margin-bottom: 16px;
-
-    &:last-child {
-      margin-bottom: 0;
-    }
-  }
-
-  .groupHeader {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--td-text-color-primary, #333);
-    padding: 8px 0;
-    border-bottom: 2px solid var(--td-brand-color, #0052d9);
-    margin-bottom: 8px;
-  }
-
   .storyboardList {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    margin-top: 8px;
   }
 
   .storyboardItem {
@@ -161,17 +128,35 @@ const tagColors = ["#9c7cfc", "#5b9afc", "#5bccb3", "#e8a855", "#e86b6b", "#7cb8
     min-width: 0;
   }
 
+  .itemHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+  }
+
+  .itemTags {
+    display: flex;
+    gap: 5px;
+    flex-shrink: 0;
+    margin-left: 12px;
+  }
+
   .itemTitle {
     font-size: 14px;
     color: var(--td-text-color-primary, #333);
     line-height: 1.5;
-    margin-bottom: 4px;
   }
 
-  .itemSubtitle {
+  .itemDetail {
     font-size: 12px;
     color: var(--td-text-color-secondary, #999);
     line-height: 1.4;
+
+    .sep {
+      margin: 0 6px;
+      color: var(--td-border-level-1-color, #ddd);
+    }
   }
 }
 </style>

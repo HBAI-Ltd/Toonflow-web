@@ -28,24 +28,16 @@ interface AssetItem {
   derive: DeriveAsset[];
 }
 
-interface StoryboardItem {
+interface StoryboardTableItem {
   id: number;
-  scene: string;
+  title: string;
   description: string;
   camera: string;
-  duration?: string;
-  frameMode?: string;
-  mooPurpose?: string;
-  luck?: string;
-  firstFrameDescribe?: string;
-  endFrameDescription?: string;
-  linesSoundEffects?: string;
-  assets?: string[];
-}
-
-interface StoryboardTableGroup {
-  name: string;
-  items: StoryboardItem[];
+  duration: number;
+  frameMode: "firstFrame" | "endFrame" | "linesSoundEffects";
+  lines: string | null;
+  sound: string | null;
+  associateAssetsIds: number[];
 }
 
 interface StoryboardFrame {
@@ -79,7 +71,7 @@ export interface FlowData {
   script: string;
   assets: AssetItem[];
   storyboardTable: {
-    groups: StoryboardTableGroup[];
+    groups: StoryboardTableItem[];
   };
   storyboard: {
     groups: StoryboardGroup[];
@@ -140,7 +132,7 @@ export function useFlowBuilder(flowData: Ref<FlowData>, nodePositions: Ref<NodeP
         dragHandle: ".dragHandle",
         position: positions[ids.storyboardTable] || { x: 0, y: 0 },
         data: {
-          groups: data.storyboardTable.groups.map((g, i) => ({
+          groups: (data.storyboardTable?.groups ?? []).map((g, i) => ({
             ...g,
             id: `st-${i + 1}`,
           })),
@@ -157,10 +149,10 @@ export function useFlowBuilder(flowData: Ref<FlowData>, nodePositions: Ref<NodeP
         dragHandle: ".dragHandle",
         position: positions[ids.storyboard] || { x: 0, y: 0 },
         data: {
-          groups: data.storyboard.groups.map((g, i) => ({
+          groups: (data.storyboard?.groups ?? []).map((g, i) => ({
             ...g,
             id: `sb-${i + 1}`,
-            name: data.storyboardTable.groups[i]?.name || `第${i + 1}幕`,
+            name: data.storyboardTable?.groups?.[i]?.title || `第${i + 1}幕`,
           })),
           handleIds: {
             target: `${ids.storyboard}-target`,
@@ -189,7 +181,7 @@ export function useFlowBuilder(flowData: Ref<FlowData>, nodePositions: Ref<NodeP
         dragHandle: ".dragHandle",
         position: positions[ids.poster] || { x: 0, y: 0 },
         data: {
-          items: data.poster.items,
+          items: data.poster?.items ?? [],
           handleIds: {
             target: `${ids.poster}-target`,
           },

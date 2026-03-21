@@ -20,7 +20,6 @@
           :variant="message.role === 'user' ? 'base' : 'outline'"
           :handleActions="message.role === 'user' ? {} : handleActions"
           :status="message.status"
-          :action-bar="['replay', 'copy']"
           allowContentSegmentCustom>
           <!-- <template #actionbar>
             <t-chat-actionbar :action-bar="['replay', 'copy']" />
@@ -77,6 +76,7 @@ import { useMousePressed, useMouse } from "@vueuse/core";
 import projectStore from "@/stores/project";
 import settingStore from "@/stores/setting";
 import { useSocket } from "@/utils/useSocket";
+import type { FlowData } from "../../utils/flowBuilder";
 
 const { baseUrl } = storeToRefs(settingStore());
 const { project } = storeToRefs(projectStore());
@@ -115,7 +115,9 @@ const { connected, socket } = useSocket(`${baseUrl.value}/socket/productionAgent
   isolationKey: `${project.value?.id}:${props.episodesId}`,
 });
 
-const flowData = defineModel<any>();
+const flowData = defineModel<FlowData>({
+  required: true,
+});
 
 onMounted(() => {
   socket.connect();
@@ -138,20 +140,12 @@ onMounted(() => {
         msg.content![0].status = "complete";
       }
     }
-    messages.value = messages.value.sort((a, b) => {
-      const aPending = a.status === "pending" ? 1 : 0;
-      const bPending = b.status === "pending" ? 1 : 0;
-      return aPending - bPending;
-    });
+    sortMessages();
   });
 
   socket.on("systemMessage", (data) => {
     messages.value.push({ id: data.messageId, role: "system", status: "complete", content: [{ type: "text", data: data.content }] });
-    messages.value = messages.value.sort((a, b) => {
-      const aPending = a.status === "pending" ? 1 : 0;
-      const bPending = b.status === "pending" ? 1 : 0;
-      return aPending - bPending;
-    });
+    sortMessages();
   });
 
   socket.on("getFlowData", (_, callback) => {
@@ -164,6 +158,14 @@ onMounted(() => {
 
   getHistory();
 });
+
+function sortMessages() {
+  messages.value = messages.value.sort((a, b) => {
+    const aPending = a.status === "pending" ? 1 : 0;
+    const bPending = b.status === "pending" ? 1 : 0;
+    return aPending - bPending;
+  });
+}
 
 // ============== Actions ==============
 
