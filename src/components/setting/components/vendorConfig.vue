@@ -87,7 +87,12 @@
           </div>
           <div class="tags">
             <t-tag theme="primary">{{ getTypeLabel(item.type) }}</t-tag>
-            <t-tag v-for="mode in (item as any).mode" :key="mode" variant="light">{{ getModeLabel(mode, item.type) }}</t-tag>
+            <template v-for="(mode, mIdx) in (item as any).mode" :key="mIdx">
+              <t-tag v-if="!Array.isArray(mode)" variant="light">{{ getModeLabel(mode, item.type) }}</t-tag>
+              <t-tag v-else variant="light" v-for="(m, mmIdx) in mode" :key="mmIdx">
+                {{ getModeLabel(m, item.type) }}
+              </t-tag>
+            </template>
           </div>
         </t-card>
 
@@ -146,7 +151,12 @@
 
           <template v-if="modelFormData.type === 'video'">
             <t-form-item name="mode" label="视频模式">
-              <t-checkbox-group v-model="modelFormData.mode" :options="videoModeOptions" />
+              <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 0">
+                <t-checkbox-group v-model="modelFormData.mode" :options="videoModeOptions" />
+                <div style="border: 1px solid #ddd; border-radius: 6px; padding: 6px 12px; margin-top: 6px">
+                  <t-checkbox-group v-model="modelFormData.mixedMode" :options="otherOptions" style="display: flex; flex-direction: row; gap: 8px" />
+                </div>
+              </div>
             </t-form-item>
             <t-form-item name="audio" label="音频输出">
               <t-radio-group v-model="modelFormData.audio">
@@ -272,8 +282,6 @@ interface VideoModel {
     | "endFrameOptional"
     | "startFrameOptional"
     | "text"
-    | "audioReference"
-    | "videoReference"
   )[];
   audio: "optional" | false | true;
   durationResolutionMap: { duration: number[]; resolution: string[] }[];
@@ -322,6 +330,8 @@ const MODE_LABEL_MAP: Record<string, string> = {
   startFrameOptional: "首尾帧（首帧可选）",
   audioReference: "音频参考",
   videoReference: "视频参考",
+  textReference: "文本参考",
+  imageReference: "图片参考",
 };
 
 function getTypeLabel(type: string) {
@@ -373,8 +383,12 @@ const videoModeOptions = [
   { label: "首尾帧（尾帧可选）", value: "endFrameOptional" },
   { label: "首尾帧（首帧可选）", value: "startFrameOptional" },
   { label: "文生视频", value: "text" },
-  { label: "音频参考", value: "audioReference" },
-  { label: "视频参考", value: "videoReference" },
+];
+const otherOptions = [
+  { label: "文本", value: "textReference" },
+  { label: "图片", value: "videoReference" },
+  { label: "视频", value: "imageReference" },
+  { label: "音频", value: "audioReference" },
 ];
 
 const audioOptions: { label: string; value: "optional" | false | true }[] = [
@@ -577,6 +591,7 @@ const modelFormData = ref({
   multimodal: false,
   tool: false,
   mode: [] as string[],
+  mixedMode: [] as string[], // otherOptions 选中项，单独存放，构建时作为数组元素加入 mode
   audio: "optional" as "optional" | false | true,
   durationResolutionMap: [{ duration: [] as string[], resolution: [] as string[] }] as DrmRow[],
 });
@@ -589,6 +604,7 @@ function resetModelForm(type: "text" | "image" | "video" = "text") {
     multimodal: false,
     tool: false,
     mode: [],
+    mixedMode: [],
     audio: "optional",
     durationResolutionMap: [{ duration: [], resolution: [] }],
   };
@@ -652,7 +668,11 @@ function buildModelFromForm(): VendorModel | null {
     };
   }
 
-  const mode = modelFormData.value.mode as VideoModel["mode"];
+  // 把 mixedMode（otherOptions 选中项）作为一个数组元素追加到 mode
+  const mode = [...modelFormData.value.mode] as VideoModel["mode"];
+  if (modelFormData.value.mixedMode.length > 0) {
+    (mode as any[]).push([...modelFormData.value.mixedMode]);
+  }
   if (!mode.length) {
     MessagePlugin.error("请至少选择一个视频模式");
     return null;
@@ -735,6 +755,7 @@ function handleEditModel(model: VendorModel) {
       multimodal: model.multimodal,
       tool: model.tool,
       mode: [],
+      mixedMode: [],
       audio: "optional",
       durationResolutionMap: [{ duration: [], resolution: [] }],
     };
@@ -748,6 +769,7 @@ function handleEditModel(model: VendorModel) {
       multimodal: false,
       tool: false,
       mode: [...model.mode],
+      mixedMode: [],
       audio: "optional",
       durationResolutionMap: [{ duration: [], resolution: [] }],
     };
@@ -761,13 +783,24 @@ function handleEditModel(model: VendorModel) {
             resolution: [...map.resolution],
           }))
         : [{ duration: [], resolution: [] }];
+    // 反解：把 mode 中数组类型的元素提取为 mixedMode，其余为普通 mode
+    const flatMode: string[] = [];
+    let mixedMode: string[] = [];
+    for (const m of model.mode) {
+      if (Array.isArray(m)) {
+        mixedMode = [...m];
+      } else {
+        flatMode.push(m);
+      }
+    }
     modelFormData.value = {
       name: model.name,
       modelName: model.modelName,
       type: "video",
       multimodal: false,
       tool: false,
-      mode: [...model.mode],
+      mode: flatMode,
+      mixedMode,
       audio: model.audio,
       durationResolutionMap: rows,
     };

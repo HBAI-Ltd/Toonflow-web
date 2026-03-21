@@ -44,7 +44,6 @@ const props = defineProps({
     default: "请选择模型",
   },
   changeConfig: {
-    //change时是否需要获取模型相关配置
     type: Boolean,
     default: false,
   },
@@ -55,7 +54,6 @@ const emit = defineEmits<{
 async function onChange(value: any) {
   selectValue.value = value;
   if (props.changeConfig) {
-    console.log("%c Line:59 🍻", "background:#93c0a4");
     const { data } = await axios.post("/modelSelect/getModelDetail", {
       modelId: value,
     });

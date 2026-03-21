@@ -98,7 +98,6 @@ function onFilterChange() {
 
 async function getCategories() {
   const { data } = await axios.post("/task/getTaskCategories", { projectId: project.value?.id }).catch(() => ({ data: [] }));
-  console.log("%c Line:101 🥕 data", "background:#e41a6a", data);
   categoryOptions.value = [{ label: "全部", value: "" }, ...data.map((i: any) => ({ label: i.taskClass, value: i.taskClass }))];
 }
 
