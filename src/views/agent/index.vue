@@ -57,24 +57,27 @@
       <div class="data">
         <div class="tabsWrapper">
           <t-tabs v-model="currentTable">
-            <t-tab-panel :value="1" label="章节事件">
+            <template #action>
+              <div class="ac"></div>
+            </template>
+            <!-- <t-tab-panel :value="1" label="章节事件">
               <pre>{{ planData.event }}</pre>
-            </t-tab-panel>
-            <t-tab-panel :value="2" label="故事骨架">
+            </t-tab-panel> -->
+            <t-tab-panel :value="1" label="故事骨架">
               <div class="panelContent">
                 <MdPreview v-if="planData.storySkeleton" :modelValue="planData.storySkeleton" />
-                <t-empty v-else description="暂无内容" />
+                <t-empty v-else title="暂无内容" />
               </div>
             </t-tab-panel>
-            <t-tab-panel :value="3" label="改编策略">
+            <t-tab-panel :value="2" label="改编策略">
               <div class="panelContent">
                 <MdPreview v-if="planData.adaptationStrategy" :modelValue="planData.adaptationStrategy" />
-                <t-empty v-else description="暂无内容" />
+                <t-empty v-else title="暂无内容" />
               </div>
             </t-tab-panel>
-            <t-tab-panel :value="4" label="剧本">
+            <t-tab-panel :value="3" label="剧本">
               <div class="panelContent">
-                <t-empty v-if="!planData.script?.length" description="暂无内容" />
+                <t-empty v-if="!planData.script?.length" title="暂无内容" />
                 <div v-else class="scriptList">
                   <div v-for="(item, index) in planData.script" :key="index" class="scriptCard">
                     <div class="scriptCardHeader">
@@ -82,7 +85,7 @@
                       <span class="scriptTitle">{{ item.title }}</span>
                     </div>
                     <div class="scriptCardBody">
-                      <MdPreview v-if="item.content" :modelValue="item.content" />
+                      <pre v-if="item.content">{{ item.content }}</pre>
                       <span v-else class="emptyContent">暂无内容</span>
                     </div>
                   </div>
@@ -132,7 +135,7 @@ async function getData() {
     limit: 99999,
   });
   const eventString = data.data.map((i: any) => [`第${i.index}章，标题：${i.chapter}，事件：${i.event}`].join("\n")).join("\n");
-  planData.value.event = eventString
+  planData.value.event = eventString;
 }
 
 onMounted(() => {
@@ -380,6 +383,8 @@ async function getHistory() {
     font-size: 0.8125rem;
     line-height: 1.7;
     color: var(--td-text-color-primary);
+    padding: 0.5rem 0.75rem;
+
     .emptyContent {
       display: block;
       padding: 0.5rem 0.75rem;
@@ -408,5 +413,9 @@ async function getHistory() {
       color: #e34d59;
     }
   }
+}
+:deep(.t-tabs__operations--right) {
+  top: 0;
+  bottom: 0;
 }
 </style>

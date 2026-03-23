@@ -201,7 +201,7 @@ function handleClick(menu: any) {
     }
     .viewBox {
       width: 100%;
-      height: calc(94vh - 2rem);
+      height: calc(100% - 6vh);
     }
   }
 }
@@ -239,4 +239,5 @@ function handleClick(menu: any) {
   background-color: #ecedef;
   margin: 8px 0;
 }
+
 </style>

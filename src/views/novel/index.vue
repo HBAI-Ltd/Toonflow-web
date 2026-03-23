@@ -1,6 +1,6 @@
 <template>
-  <div class="novel">
-    <div class="headBtn jb ac">
+  <div class="novel" ref="novelRef">
+    <div class="headBtn jb ac" ref="headBtnRef">
       <t-space>
         <t-button theme="primary" @click="importNovelFn">
           <template #icon>
@@ -30,10 +30,10 @@
       </div>
     </div>
     <t-table
-      style="margin-top: 10px"
+      ref="tableRef"
+      style="margin-top: 10px; flex: 1; display: flex; flex-direction: column"
       :columns="columns"
       :data="tableData"
-      :max-height="600"
       :selected-row-keys="selectedRowKeys"
       :select-on-row-click="true"
       :keyboardRowHover="false"
@@ -103,7 +103,7 @@ const columns = ref<Record<string, unknown>[]>([
     width: 50,
     align: "center",
   },
-  { colKey: "reel", title: "卷", width: 200, align: "center", cell: "preview" },
+  { colKey: "reel", title: "卷", width: 100, align: "center", cell: "preview" },
   { colKey: "chapter", title: "章节名称", width: 100, ellipsis: true },
   { colKey: "chapterData", title: "章节内容", ellipsis: true },
   { colKey: "event", title: "事件", ellipsis: true },
@@ -134,7 +134,13 @@ const pagination = ref({
   total: 0,
 });
 
-onMounted(getNovel);
+onMounted(() => {
+  getNovel();
+});
+
+onUnmounted(() => {
+  stopPolling();
+});
 function onChange() {
   pagination.value.page = 1;
   getNovel();
@@ -285,16 +291,20 @@ watch(notCompultedData, (val) => {
     stopPolling();
   }
 });
-
-onUnmounted(() => {
-  stopPolling();
-});
 </script>
 
 <style lang="scss" scoped>
 .novel {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  padding-bottom: 1rem;
   .headBtn {
     margin-top: 20px;
   }
+}
+:deep(.t-table__content) {
+  flex: 1;
 }
 </style>
