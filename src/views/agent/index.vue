@@ -58,7 +58,9 @@
         <div class="tabsWrapper">
           <t-tabs v-model="currentTable">
             <template #action>
-              <div class="ac"></div>
+              <div class="ac" v-if="currentTable != 3">
+                <t-button @click="editMdPreview">编辑</t-button>
+              </div>
             </template>
             <!-- <t-tab-panel :value="1" label="章节事件">
               <pre>{{ planData.event }}</pre>
@@ -81,12 +83,31 @@
                 <div v-else class="scriptList">
                   <div v-for="(item, index) in planData.script" :key="index" class="scriptCard">
                     <div class="scriptCardHeader">
-                      <span class="scriptIndex">#{{ index + 1 }}</span>
-                      <span class="scriptTitle">{{ item.title }}</span>
+                      <div class="scriptCardHeaderLeft">
+                        <span class="scriptIndex">#{{ index + 1 }}</span>
+                        <span class="scriptTitle">{{ item.title }}</span>
+                      </div>
+                      <div class="scriptCardActions">
+                        <t-button size="small" @click="editScript(index)">
+                          <template #icon><i-edit size="14" /></template>
+                          编辑
+                        </t-button>
+                      </div>
                     </div>
                     <div class="scriptCardBody">
                       <pre v-if="item.content">{{ item.content }}</pre>
                       <span v-else class="emptyContent">暂无内容</span>
+                    </div>
+                    <div v-if="item.relatedAssets?.length" class="scriptCardFooter ac">
+                      <span class="assetsLabel">
+                        <i-link size="12" />
+                        关联资产
+                      </span>
+                      <div class="assetsTags">
+                        <t-tag v-for="(asset, ai) in item.relatedAssets" size="small" :key="ai" variant="light" theme="warning">
+                          {{ asset }}
+                        </t-tag>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -96,6 +117,48 @@
         </div>
       </Pane>
     </Splitpanes>
+    <editMdPreivew v-model="dialogVisible" @save="onConfirm" :content="editContent" />
+
+    <!-- 剧本编辑对话框 -->
+    <t-dialog
+      v-model:visible="scriptEditVisible"
+      header="编辑剧本"
+      width="680px"
+      :confirm-btn="{ content: '保存', theme: 'primary' }"
+      @confirm="saveScript"
+      @close="scriptEditVisible = false">
+      <div class="scriptEditForm">
+        <div class="scriptEditField">
+          <label>标题</label>
+          <t-input v-model="scriptEditData.title" placeholder="请输入标题" />
+        </div>
+        <div class="scriptEditField">
+          <label>内容</label>
+          <t-textarea v-model="scriptEditData.content" placeholder="请输入剧本内容" :autosize="{ minRows: 8, maxRows: 16 }" />
+        </div>
+        <div class="scriptEditField">
+          <label>关联资产</label>
+          <div class="assetsEditor">
+            <div class="assetsTagList">
+              <t-tag
+                v-for="(asset, i) in scriptEditData.relatedAssets"
+                :key="i"
+                size="small"
+                variant="light"
+                theme="primary"
+                closable
+                @close="removeAsset(i)">
+                {{ asset }}
+              </t-tag>
+            </div>
+            <div class="assetsInputRow">
+              <t-input v-model="newAssetInput" size="small" placeholder="输入资产名称后回车添加" @enter="addAsset" style="flex: 1" />
+              <t-button size="small" variant="outline" @click="addAsset">添加</t-button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </t-dialog>
   </div>
 </template>
 
@@ -109,7 +172,7 @@ import settingStore from "@/stores/setting";
 import { useSocket } from "@/utils/useSocket";
 import { Splitpanes, Pane } from "splitpanes";
 import "splitpanes/dist/splitpanes.css";
-
+import editMdPreivew from "@/components/editMdPreivew.vue";
 const { baseUrl } = storeToRefs(settingStore());
 const { project } = storeToRefs(projectStore());
 
@@ -117,6 +180,9 @@ const inputValue = ref("");
 const loadingHistory = ref(false);
 const status = ref<"idle" | "pending" | "streaming">("idle");
 const currentMessageId = ref<string | null>(null);
+
+const dialogVisible = ref(false);
+const editContent = ref("");
 
 const planData = ref({
   event: "",
@@ -126,6 +192,32 @@ const planData = ref({
     {
       title: "第一幕",
       content: "123213123123123123123",
+      relatedAssets: ["1123", "啊手动阀", "12321321"],
+    },
+    {
+      title: "第一幕",
+      content: "123213123123123123123",
+      relatedAssets: ["1123", "啊手动阀", "12321321"],
+    },
+    {
+      title: "第一幕",
+      content: "123213123123123123123",
+      relatedAssets: ["1123", "啊手动阀", "12321321"],
+    },
+    {
+      title: "第一幕",
+      content: "123213123123123123123",
+      relatedAssets: ["1123", "啊手动阀", "12321321"],
+    },
+    {
+      title: "第一幕",
+      content: "123213123123123123123",
+      relatedAssets: ["1123", "啊手动阀", "12321321"],
+    },
+    {
+      title: "第一幕",
+      content: "123213123123123123123",
+      relatedAssets: ["1123", "啊手动阀", "12321321"],
     },
   ],
 });
@@ -270,6 +362,63 @@ async function getHistory() {
   sortMessages();
   loadingHistory.value = false;
 }
+
+// ============== 剧本编辑 ==============
+const scriptEditVisible = ref(false);
+const scriptEditIndex = ref(-1);
+const newAssetInput = ref("");
+const scriptEditData = ref({ title: "", content: "", relatedAssets: [] as string[] });
+
+function editScript(index: number) {
+  const item = planData.value.script[index];
+  scriptEditIndex.value = index;
+  scriptEditData.value = {
+    title: item.title,
+    content: item.content,
+    relatedAssets: [...(item.relatedAssets ?? [])],
+  };
+  newAssetInput.value = "";
+  scriptEditVisible.value = true;
+}
+
+function saveScript() {
+  if (scriptEditIndex.value < 0) return;
+  planData.value.script[scriptEditIndex.value] = {
+    ...planData.value.script[scriptEditIndex.value],
+    ...scriptEditData.value,
+  };
+  scriptEditVisible.value = false;
+}
+
+function addAsset() {
+  const val = newAssetInput.value.trim();
+  if (!val) return;
+  scriptEditData.value.relatedAssets.push(val);
+  newAssetInput.value = "";
+}
+
+function removeAsset(index: number) {
+  scriptEditData.value.relatedAssets.splice(index, 1);
+}
+
+//编辑markdown
+function editMdPreview() {
+  if (currentTable.value == 1) editContent.value = planData.value.storySkeleton;
+  else if (currentTable.value == 2) editContent.value = planData.value.adaptationStrategy;
+  dialogVisible.value = true;
+}
+function onConfirm(value: string) {
+  editContent.value = value;
+  switch (currentTable.value) {
+    case 1:
+      planData.value.storySkeleton = value;
+      return;
+    case 2:
+      planData.value.adaptationStrategy = value;
+      return;
+  }
+  dialogVisible.value = false;
+}
 </script>
 
 <style lang="scss" scoped>
@@ -360,48 +509,131 @@ async function getHistory() {
 }
 
 .scriptList {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: 0.75rem;
 }
 
 .scriptCard {
   border: 1px solid var(--td-border-level-2-color);
-  border-radius: 6px;
+  border-radius: 8px;
   overflow: hidden;
   background: #fff;
+  display: flex;
+  flex-direction: column;
+  transition: box-shadow 0.2s ease;
   .scriptCardHeader {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 0.5rem;
     padding: 0.5rem 0.75rem;
     background-color: #f5f7fa;
     border-bottom: 1px solid var(--td-border-level-2-color);
+    .scriptCardHeaderLeft {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      min-width: 0;
+    }
+    .scriptCardActions {
+      flex-shrink: 0;
+    }
     .scriptIndex {
       font-size: 0.75rem;
       font-weight: 600;
       color: var(--td-brand-color);
       flex-shrink: 0;
+      background: var(--td-brand-color-light);
+      padding: 1px 6px;
+      border-radius: 4px;
     }
     .scriptTitle {
       font-size: 0.875rem;
       font-weight: 600;
       color: var(--td-text-color-primary);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
   }
   .scriptCardBody {
     font-size: 0.8125rem;
     line-height: 1.7;
     color: var(--td-text-color-primary);
-    padding: 0.5rem 0.75rem;
-
+    padding: 0.625rem 0.75rem;
+    flex: 1;
+    pre {
+      margin: 0;
+      white-space: pre-wrap;
+      word-break: break-all;
+      font-family: inherit;
+    }
     .emptyContent {
       display: block;
-      padding: 0.5rem 0.75rem;
       color: var(--td-text-color-placeholder);
+      font-size: 0.8125rem;
     }
     :deep(.md-editor-preview-wrapper) {
-      padding: 0.5rem 0.75rem;
+      padding: 0;
+    }
+  }
+  .scriptCardFooter {
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    border-top: 1px solid var(--td-border-level-2-color);
+    background-color: #fafafa;
+    .assetsLabel {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      font-size: 0.75rem;
+      color: var(--td-text-color-secondary);
+      white-space: nowrap;
+      margin-top: 2px;
+      flex-shrink: 0;
+    }
+    .assetsTags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+    }
+  }
+}
+
+.scriptEditForm {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 0.25rem 0;
+  .scriptEditField {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+    label {
+      font-size: 0.8125rem;
+      font-weight: 500;
+      color: var(--td-text-color-secondary);
+    }
+  }
+  .assetsEditor {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    border: 1px solid var(--td-border-level-2-color);
+    border-radius: 6px;
+    padding: 0.5rem 0.75rem;
+    background: #fafafa;
+    .assetsTagList {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      min-height: 1.5rem;
+    }
+    .assetsInputRow {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
     }
   }
 }
@@ -427,5 +659,8 @@ async function getHistory() {
 :deep(.t-tabs__operations--right) {
   top: 0;
   bottom: 0;
+}
+:deep(.t-tabs__btn--right) {
+  display: none;
 }
 </style>

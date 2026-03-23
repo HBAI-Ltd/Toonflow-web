@@ -647,8 +647,8 @@ function resumePollingIfNeeded(list: StoryboardItem[]) {
   // 合并到待轮询列表（去重），不覆盖已有的
   const merged = new Set([...pendingResultIds.value, ...pendingIds]);
   pendingResultIds.value = [...merged];
-  // 如果当前没有轮询定时器则启动
-  startPolling(false);
+  // 强制重启，确保新加入的 pendingIds 被立即轮询（页面刷新恢复场景）
+  startPolling(true);
 }
 
 //当前选中的分镜或者视频
@@ -1098,7 +1098,12 @@ let pollingTimer: number | null = null;
 async function fetchVideoData(scriptId: number | string, specifyIds: Array<number | string>) {
   try {
     const { data } = await axios.post("/production/workbench/videoPolling", { scriptId, specifyIds });
-    if (!data || data.length === 0) return;
+    // 接口返回空数据，说明这批 ID 后端已无记录，直接清空并停止轮询
+    if (!data || data.length === 0) {
+      pendingResultIds.value = [];
+      stopPolling();
+      return;
+    }
     const polledVideos = data as VideoRecord[];
     // 将后端返回的视频状态合并到 shotList：已有的更新状态，不存在的追加进去
     const updatedList = shotList.value.map((shot) => {
@@ -1168,6 +1173,13 @@ async function fetchVideoData(scriptId: number | string, specifyIds: Array<numbe
     if (doneIds.length > 0) {
       pendingResultIds.value = pendingResultIds.value.filter((id) => !doneIds.includes(id));
     }
+    // 后端本次未返回的 ID 视为已失效，一并移除，防止永久轮询
+    const returnedIds = polledVideos.map((v) => v.id);
+    pendingResultIds.value = pendingResultIds.value.filter((id) => returnedIds.includes(id));
+    // 全部完成则立即停止轮询
+    if (pendingResultIds.value.length === 0) {
+      stopPolling();
+    }
   } catch (error) {
     console.error("获取视频数据失败:", error);
   }
@@ -1182,7 +1194,13 @@ function startPolling(force: boolean = false) {
     stopPolling();
   }
   // 使用 nextTick 确保数据已更新
-  nextTick(() => {
+  nextTick(async () => {
+    if (pendingResultIds.value.length === 0) return;
+    // 先立即执行一次，无需等待第一个 5s 间隔
+    if (currentScriptId.value) {
+      await fetchVideoData(currentScriptId.value, [...pendingResultIds.value]);
+    }
+    // 若立即执行后已全部完成，不再开启定时器
     if (pendingResultIds.value.length === 0) return;
     pollingTimer = window.setInterval(async () => {
       if (pendingResultIds.value.length === 0) {
@@ -1190,7 +1208,7 @@ function startPolling(force: boolean = false) {
         return;
       }
       if (currentScriptId.value) {
-        await fetchVideoData(currentScriptId.value, pendingResultIds.value);
+        await fetchVideoData(currentScriptId.value, [...pendingResultIds.value]);
       }
     }, 5000);
   });
@@ -1214,10 +1232,11 @@ function handleConfirmSelection() {
       getProductionData();
     });
 }
-function handleBatchGenerate() {
+async function handleBatchGenerate() {
   // 批量生成逻辑
-  for (const shot of shotList.value) {
-    const data = {
+  const checkedShots = shotList.value.filter((item) => checkedIds.value.has(item.id));
+  for (const shot of checkedShots) {
+    const list = {
       scriptId: shot.scriptId,
       projectId: project.value?.id,
       storyboardId: shot.id,
@@ -1236,18 +1255,22 @@ function handleBatchGenerate() {
           ]
         : [],
     };
-    axios.post("/production/workbench/generateVideo", data).then(({ data }) => {
-      const newVideoIds: Array<number | string> = Array.isArray(data) ? data : [data];
-      const merged = new Set([...pendingResultIds.value, ...newVideoIds]);
-      pendingResultIds.value = [...merged];
-      getProductionData();
-      startPolling(true);
-    });
+    const { data } = await axios.post("/production/workbench/generateVideo", list);
+    const newVideoIds: Array<number | string> = Array.isArray(data) ? data : [data];
+    const merged = new Set([...pendingResultIds.value, ...newVideoIds]);
+    pendingResultIds.value = [...merged];
   }
+  // 所有请求发出后统一刷新一次，再启动轮询（避免循环内反复重置定时器）
+  await getProductionData();
+  startPolling(true);
 }
-//批量下载逻辑
+const emit = defineEmits(["close"]);
+//导入剪辑台
 function handleBatchDownload() {
-  // 批量下载逻辑
+  const checkedShots = shotList.value.filter((item) => checkedIds.value.has(item.id));
+  //拿到选中的分镜配置里面选中的视频
+  const videos = checkedShots.map((shot) => shot.videos?.find((v) => v.id === shot.selectedVideoId)).filter((v): v is VideoRecord => v != null);
+  emit("close", videos);
 }
 </script>
 

@@ -31,7 +31,7 @@
     </div>
     <div class="content">
       <preview v-if="activeMenu === 'preview'" />
-      <generate v-show="activeMenu === 'generate'" />
+      <generate v-show="activeMenu === 'generate'" @close="handleBatchDownload" />
       <editVideo
         v-if="activeMenu === 'editVideo'"
         :initial-tracks="mockTracks"
@@ -147,8 +147,7 @@ function createDemoTracks(): Track[] {
     clips: [],
     order: 2,
   };
-  const audioClips: MediaClip[] = [
-  ];
+  const audioClips: MediaClip[] = [];
   audioTrack.clips = audioClips;
 
   // 字幕轨道
@@ -188,14 +187,35 @@ function createDemoTracks(): Track[] {
     clips: [],
     order: 4,
   };
-  const filterClips: FilterClip[] = [
-  ];
+  const filterClips: FilterClip[] = [];
   filterTrack.clips = filterClips;
 
   return [mainTrack, audioTrack, subtitleTrack, filterTrack];
 }
 
 const mockTracks = createDemoTracks();
+
+//导入到剪辑台
+function handleBatchDownload(data: any) {
+  mockTracks[0].clips = data.map((item: any) => {
+    const clip: MediaClip = {
+      id: generateId("clip-"),
+      trackId: mockTracks[0].id,
+      type: "video",
+      startTime: 0,
+      endTime: item.duration || 5, // 默认持续5秒
+      selected: false,
+      sourceUrl: item.filePath,
+      originalDuration: item.duration || 5,
+      trimStart: 0,
+      trimEnd: item.duration || 5,
+      playbackRate: 1,
+      thumbnails: [],
+    };
+    return clip;
+  });
+  activeMenu.value = "editVideo";
+}
 </script>
 
 <style lang="scss" scoped>

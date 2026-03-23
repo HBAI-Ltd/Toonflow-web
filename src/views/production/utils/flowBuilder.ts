@@ -19,16 +19,24 @@ interface DeriveAsset {
   id: number;
   assetsId: string;
   name: string;
+  prompt: string;
   desc: string;
   src: string;
   state: "未生成" | "生成中" | "已完成" | "生成失败";
+  describe: string;
+  type: "角色" | "道具" | "场景" | "素材";
 }
 
 interface AssetItem {
+  id: number;
   assetsId: string;
   name: string;
   desc: string;
+  prompt: string;
   src: string;
+  describe: string;
+  state: "未生成" | "生成中" | "已完成" | "生成失败";
+  type: "角色" | "道具" | "场景" | "素材";
   derive: DeriveAsset[];
 }
 
@@ -79,8 +87,6 @@ const edgeStyle = {
   stroke: "#00000",
   strokeWidth: 4,
 };
-
-
 
 // ==================== 构建函数 ====================
 export function useFlowBuilder(flowData: Ref<FlowData>, nodePositions: Ref<NodePositions>) {
