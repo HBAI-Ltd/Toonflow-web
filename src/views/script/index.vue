@@ -1,23 +1,26 @@
 <template>
   <div class="script">
     <div class="actionBar">
-      <div class="searchWrapper f ac">
-        <t-input placeholder="搜索剧本名称..." v-model="searchQuery" class="searchInput" clearable />
-        <t-button theme="primary" @click="onChange" style="margin-left: 10px">
+      <div class="actionBar-left f ac">
+        <t-input placeholder="搜索剧本名称..." v-model="searchQuery" class="searchInput" clearable style="width: 300px" />
+        <t-button theme="primary" @click="onChange">
           <template #icon><i-search /></template>
           搜索
         </t-button>
+        <t-button theme="primary" @click="handleAddScript">
+          <template #icon><i-plus /></template>
+          新建剧本
+        </t-button>
       </div>
-      <t-button theme="primary" @click="handleAddScript">
-        <template #icon><i-plus /></template>
-        新建剧本
-      </t-button>
-      <t-button theme="primary" @click="handleExportScript">
-        <template #icon>
-          <i-export />
-        </template>
-        导出剧本
-      </t-button>
+      <div class="actionBar-right f ac" v-if="scripts.length">
+        <t-button :theme="isAllSelected ? 'default' : 'primary'" variant="outline" @click="toggleSelectAll(!isAllSelected)">
+          {{ isAllSelected ? "取消全选" : "全选" }}
+        </t-button>
+        <t-button theme="primary" @click="handleExportScript" :disabled="selectedIds.length === 0">
+          <template #icon><i-export /></template>
+          导出剧本{{ selectedIds.length ? `(${selectedIds.length})` : "" }}
+        </t-button>
+      </div>
     </div>
     <div class="contentArea">
       <div v-if="scripts.length === 0" class="emptyState">
@@ -26,6 +29,12 @@
       <div v-else class="scriptsList f w">
         <div v-for="(item, index) in scripts" :key="index" @click="handleScriptClick(item)">
           <t-card shadow :title="item.name" hover-shadow :style="{ width: '400px', cursor: 'pointer' }">
+            <template #header>
+              <div class="cardHeader f ac">
+                <t-checkbox :checked="selectedIds.includes(item.id)" @click.stop @change="toggleSelect(item.id)" />
+                <span class="cardTitle">{{ item.name }}</span>
+              </div>
+            </template>
             <span class="content">{{ item.content }}</span>
             <template #actions>
               <i-delete theme="outline" @click.stop="handleDeleteScript(item.id)" style="cursor: pointer" />
@@ -55,6 +64,27 @@ interface Script {
 const scripts = ref<Script[]>([]);
 const searchQuery = ref("");
 const addScriptShow = ref(false);
+const selectedIds = ref<number[]>([]);
+
+const isAllSelected = computed(() => scripts.value.length > 0 && selectedIds.value.length === scripts.value.length);
+const isIndeterminate = computed(() => selectedIds.value.length > 0 && selectedIds.value.length < scripts.value.length);
+
+function toggleSelect(id: number) {
+  const idx = selectedIds.value.indexOf(id);
+  if (idx === -1) {
+    selectedIds.value.push(id);
+  } else {
+    selectedIds.value.splice(idx, 1);
+  }
+}
+
+function toggleSelectAll(checked: boolean) {
+  if (checked) {
+    selectedIds.value = scripts.value.map((s) => s.id);
+  } else {
+    selectedIds.value = [];
+  }
+}
 // 搜索剧本
 async function searchScripts() {
   try {
@@ -78,27 +108,27 @@ function handleAddScript() {
   addScriptShow.value = true;
 }
 //导出剧本
-function handleExportScript() {
-  const script = scripts.value?.map((item) => {
-    return {
-      name: item.name,
-      content: item.content,
-    };
-  });
-  if (!script || !script.length) {
-    MessagePlugin.warning("暂无剧本可导出");
+async function handleExportScript() {
+  if (!selectedIds.value.length) {
+    MessagePlugin.warning("请先选择要导出的剧本");
     return;
   }
-  //生成txt文件
-  const blob = new Blob([script.map((s) => `${s.name}\n\n${s.content}\n\n`).join("")], { type: "text/plain;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = `剧本_${new Date().toISOString().slice(0, 10)}.txt`;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
+  try {
+    const res = await axios.post("/script/exportScript", { id: selectedIds.value }, { responseType: "blob" });
+    const blob = new Blob([res as any], { type: "application/zip" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `剧本_${new Date().toISOString().slice(0, 10)}.zip`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    MessagePlugin.success("导出成功");
+  } catch (error) {
+    console.error("导出剧本失败:", error);
+    MessagePlugin.error("导出剧本失败");
+  }
 }
 const selectedScript = ref<Script>({
   id: 0,
@@ -145,11 +175,14 @@ async function handleDeleteScript(scriptId: number) {
   }
   .actionBar {
     display: flex;
-    gap: 16px;
-    margin-bottom: 32px;
-    .searchWrapper {
-      flex: 1;
-      max-width: 500px;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    .actionBar-left {
+      gap: 10px;
+    }
+    .actionBar-right {
+      gap: 12px;
     }
   }
   .contentArea {
@@ -160,6 +193,14 @@ async function handleDeleteScript(scriptId: number) {
         -webkit-box-orient: vertical;
         overflow: hidden;
         -webkit-line-clamp: 1;
+      }
+      .cardHeader {
+        gap: 8px;
+        .cardTitle {
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
       }
     }
     .emptyState {

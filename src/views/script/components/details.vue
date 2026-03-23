@@ -13,32 +13,16 @@
       :afterClose="handleClose"
       @cancel="closeModal">
       <template #header>
-        <t-space align="center" class="modal-header" style="justify-content: space-between; width: 100%;">
-          <t-space align="center" :size="8">
-            <t-input
-              v-if="isEditingTitle"
-              v-model="editableTitle"
-              class="title-input"
-              @enter="saveTitle"
-              @blur="saveTitle"
-              :maxlength="50"
-              placeholder="请输入标题"
-              ref="titleInputRef" />
-            <t-typography-title v-else level="h4" style="margin: 0">
-              {{ props.item.name || "剧本详情" }}
-            </t-typography-title>
-            <t-button theme="default" variant="text" size="small" @click="toggleEditTitle">
-              <template #icon>
-                <i-edit v-if="!isEditingTitle" theme="outline" size="16" />
-                <i-check v-else theme="outline" size="16" />
-              </template>
-            </t-button>
-          </t-space>
-        </t-space>
+        <t-typography-title level="h4" style="margin: 0">剧本详情</t-typography-title>
       </template>
-      <div class="data">
-        <t-textarea v-model="props.item.content" placeholder="请输入剧本内容..." name="description" :autosize="{ minRows: 30, maxRows: 30 }" />
-      </div>
+      <t-form :data="props.item" label-align="top" class="detailsForm">
+        <t-form-item label="剧本名称" name="name">
+          <t-input v-model="props.item.name" :maxlength="10" placeholder="请输入剧本名称" />
+        </t-form-item>
+        <t-form-item label="剧本内容" name="content">
+          <t-textarea v-model="props.item.content" placeholder="请输入剧本内容..." :autosize="{ minRows: 25, maxRows: 25 }" />
+        </t-form-item>
+      </t-form>
     </t-dialog>
   </div>
 </template>
@@ -59,28 +43,6 @@ const detailsShow = defineModel<boolean>({
 const props = defineProps<{
   item: ScriptItem;
 }>();
-
-const isEditingTitle = ref(false);
-const editableTitle = ref("");
-const titleInputRef = ref();
-
-function toggleEditTitle() {
-  if (!isEditingTitle.value) {
-    editableTitle.value = props.item.name;
-    isEditingTitle.value = true;
-    nextTick(() => {
-      titleInputRef.value?.focus();
-    });
-  } else {
-    saveTitle();
-  }
-}
-function saveTitle() {
-  if (editableTitle.value.trim()) {
-    props.item.name = editableTitle.value.trim().substring(0, 10); // 限制长度为10
-  }
-  isEditingTitle.value = false;
-}
 
 function handleClose() {
   detailsShow.value = false;
@@ -103,112 +65,12 @@ async function onConfirm() {
   }
   detailsShow.value = false;
 }
-const LINE_HEIGHT = 28;
-const MIN_LINES = 20;
-const textareaRef = ref<HTMLTextAreaElement | null>(null);
-
-function adjustTextareaHeight(textarea: HTMLTextAreaElement) {
-  textarea.style.height = "auto";
-  const newHeight = Math.max(textarea.scrollHeight, MIN_LINES * LINE_HEIGHT);
-  textarea.style.height = `${newHeight}px`;
-}
-
-function handleInput(event: Event) {
-  const textarea = event.target as HTMLTextAreaElement;
-  adjustTextareaHeight(textarea);
-}
-
-function setTextareaRef(el: any) {
-  if (el) {
-    textareaRef.value = el;
-    nextTick(() => {
-      adjustTextareaHeight(el);
-    });
-  }
-}
-
-// 监听 detailsShow 变化，在对话框打开时重新调整高度
-watch(detailsShow, (newVal) => {
-  if (newVal && textareaRef.value) {
-    nextTick(() => {
-      adjustTextareaHeight(textareaRef.value!);
-    });
-  }
-});
 </script>
 
 <style lang="scss" scoped>
-$line-height: 28px;
-
 .details {
-  .modal-header {
-    background: var(--td-bg-color-container);
-    height: 60px;
-    width: 100%;
-
-    :deep(.ant-typography) {
-      color: var(--td-text-color-primary);
-      margin: 0;
-    }
-
-    :deep(.ant-btn-text) {
-      color: var(--td-brand-color);
-
-      &:hover {
-        background: var(--td-bg-color-component-hover);
-        color: var(--td-brand-color-hover);
-      }
-    }
-
-    .title-input {
-      width: 300px;
-
-      :deep(.ant-input) {
-        font-size: 16px;
-        font-weight: 600;
-        color: var(--td-text-color-primary);
-        background: var(--td-bg-color-container);
-        border: 1px solid var(--td-brand-color);
-
-        &:focus {
-          border-color: var(--td-brand-color);
-          box-shadow: 0 0 0 2px rgba(153, 19, 250, 0.1);
-        }
-      }
-    }
-  }
-
-  .data {
-    width: 100%;
-    height: 700px;
-    overflow: auto;
-
-    .notebook-textarea {
-      flex: 1;
-      padding: 12px 16px;
-      border: none;
-      outline: none;
-      resize: none;
-      overflow: hidden;
-      min-height: calc($line-height * 20);
-      width: 100%;
-      font-size: 16px;
-      line-height: $line-height;
-      background: transparent;
-      color: var(--td-text-color-primary);
-      font-family: "KaiTi", "STKaiti", "PingFang SC", sans-serif;
-      background-image: repeating-linear-gradient(
-        transparent,
-        transparent calc($line-height - 1px),
-        var(--td-component-border) calc($line-height - 1px),
-        var(--td-component-border) $line-height
-      );
-      background-position: 0 12px;
-
-      &::placeholder {
-        color: var(--td-text-color-placeholder);
-      }
-    }
+  .detailsForm {
+    padding: 0 8px;
   }
 }
 </style>
