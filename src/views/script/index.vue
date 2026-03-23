@@ -65,7 +65,7 @@ interface ScriptAsset {
   name: string;
   describe: string;
   prompt: string;
-  type: "角色" | "道具" | "场景" | "素材";
+  type: "role" | "tool" | "scene" | "clip";
 }
 interface Script {
   id: number;

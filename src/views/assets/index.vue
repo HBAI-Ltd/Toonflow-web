@@ -408,7 +408,7 @@ interface Asset {
   describe: string;
   remark: string;
   filePath?: string;
-  type: "角色" | "道具" | "场景" | "素材"; // "角色" | "道具" | "场景" | "素材"
+  type: "role" | "tool" | "scene" | "clip"; // "角色" | "道具" | "场景" | "素材"
   sonAssets?: Asset[]; // 子资产列表
   imageId: number;
 }

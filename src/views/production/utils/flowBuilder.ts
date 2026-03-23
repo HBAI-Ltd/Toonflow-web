@@ -24,7 +24,7 @@ interface DeriveAsset {
   src: string;
   state: "未生成" | "生成中" | "已完成" | "生成失败";
   describe: string;
-  type: "角色" | "道具" | "场景" | "素材";
+  type: "role" | "tool" | "scene" | "clip";
 }
 
 interface AssetItem {
@@ -36,7 +36,7 @@ interface AssetItem {
   src: string;
   describe: string;
   state: "未生成" | "生成中" | "已完成" | "生成失败";
-  type: "角色" | "道具" | "场景" | "素材";
+  type: "role" | "tool" | "scene" | "clip";
   derive: DeriveAsset[];
 }
 

@@ -184,42 +184,49 @@ const currentMessageId = ref<string | null>(null);
 const dialogVisible = ref(false);
 const editContent = ref("");
 
-const planData = ref({
-  event: "",
+interface Asset {
+  id: number;
+  assetsId: string;
+  name: string;
+  prompt: string;
+  desc: string;
+  src: string;
+  state: "未生成" | "生成中" | "已完成" | "生成失败";
+  type: "role" | "tool" | "scene" | "clip";
+}
+
+interface PlanData {
+  storySkeleton: string;
+  adaptationStrategy: string;
+  script: {
+    title: string;
+    content: string;
+    relatedAssets: Asset[];
+  }[];
+}
+
+const planData = ref<PlanData>({
   storySkeleton: "",
   adaptationStrategy: "",
-  script: [
-    {
-      title: "第一幕",
-      content: "123213123123123123123",
-      relatedAssets: ["1123", "啊手动阀", "12321321"],
-    },
-    {
-      title: "第一幕",
-      content: "123213123123123123123",
-      relatedAssets: ["1123", "啊手动阀", "12321321"],
-    },
-    {
-      title: "第一幕",
-      content: "123213123123123123123",
-      relatedAssets: ["1123", "啊手动阀", "12321321"],
-    },
-    {
-      title: "第一幕",
-      content: "123213123123123123123",
-      relatedAssets: ["1123", "啊手动阀", "12321321"],
-    },
-    {
-      title: "第一幕",
-      content: "123213123123123123123",
-      relatedAssets: ["1123", "啊手动阀", "12321321"],
-    },
-    {
-      title: "第一幕",
-      content: "123213123123123123123",
-      relatedAssets: ["1123", "啊手动阀", "12321321"],
-    },
-  ],
+  script: [],
+});
+
+watch(
+  () => [planData.value.storySkeleton, planData.value.adaptationStrategy],
+  () => {
+    // setPlanData();
+  },
+  { immediate: true },
+);
+
+async function getPlanData() {
+  const { data } = await axios.post("/scriptAgent/getPlanData", { projectId: project.value?.id, agentType: "scriptAgent" });
+  planData.value.storySkeleton = data.storySkeleton;
+  planData.value.adaptationStrategy = data.adaptationStrategy;
+}
+
+onMounted(() => {
+  getPlanData();
 });
 
 const welcomeMsg: ChatMessagesData = {
@@ -230,7 +237,7 @@ const welcomeMsg: ChatMessagesData = {
     {
       type: "suggestion",
       status: "complete",
-      data: [{ title: "开始生成故事骨架", prompt: "开始生成故事骨架" }],
+      data: [{ title: "开始", prompt: "开始" }],
     },
   ],
 };
