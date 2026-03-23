@@ -57,17 +57,40 @@
       <Pane :size="75" :min-size="30" class="data">
         <div class="tabsWrapper">
           <t-tabs v-model="currentTable">
-            <t-tab-panel :value="1" label="章节事件">
+            <template #action>
+              <div class="ac"></div>
+            </template>
+            <!-- <t-tab-panel :value="1" label="章节事件">
               <pre>{{ planData.event }}</pre>
+            </t-tab-panel> -->
+            <t-tab-panel :value="1" label="故事骨架">
+              <div class="panelContent">
+                <MdPreview v-if="planData.storySkeleton" :modelValue="planData.storySkeleton" />
+                <t-empty v-else title="暂无内容" />
+              </div>
             </t-tab-panel>
-            <t-tab-panel :value="2" label="故事骨架">
-              {{ planData.storySkeleton }}
+            <t-tab-panel :value="2" label="改编策略">
+              <div class="panelContent">
+                <MdPreview v-if="planData.adaptationStrategy" :modelValue="planData.adaptationStrategy" />
+                <t-empty v-else title="暂无内容" />
+              </div>
             </t-tab-panel>
-            <t-tab-panel :value="3" label="改编策略">
-              {{ planData.adaptationStrategy }}
-            </t-tab-panel>
-            <t-tab-panel :value="4" label="剧本">
-              {{ planData.script }}
+            <t-tab-panel :value="3" label="剧本">
+              <div class="panelContent">
+                <t-empty v-if="!planData.script?.length" title="暂无内容" />
+                <div v-else class="scriptList">
+                  <div v-for="(item, index) in planData.script" :key="index" class="scriptCard">
+                    <div class="scriptCardHeader">
+                      <span class="scriptIndex">#{{ index + 1 }}</span>
+                      <span class="scriptTitle">{{ item.title }}</span>
+                    </div>
+                    <div class="scriptCardBody">
+                      <pre v-if="item.content">{{ item.content }}</pre>
+                      <span v-else class="emptyContent">暂无内容</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </t-tab-panel>
           </t-tabs>
         </div>
@@ -102,7 +125,7 @@ const planData = ref({
   script: [
     {
       title: "第一幕",
-      content: "",
+      content: "123213123123123123123",
     },
   ],
 });
@@ -329,6 +352,60 @@ async function getHistory() {
   }
 }
 
+.panelContent {
+  height: 100%;
+  overflow-y: auto;
+  padding: 0.75rem 1rem;
+  box-sizing: border-box;
+}
+
+.scriptList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.scriptCard {
+  border: 1px solid var(--td-border-level-2-color);
+  border-radius: 6px;
+  overflow: hidden;
+  background: #fff;
+  .scriptCardHeader {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    background-color: #f5f7fa;
+    border-bottom: 1px solid var(--td-border-level-2-color);
+    .scriptIndex {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--td-brand-color);
+      flex-shrink: 0;
+    }
+    .scriptTitle {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--td-text-color-primary);
+    }
+  }
+  .scriptCardBody {
+    font-size: 0.8125rem;
+    line-height: 1.7;
+    color: var(--td-text-color-primary);
+    padding: 0.5rem 0.75rem;
+
+    .emptyContent {
+      display: block;
+      padding: 0.5rem 0.75rem;
+      color: var(--td-text-color-placeholder);
+    }
+    :deep(.md-editor-preview-wrapper) {
+      padding: 0.5rem 0.75rem;
+    }
+  }
+}
+
 .settingMenu {
   padding: 4px 0;
   .settingMenuItem {
@@ -346,5 +423,9 @@ async function getHistory() {
       color: #e34d59;
     }
   }
+}
+:deep(.t-tabs__operations--right) {
+  top: 0;
+  bottom: 0;
 }
 </style>

@@ -112,7 +112,7 @@
             还原拖拽排序
           </t-button>
         </div>
-        <t-button theme="default" variant="text" size="small" class="exportBtn">
+        <t-button theme="default" variant="text" size="small" class="exportBtn" @click="exportImage">
           <template #icon><i-download theme="outline" size="16" /></template>
           导出图片
         </t-button>
@@ -378,6 +378,32 @@ watch(
 );
 
 const onDragEnd = () => nextTick(() => (isDragging.value = false));
+
+function exportImage() {
+  //拿到选中的数据
+  const selectedShots = shotList.value.filter((shot) => shot.selected).map((shot) => ({ id: shot.id }));
+  if (selectedShots.length <= 0) {
+    DialogPlugin.alert({
+      header: "提示",
+      body: "请至少选择一个分镜进行导出",
+    });
+    return;
+  }
+  axios
+    .post("/production/exportImage", {
+      shotId: selectedShots,
+    })
+    .then((response) => {
+      const { data } = response;
+      const link = document.createElement("a");
+      link.href = data.url;
+      link.download = "分镜图片.zip";
+      link.click();
+    })
+    .catch((error) => {
+      console.error("导出图片失败:", error);
+    });
+}
 </script>
 
 <style lang="scss" scoped>
