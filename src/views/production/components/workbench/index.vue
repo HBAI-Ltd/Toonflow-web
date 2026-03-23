@@ -31,7 +31,7 @@
     </div>
     <div class="content">
       <preview v-if="activeMenu === 'preview'" />
-      <generate v-show="activeMenu === 'generate'" @close="handleBatchDownload" />
+      <generate v-show="activeMenu === 'generate'" @close="handleBatchDownload" v-model="extractLines" />
       <editVideo
         v-if="activeMenu === 'editVideo'"
         :initial-tracks="mockTracks"
@@ -41,10 +41,24 @@
         :canvas-width="canvasWidth"
         :canvas-height="canvasHeight" />
     </div>
+    <t-dialog theme="info" header="提示" body="是否从提取台词" v-model:visible="visible1" @confirm="onConfirm" :onClose="close1">
+      <template #footer>
+        <div class="f ac"> 
+          <t-button variant="outline" @click="visible1 = false">取 消</t-button>
+          <t-button @click="onConfirm">确 定</t-button>
+        </div>
+      </template>
+      <template #default>
+        <div class="f f-column" style="gap: 12px">
+          <span>是否从提取台词？</span>
+        </div>
+      </template>
+    </t-dialog>
   </t-dialog>
 </template>
 
 <script setup lang="ts">
+import axios from "@/utils/axios";
 import preview from "./preview.vue";
 import generate from "./generate.vue";
 import editVideo from "./editVideo/index.vue";
@@ -195,15 +209,44 @@ function createDemoTracks(): Track[] {
 
 const mockTracks = createDemoTracks();
 
-//导入到剪辑台
-function handleBatchDownload(data: any) {
-  mockTracks[0].clips = data.map((item: any) => {
+const visible1 = ref(false);
+const extractLines = ref(false);
+const batchDownloadValue = ref<any>(null);
+
+async function onConfirm() {
+  visible1.value = false;
+  extractLines.value = true;
+  const value = batchDownloadValue.value;
+  const list = batchDownloadValue.value.map((item: any) => ({
+    videoId: item.videoId,
+    prompt: item.prompt,
+  }));
+  const { data } = await axios.post("/production/workbench/extractLines", list);
+  // 字幕
+  mockTracks[2].clips = data.map((item: any) => {
+    const clip: SubtitleClip = {
+      id: generateId("clip-"),
+      trackId: mockTracks[2].id,
+      type: "subtitle",
+      startTime: item.startTime,
+      endTime: item.endTime,
+      selected: false,
+      text: item.text,
+      fontFamily: "Arial",
+      fontSize: 24,
+      color: "#ffffff",
+      textAlign: "center",
+    };
+    return clip;
+  });
+  // 视频轨道
+  mockTracks[0].clips = value.map((item: any) => {
     const clip: MediaClip = {
       id: generateId("clip-"),
       trackId: mockTracks[0].id,
       type: "video",
       startTime: 0,
-      endTime: item.duration || 5, // 默认持续5秒
+      endTime: item.duration || 5,
       selected: false,
       sourceUrl: item.filePath,
       originalDuration: item.duration || 5,
@@ -214,7 +257,38 @@ function handleBatchDownload(data: any) {
     };
     return clip;
   });
+  visible1.value = false;
   activeMenu.value = "editVideo";
+}
+
+function close1() {
+  const value = batchDownloadValue.value;
+  // 视频轨道
+  mockTracks[0].clips = value.map((item: any) => {
+    const clip: MediaClip = {
+      id: generateId("clip-"),
+      trackId: mockTracks[0].id,
+      type: "video",
+      startTime: 0,
+      endTime: item.duration || 5,
+      selected: false,
+      sourceUrl: item.filePath,
+      originalDuration: item.duration || 5,
+      trimStart: 0,
+      trimEnd: item.duration || 5,
+      playbackRate: 1,
+      thumbnails: [],
+    };
+    return clip;
+  });
+  visible1.value = false;
+  activeMenu.value = "editVideo";
+}
+
+//导入到剪辑台
+function handleBatchDownload(value: any) {
+  batchDownloadValue.value = value;
+  visible1.value = true;
 }
 </script>
 
