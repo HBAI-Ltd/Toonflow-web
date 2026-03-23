@@ -58,7 +58,7 @@
         <div class="tabsWrapper">
           <t-tabs v-model="currentTable">
             <t-tab-panel :value="1" label="章节事件">
-              {{ planData.event }}
+              <pre>{{ planData.event }}</pre>
             </t-tab-panel>
             <t-tab-panel :value="2" label="故事骨架">
               {{ planData.storySkeleton }}
@@ -101,9 +101,22 @@ const planData = ref({
     {
       title: "第一幕",
       content: "",
-      
-    }
+    },
   ],
+});
+
+async function getData() {
+  const { data } = await axios.post(`/novel/getNovel`, {
+    projectId: project.value?.id,
+    page: 1,
+    limit: 99999,
+  });
+  const eventString = data.data.map((i: any) => [`第${i.index}章，标题：${i.chapter}，事件：${i.event}`].join("\n")).join("\n");
+  planData.value.event = eventString
+}
+
+onMounted(() => {
+  getData();
 });
 
 const welcomeMsg: ChatMessagesData = {
@@ -164,6 +177,10 @@ onMounted(() => {
   });
 
   getHistory();
+});
+
+onUnmounted(() => {
+  socket.disconnect();
 });
 
 function sortMessages() {

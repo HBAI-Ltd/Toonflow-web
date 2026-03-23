@@ -159,6 +159,10 @@ onMounted(() => {
   getHistory();
 });
 
+onUnmounted(() => {
+  socket.disconnect();
+});
+
 function sortMessages() {
   messages.value = messages.value.sort((a, b) => {
     const aPending = a.status === "pending" ? 1 : 0;
