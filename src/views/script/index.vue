@@ -36,6 +36,11 @@
               </div>
             </template>
             <span class="content">{{ item.content }}</span>
+            <div class="assetTags" v-if="item.assets?.length" @click.stop>
+              <t-tag v-for="asset in item.assets" :key="asset.id" variant="light-outline" size="small">
+                {{ asset.name }}
+              </t-tag>
+            </div>
             <template #actions>
               <i-delete theme="outline" @click.stop="handleDeleteScript(item.id)" style="cursor: pointer" />
             </template>
@@ -55,11 +60,19 @@ import AddScript from "./components/addScript.vue";
 import projectStore from "@/stores/project";
 
 const { project } = storeToRefs(projectStore());
+interface ScriptAsset {
+  id: number;
+  name: string;
+  describe: string;
+  prompt: string;
+  type: "角色" | "道具" | "场景" | "素材";
+}
 interface Script {
   id: number;
   name: string;
   content: string;
   createTime?: number;
+  assets?: ScriptAsset[];
 }
 const scripts = ref<Script[]>([]);
 const searchQuery = ref("");
@@ -67,7 +80,6 @@ const addScriptShow = ref(false);
 const selectedIds = ref<number[]>([]);
 
 const isAllSelected = computed(() => scripts.value.length > 0 && selectedIds.value.length === scripts.value.length);
-const isIndeterminate = computed(() => selectedIds.value.length > 0 && selectedIds.value.length < scripts.value.length);
 
 function toggleSelect(id: number) {
   const idx = selectedIds.value.indexOf(id);
@@ -201,6 +213,12 @@ async function handleDeleteScript(scriptId: number) {
           text-overflow: ellipsis;
           white-space: nowrap;
         }
+      }
+      .assetTags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 8px;
       }
     }
     .emptyState {

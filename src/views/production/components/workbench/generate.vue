@@ -361,7 +361,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from "vue";
+import { ref, computed, onMounted, nextTick, onUnmounted } from "vue";
 import { storeToRefs } from "pinia";
 import axios from "@/utils/axios";
 import projectStore from "@/stores/project";
@@ -459,42 +459,11 @@ const shotList = ref<StoryboardItem[]>([]);
 // 底部轨道滚动容器
 const trackListRef = ref<HTMLElement | null>(null);
 
-// ---- 模块级轮询单例（脱离组件生命周期，页面关闭后继续轮询）----
-let _pollingTimer: ReturnType<typeof setTimeout> | null = null;
-let _pollingActive = false;
-
-/** 全局轮询：每 5 秒查询一次，直到无生成中的视频为止 */
-function _globalPoll(fetchFn: () => Promise<StoryboardItem[]>, checkFn: () => boolean) {
-  fetchFn()
-    .then(() => {
-      if (checkFn()) {
-        _pollingTimer = setTimeout(() => _globalPoll(fetchFn, checkFn), 5000);
-      } else {
-        _pollingTimer = null;
-        _pollingActive = false;
-      }
-    })
-    .catch(() => {
-      _pollingTimer = null;
-      _pollingActive = false;
-    });
-}
-
-// 是否正在轮询中（仅用于当前组件实例内 UI 反馈）
-const isPolling = ref(false);
-
 onMounted(() => {
   getProductionData();
-  // 若后台轮询仍在运行（页面曾被关闭但轮询未停），恢复本地 UI 标志
-  if (_pollingActive) {
-    isPolling.value = true;
-  }
 });
-
 onUnmounted(() => {
-  // 组件卸载时不停止轮询，让后台继续拉取最新状态
-  // 只清空本地响应式标志，避免内存泄漏
-  isPolling.value = false;
+  stopPolling();
 });
 function isDualFrame(mode?: VideoModelMode) {
   return mode === "startEndRequired" || mode === "endFrameOptional" || mode === "startFrameOptional";
@@ -580,7 +549,7 @@ function initShotFields(item: StoryboardItem) {
 }
 
 //查询分镜视频
-function getProductionData(isPollingRefresh = false) {
+function getProductionData() {
   return axios
     .post("/production/getProductionData", {
       scriptId: 1,
@@ -589,71 +558,52 @@ function getProductionData(isPollingRefresh = false) {
       const list: StoryboardItem[] = data || [];
       // 批量初始化所有分镜的回显字段，保证视频轨道卡片也能正确展示
       list.forEach((item) => initShotFields(item));
-
-      if (isPollingRefresh) {
-        // 轮询刷新：合并更新 shotList，避免重置用户的选中状态
-        const newMap = new Map(list.map((item) => [item.id, item]));
-        shotList.value = shotList.value.map((old) => newMap.get(old.id) ?? old);
-        // 同步更新当前选中分镜的数据
-        if (currentShot.value) {
-          const updated = newMap.get(currentShot.value.id);
-          if (updated) {
-            // 保留前端运行时扩展字段（mixedRefs / endFrameUrl 等）
-            const merged: StoryboardItem = {
-              ...updated,
-              selectedVideoId: currentShot.value.selectedVideoId,
-              mixedRefs: currentShot.value.mixedRefs,
-              endFrameUrl: currentShot.value.endFrameUrl,
-              endFrameSource: currentShot.value.endFrameSource,
-              endFrameId: currentShot.value.endFrameId,
-            };
-            initShotFields(merged);
-            currentShot.value = merged;
-            // 更新左侧预览：保留用户当前已选中的视频状态（selectedVideoId 有值则显示视频，否则显示图片）
-            const videoRecord = getVideoRecord(merged);
-            selectedData.value = {
-              id: merged.id as number,
-              videoUrl: videoRecord?.filePath ?? "",
-              imageUrl: merged.imageUrl || merged.filePath || "",
-            };
-          }
-        }
-      } else {
-        shotList.value = list;
-        // 数据加载完成后自动选中第一个分镜
-        if (shotList.value.length > 0) {
-          selectShot(shotList.value[0].id);
-        }
+      // 记录 scriptId 供轮询使用
+      if (list.length > 0 && currentScriptId.value == null) {
+        currentScriptId.value = list[0].scriptId as number;
       }
+      shotList.value = list;
+      if (currentShot.value) {
+        // 已有选中的分镜：用新数据刷新 currentShot，保持当前选中不变
+        const refreshed = list.find((s) => s.id === currentShot.value!.id);
+        if (refreshed) {
+          currentShot.value = refreshed;
+          // 同步刷新左侧预览的视频（状态可能已更新）
+          const previewVideo = getVideoRecord(refreshed);
+          selectedData.value = {
+            id: refreshed.id as number,
+            videoUrl: previewVideo?.filePath ?? selectedData.value?.videoUrl ?? "",
+            imageUrl: refreshed.imageUrl || refreshed.filePath || "",
+          };
+        }
+      } else if (list.length > 0) {
+        // 初次加载：默认选中第一个分镜
+        selectShot(list[0].id);
+      }
+      // 检查是否有生成中的视频，若有则恢复轮询（应对刷新/切换页面后轮询中断的情况）
+      resumePollingIfNeeded(list);
       return list;
     });
 }
 
-/** 检查是否还有视频处于【生成中】状态 */
-function hasGeneratingVideo(): boolean {
-  return shotList.value.some((item) => item.videos?.some((v) => v.state === "生成中"));
+/** 检查列表中是否存在"生成中"的视频，有则将其 id 加入 pendingResultIds 并启动轮询 */
+function resumePollingIfNeeded(list: StoryboardItem[]) {
+  const pendingIds: Array<number | string> = [];
+  list.forEach((shot) => {
+    shot.videos?.forEach((v) => {
+      if (v.state === "生成中") {
+        pendingIds.push(v.id);
+      }
+    });
+  });
+  if (pendingIds.length === 0) return;
+  // 合并到待轮询列表（去重），不覆盖已有的
+  const merged = new Set([...pendingResultIds.value, ...pendingIds]);
+  pendingResultIds.value = [...merged];
+  // 如果当前没有轮询定时器则启动
+  startPolling(false);
 }
 
-/** 开始轮询（幂等：已在轮询中则不重复启动） */
-function startPolling() {
-  isPolling.value = true;
-  if (_pollingActive) return; // 已有全局轮询在跑，无需重复
-  _pollingActive = true;
-  _globalPoll(
-    () => getProductionData(true),
-    () => hasGeneratingVideo(),
-  );
-}
-
-/** 停止轮询（仅在生成提交失败等主动中断场景调用） */
-function stopPolling() {
-  if (_pollingTimer !== null) {
-    clearTimeout(_pollingTimer);
-    _pollingTimer = null;
-  }
-  _pollingActive = false;
-  isPolling.value = false;
-}
 //当前选中的分镜或者视频
 const selectedData = ref<{ id: number; videoUrl: string; imageUrl: string }>();
 // 勾选的分镜 id 集合
@@ -680,15 +630,6 @@ function handleSelectAll(checked: boolean) {
     checkedIds.value = new Set();
   }
 }
-
-function handleBatchGenerate() {
-  // 批量生成逻辑
-}
-//批量下载逻辑
-function handleBatchDownload() {
-  // 批量下载逻辑
-}
-
 // 当前选中的分镜对象（完整数据）
 const currentShot = ref<StoryboardItem | null>(null);
 
@@ -1034,22 +975,12 @@ function handleSelectHistoryVideo(video: VideoRecord) {
 // 删除历史视频
 function handleDeleteHistoryVideo(videoId: number | string) {
   axios.post("/production/workbench/delVideo", { videoId }).then(() => {
-    getProductionData(true);
+    getProductionData();
     MessagePlugin.success("视频删除成功");
   });
 }
 const { project } = storeToRefs(projectStore());
 
-//轮询视频
-function pollingVideo(storyboardId: number | string) {
-  if (currentShot.value?.selectedVideoId) {
-    axios
-      .post("/production/workbench/videoPolling", {
-        storyboardId: storyboardId,
-      })
-      .then((res) => {});
-  }
-}
 //生成
 async function handleGenerate() {
   const shot = currentShot.value;
@@ -1100,19 +1031,176 @@ async function handleGenerate() {
     audio: selectedAudio.value,
     data: dataList,
   };
-  pollingVideo(shot.id);
-  axios
-    .post("/production/workbench/generateVideo", payload)
-    .then(() => {})
-    .catch(() => {});
+  const { data } = await axios.post("/production/workbench/generateVideo", payload);
+  // data 为新生成的视频 ID 列表
+  const newVideoIds: Array<number | string> = Array.isArray(data) ? data : [data];
+  // 合并到待轮询列表（去重）
+  const merged = new Set([...pendingResultIds.value, ...newVideoIds]);
+  pendingResultIds.value = [...merged];
+  // 立即刷新一次数据，让历史列表出现"生成中"状态
+  await getProductionData();
+  startPolling(true);
+}
+
+const currentScriptId = ref<number | null>(null);
+const pendingResultIds = ref<Array<number | string>>([]);
+// 轮询定时器
+let pollingTimer: number | null = null;
+
+/** 轮询接口：查询 pendingResultIds 中的视频状态，并将结果合并/更新到 shotList 对应分镜的 videos 列表 */
+async function fetchVideoData(scriptId: number | string, specifyIds: Array<number | string>) {
+  try {
+    const { data } = await axios.post("/production/workbench/videoPolling", { scriptId, specifyIds });
+    if (!data || data.length === 0) return;
+    const polledVideos = data as VideoRecord[];
+    // 将后端返回的视频状态合并到 shotList：已有的更新状态，不存在的追加进去
+    const updatedList = shotList.value.map((shot) => {
+      // 筛选出属于当前分镜的轮询结果
+      const relatedVideos = polledVideos.filter((v) => v.storyboardId === shot.id);
+      if (relatedVideos.length === 0) return shot;
+
+      const existingVideos = shot.videos ? [...shot.videos] : [];
+      let changed = false;
+
+      relatedVideos.forEach((polled) => {
+        const idx = existingVideos.findIndex((v) => v.id === polled.id);
+        if (idx !== -1) {
+          // 已存在：更新状态、路径等字段
+          existingVideos[idx] = {
+            ...existingVideos[idx],
+            state: polled.state ?? existingVideos[idx].state,
+            filePath: polled.filePath || existingVideos[idx].filePath,
+            errorReason: polled.errorReason || existingVideos[idx].errorReason,
+          };
+        } else {
+          // 不存在：追加新记录（可能是刚提交还未写入 shotList 的新视频）
+          existingVideos.push(polled);
+        }
+        changed = true;
+      });
+
+      return changed ? { ...shot, videos: existingVideos } : shot;
+    });
+
+    shotList.value = updatedList;
+    // 同步更新 currentShot，并在有新视频生成成功时自动选中
+    if (currentShot.value) {
+      const refreshed = updatedList.find((s) => s.id === currentShot.value!.id);
+      if (refreshed) {
+        // 检查是否有刚刚生成成功、但尚未被选中的视频
+        const relatedSucceeded = polledVideos.filter((v) => v.storyboardId === refreshed.id && v.state === "生成成功");
+        let updatedShot = refreshed;
+        if (relatedSucceeded.length > 0 && refreshed.selectedVideoId == null) {
+          // 自动选中最新成功的视频
+          const autoSelect = relatedSucceeded[relatedSucceeded.length - 1];
+          updatedShot = { ...refreshed, selectedVideoId: autoSelect.id };
+          // 同步回 shotList
+          const idx = shotList.value.findIndex((s) => s.id === updatedShot.id);
+          if (idx !== -1) shotList.value[idx] = updatedShot;
+          // 刷新左侧预览
+          selectedData.value = {
+            id: updatedShot.id as number,
+            videoUrl: autoSelect.filePath ?? "",
+            imageUrl: updatedShot.imageUrl || updatedShot.filePath || "",
+          };
+        } else if (refreshed.selectedVideoId != null) {
+          // 已有选中视频：刷新预览地址（路径可能在轮询后才返回）
+          const selVideo = refreshed.videos?.find((v) => v.id === refreshed.selectedVideoId && v.state === "生成成功");
+          if (selVideo && selectedData.value) {
+            selectedData.value = {
+              ...selectedData.value,
+              videoUrl: selVideo.filePath ?? selectedData.value.videoUrl,
+            };
+          }
+        }
+        currentShot.value = updatedShot;
+      }
+    }
+    // 从 pendingResultIds 中移除已完成（成功或失败）的视频 ID，不再轮询它们
+    const doneIds = polledVideos.filter((d) => d.state === "生成成功" || d.state === "生成失败").map((d) => d.id);
+    if (doneIds.length > 0) {
+      pendingResultIds.value = pendingResultIds.value.filter((id) => !doneIds.includes(id));
+    }
+  } catch (error) {
+    console.error("获取视频数据失败:", error);
+  }
+}
+
+// 开始轮询
+function startPolling(force: boolean = false) {
+  if (pollingTimer) {
+    // 如果已有定时器且不是强制启动，直接返回
+    if (!force) return;
+    // 强制启动时，先停止旧的定时器
+    stopPolling();
+  }
+  // 使用 nextTick 确保数据已更新
+  nextTick(() => {
+    if (pendingResultIds.value.length === 0) return;
+    pollingTimer = window.setInterval(async () => {
+      if (pendingResultIds.value.length === 0) {
+        stopPolling();
+        return;
+      }
+      if (currentScriptId.value) {
+        await fetchVideoData(currentScriptId.value, pendingResultIds.value);
+      }
+    }, 5000);
+  });
+}
+// 停止轮询
+function stopPolling() {
+  if (pollingTimer) {
+    clearInterval(pollingTimer);
+    pollingTimer = null;
+  }
 }
 function handleConfirmSelection() {
+  if (!currentShot.value?.selectedVideoId) {
+    MessagePlugin.warning("请先选择一个视频");
+    return;
+  }
   axios
     .post("/production/workbench/confirmSelection", { storyboardId: currentShot.value?.id, videoId: currentShot.value?.selectedVideoId })
     .then(() => {
-      MessagePlugin.success("视频确认成功");
-      getProductionData(true);
+      MessagePlugin.success("确认选中成功");
+      getProductionData();
     });
+}
+function handleBatchGenerate() {
+  // 批量生成逻辑
+  for (const shot of shotList.value) {
+    const data = {
+      scriptId: shot.scriptId,
+      projectId: project.value?.id,
+      storyboardId: shot.id,
+      prompt: shot.prompt || "",
+      model: shot.model || "",
+      mode: shot.mode || "",
+      resolution: shot.resolution || "",
+      duration: Number(shot.duration) || 0,
+      audio: shot.sound ? true : false,
+      data: shot.imageUrl
+        ? [
+            {
+              type: shot.imageSource ?? "storyboard",
+              id: shot.imageId ?? shot.id,
+            },
+          ]
+        : [],
+    };
+    axios.post("/production/workbench/generateVideo", data).then(({ data }) => {
+      const newVideoIds: Array<number | string> = Array.isArray(data) ? data : [data];
+      const merged = new Set([...pendingResultIds.value, ...newVideoIds]);
+      pendingResultIds.value = [...merged];
+      getProductionData();
+      startPolling(true);
+    });
+  }
+}
+//批量下载逻辑
+function handleBatchDownload() {
+  // 批量下载逻辑
 }
 </script>
 

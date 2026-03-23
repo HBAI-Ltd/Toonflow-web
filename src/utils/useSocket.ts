@@ -2,9 +2,13 @@ import { ref } from "vue";
 import { io, Socket } from "socket.io-client";
 
 export interface SocketEventMap {
+  //scriptAgent
+  getPlanData: (data: any, callback: (response: any) => void) => void;
+  setPlanData: (data: any) => void;
+  //productionAgent
   getFlowData: (data: any, callback: (response: any) => void) => void;
   setFlowData: (data: any) => void;
-  noticeUserGeneratedFlowDataImages: null;
+  //公共
   message: string;
   stop: string;
   textMessage: { type: "start" | "content" | "end"; messageId: string; delta: string | null; role: "assistant"; name: string };

@@ -4,7 +4,7 @@
       <!-- 左侧预览区域 -->
       <div class="previewArea">
         <div class="videoWrapper">
-          <img v-if="currentShot?.imageUrl" :src="currentShot.imageUrl" :alt="currentShot.description" class="previewImage" />
+          <img v-if="currentShot?.filePath" :src="currentShot.filePath" :alt="currentShot.description" class="previewImage" />
           <div v-else class="placeholderImage">
             <i-pic theme="outline" size="48" fill="#999" />
             <span>暂无图片</span>
@@ -65,24 +65,7 @@
             <span class="titleIndicator" />
             时长
           </div>
-          <div class="sectionContent">{{ currentShot?.duration || "3 秒" }}</div>
-        </div>
-
-        <div class="infoSection">
-          <div class="sectionTitle">
-            <span class="titleIndicator" />
-            涉及资产
-          </div>
-          <div class="characterList">
-            <div v-for="(char, index) in currentCharacters" :key="index" class="characterItem">
-              <t-image :src="char.avatar" fit="cover" class="characterAvatar" :style="{ width: '80px', height: '80px', borderRadius: '8px' }" />
-              <t-tag>{{ char.name }}（{{ char.role }}）</t-tag>
-            </div>
-            <div v-if="!currentCharacters.length" class="noCharacter">
-              <t-tag theme="default" variant="light">暂无出场人物</t-tag>
-            </div>
-          </div>
-          <div v-if="currentShot?.characterDesc" class="characterDesc">{{ currentShot.characterDesc }}</div>
+          <div class="sectionContent">{{ currentShot?.duration ? currentShot.duration + " 秒" : "3 秒" }}</div>
         </div>
 
         <div class="infoSection">
@@ -91,19 +74,37 @@
             图片提示词
           </div>
           <div class="shootingTips">
-            <div v-if="currentCharacters.length" class="tipItem">
-              <span class="tipLabel">出场人物：</span>
-              <span class="tipValue">{{ currentCharacters.map((c) => c.name).join("、") }}</span>
-            </div>
-            <div v-if="currentShot?.characterAction" class="tipItem">
-              <span>- {{ currentShot.characterAction }}</span>
-            </div>
             <template v-for="item in promptTips" :key="item.label">
               <div v-if="item.value" class="tipItem">
                 <span class="tipLabel">{{ item.label }}：</span>
                 <span class="tipValue">{{ item.value }}</span>
               </div>
             </template>
+          </div>
+        </div>
+
+        <div class="infoSection">
+          <div class="sectionTitle">
+            <span class="titleIndicator" />
+            生成配置
+          </div>
+          <div class="shootingTips">
+            <div v-if="currentShot?.model" class="tipItem">
+              <span class="tipLabel">模型：</span>
+              <span class="tipValue">{{ currentShot.model }}</span>
+            </div>
+            <div v-if="currentShot?.resolution" class="tipItem">
+              <span class="tipLabel">分辨率：</span>
+              <span class="tipValue">{{ currentShot.resolution }}</span>
+            </div>
+            <div v-if="currentShot?.mode" class="tipItem">
+              <span class="tipLabel">模式：</span>
+              <span class="tipValue">{{ MODE_LABEL[currentShot.mode] ?? currentShot.mode }}</span>
+            </div>
+            <div v-if="currentShot?.camera" class="tipItem">
+              <span class="tipLabel">运镜方式：</span>
+              <span class="tipValue">{{ currentShot.camera }}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -119,7 +120,7 @@
             还原拖拽排序
           </t-button>
         </div>
-        <t-button theme="default" variant="text" size="small" class="exportBtn">
+        <t-button theme="default" variant="text" size="small" class="exportBtn" @click="exportSelectedShots">
           <template #icon><i-download theme="outline" size="16" /></template>
           导出图片
         </t-button>
@@ -146,7 +147,7 @@
               @click="selectShot(index)">
               <t-checkbox v-model="shot.selected" class="shotCheckbox" @click.stop />
               <div class="shotImageWrapper">
-                <img v-if="shot.imageUrl" :src="shot.imageUrl" :alt="shot.description" class="shotImage" />
+                <img v-if="shot.filePath" :src="shot.filePath" :alt="shot.description" class="shotImage" />
                 <div v-else class="shotPlaceholder">
                   <i-pic theme="outline" size="24" fill="#999" />
                 </div>
@@ -164,112 +165,51 @@
 import { ref, computed, watch, nextTick, onUnmounted } from "vue";
 import { VueDraggable } from "vue-draggable-plus";
 import { DialogPlugin } from "tdesign-vue-next";
-
-interface ShotCharacter {
-  name: string;
-  role: string;
-  avatar?: string;
-}
+import axios from "@/utils/axios";
 
 interface Shot {
   id: number | string;
+  title: string;
   description: string;
-  duration?: number;
-  imageUrl?: string;
-  characters?: ShotCharacter[];
-  characterDesc?: string;
-  characterAction?: string;
-  sceneDesc?: string;
-  camera?: string;
+  duration?: string | number;
+  filePath?: string;
+  camera?: string | null;
+  prompt?: string;
+  mode?: string;
+  model?: string;
+  resolution?: string;
+  sound?: string | null;
+  frameMode?: string | null;
+  scriptId?: number;
+  createTime?: number;
   status?: "generating" | "completed" | "failed";
   selected?: boolean;
 }
-
+const MODE_LABEL: Record<string, string> = {
+  singleImage: "单图",
+  multiImage: "多图",
+  gridImage: "网格多图",
+  startEndRequired: "首尾帧",
+  endFrameOptional: "首尾帧",
+  startFrameOptional: "首尾帧",
+  text: "文生视频",
+  ["videoReference"]: "视频参考",
+  ["imageReference"]: "图片参考",
+  ["audioReference"]: "音频参考",
+  ["textReference"]: "文本参考",
+};
 // 模拟分镜数据
-const shotList = ref<Shot[]>([
-  {
-    id: 1,
-    description: "艾琳走出舱门",
-    duration: 3,
-    imageUrl: "https://picsum.photos/400/300?random=1",
-    characters: [{ name: "艾琳", role: "女宇航员", avatar: "https://picsum.photos/80/80?random=10" }],
-    characterDesc: "身穿宇航服走出舱门的人",
-    characterAction: "艾琳（身穿宇航服从舱门走出的人）",
-    sceneDesc: "艾琳的脚踏出舱门，踩在发光的苔藓上，激起光粒。",
-    camera: "固定镜头，仰视角度，中景，正常速度。",
-    status: "generating",
-    selected: false,
-  },
-  {
-    id: 2,
-    description: "探索神秘洞穴",
-    duration: 3,
-    imageUrl: "https://picsum.photos/400/300?random=2",
-    characters: [{ name: "艾琳", role: "女宇航员", avatar: "https://picsum.photos/80/80?random=10" }],
-    sceneDesc: "艾琳手持光源，小心翼翼地进入幽深的洞穴",
-    camera: "跟拍镜头，中景，缓慢推进",
-    status: "completed",
-    selected: false,
-  },
-  {
-    id: 3,
-    description: "发现水晶矿脉",
-    duration: 3,
-    imageUrl: "https://picsum.photos/400/300?random=3",
-    sceneDesc: "蓝紫色的水晶矿脉在黑暗中闪烁",
-    camera: "特写镜头，缓慢横移",
-    selected: false,
-  },
-  {
-    id: 4,
-    description: "能量波动异常",
-    duration: 3,
-    imageUrl: "https://picsum.photos/400/300?random=4",
-    sceneDesc: "水晶忽然发出强烈的光芒",
-    camera: "快速变焦，制造紧张感",
-    selected: false,
-  },
-  {
-    id: 5,
-    description: "神秘生物现身",
-    duration: 3,
-    imageUrl: "https://picsum.photos/400/300?random=5",
-    characters: [{ name: "艾琳", role: "女宇航员", avatar: "https://picsum.photos/80/80?random=10" }],
-    sceneDesc: "一个发光的神秘生物从水晶中浮现",
-    camera: "固定镜头，大全景",
-    selected: false,
-  },
-  {
-    id: 6,
-    description: "对视交流",
-    duration: 3,
-    imageUrl: "https://picsum.photos/400/300?random=6",
-    characters: [{ name: "艾琳", role: "女宇航员", avatar: "https://picsum.photos/80/80?random=10" }],
-    sceneDesc: "艾琳与神秘生物四目相对",
-    camera: "正反打镜头，特写",
-    selected: false,
-  },
-  {
-    id: 7,
-    description: "心灵感应",
-    duration: 3,
-    imageUrl: "https://picsum.photos/400/300?random=7",
-    characters: [{ name: "艾琳", role: "女宇航员", avatar: "https://picsum.photos/80/80?random=10" }],
-    sceneDesc: "光芒包裹住艾琳，传递着信息",
-    camera: "环绕镜头，360度旋转",
-    selected: false,
-  },
-  {
-    id: 8,
-    description: "获得启示",
-    duration: 3,
-    imageUrl: "https://picsum.photos/400/300?random=8",
-    characters: [{ name: "艾琳", role: "女宇航员", avatar: "https://picsum.photos/80/80?random=10" }],
-    sceneDesc: "艾琳睁开双眼，眼中闪烁着星光",
-    camera: "眼部特写，缓慢拉远",
-    selected: false,
-  },
-]);
+const shotList = ref<Shot[]>([]);
+onMounted(() => {
+  getShotList();
+});
+//查询分镜数据
+async function getShotList() {
+  const { data } = await axios.post("/production/getStoryboardData", {
+    scriptId: 1,
+  });
+  shotList.value = data;
+}
 
 const currentShotIndex = ref(0);
 const selectAll = ref(false);
@@ -288,26 +228,22 @@ const initialOrder = shotList.value.map((shot) => shot.id);
 // ===== 计算属性 =====
 
 const currentShot = computed(() => shotList.value[currentShotIndex.value] || null);
-const currentCharacters = computed(() => currentShot.value?.characters || []);
-const currentShotDuration = computed(() => currentShot.value?.duration || 3);
+const currentShotDuration = computed(() => parseFloat(String(currentShot.value?.duration || 3)));
 const isFirstShot = computed(() => currentShotIndex.value === 0);
 const isLastShot = computed(() => currentShotIndex.value === shotList.value.length - 1);
 
-const totalDuration = computed(() => shotList.value.reduce((sum, s) => sum + (s.duration || 3), 0));
+const totalDuration = computed(() => shotList.value.reduce((sum, s) => sum + parseFloat(String(s.duration || 3)), 0));
 
 const totalProgress = computed(() => {
   const elapsed = getCumulativeDuration(currentShotIndex.value) + currentElapsed.value;
   return Math.min((elapsed / totalDuration.value) * 100, 100);
 });
 
-const promptTips = computed(() => [
-  { label: "画面描述", value: currentShot.value?.sceneDesc },
-  { label: "运镜方式", value: currentShot.value?.camera },
-]);
+const promptTips = computed(() => [{ label: "提示词", value: currentShot.value?.prompt }]);
 
 // ===== 工具函数 =====
 
-const getDuration = (index: number) => shotList.value[index]?.duration || 3;
+const getDuration = (index: number) => parseFloat(String(shotList.value[index]?.duration || 3));
 
 const getCumulativeDuration = (index: number) => {
   let sum = 0;
@@ -452,6 +388,23 @@ watch(
 );
 
 const onDragEnd = () => nextTick(() => (isDragging.value = false));
+
+function exportSelectedShots() {
+  const selectedShots = shotList.value.filter((shot) => shot.selected);
+  if (selectedShots.length === 0) {
+    DialogPlugin.alert({
+      header: "提示",
+      body: "请至少选择一个分镜进行导出。",
+    });
+    return;
+  }
+  // 模拟导出逻辑
+  const exportedIds = selectedShots.map((s) => s.id).join(", ");
+  DialogPlugin.alert({
+    header: "导出成功",
+    body: `已导出分镜ID：${exportedIds}`,
+  });
+}
 </script>
 
 <style lang="scss" scoped>

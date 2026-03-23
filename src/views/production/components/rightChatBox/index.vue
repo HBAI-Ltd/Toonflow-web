@@ -112,7 +112,7 @@ const messages = ref<ChatMessagesData[]>([welcomeMsg]);
 // ============== Socket ==============
 
 const { connected, socket } = useSocket(`${baseUrl.value}/socket/productionAgent`, {
-  isolationKey: `${project.value?.id}:${props.episodesId}`,
+  isolationKey: `${project.value?.id}:productionAgent:${props.episodesId}`,
 });
 
 const flowData = defineModel<FlowData>({
@@ -153,8 +153,6 @@ onMounted(() => {
   });
 
   socket.on("setFlowData", ({ key, value }) => {
-    console.log("%c Line:156 🥟 key", "background:#ea7e5c", key);
-    console.log("%c Line:156 🥖 value", "background:#33a5ff", value);
     _.set(flowData.value, key, value);
   });
 
@@ -205,7 +203,7 @@ function handleClearMemory(type: "message" | "summary" | "all") {
     cancelBtn: "取消",
     theme: "warning",
     onConfirm: async () => {
-      await axios.post(`/agents/clearMemory`, { projectId: project.value?.id, episodesId: props.episodesId, type });
+      await axios.post(`/agents/clearMemory`, { projectId: project.value?.id, agentType: "productionAgent", episodesId: props.episodesId, type });
       MessagePlugin.success(`${memoryTypeLabel[type]}已清空`);
       dialog.destroy();
       getHistory();
