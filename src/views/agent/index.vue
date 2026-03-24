@@ -188,38 +188,7 @@ const planData = ref({
   event: "",
   storySkeleton: "",
   adaptationStrategy: "",
-  script: [
-    {
-      title: "第一幕",
-      content: "123213123123123123123",
-      relatedAssets: ["1123", "啊手动阀", "12321321"],
-    },
-    {
-      title: "第一幕",
-      content: "123213123123123123123",
-      relatedAssets: ["1123", "啊手动阀", "12321321"],
-    },
-    {
-      title: "第一幕",
-      content: "123213123123123123123",
-      relatedAssets: ["1123", "啊手动阀", "12321321"],
-    },
-    {
-      title: "第一幕",
-      content: "123213123123123123123",
-      relatedAssets: ["1123", "啊手动阀", "12321321"],
-    },
-    {
-      title: "第一幕",
-      content: "123213123123123123123",
-      relatedAssets: ["1123", "啊手动阀", "12321321"],
-    },
-    {
-      title: "第一幕",
-      content: "123213123123123123123",
-      relatedAssets: ["1123", "啊手动阀", "12321321"],
-    },
-  ],
+  script: [],
 });
 
 const welcomeMsg: ChatMessagesData = {
