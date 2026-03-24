@@ -236,7 +236,7 @@ interface ImageConfig {
 const imageRequest = async (imageConfig: ImageConfig, imageModel: ImageModel) => {
   if (!vendor.inputValues.apiKey) throw new Error("缺少API Key");
   const apiKey = vendor.inputValues.apiKey.replace("Bearer ", "");
-
+  if(imageModel.modelName.toLowerCase().includes("doubao")){
   const size = imageConfig.size === "1K" ? "2K" : imageConfig.size;
   const sizeMap: Record<string, Record<string, string>> = {
     "16:9": {
@@ -302,8 +302,8 @@ const buildDoubaoMetadata = (videoConfig: VideoConfig) => {
     videoConfig.imageBase64.forEach((i, index) => {
       if (videoConfig.mode == "startEnd") {
         (metaData.image_roles as string[]).push(index == 0 ? "first_frame" : "last_frame");
-      }
-      if (videoConfig.mode == "single" || videoConfig.mode == "multi") {
+      }else{
+
         (metaData.image_roles as string[]).push("reference_image");
       }
     });

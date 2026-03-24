@@ -52,7 +52,9 @@
       </template>
       <template #event="{ row }">
         <t-loading v-if="row.eventState == 0" size="small" text="生成中..."></t-loading>
-        <span v-else-if="row.eventState == -1 && !row.event" style="color: red">生成失败</span>
+        <t-tooltip v-else-if="row.eventState == -1 && !row.event" :content="row?.errorReason">
+          <div style="color: red; cursor: pointer">生成失败</div>
+        </t-tooltip>
         <div v-else>
           {{ row.event || "无" }}
         </div>

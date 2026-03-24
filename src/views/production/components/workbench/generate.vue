@@ -31,10 +31,13 @@
             <!-- singleImage: 单图 -->
             <template v-if="currentMode === 'singleImage'">
               <div class="frameItem">
-                <div class="frameThumbnail" :class="{ addFrame: !currentShot?.imageUrl }" @click="!currentShot?.imageUrl && handleAddImage()">
-                  <img v-if="currentShot?.imageUrl" :src="currentShot.imageUrl" class="frameImage" />
+                <div
+                  class="frameThumbnail"
+                  :class="{ addFrame: !currentShot?.config?.data?.[0]?.url }"
+                  @click="!currentShot?.config?.data?.[0]?.url && handleAddImage()">
+                  <img v-if="currentShot?.config?.data?.[0]?.url" :src="currentShot.config!.data![0].url" class="frameImage" />
                   <i-plus v-else size="24" fill="#999" />
-                  <div v-if="currentShot?.imageUrl" class="frameRemoveBtn" @click.stop="handleRemoveImage()">
+                  <div v-if="currentShot?.config?.data?.[0]?.url" class="frameRemoveBtn" @click.stop="handleRemoveImage()">
                     <i-close size="12" fill="#fff" />
                   </div>
                 </div>
@@ -43,9 +46,9 @@
             </template>
             <!-- multiImage / gridImage: 多图 -->
             <template v-else-if="currentMode === 'multiImage' || currentMode === 'gridImage'">
-              <div v-for="(img, idx) in currentShot?.imageUrls || []" :key="idx" class="frameItem">
+              <div v-for="(item, idx) in currentShot?.config?.data || []" :key="idx" class="frameItem">
                 <div class="frameThumbnail">
-                  <img :src="img" class="frameImage" />
+                  <img :src="item.url" class="frameImage" />
                   <div class="frameRemoveBtn" @click.stop="handleRemoveImageAt(idx)">
                     <i-close size="12" fill="#fff" />
                   </div>
@@ -67,16 +70,19 @@
                   <div class="frameItem">
                     <div
                       class="frameThumbnail"
-                      :class="{ addFrame: !currentShot?.mixedRefs?.videoReference }"
-                      @click="!currentShot?.mixedRefs?.videoReference && handleAddMixedRef('videoReference')">
+                      :class="{ addFrame: !currentShot?.config?.data?.find((d) => d.type === 'videoReference') }"
+                      @click="!currentShot?.config?.data?.find((d) => d.type === 'videoReference') && handleAddMixedRef('videoReference')">
                       <video
-                        v-if="currentShot?.mixedRefs?.videoReference"
-                        :src="currentShot.mixedRefs.videoReference.url"
+                        v-if="currentShot?.config?.data?.find((d) => d.type === 'videoReference')"
+                        :src="currentShot.config!.data!.find((d) => d.type === 'videoReference')!.url"
                         class="frameImage"
                         muted
                         preload="metadata" />
                       <i-plus v-else size="24" fill="#999" />
-                      <div v-if="currentShot?.mixedRefs?.videoReference" class="frameRemoveBtn" @click.stop="handleRemoveMixedRef('videoReference')">
+                      <div
+                        v-if="currentShot?.config?.data?.find((d) => d.type === 'videoReference')"
+                        class="frameRemoveBtn"
+                        @click.stop="handleRemoveMixedRef('videoReference')">
                         <i-close size="12" fill="#fff" />
                       </div>
                     </div>
@@ -88,11 +94,17 @@
                   <div class="frameItem">
                     <div
                       class="frameThumbnail"
-                      :class="{ addFrame: !currentShot?.mixedRefs?.imageReference }"
-                      @click="!currentShot?.mixedRefs?.imageReference && handleAddMixedRef('imageReference')">
-                      <img v-if="currentShot?.mixedRefs?.imageReference" :src="currentShot.mixedRefs.imageReference.url" class="frameImage" />
+                      :class="{ addFrame: !currentShot?.config?.data?.find((d) => d.type === 'imageReference') }"
+                      @click="!currentShot?.config?.data?.find((d) => d.type === 'imageReference') && handleAddMixedRef('imageReference')">
+                      <img
+                        v-if="currentShot?.config?.data?.find((d) => d.type === 'imageReference')"
+                        :src="currentShot.config!.data!.find((d) => d.type === 'imageReference')!.url"
+                        class="frameImage" />
                       <i-plus v-else size="24" fill="#999" />
-                      <div v-if="currentShot?.mixedRefs?.imageReference" class="frameRemoveBtn" @click.stop="handleRemoveMixedRef('imageReference')">
+                      <div
+                        v-if="currentShot?.config?.data?.find((d) => d.type === 'imageReference')"
+                        class="frameRemoveBtn"
+                        @click.stop="handleRemoveMixedRef('imageReference')">
                         <i-close size="12" fill="#fff" />
                       </div>
                     </div>
@@ -104,13 +116,16 @@
                   <div class="frameItem">
                     <div
                       class="frameThumbnail"
-                      :class="{ addFrame: !currentShot?.mixedRefs?.audioReference }"
-                      @click="!currentShot?.mixedRefs?.audioReference && handleAddMixedRef('audioReference')">
-                      <div v-if="currentShot?.mixedRefs?.audioReference" class="audioRefIcon">
+                      :class="{ addFrame: !currentShot?.config?.data?.find((d) => d.type === 'audioReference') }"
+                      @click="!currentShot?.config?.data?.find((d) => d.type === 'audioReference') && handleAddMixedRef('audioReference')">
+                      <div v-if="currentShot?.config?.data?.find((d) => d.type === 'audioReference')" class="audioRefIcon">
                         <i-volume-notice size="24" fill="#3070d6" />
                       </div>
                       <i-plus v-else size="24" fill="#999" />
-                      <div v-if="currentShot?.mixedRefs?.audioReference" class="frameRemoveBtn" @click.stop="handleRemoveMixedRef('audioReference')">
+                      <div
+                        v-if="currentShot?.config?.data?.find((d) => d.type === 'audioReference')"
+                        class="frameRemoveBtn"
+                        @click.stop="handleRemoveMixedRef('audioReference')">
                         <i-close size="12" fill="#fff" />
                       </div>
                     </div>
@@ -127,10 +142,13 @@
             <!-- 首尾帧模式 -->
             <template v-else-if="isDualFrameMode">
               <div class="frameItem">
-                <div class="frameThumbnail" :class="{ addFrame: !currentShot?.imageUrl }" @click="!currentShot?.imageUrl && handleAddImage()">
-                  <img v-if="currentShot?.imageUrl" :src="currentShot.imageUrl" class="frameImage" />
+                <div
+                  class="frameThumbnail"
+                  :class="{ addFrame: !currentShot?.config?.data?.[0]?.url }"
+                  @click="!currentShot?.config?.data?.[0]?.url && handleAddImage()">
+                  <img v-if="currentShot?.config?.data?.[0]?.url" :src="currentShot.config!.data![0].url" class="frameImage" />
                   <i-plus v-else size="24" fill="#999" />
-                  <div v-if="currentShot?.imageUrl" class="frameRemoveBtn" @click.stop="handleRemoveImage()">
+                  <div v-if="currentShot?.config?.data?.[0]?.url" class="frameRemoveBtn" @click.stop="handleRemoveImage()">
                     <i-close size="12" fill="#fff" />
                   </div>
                 </div>
@@ -139,11 +157,11 @@
               <div class="frameSwapBtn" @click="handleSwapFrames">
                 <i-switch size="16" />
               </div>
-              <div class="frameItem" @click="!currentShot?.endFrameUrl && handleAddEndFrame()">
-                <div class="frameThumbnail" :class="{ addFrame: !currentShot?.endFrameUrl }">
-                  <img v-if="currentShot?.endFrameUrl" :src="currentShot.endFrameUrl" class="frameImage" />
+              <div class="frameItem" @click="!currentShot?.config?.data?.[1]?.url && handleAddEndFrame()">
+                <div class="frameThumbnail" :class="{ addFrame: !currentShot?.config?.data?.[1]?.url }">
+                  <img v-if="currentShot?.config?.data?.[1]?.url" :src="currentShot.config!.data![1].url" class="frameImage" />
                   <i-plus v-else size="24" fill="#999" />
-                  <div v-if="currentShot?.endFrameUrl" class="frameRemoveBtn" @click.stop="handleRemoveEndFrame()">
+                  <div v-if="currentShot?.config?.data?.[1]?.url" class="frameRemoveBtn" @click.stop="handleRemoveEndFrame()">
                     <i-close size="12" fill="#fff" />
                   </div>
                 </div>
@@ -256,7 +274,7 @@
                     <video
                       :src="video.filePath"
                       class="historyCardThumb"
-                      :poster="videoFrameCache.get(video.filePath) || currentShot?.imageUrl || currentShot?.filePath || ''"
+                      :poster="videoFrameCache.get(video.filePath) || currentShot?.config?.data?.[0]?.url || currentShot?.filePath || ''"
                       preload="metadata"
                       muted
                       @loadedmetadata="(e: Event) => extractLastFrame(video.filePath, e.target as HTMLVideoElement)" />
@@ -332,7 +350,7 @@
                 <video
                   :src="getVideoRecord(item)!.filePath"
                   class="shotImage"
-                  :poster="videoFrameCache.get(getVideoRecord(item)!.filePath) || item.imageUrl || item.filePath || ''"
+                  :poster="videoFrameCache.get(getVideoRecord(item)!.filePath) || item.config?.data?.[0]?.url || item.filePath || ''"
                   muted
                   loop
                   preload="metadata"
@@ -341,26 +359,26 @@
               <!-- 双帧模式：显示分镜图片 -->
               <template v-else-if="isDualFrame(item.config?.mode as VideoModelMode)">
                 <div class="shotDualFrame">
-                  <img v-if="item.imageUrl || item.filePath" :src="item.imageUrl || item.filePath" class="shotFrameImg" />
+                  <img v-if="item.config?.data?.[0]?.url || item.filePath" :src="item.config?.data?.[0]?.url || item.filePath" class="shotFrameImg" />
                   <div v-else class="shotFramePlaceholder"><i-pic size="16" fill="#999" /></div>
-                  <img v-if="item.endFrameUrl" :src="item.endFrameUrl" class="shotFrameImg" />
+                  <img v-if="item.config?.data?.[1]?.url" :src="item.config.data[1].url" class="shotFrameImg" />
                   <div v-else class="shotFramePlaceholder"><i-pic size="16" fill="#999" /></div>
                 </div>
               </template>
               <!-- 多图模式：拼接显示多张图片 -->
-              <template v-else-if="item.imageUrls && item.imageUrls.length > 1">
+              <template v-else-if="item.config?.data && item.config.data.length > 1">
                 <div
                   class="shotMultiFrame"
                   :style="{
-                    gridTemplateColumns: `repeat(${item.imageUrls.length <= 2 ? 2 : 3}, 1fr)`,
-                    gridTemplateRows: `repeat(${Math.ceil(item.imageUrls.length / (item.imageUrls.length <= 2 ? 2 : 3))}, 1fr)`,
+                    gridTemplateColumns: `repeat(${item.config.data.length <= 2 ? 2 : 3}, 1fr)`,
+                    gridTemplateRows: `repeat(${Math.ceil(item.config.data.length / (item.config.data.length <= 2 ? 2 : 3))}, 1fr)`,
                   }">
-                  <img v-for="(url, idx) in item.imageUrls" :key="idx" :src="url" class="shotMultiFrameImg" />
+                  <img v-for="(d, idx) in item.config.data" :key="idx" :src="d.url" class="shotMultiFrameImg" />
                 </div>
               </template>
               <!-- 普通模式：显示分镜图片 -->
               <template v-else>
-                <img v-if="item.imageUrl || item.filePath" :src="item.imageUrl || item.filePath" class="shotImage" />
+                <img v-if="item.config?.data?.[0]?.url || item.filePath" :src="item.config?.data?.[0]?.url || item.filePath" class="shotImage" />
                 <div v-else class="shotPlaceholder"><i-pic size="16" fill="#999" /></div>
               </template>
               <!-- 序号标签 -->
@@ -426,7 +444,8 @@ interface VideoGenerationConfig {
   resolution: string;
   duration: number;
   audio: number | boolean;
-  data?: string[];
+  /** 图片/视频/音频资源列表，id+type 是传给后端的核心字段，url 用于前端展示 */
+  data?: { id: string | number; url: string; type: string }[];
 }
 //单个视频记录参数（后端返回的视频生成结果）
 interface VideoRecord {
@@ -435,13 +454,6 @@ interface VideoRecord {
   filePath: string;
   state: string;
   errorReason?: string;
-}
-// 混合参考单项
-interface MixedRefItem {
-  url: string;
-  type: "image" | "video" | "audio";
-  /** 资产 id（assets 来源时有值） */
-  id?: number;
 }
 //分镜参数（后端返回的原始分镜数据）
 interface StoryboardItem {
@@ -452,11 +464,12 @@ interface StoryboardItem {
   prompt: string;
   seconds?: number;
   duration?: string | number;
+  /** 分镜原图路径（始终不变，作为无 config.data 时的默认展示图） */
   filePath: string;
   frameType: string | null;
   config?: VideoGenerationConfig | null;
   videos?: VideoRecord[];
-  // 后端平铺字段（无 config 时使用）
+  // 后端平铺字段
   /** 后端直接返回的模型 */
   model?: string;
   /** 后端直接返回的分辨率 */
@@ -465,29 +478,6 @@ interface StoryboardItem {
   sound?: string | number;
   /** 后端直接返回的模式 */
   mode?: string;
-  /** 后端直接返回的单图 url */
-  imageUrl?: string;
-  /** 后端直接返回的图片来源 */
-  imageSource?: "storyboard" | "assets";
-  /** 后端直接返回的图片 id */
-  imageId?: number | string;
-  /** 后端直接返回的多图 url 列表 */
-  imageUrls?: string[];
-  /** 后端直接返回的多图来源列表 */
-  imageSources?: Array<{ source: "storyboard" | "assets"; id: number | string }>;
-  // 以下为前端运行时扩展的字段
-  /** 尾帧 url */
-  endFrameUrl?: string;
-  /** 尾帧来源 */
-  endFrameSource?: "storyboard" | "assets";
-  /** 尾帧对应的 id */
-  endFrameId?: number | string;
-  /** 混合参考模式的各类资源 */
-  mixedRefs?: {
-    videoReference?: MixedRefItem;
-    imageReference?: MixedRefItem;
-    audioReference?: MixedRefItem;
-  };
   /** 当前选中展示的视频 id（对应 config.videoId） */
   selectedVideoId?: number | string;
 }
@@ -527,66 +517,10 @@ function getVideoRecord(item: StoryboardItem): VideoRecord | null {
   return null;
 }
 /**
- * 初始化单个分镜的前端回显字段（imageUrl / imageUrls 等）
- * 优先级：config.data > 后端平铺字段（imageUrl/imageUrls） > 分镜原图(filePath)
- * 每次从后端拿到数据后都应对所有分镜调用，以保证轨道卡片显示正确
+ * 初始化分镜：将 config.videoId 同步到 selectedVideoId，以便轨道卡片展示选中视频。
+ * 展示用的图片 url 直接从 config.data[n].url 读取，无需额外字段。
  */
 function initShotFields(item: StoryboardItem) {
-  const configData = item.config?.data;
-  if (configData && configData.length > 0) {
-    // 有 config.data：用保存的图片 URL 回显
-    // imageSource / imageId 优先使用后端返回的 imageSources，不强制覆盖为 assets
-    item.imageUrl = configData[0];
-    item.imageUrls = [...configData];
-
-    if (item.imageSources && item.imageSources.length > 0) {
-      // 后端已返回 imageSources，直接用，同步首帧来源
-      item.imageSource = item.imageSources[0].source;
-      item.imageId = item.imageSources[0].id;
-    } else {
-      // 后端没有返回 imageSources（兼容旧数据），按 URL 是否等于 filePath 推断
-      item.imageSources = configData.map((url) => ({
-        source: (url === item.filePath ? "storyboard" : "assets") as "storyboard" | "assets",
-        id: url === item.filePath ? item.id : item.id,
-      }));
-      item.imageSource = item.imageSources[0].source;
-      item.imageId = item.imageSources[0].id;
-    }
-
-    // 首尾帧：第一张为首帧，第二张为尾帧
-    if (configData.length >= 2) {
-      item.endFrameUrl = configData[1];
-      if (item.imageSources && item.imageSources.length >= 2) {
-        item.endFrameSource = item.imageSources[1].source;
-        item.endFrameId = item.imageSources[1].id;
-      } else {
-        item.endFrameSource = configData[1] === item.filePath ? "storyboard" : "assets";
-        item.endFrameId = item.id;
-      }
-    }
-  } else {
-    // 没有 config.data：优先用后端平铺的 imageUrl/imageUrls，否则降级用 filePath
-    if (!item.imageUrl) {
-      item.imageUrl = item.filePath ?? "";
-    }
-    if (!item.imageSource) {
-      item.imageSource = "storyboard";
-      item.imageId = item.id;
-    }
-    if (!item.imageUrls || item.imageUrls.length === 0) {
-      // 后端如果没有返回 imageUrls，用 imageUrl 补充
-      item.imageUrls = item.imageUrl ? [item.imageUrl] : item.filePath ? [item.filePath] : [];
-      item.imageSources = item.imageUrls.map(() => ({ source: item.imageSource ?? ("storyboard" as const), id: item.imageId ?? item.id }));
-    } else if (!item.imageSources || item.imageSources.length === 0) {
-      // 后端返回了 imageUrls 但没有 imageSources，自动补全来源
-      item.imageSources = item.imageUrls.map((url) => ({
-        source: (url === item.filePath ? "storyboard" : "assets") as "storyboard" | "assets",
-        id: item.id,
-      }));
-    }
-  }
-  // 如果 config 里记录了选中的视频 id，同步到 selectedVideoId
-  // 这样轨道卡片和预览区都能直接通过 getVideoRecord 拿到选中视频
   if (item.config?.videoId != null && item.selectedVideoId == null) {
     const matched = item.videos?.find((v) => v.id === item.config!.videoId && v.state === "生成成功");
     if (matched) {
@@ -620,7 +554,7 @@ function getProductionData() {
           selectedData.value = {
             id: refreshed.id as number,
             videoUrl: previewVideo?.filePath ?? selectedData.value?.videoUrl ?? "",
-            imageUrl: refreshed.imageUrl || refreshed.filePath || "",
+            imageUrl: refreshed.config?.data?.[0]?.url || refreshed.filePath || "",
           };
         }
       } else if (list.length > 0) {
@@ -692,7 +626,7 @@ function selectShot(id: number | string) {
   selectedData.value = {
     id: item.id as number,
     videoUrl: previewVideo?.filePath ?? "",
-    imageUrl: item.imageUrl || item.filePath || "",
+    imageUrl: item.config?.data?.[0]?.url || item.filePath || "",
   };
   // 如果分镜有保存的 config，回显相关参数；否则用后端平铺字段回显
   const configModel = item.config?.model;
@@ -889,6 +823,19 @@ function syncShotToList(shot: StoryboardItem) {
   if (idx !== -1) shotList.value[idx] = shot;
 }
 
+/** 获取分镜 config.data，无则返回空数组 */
+function getShotData(shot: StoryboardItem) {
+  return shot.config?.data ?? [];
+}
+
+/** 更新分镜的 config.data（内部工具函数） */
+function updateShotData(shot: StoryboardItem, newData: { id: string | number; url: string; type: string }[]): StoryboardItem {
+  return {
+    ...shot,
+    config: shot.config ? { ...shot.config, data: newData } : ({ data: newData } as unknown as VideoGenerationConfig),
+  };
+}
+
 /** 单图模式：替换参考图 */
 async function handleAddImage() {
   if (!currentShot.value) return;
@@ -897,14 +844,17 @@ async function handleAddImage() {
   const asset = selected[0];
   const url = asset.filePath ?? "";
   if (!url) return;
-  currentShot.value = { ...currentShot.value, imageUrl: url, imageSource: "assets", imageId: asset.id };
+  const newData = [{ id: asset.id, url, type: "assets" }];
+  currentShot.value = updateShotData(currentShot.value, newData);
   syncShotToList(currentShot.value);
 }
 
 /** 单图模式：删除参考图（恢复为分镜原图） */
 function handleRemoveImage() {
   if (!currentShot.value) return;
-  currentShot.value = { ...currentShot.value, imageUrl: currentShot.value.filePath, imageSource: "storyboard", imageId: currentShot.value.id };
+  const shot = currentShot.value;
+  const newData = shot.filePath ? [{ id: shot.id, url: shot.filePath, type: "storyboard" }] : [];
+  currentShot.value = updateShotData(shot, newData);
   syncShotToList(currentShot.value);
 }
 
@@ -914,28 +864,21 @@ async function handleAddImageMulti() {
   const selected = await openAssetsSelector({ multiple: true, title: "选择参考图片" });
   if (!selected.length) return;
   const shot = currentShot.value;
-  // 分镜原图作为第一张（storyboard 来源）
-  const baseUrls = shot.filePath ? [shot.filePath] : [];
-  const baseSources: StoryboardItem["imageSources"] = shot.filePath ? [{ source: "storyboard", id: shot.id }] : [];
-  const existingUrls = shot.imageUrls?.filter((u) => !baseUrls.includes(u)) ?? [];
-  const existingSources = shot.imageSources?.slice(baseSources.length) ?? [];
-  // 新选资产
-  const newUrls = selected.map((a) => a.filePath ?? "").filter(Boolean);
-  const newSources = selected.filter((a) => a.filePath).map((a) => ({ source: "assets" as const, id: a.id }));
-  const merged = [...new Set([...baseUrls, ...existingUrls, ...newUrls])];
-  const mergedSources = [...baseSources, ...existingSources, ...newSources].slice(0, merged.length);
-  currentShot.value = { ...shot, imageUrls: merged, imageSources: mergedSources };
+  const existingData = getShotData(shot);
+  const newItems = selected.filter((a) => a.filePath).map((a) => ({ id: a.id, url: a.filePath ?? "", type: "assets" }));
+  // 去重（以 url 为标识）
+  const urlSet = new Set(existingData.map((d) => d.url));
+  const merged = [...existingData, ...newItems.filter((d) => !urlSet.has(d.url))];
+  currentShot.value = updateShotData(shot, merged);
   syncShotToList(currentShot.value);
 }
 
 /** 多图模式：删除指定索引图片 */
 function handleRemoveImageAt(idx: number) {
   if (!currentShot.value) return;
-  const urls = [...(currentShot.value.imageUrls ?? [])];
-  const sources = [...(currentShot.value.imageSources ?? [])];
-  urls.splice(idx, 1);
-  sources.splice(idx, 1);
-  currentShot.value = { ...currentShot.value, imageUrls: urls, imageSources: sources };
+  const shot = currentShot.value;
+  const newData = getShotData(shot).filter((_, i) => i !== idx);
+  currentShot.value = updateShotData(shot, newData);
   syncShotToList(currentShot.value);
 }
 
@@ -947,22 +890,35 @@ async function handleAddEndFrame() {
   const asset = selected[0];
   const url = asset.filePath ?? "";
   if (!url) return;
-  currentShot.value = { ...currentShot.value, endFrameUrl: url, endFrameSource: "assets", endFrameId: asset.id };
+  const shot = currentShot.value;
+  const existingData = getShotData(shot);
+  // 首帧取 data[0]，尾帧更新/设置为 data[1]
+  const startItem = existingData[0] ?? { id: shot.id, url: shot.filePath ?? "", type: "storyboard" };
+  const newData = [startItem, { id: asset.id, url, type: "assets" }];
+  currentShot.value = updateShotData(shot, newData);
   syncShotToList(currentShot.value);
 }
 
 /** 首尾帧：删除尾帧 */
 function handleRemoveEndFrame() {
   if (!currentShot.value) return;
-  currentShot.value = { ...currentShot.value, endFrameUrl: undefined, endFrameSource: undefined, endFrameId: undefined };
+  const shot = currentShot.value;
+  const existingData = getShotData(shot);
+  // 只保留首帧（data[0]）
+  const newData = existingData.length > 0 ? [existingData[0]] : [];
+  currentShot.value = updateShotData(shot, newData);
   syncShotToList(currentShot.value);
 }
 
 /** 首尾帧：互换首帧和尾帧 */
 function handleSwapFrames() {
   if (!currentShot.value) return;
-  const { imageUrl, endFrameUrl } = currentShot.value;
-  currentShot.value = { ...currentShot.value, imageUrl: endFrameUrl ?? "", endFrameUrl: imageUrl ?? "" };
+  const shot = currentShot.value;
+  const existingData = [...getShotData(shot)];
+  if (existingData.length >= 2) {
+    [existingData[0], existingData[1]] = [existingData[1], existingData[0]];
+  }
+  currentShot.value = updateShotData(shot, existingData);
   syncShotToList(currentShot.value);
 }
 
@@ -979,23 +935,32 @@ async function handleAddMixedRef(refType: "videoReference" | "imageReference" | 
   const asset = selected[0];
   const url = asset.filePath ?? "";
   if (!url) return;
-  const type: MixedRefItem["type"] = isVideo ? "video" : isAudio ? "audio" : "image";
-  currentShot.value = {
-    ...currentShot.value,
-    mixedRefs: {
-      ...currentShot.value.mixedRefs,
-      [refType]: { url, type, id: asset.id },
-    },
-  };
+  const refTypeOrder: VideoMixedRef[] = ["videoReference", "imageReference", "audioReference"];
+  const shot = currentShot.value;
+  const existingData = getShotData(shot);
+  // 混合模式用 type 字段区分不同类型，这里用 refType 作为 type 存入 data
+  const idx = existingData.findIndex((d) => d.type === refType);
+  const newItem = { id: asset.id, url, type: refType };
+  let newData: typeof existingData;
+  if (idx !== -1) {
+    newData = existingData.map((d, i) => (i === idx ? newItem : d));
+  } else {
+    // 按照 refTypeOrder 顺序插入
+    const insertIdx = refTypeOrder.indexOf(refType);
+    const before = existingData.filter((d) => refTypeOrder.indexOf(d.type as VideoMixedRef) < insertIdx);
+    const after = existingData.filter((d) => refTypeOrder.indexOf(d.type as VideoMixedRef) >= insertIdx && d.type !== refType);
+    newData = [...before, newItem, ...after];
+  }
+  currentShot.value = updateShotData(shot, newData);
   syncShotToList(currentShot.value);
 }
 
 /** 混合参考：删除某类型资源 */
 function handleRemoveMixedRef(refType: "videoReference" | "imageReference" | "audioReference") {
   if (!currentShot.value) return;
-  const refs = { ...currentShot.value.mixedRefs };
-  delete refs[refType];
-  currentShot.value = { ...currentShot.value, mixedRefs: refs };
+  const shot = currentShot.value;
+  const newData = getShotData(shot).filter((d) => d.type !== refType);
+  currentShot.value = updateShotData(shot, newData);
   syncShotToList(currentShot.value);
 }
 
@@ -1033,38 +998,8 @@ async function handleGenerate() {
   const shot = currentShot.value;
   if (!shot) return;
 
-  type DataItem = { type: "storyboard" | "assets"; id: number | string };
-  const dataList: DataItem[] = [];
-
-  if (isMixedRefMode.value) {
-    // 混合参考模式
-    const refs = shot.mixedRefs;
-    if (refs?.videoReference?.id != null) dataList.push({ type: "assets", id: refs.videoReference.id });
-    if (refs?.imageReference?.id != null) dataList.push({ type: "assets", id: refs.imageReference.id });
-    if (refs?.audioReference?.id != null) dataList.push({ type: "assets", id: refs.audioReference.id });
-  } else if (isDualFrameMode.value) {
-    // 首尾帧模式：首帧
-    dataList.push({ type: shot.imageSource ?? "storyboard", id: shot.imageId ?? shot.id });
-    // 尾帧（可选）
-    if (shot.endFrameUrl) {
-      dataList.push({ type: shot.endFrameSource ?? "storyboard", id: shot.endFrameId ?? shot.id });
-    }
-  } else if (currentMode.value === "multiImage" || currentMode.value === "gridImage") {
-    // 多图模式
-    (shot.imageSources ?? (shot.imageUrls ?? []).map(() => ({ source: "storyboard" as const, id: shot.id }))).forEach((src) =>
-      dataList.push({ type: src.source, id: src.id }),
-    );
-  } else {
-    // 单图 / 文生视频等其他模式
-    if (shot.imageUrl) {
-      // 优先从 imageSources[0] 读取来源，避免 imageSource 与 imageSources 不一致
-      const src0 = shot.imageSources?.[0];
-      dataList.push({
-        type: src0?.source ?? shot.imageSource ?? "storyboard",
-        id: src0?.id ?? shot.imageId ?? shot.id,
-      });
-    }
-  }
+  // 从 config.data 读取，只传 id 和 type 给后端
+  const dataList = getShotData(shot).map((d) => ({ id: d.id, type: d.type }));
 
   const payload = {
     projectId: project.value?.id,
@@ -1153,7 +1088,7 @@ async function fetchVideoData(scriptId: number | string, specifyIds: Array<numbe
           selectedData.value = {
             id: updatedShot.id as number,
             videoUrl: autoSelect.filePath ?? "",
-            imageUrl: updatedShot.imageUrl || updatedShot.filePath || "",
+            imageUrl: updatedShot.config?.data?.[0]?.url || updatedShot.filePath || "",
           };
         } else if (refreshed.selectedVideoId != null) {
           // 已有选中视频：刷新预览地址（路径可能在轮询后才返回）
@@ -1233,27 +1168,21 @@ function handleConfirmSelection() {
     });
 }
 async function handleBatchGenerate() {
-  // 批量生成逻辑
+  // 批量生成逻辑：从每个分镜的 config.data 读取，只传 id 和 type
   const checkedShots = shotList.value.filter((item) => checkedIds.value.has(item.id));
+  MessagePlugin.success("已提交批量生成请求，正在处理中...");
   for (const shot of checkedShots) {
     const list = {
       scriptId: shot.scriptId,
       projectId: project.value?.id,
       storyboardId: shot.id,
-      prompt: shot.prompt || "",
-      model: shot.model || "",
-      mode: shot.mode || "",
-      resolution: shot.resolution || "",
-      duration: Number(shot.duration) || 0,
-      audio: shot.sound ? true : false,
-      data: shot.imageUrl
-        ? [
-            {
-              type: shot.imageSource ?? "storyboard",
-              id: shot.imageId ?? shot.id,
-            },
-          ]
-        : [],
+      prompt: shot.config?.prompt || shot.prompt || "",
+      model: shot.config?.model || shot.model || "",
+      mode: shot.config?.mode || shot.mode || "",
+      resolution: shot.config?.resolution || shot.resolution || "",
+      duration: shot.config?.duration ?? Number(shot.duration) ?? 0,
+      audio: shot.config?.audio == 0 ? false : true,
+      data: getShotData(shot).map((d) => ({ id: d.id, type: d.type })),
     };
     const { data } = await axios.post("/production/workbench/generateVideo", list);
     const newVideoIds: Array<number | string> = Array.isArray(data) ? data : [data];
@@ -1268,8 +1197,17 @@ const emit = defineEmits(["close"]);
 //导入剪辑台
 function handleBatchDownload() {
   const checkedShots = shotList.value.filter((item) => checkedIds.value.has(item.id));
-  //拿到选中的分镜配置里面选中的视频
-  const videos = checkedShots.map((shot) => shot.videos?.find((v) => v.id === shot.selectedVideoId)).filter((v): v is VideoRecord => v != null);
+  const videos = checkedShots
+    .map((shot) => {
+      if (!shot.config?.videoId) return null;
+      const video = shot.videos?.find((v) => v.id === shot.config?.videoId);
+      return {
+        videoId: video?.id,
+        filePath: video?.filePath,
+        prompt: shot.config?.videoId == null ? shot.prompt : shot.config?.prompt,
+      };
+    })
+    .filter((v): v is NonNullable<typeof v> => !!v);
   emit("close", videos);
 }
 </script>

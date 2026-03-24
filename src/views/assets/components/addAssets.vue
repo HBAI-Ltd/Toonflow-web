@@ -1,6 +1,14 @@
 <template>
   <div class="addAssets">
-    <t-dialog v-model:visible="addAssetsShow" :closable="false" width="40vw" :header="props.title" :maskClosable="false">
+    <t-dialog
+      v-model:visible="addAssetsShow"
+      :closable="false"
+      width="40vw"
+      :header="props.title"
+      :maskClosable="false"
+      @close-btn-click="handleCancel"
+      @confirm="onConfirm"
+      @cancel="handleCancel">
       <div class="data">
         <t-form :data="props.formData" :rules="rules" ref="formRef">
           <t-form-item label="名称" name="name">
