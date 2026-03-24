@@ -17,7 +17,9 @@ export default defineStore(
       primaryColor: "#000",
     });
 
-    return { showSetting, baseUrl, wsBaseUrl, otherSetting, themeSetting };
+    const language = ref<string>("zh-CN");
+
+    return { showSetting, baseUrl, wsBaseUrl, otherSetting, themeSetting, language };
   },
   { persist: true },
 );
