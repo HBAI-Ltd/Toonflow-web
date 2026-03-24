@@ -33,18 +33,19 @@
       <preview v-if="activeMenu === 'preview'" />
       <generate v-show="activeMenu === 'generate'" @close="handleBatchDownload" v-model="extractLines" />
       <editVideo
-        v-if="activeMenu === 'editVideo'"
-        :initial-tracks="mockTracks"
+        v-show="activeMenu === 'editVideo'"
         :initial-media-items="mockMediaItems"
         :initial-audio-items="mockAudioItems"
         :initial-image-items="mockImageItems"
         :canvas-width="canvasWidth"
-        :canvas-height="canvasHeight" />
+        :canvas-height="canvasHeight"
+        ref="editVideoRef" />
     </div>
-    <t-dialog theme="info" header="提示" body="是否从提取台词" v-model:visible="visible1" @confirm="onConfirm" :onClose="close1">
+    <t-dialog theme="info" header="提示" body="是否从提取台词" v-model:visible="visible1">
       <template #footer>
-        <div class="f ac"> 
+        <div class="f ac" style="display: flex; justify-content: flex-end">
           <t-button variant="outline" @click="visible1 = false">取 消</t-button>
+          <t-button variant="outline" @click="noFn">否</t-button>
           <t-button @click="onConfirm">确 定</t-button>
         </div>
       </template>
@@ -62,7 +63,7 @@ import axios from "@/utils/axios";
 import preview from "./preview.vue";
 import generate from "./generate.vue";
 import editVideo from "./editVideo/index.vue";
-import { generateId, type Track, type MediaClip, type SubtitleClip, type FilterClip, type TransitionClip, type Clip } from "vue-clip-track";
+import { generateId, useTracksStore, type Track, type MediaClip, type SubtitleClip, type Clip } from "vue-clip-track";
 import type { MediaItem, AudioItem } from "./editVideo/utils/mediaData";
 
 const visible = defineModel("visible", {
@@ -71,6 +72,8 @@ const visible = defineModel("visible", {
 });
 
 const activeMenu = ref("preview");
+const editVideoRef = ref();
+const tracksStore = useTracksStore();
 
 // 画布尺寸配置
 const canvasWidth = ref(1920);
@@ -119,95 +122,7 @@ const mockImageItems: MediaItem[] = [
   },
 ];
 
-/** 轨道初始数据 */
-function createDemoTracks(): Track[] {
-  // 主视频轨道（带转场）
-  const mainTrack: Track = {
-    id: generateId("track-"),
-    type: "video",
-    name: "主轨道（视频）",
-    visible: true,
-    locked: false,
-    clips: [],
-    order: 0,
-    isMain: true,
-  };
-
-  const mainClips: Array<MediaClip | TransitionClip> = [
-    {
-      id: generateId("clip-"),
-      trackId: mainTrack.id,
-      type: "video",
-      startTime: 0,
-      endTime: 5,
-      selected: false,
-      sourceUrl: "https://webav-tech.github.io/WebAV/video/bunny_0.mp4",
-      originalDuration: 23,
-      trimStart: 0,
-      trimEnd: 5,
-      playbackRate: 1,
-      thumbnails: [],
-    } as MediaClip,
-  ];
-  mainTrack.clips = mainClips as Clip[];
-
-  // 音频轨道
-  const audioTrack: Track = {
-    id: generateId("track-"),
-    type: "audio",
-    name: "音频1",
-    visible: true,
-    locked: false,
-    clips: [],
-    order: 2,
-  };
-  const audioClips: MediaClip[] = [];
-  audioTrack.clips = audioClips;
-
-  // 字幕轨道
-  const subtitleTrack: Track = {
-    id: generateId("track-"),
-    type: "subtitle",
-    name: "字幕1",
-    visible: true,
-    locked: false,
-    clips: [],
-    order: 3,
-  };
-  const subtitleClips: SubtitleClip[] = [
-    {
-      id: generateId("clip-"),
-      trackId: subtitleTrack.id,
-      type: "subtitle",
-      startTime: 1,
-      endTime: 3,
-      selected: false,
-      text: "这是第一段字幕",
-      fontFamily: "Arial",
-      fontSize: 24,
-      color: "#ffffff",
-      textAlign: "center",
-    },
-  ];
-  subtitleTrack.clips = subtitleClips;
-
-  // 滤镜轨道
-  const filterTrack: Track = {
-    id: generateId("track-"),
-    type: "filter",
-    name: "滤镜1",
-    visible: true,
-    locked: false,
-    clips: [],
-    order: 4,
-  };
-  const filterClips: FilterClip[] = [];
-  filterTrack.clips = filterClips;
-
-  return [mainTrack, audioTrack, subtitleTrack, filterTrack];
-}
-
-const mockTracks = createDemoTracks();
+// 无需预先创建静态 mockTracks，改为通过 tracksStore 动态追加
 
 const visible1 = ref(false);
 const extractLines = ref(false);
@@ -219,70 +134,112 @@ async function onConfirm() {
   const value = batchDownloadValue.value;
   const list = batchDownloadValue.value.map((item: any) => ({
     videoId: item.videoId,
-    prompt: item.prompt,
+    prompt:
+      "日系清新治愈风，暖色调，4K 画质，柔光滤镜，画面比例 9:16，帧率 30fps；0-3 秒俯拍镜头，清晨阳光透过窗户洒在木质书桌，镜头缓慢推进，聚焦一杯冒着热气的牛奶 + 全麦面包，背景轻响轻柔的钢琴 BGM；3-8 秒手持跟拍，人物赤脚踩在地毯上走向阳台，镜头侧跟，人物轻声台词：新的一天，从温柔的晨光开始；8-15 秒特写镜头，手指轻触窗边绿植的叶片，阳光落在指尖，温柔低语台词：把生活调成自己喜欢的模式，慢一点也没关系；15-25 秒全景镜头，人物坐在阳台藤椅上翻开纸质书，镜头拉远，背景是城市的温柔街景，台词：在平凡的日常里，藏着最珍贵的小美好；25-30 秒定格镜头，画面渐暗，出现文字热爱生活，永远热烈，BGM 渐弱收尾",
   }));
-  const { data } = await axios.post("/production/workbench/extractLines", list);
-  // 字幕
-  mockTracks[2].clips = data.map((item: any) => {
-    const clip: SubtitleClip = {
-      id: generateId("clip-"),
-      trackId: mockTracks[2].id,
-      type: "subtitle",
-      startTime: item.startTime,
-      endTime: item.endTime,
-      selected: false,
-      text: item.text,
-      fontFamily: "Arial",
-      fontSize: 24,
-      color: "#ffffff",
-      textAlign: "center",
-    };
-    return clip;
-  });
-  // 视频轨道
-  mockTracks[0].clips = value.map((item: any) => {
-    const clip: MediaClip = {
-      id: generateId("clip-"),
-      trackId: mockTracks[0].id,
-      type: "video",
-      startTime: 0,
-      endTime: item.duration || 5,
-      selected: false,
-      sourceUrl: item.filePath,
-      originalDuration: item.duration || 5,
-      trimStart: 0,
-      trimEnd: item.duration || 5,
-      playbackRate: 1,
-      thumbnails: [],
-    };
-    return clip;
-  });
+  const { data } = await axios.post("/production/workbench/getChatLines", { list });
+  // 计算当前视频轨道的末尾时间作为追加起点
+  appendClipsToStore(value, data);
+  activeMenu.value = "editVideo";
+}
+
+function noFn() {
+  const value = batchDownloadValue.value;
+  appendClipsToStore(value, null);
   visible1.value = false;
   activeMenu.value = "editVideo";
 }
 
-function close1() {
-  const value = batchDownloadValue.value;
-  // 视频轨道
-  mockTracks[0].clips = value.map((item: any) => {
+/** 追加视频片段（以及可选的字幕）到 tracksStore 对应轨道末尾 */
+function appendClipsToStore(videoList: any[], subtitleData: any[] | null) {
+  let videoTrack = tracksStore.tracks.find((t) => t.type === "video" && t.isMain);
+  if (!videoTrack) {
+    videoTrack = {
+      id: generateId("track-"),
+      type: "video",
+      name: "主轨道（视频）",
+      visible: true,
+      locked: false,
+      clips: [],
+      order: 0,
+      isMain: true,
+    };
+    tracksStore.addTrack(videoTrack);
+    videoTrack = tracksStore.tracks.find((t) => t.type === "video" && t.isMain)!;
+  }
+
+  let subtitleTrack = tracksStore.tracks.find((t) => t.type === "subtitle");
+  if (!subtitleTrack && subtitleData) {
+    subtitleTrack = {
+      id: generateId("track-"),
+      type: "subtitle",
+      name: "字幕1",
+      visible: true,
+      locked: false,
+      clips: [],
+      order: 3,
+    };
+    tracksStore.addTrack(subtitleTrack);
+    subtitleTrack = tracksStore.tracks.find((t) => t.type === "subtitle")!;
+  }
+
+  // 计算视频轨道末尾时间
+  const existingVideoClips = videoTrack!.clips.filter((c) => c.type !== "transition");
+  let currentTime = existingVideoClips.reduce((max, c) => Math.max(max, c.endTime), 0);
+
+  // 追加视频片段
+  videoList.forEach((item: any) => {
+    const duration = item.duration || 5;
     const clip: MediaClip = {
       id: generateId("clip-"),
-      trackId: mockTracks[0].id,
+      trackId: videoTrack!.id,
       type: "video",
-      startTime: 0,
-      endTime: item.duration || 5,
+      startTime: currentTime,
+      endTime: currentTime + duration,
       selected: false,
       sourceUrl: item.filePath,
-      originalDuration: item.duration || 5,
+      originalDuration: duration,
       trimStart: 0,
-      trimEnd: item.duration || 5,
+      trimEnd: duration,
       playbackRate: 1,
       thumbnails: [],
     };
-    return clip;
+    tracksStore.addClip(videoTrack!.id, clip as Clip);
+    currentTime += duration;
   });
-  visible1.value = false;
-  activeMenu.value = "editVideo";
+
+  // 追加字幕片段（如果有），时间与视频对齐
+  if (subtitleData && subtitleTrack) {
+    const existingSubtitleClips = subtitleTrack.clips;
+    let subtitleStart = existingSubtitleClips.reduce((max, c) => Math.max(max, c.endTime), 0);
+    // 字幕起点对齐视频追加的起点
+    const videoAppendStart = existingVideoClips.reduce((max, c) => Math.max(max, c.endTime), 0);
+    subtitleStart = Math.max(subtitleStart, videoAppendStart);
+
+    videoList.forEach((item: any, index: number) => {
+      const duration = item.duration || 5;
+      const text = subtitleData[index]?.prompt || subtitleData[index]?.text || "";
+      if (!text) {
+        subtitleStart += duration;
+        return;
+      }
+      const clip: SubtitleClip = {
+        id: generateId("clip-"),
+        trackId: subtitleTrack!.id,
+        type: "subtitle",
+        startTime: subtitleStart,
+        endTime: subtitleStart + duration,
+        selected: false,
+        text,
+        fontFamily: "Arial",
+        fontSize: 24,
+        color: "#ffffff",
+        textAlign: "center",
+      };
+      tracksStore.addClip(subtitleTrack!.id, clip as Clip);
+      subtitleStart += duration;
+    });
+  }
 }
 
 //导入到剪辑台
