@@ -50,7 +50,13 @@
         </div>
       </div>
       <div class="viewBox">
-        <router-view />
+        <KeepAlive>
+          <router-view v-slot="{ Component }">
+            <transition name="fade" mode="out-in">
+              <component :is="Component" />
+            </transition>
+          </router-view>
+        </KeepAlive>
       </div>
     </div>
   </div>
@@ -239,5 +245,4 @@ function handleClick(menu: any) {
   background-color: #ecedef;
   margin: 8px 0;
 }
-
 </style>

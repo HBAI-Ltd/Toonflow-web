@@ -42,13 +42,11 @@
         :canvas-height="canvasHeight"
         ref="editVideoRef" />
     </div>
-    <!-- 全屏加载遮罩 -->
     <div v-if="importLoading" class="importLoadingMask">
       <div class="importLoadingContent">
         <t-loading size="large" text="正在导入剪辑台，请稍候..." />
       </div>
     </div>
-
     <t-dialog theme="info" header="提示" body="是否从提取台词" v-model:visible="visible1">
       <template #footer>
         <div class="f ac" style="display: flex; justify-content: flex-end">
@@ -283,7 +281,6 @@ function handleBatchDownload(value: any) {
     align-items: center;
     justify-content: center;
     backdrop-filter: blur(4px);
-
     .importLoadingContent {
       display: flex;
       flex-direction: column;

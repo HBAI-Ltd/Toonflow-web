@@ -12,7 +12,7 @@
       <div class="settingRight">
         <div class="sectionTitle">{{ currentMenuItem?.label }}</div>
         <div class="settingContent">
-          <themeConfig v-if="activeMenu === 'themeConfig'" />
+          <languageConfig v-if="activeMenu === 'language'" />
           <vendorConfig v-if="activeMenu === 'vendorConfig'" />
           <requestConfig v-if="activeMenu === 'requestConfig'" />
           <loginConfig v-if="activeMenu === 'loginConfig'" />
@@ -34,7 +34,7 @@ import { ref, computed } from "vue";
 import settingStore from "@/stores/setting";
 const { showSetting } = storeToRefs(settingStore());
 
-import themeConfig from "./components/themeConfig.vue";
+import languageConfig from "./components/languageConfig.vue";
 import requestConfig from "./components/requestConfig.vue";
 import loginConfig from "./components/loginConfig.vue";
 import agentConfog from "./components/agentConfog.vue";
@@ -47,7 +47,7 @@ import memoryConfig from "./components/memoryConfig.vue";
 import fileManagement from "./components/fileManagement.vue";
 
 const menuItems = [
-  { key: "themeConfig", label: "主题", icon: "i-platte" },
+  { key: "language", label: "语言设置", icon: "i-translate" },
   { key: "vendorConfig", label: "模型服务", icon: "i-computer" },
   { key: "agentConfog", label: "Agent配置", icon: "i-color-filter" },
   { key: "memoryConfig", label: "Agent记忆配置", icon: "i-memory-card-one" },
@@ -60,7 +60,7 @@ const menuItems = [
   { key: "logoutConfig", label: "退出登录", icon: "i-logout" },
 ];
 
-const activeMenu = ref("themeConfig");
+const activeMenu = ref("language");
 const currentMenuItem = computed(() => menuItems.find((item) => item.key === activeMenu.value));
 </script>
 
