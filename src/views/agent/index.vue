@@ -56,7 +56,7 @@
       </Pane>
       <Pane :size="75" :min-size="30" class="data">
         <div class="tabsWrapper">
-          <t-tabs v-model="currentTable">
+          <t-tabs v-model="currentTable" @change="changeTab">
             <template #action>
               <div class="ac" v-if="currentTable != 3">
                 <t-button @click="editMdPreview">编辑</t-button>
@@ -85,7 +85,7 @@
                     <div class="scriptCardHeader">
                       <div class="scriptCardHeaderLeft">
                         <span class="scriptIndex">#{{ index + 1 }}</span>
-                        <span class="scriptTitle">{{ item.title }}</span>
+                        <span class="scriptTitle">{{ item.name }}</span>
                       </div>
                       <div class="scriptCardActions">
                         <t-button size="small" @click="editScript(index)">
@@ -105,7 +105,7 @@
                       </span>
                       <div class="assetsTags">
                         <t-tag v-for="(asset, ai) in item.relatedAssets" size="small" :key="ai" variant="light" theme="warning">
-                          {{ asset }}
+                          {{ asset.name }}
                         </t-tag>
                       </div>
                     </div>
@@ -130,7 +130,7 @@
       <div class="scriptEditForm">
         <div class="scriptEditField">
           <label>标题</label>
-          <t-input v-model="scriptEditData.title" placeholder="请输入标题" />
+          <t-input v-model="scriptEditData.name" placeholder="请输入标题" />
         </div>
         <div class="scriptEditField">
           <label>内容</label>
@@ -146,8 +146,8 @@
                 选择资产
               </t-button>
             </div>
-            <div class="assets-list" v-if="selectedAssets.length">
-              <t-tag v-for="asset in selectedAssets" :key="asset.id" closable variant="light-outline" @close="removeAsset(asset.id)">
+            <div class="assets-list" v-if="scriptEditData.relatedAssets.length">
+              <t-tag v-for="asset in scriptEditData.relatedAssets" :key="asset.id" closable variant="light-outline" @close="removeAsset(asset.id)">
                 {{ asset.name }}
               </t-tag>
             </div>
@@ -171,6 +171,7 @@ import { Splitpanes, Pane } from "splitpanes";
 import "splitpanes/dist/splitpanes.css";
 import editMdPreivew from "@/components/editMdPreivew.vue";
 import openAssetsSelector from "@/utils/assetsCheck";
+import type { TabValue } from "tdesign-vue-next/es/tabs/type";
 const { baseUrl } = storeToRefs(settingStore());
 const { project } = storeToRefs(projectStore());
 
@@ -181,26 +182,25 @@ const currentMessageId = ref<string | null>(null);
 
 const dialogVisible = ref(false);
 const editContent = ref("");
-
+const memoryTypeLabel: Record<string, string> = { message: "消息记忆", summary: "摘要记忆", all: "全部记忆" };
+const currentTable = ref(1);
 interface Asset {
   id: number;
-  assetsId: number | null; //父id
   name: string;
+  describe: string;
   prompt: string;
-  desc: string;
-  src: string;
-  state: "未生成" | "生成中" | "已完成" | "生成失败";
   type: "role" | "tool" | "scene" | "clip";
 }
-
+interface Script {
+  id: number;
+  name: string;
+  content: string;
+  relatedAssets: Asset[];
+}
 interface PlanData {
   storySkeleton: string;
   adaptationStrategy: string;
-  script: {
-    title: string;
-    content: string;
-    relatedAssets: Asset[];
-  }[];
+  script: Script[];
 }
 
 const planData = ref<PlanData>({
@@ -282,7 +282,9 @@ onMounted(() => {
   });
 
   socket.on("setPlanData", ({ key, value }) => {
-    _.set(planData.value, key, value);
+    if (key == "script") {
+      getScriptApi();
+    } else _.set(planData.value, key, value);
   });
 
   getHistory();
@@ -324,8 +326,6 @@ const handleActions = {
   suggestion: (data?: any) => handleSend(data?.content?.prompt),
 };
 
-const memoryTypeLabel: Record<string, string> = { message: "消息记忆", summary: "摘要记忆", all: "全部记忆" };
-
 function handleClearMemory(type: "message" | "summary" | "all") {
   const dialog = DialogPlugin.confirm({
     header: "确认清空",
@@ -342,8 +342,6 @@ function handleClearMemory(type: "message" | "summary" | "all") {
   });
 }
 
-const currentTable = ref(1);
-
 async function getHistory() {
   loadingHistory.value = true;
   const { data } = await axios.post(`/agents/getMemory`, {
@@ -359,13 +357,14 @@ async function getHistory() {
 const scriptEditVisible = ref(false);
 const scriptEditIndex = ref(-1);
 const newAssetInput = ref("");
-const scriptEditData = ref({ title: "", content: "", relatedAssets: [] as Asset[] });
+const scriptEditData = ref<Script>({ id: -1, name: "", content: "", relatedAssets: [] });
 
 function editScript(index: number) {
   const item = planData.value.script[index];
   scriptEditIndex.value = index;
   scriptEditData.value = {
-    title: item.title,
+    id: item.id,
+    name: item.name,
     content: item.content,
     relatedAssets: [...(item.relatedAssets ?? [])],
   };
@@ -379,11 +378,25 @@ async function saveScript() {
     ...planData.value.script[scriptEditIndex.value],
     ...scriptEditData.value,
   };
-  scriptEditVisible.value = false;
+
+  try {
+    await axios.post("/script/updateScript", {
+      id: scriptEditData.value.id,
+      name: scriptEditData.value.name,
+      content: scriptEditData.value.content,
+      assets: scriptEditData.value.relatedAssets.map((a) => a.id),
+    });
+    MessagePlugin.success("剧本更新成功");
+    scriptEditVisible.value = false;
+  } catch (error) {
+    console.error("更新剧本失败:", error);
+    MessagePlugin.error("更新剧本失败，请稍后再试");
+  } finally {
+  }
 }
 
 function removeAsset(id: number) {
-  selectedAssets.value = selectedAssets.value.filter((a) => a.id !== id);
+  scriptEditData.value.relatedAssets = scriptEditData.value.relatedAssets.filter((a) => a.id !== id);
 }
 
 //编辑markdown
@@ -404,17 +417,35 @@ function onConfirm(value: string) {
   }
   dialogVisible.value = false;
 }
-const selectedAssets = ref<Asset[]>([]);
 
 async function handleSelectAssets() {
   const assets = await openAssetsSelector({ title: "选择关联资产", types: ["role", "tool", "scene"] });
   if (assets.length) {
-    const existing = new Set(selectedAssets.value.map((a) => a.id));
+    const existing = new Set(scriptEditData.value.relatedAssets.map((a) => a.id));
     for (const a of assets) {
       if (!existing.has(a.id)) {
-        selectedAssets.value.push({ ...a, src: a.filePath!, desc: a.describe });
+        scriptEditData.value.relatedAssets.push({ id: a.id, name: a.name, describe: a.describe, prompt: a.prompt, type: a.type });
       }
     }
+  }
+}
+
+async function getScriptApi() {
+  try {
+    const res = await axios.post("/script/getScrptApi", {
+      projectId: project.value?.id,
+    });
+    console.log("%c Line:424 🍻 res.data", "background:#33a5ff", res.data);
+
+    planData.value.script = res.data;
+  } catch (error) {
+    console.error("搜索剧本失败:", error);
+    MessagePlugin.error("搜索剧本失败");
+  }
+}
+function changeTab(value: TabValue) {
+  if (value == 3) {
+    getScriptApi();
   }
 }
 </script>

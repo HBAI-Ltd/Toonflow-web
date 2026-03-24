@@ -390,12 +390,12 @@ watch(addProjectShow, (visible) => {
 function fetchArtStyles() {
   artStyleLoading.value = true;
   axios
-    .post("/artStyle/getArtStyle", {})
+    .post("/artStyle/getArtStyle")
     .then(({ data }) => {
-      artStyleOptions.value = data.map((item: { id?: string | number; fileUrl: string; name: string; prompt?: string }) => ({
+      artStyleOptions.value = data.map((item: { id?: string | number; fileUrl: string; label: string; prompt?: string }) => ({
         id: item.id,
         fileUrl: item.fileUrl,
-        label: item.name,
+        label: item.label,
         prompt: item.prompt,
       }));
     })

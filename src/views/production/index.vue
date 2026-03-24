@@ -47,8 +47,8 @@
         <rightChatBox v-model="flowData" :title="rightChatTitle" @close="openShowVisible = false" :episodesId="episodesId" />
       </transition>
     </div>
+    <t-guide v-model="current" :steps="steps" @finish="finishGuide" />
   </VueFlow>
-  <t-guide v-model="current" :steps="steps" @finish="finishGuide" />
 </template>
 
 <script setup lang="ts">
@@ -223,11 +223,11 @@ async function getData() {
 }
 
 async function saveFlowData() {
-  await axios.post("/production/saveFlowData", {
-    projectId: project.value?.id,
-    episodesId: episodesId.value,
-    data: flowData.value,
-  });
+  // await axios.post("/production/saveFlowData", {
+  //   projectId: project.value?.id,
+  //   episodesId: episodesId.value,
+  //   data: flowData.value,
+  // });
 }
 
 watch(

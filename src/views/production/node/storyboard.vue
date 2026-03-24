@@ -44,12 +44,7 @@
             <div
               class="addBetween addBetween--right"
               :class="{ expanded: hoveredIndex === index }"
-              @click.stop="
-                editStoryboaryImage([
-                  item.src || '',
-                  index < (storyboard?.length ?? 0) - 1 ? storyboard[index + 1]?.src || '' : '',
-                ])
-              ">
+              @click.stop="editStoryboaryImage([item.src || '', index < (storyboard?.length ?? 0) - 1 ? storyboard[index + 1]?.src || '' : ''])">
               <t-button theme="primary" variant="outline" shape="circle">
                 <template #icon><i-plus /></template>
               </t-button>
@@ -231,7 +226,7 @@ async function saveOrUpdateFlowData(data: { nodes: NodeType[]; edges: Edge<any, 
       imageUrl,
     });
     // 更新对应分镜的 src
-    const target = props.data.storyboard.find((s) => s.id === currentRow.value.id);
+    const target = storyboard.value.find((s) => s.id === currentRow.value.id);
     if (target) target.src = imageUrl;
   } else {
     await axios.post("/production/editStoryboard/saveStoryboardFlow", {

@@ -50,13 +50,13 @@
         </div>
       </div>
       <div class="viewBox">
-        <KeepAlive>
-          <router-view v-slot="{ Component }">
-            <transition name="fade" mode="out-in">
-              <component :is="Component" />
-            </transition>
-          </router-view>
-        </KeepAlive>
+        <router-view v-slot="{ Component }">
+          <transition name="fade" mode="out-in">
+            <KeepAlive>
+              <component :is="Component" :key="$route.fullPath" />
+            </KeepAlive>
+          </transition>
+        </router-view>
       </div>
     </div>
   </div>
@@ -244,5 +244,14 @@ function handleClick(menu: any) {
   height: 1px;
   background-color: #ecedef;
   margin: 8px 0;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 </style>

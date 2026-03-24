@@ -36,8 +36,8 @@
               </div>
             </template>
             <span class="content">{{ item.content }}</span>
-            <div class="assetTags" v-if="item.assets?.length" @click.stop>
-              <t-tag v-for="asset in item.assets" :key="asset.id" variant="light-outline" size="small">
+            <div class="assetTags" v-if="item.relatedAssets?.length" @click.stop>
+              <t-tag v-for="asset in item.relatedAssets" :key="asset.id" variant="light-outline" size="small">
                 {{ asset.name }}
               </t-tag>
             </div>
@@ -72,7 +72,7 @@ interface Script {
   name: string;
   content: string;
   createTime?: number;
-  assets?: ScriptAsset[];
+  relatedAssets?: ScriptAsset[];
 }
 const scripts = ref<Script[]>([]);
 const searchQuery = ref("");
