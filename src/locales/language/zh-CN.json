@@ -271,11 +271,15 @@
         "logs": "data/logs",
         "logsDesc": "运行日志与错误日志。",
         "oss": "data/oss",
-        "ossDesc": "对象存储相关资源。",
+        "ossDesc": "文件存储相关资源。",
         "skills": "data/skills",
         "skillsDesc": "技能与提示配置文件。",
         "models": "data/models",
-        "modelsDesc": "模型文件与配置。"
+        "modelsDesc": "模型文件与配置。",
+        "web": "data/web",
+        "webDesc": "Web 相关资源，如前端构建产物等。",
+        "serve": "data/serve",
+        "serveDesc": "后端服务文件"
       },
       "openFailed": "打开文件夹失败"
     }

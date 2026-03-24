@@ -10,11 +10,11 @@
         <div class="versionInfo">
           <div class="versionRow">
             <span class="label">当前版本：</span>
-            <span class="version">{{ updateInfo.currentVersion }}</span>
+            <!-- <span class="version">{{ updateInfo.currentVersion }}</span> -->
           </div>
           <div class="versionRow">
             <span class="label">最新版本：</span>
-            <span class="version latestVersion">{{ updateInfo.latestVersion }}</span>
+            <!-- <span class="version latestVersion">{{ updateInfo.latestVersion }}</span> -->
           </div>
         </div>
         <div class="updateTip">
@@ -32,28 +32,14 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
-import { checkForUpdate, RELEASE_URL, type UpdateInfo } from "@/utils/checkUpdate";
 import useIndexStore from "@/stores/index";
 
 const indexStore = useIndexStore();
 const showUpdate = ref(false);
 
-const updateInfo = ref<UpdateInfo>({
-  hasUpdate: false,
-  currentVersion: '',
-  latestVersion: '',
-  releaseUrl: RELEASE_URL,
-});
-
 // 检查更新
 async function checkUpdate() {
   const currentVersion = indexStore.version;
-  const result = await checkForUpdate(currentVersion);
-  updateInfo.value = result;
-  
-  if (result.hasUpdate) {
-    showUpdate.value = true;
-  }
 }
 
 // 稍后提醒
@@ -63,7 +49,6 @@ function handleLater() {
 
 // 立即更新
 function handleUpdate() {
-  window.open(updateInfo.value.releaseUrl, '_blank');
   showUpdate.value = false;
 }
 

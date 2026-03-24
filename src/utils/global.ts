@@ -7,6 +7,7 @@ declare global {
   interface Window {
     $message: typeof MessagePlugin;
     $electron: boolean;
+    $port: string;
     $t: typeof t;
   }
 }

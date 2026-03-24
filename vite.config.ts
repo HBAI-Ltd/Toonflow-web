@@ -55,4 +55,7 @@ export default defineConfig({
       },
     },
   },
+  server:{
+    port: 50188,
+  }
 });

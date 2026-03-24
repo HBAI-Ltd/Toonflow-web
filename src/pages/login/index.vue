@@ -120,7 +120,7 @@ const handleLogin = () => {
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: #eeeeee;
+  background-color: #ebebeb;
 
   .formBox {
     width: 380px;

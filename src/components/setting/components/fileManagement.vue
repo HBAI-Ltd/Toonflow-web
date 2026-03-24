@@ -29,11 +29,13 @@ type QuickPathItem = {
 };
 
 const folderList: QuickPathItem[] = [
-  { label: "settings.file.folders.data", path: "data", desc: "settings.file.folders.dataDesc" },
-  { label: "settings.file.folders.logs", path: "data/logs", desc: "settings.file.folders.logsDesc" },
-  { label: "settings.file.folders.oss", path: "data/oss", desc: "settings.file.folders.ossDesc" },
-  { label: "settings.file.folders.skills", path: "data/skills", desc: "settings.file.folders.skillsDesc" },
-  { label: "settings.file.folders.models", path: "data/models", desc: "settings.file.folders.modelsDesc" },
+  { label: "settings.file.folders.data", path: "", desc: "settings.file.folders.dataDesc" },
+  { label: "settings.file.folders.logs", path: "logs", desc: "settings.file.folders.logsDesc" },
+  { label: "settings.file.folders.oss", path: "oss", desc: "settings.file.folders.ossDesc" },
+  { label: "settings.file.folders.skills", path: "skills", desc: "settings.file.folders.skillsDesc" },
+  { label: "settings.file.folders.models", path: "models", desc: "settings.file.folders.modelsDesc" },
+  { label: "settings.file.folders.web", path: "web", desc: "settings.file.folders.webDesc" },
+  { label: "settings.file.folders.serve", path: "models", desc: "settings.file.folders.modelsDesc" },
 ];
 
 const isDesktop = window.$electron === true;
