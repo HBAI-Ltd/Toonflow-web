@@ -1,7 +1,6 @@
 <template>
   <div class="generateContainer">
     <div class="mainContent">
-      <!-- 左侧预览区域 -->
       <div class="previewArea">
         <div class="videoWrapper">
           <video
@@ -20,7 +19,6 @@
         </div>
       </div>
       <t-card class="infoPanel">
-        <!-- 提示词输入 -->
         <div class="promptSection">
           <div class="sectionTitle">
             <span class="titleIndicator" />
@@ -28,7 +26,6 @@
           </div>
           <t-textarea v-model="promptText" placeholder="输入提示词，描述你想要生成的视频内容..." :autosize="{ minRows: 4, maxRows: 12 }" />
           <div class="frameSection" v-if="currentModeKey !== 'text' && mode.length > 0 && (!isMixedRefMode || mixedRefTypes.length > 0)">
-            <!-- singleImage: 单图 -->
             <template v-if="currentMode === 'singleImage'">
               <div class="frameItem">
                 <div
@@ -44,7 +41,6 @@
                 <span class="frameLabel">参考图</span>
               </div>
             </template>
-            <!-- multiImage / gridImage: 多图 -->
             <template v-else-if="currentMode === 'multiImage' || currentMode === 'gridImage'">
               <div v-for="(item, idx) in currentShot?.config?.data || []" :key="idx" class="frameItem">
                 <div class="frameThumbnail">
@@ -61,11 +57,8 @@
                 <span class="frameLabel">图片</span>
               </div>
             </template>
-
-            <!-- VideoMixedRef 混合参考模式 -->
             <template v-else-if="isMixedRefMode">
               <template v-for="refType in mixedRefTypes" :key="refType">
-                <!-- videoReference -->
                 <template v-if="refType === 'videoReference'">
                   <div class="frameItem">
                     <div
@@ -89,7 +82,6 @@
                     <span class="frameLabel">参考视频</span>
                   </div>
                 </template>
-                <!-- imageReference -->
                 <template v-else-if="refType === 'imageReference'">
                   <div class="frameItem">
                     <div
@@ -111,7 +103,6 @@
                     <span class="frameLabel">参考图片</span>
                   </div>
                 </template>
-                <!-- audioReference -->
                 <template v-else-if="refType === 'audioReference'">
                   <div class="frameItem">
                     <div
@@ -132,14 +123,11 @@
                     <span class="frameLabel">参考音频</span>
                   </div>
                 </template>
-                <!-- textReference 只显示文本输入，不显示上传 -->
                 <template v-else-if="refType === 'textReference'">
-                  <!-- 文本引用仅在 frameSection 内不额外渲染上传，文字已在提示词区域输入 -->
                 </template>
               </template>
             </template>
 
-            <!-- 首尾帧模式 -->
             <template v-else-if="isDualFrameMode">
               <div class="frameItem">
                 <div
@@ -245,7 +233,6 @@
             </div>
           </div>
 
-          <!-- 历史版本 -->
           <div class="historySection">
             <div class="historyHeader jb ac">
               <div>
@@ -269,7 +256,6 @@
                     disabled: video.state === '生成中' || video.state === '生成失败',
                   }"
                   @click="handleSelectHistoryVideo(video)">
-                  <!-- 成功：正常显示视频 -->
                   <template v-if="video.state === '生成成功'">
                     <video
                       :src="video.filePath"
@@ -279,7 +265,6 @@
                       muted
                       @loadedmetadata="(e: Event) => extractLastFrame(video.filePath, e.target as HTMLVideoElement)" />
                   </template>
-                  <!-- 生成中：灰色背景 + 转圈 -->
                   <template v-else-if="video.state === '生成中'">
                     <div class="historyCardThumb historyCardThumbEmpty" />
                     <div class="historyCardOverlay">
@@ -287,7 +272,6 @@
                       <span class="overlayText">生成中</span>
                     </div>
                   </template>
-                  <!-- 失败：显示失败提示 -->
                   <template v-else-if="video.state === '生成失败'">
                     <div class="historyCardThumb historyCardThumbEmpty" />
                     <div class="historyCardOverlay historyCardOverlayFailed">
@@ -295,15 +279,12 @@
                       <span class="overlayText">生成失败</span>
                     </div>
                   </template>
-                  <!-- 未知状态 -->
                   <template v-else>
                     <div class="historyCardThumb historyCardThumbEmpty" />
                   </template>
-                  <!-- 右上角：选中勾 -->
                   <div v-if="currentShot?.selectedVideoId === video.id" class="historyCardCheck">
                     <i-check size="12" fill="#fff" />
                   </div>
-                  <!-- 右下角：悬浮删除按钮 -->
                   <div class="historyCardDelete" @click.stop="handleDeleteHistoryVideo(video.id)">
                     <i-delete size="12" fill="#fff" />
                   </div>
@@ -340,7 +321,6 @@
             :class="{ active: selectedData?.id === item.id }"
             @click="selectShot(item.id)">
             <div class="shotImageWrapper">
-              <!-- 左上角勾选框 -->
               <t-checkbox
                 class="shotCheckbox"
                 :checked="checkedIds.has(item.id)"
@@ -356,7 +336,6 @@
                   preload="metadata"
                   @loadedmetadata="(e: Event) => extractLastFrame(getVideoRecord(item)!.filePath, e.target as HTMLVideoElement)" />
               </template>
-              <!-- 双帧模式：显示分镜图片 -->
               <template v-else-if="isDualFrame(item.config?.mode as VideoModelMode)">
                 <div class="shotDualFrame">
                   <img v-if="item.config?.data?.[0]?.url || item.filePath" :src="item.config?.data?.[0]?.url || item.filePath" class="shotFrameImg" />
@@ -365,7 +344,6 @@
                   <div v-else class="shotFramePlaceholder"><i-pic size="16" fill="#999" /></div>
                 </div>
               </template>
-              <!-- 多图模式：拼接显示多张图片 -->
               <template v-else-if="item.config?.data && item.config.data.length > 1">
                 <div
                   class="shotMultiFrame"
@@ -376,12 +354,10 @@
                   <img v-for="(d, idx) in item.config.data" :key="idx" :src="d.url" class="shotMultiFrameImg" />
                 </div>
               </template>
-              <!-- 普通模式：显示分镜图片 -->
               <template v-else>
                 <img v-if="item.config?.data?.[0]?.url || item.filePath" :src="item.config?.data?.[0]?.url || item.filePath" class="shotImage" />
                 <div v-else class="shotPlaceholder"><i-pic size="16" fill="#999" /></div>
               </template>
-              <!-- 序号标签 -->
               <t-tag class="shotNumber" size="small" variant="dark">#{{ index + 1 }}</t-tag>
             </div>
           </div>
