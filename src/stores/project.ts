@@ -7,6 +7,8 @@ interface Project {
   videoRatio: string | null;
   createTime: number;
   updatedAt: number;
+  imageModel: string;
+  videoModel: string;
 }
 
 export default defineStore(

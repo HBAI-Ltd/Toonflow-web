@@ -383,7 +383,8 @@
         "artStylePrompt": "視覺手冊提示詞",
         "aiExtract": "AI 萃取提示詞",
         "promptPlaceholder": "描述視覺手冊提示詞，用於產生圖片時指定視覺手冊",
-        "modelData": "選擇模型"
+        "modelData": "選擇圖片模型",
+        "videoModelData": "選擇視訊模型"
       },
       "msg": {
         "fetchFailed": "取得專案列表失敗",

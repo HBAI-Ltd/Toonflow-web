@@ -2,8 +2,8 @@
   <div class="project">
     <div class="header">
       <div class="fc">
-        <span class="title">{{ $t('workbench.project.title') }}</span>
-        <span class="sub">{{ $t('workbench.project.subtitle') }}</span>
+        <span class="title">{{ $t("workbench.project.title") }}</span>
+        <span class="sub">{{ $t("workbench.project.subtitle") }}</span>
       </div>
       <t-button
         class="addBtn"
@@ -12,7 +12,7 @@
           dialogShow = true;
         ">
         <template #icon><i-plus class="addIcon" :size="20" /></template>
-        {{ $t('workbench.project.newProject') }}
+        {{ $t("workbench.project.newProject") }}
       </t-button>
     </div>
     <div class="list">
@@ -22,7 +22,7 @@
             <div class="title">
               {{ project.name }}
             </div>
-            <t-tag shape="round">{{ project.artStyle }}</t-tag>
+            <t-tag shape="round" v-if="project.artStyle">{{ project.artStyle }}</t-tag>
             <div class="intro">
               {{ project.intro }}
             </div>
@@ -66,7 +66,7 @@ function getAllProject() {
       allProject.value = data;
     })
     .catch(() => {
-      window.$message.error($t('workbench.project.msg.fetchFailed'));
+      window.$message.error($t("workbench.project.msg.fetchFailed"));
     });
 }
 
@@ -80,54 +80,81 @@ const router = useRouter();
 function openProject(projectId: string | undefined) {
   const item = allProject.value.find((p) => p.id === projectId);
   if (item) project.value = item;
-  else return window.$message.error($t('workbench.project.msg.notFound'));
+  else return window.$message.error($t("workbench.project.msg.notFound"));
   router.push(`/novel`);
 }
 
-function openEdit(item: { id: string; name: string; intro: string; type: string; artStyle: string | null; videoRatio: string | null }) {
+function openEdit(item: {
+  id: string;
+  name: string;
+  intro: string;
+  type: string;
+  artStyle: string | null;
+  videoRatio: string | null;
+  imageModel: string;
+  videoModel: string;
+}) {
   editProjectData.value = item;
   dialogShow.value = true;
 }
 
-function editProjectFn(data: { id: string; name: string; intro: string; type: string; artStyle: string; videoRatio: string }) {
+function editProjectFn(data: {
+  id: string;
+  name: string;
+  intro: string;
+  type: string;
+  artStyle: string;
+  videoRatio: string;
+  imageModel: string;
+  videoModel: string;
+}) {
   axios
     .post("/project/editProject", data)
     .then(() => {
-      window.$message.success($t('workbench.project.msg.editSuccess'));
+      window.$message.success($t("workbench.project.msg.editSuccess"));
       getAllProject();
     })
     .catch((e) => {
-      window.$message.error(e.message ?? $t('workbench.project.msg.editFailed'));
+      window.$message.error(e.message ?? $t("workbench.project.msg.editFailed"));
     });
 }
 
-function addProjectFn(data: { projectType: string; name: string; intro: string; type: string; artStyle: string; videoRatio: string }) {
+function addProjectFn(data: {
+  projectType: string;
+  name: string;
+  intro: string;
+  type: string;
+  artStyle: string;
+  videoRatio: string;
+  imageModel: string;
+  videoModel: string;
+}) {
   axios
     .post("/project/addProject", data)
     .then(() => {
-      window.$message.success($t('workbench.project.msg.addSuccess'));
+      window.$message.success($t("workbench.project.msg.addSuccess"));
       getAllProject();
     })
     .catch((e) => {
-      window.$message.error(e.message ?? $t('workbench.project.msg.addFailed'));
+      window.$message.error(e.message ?? $t("workbench.project.msg.addFailed"));
     });
 }
 
 function delProjcer(projectId: string | undefined) {
   const dialog = DialogPlugin.confirm({
-    header: $t('workbench.project.msg.deleteHeader'),
-    body: $t('workbench.project.msg.deleteBody'),
-    confirmBtn: $t('workbench.project.msg.deleteConfirm'),
-    cancelBtn: $t('workbench.project.msg.deleteCancel'),
+    header: $t("workbench.project.msg.deleteHeader"),
+    body: $t("workbench.project.msg.deleteBody"),
+    confirmBtn: $t("workbench.project.msg.deleteConfirm"),
+    cancelBtn: $t("workbench.project.msg.deleteCancel"),
     onConfirm: () => {
       axios
         .post("/project/delProject", { id: projectId })
         .then(() => {
-          window.$message.success($t('workbench.project.msg.deleteSuccess'));
+          window.$message.success($t("workbench.project.msg.deleteSuccess"));
           getAllProject();
         })
         .catch((e) => {
-          window.$message.error(e.message ?? $t('workbench.project.msg.deleteFailed'));
+          window.$message.error(e.message ?? $t("workbench.project.msg.deleteFailed"));
         })
         .finally(() => {
           dialog.destroy();
