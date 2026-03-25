@@ -22,7 +22,7 @@
             class="inputBox"
             v-model="inputValue"
             :loading="status === 'pending' || status === 'streaming'"
-            placeholder="请输入内容"
+            placeholder="$t('workbench.scriptAgent.inputPlaceholder')"
             @send="handleSend"
             @stop="handleStop">
             <template #footer-prefix>
@@ -36,15 +36,15 @@
                   <div class="settingMenu">
                     <div class="settingMenuItem" @click="handleClearMemory('message')">
                       <i-delete size="14" />
-                      <span>清空消息记忆</span>
+                      <span>{{ $t('workbench.scriptAgent.clearMessageMemory') }}</span>
                     </div>
                     <div class="settingMenuItem" @click="handleClearMemory('summary')">
                       <i-close size="14" />
-                      <span>清空摘要记忆</span>
+                      <span>{{ $t('workbench.scriptAgent.clearSummaryMemory') }}</span>
                     </div>
                     <div class="settingMenuItem danger" @click="handleClearMemory('all')">
                       <i-delete-one size="14" />
-                      <span>清空全部记忆</span>
+                      <span>{{ $t('workbench.scriptAgent.clearAllMemory') }}</span>
                     </div>
                   </div>
                 </template>
@@ -59,27 +59,27 @@
           <t-tabs v-model="currentTable" @change="changeTab">
             <template #action>
               <div class="ac" v-if="currentTable != 3">
-                <t-button @click="editMdPreview">编辑</t-button>
+                <t-button @click="editMdPreview">{{ $t('workbench.scriptAgent.edit') }}</t-button>
               </div>
             </template>
             <!-- <t-tab-panel :value="1" label="章节事件">
               <pre>{{ planData.event }}</pre>
             </t-tab-panel> -->
-            <t-tab-panel :value="1" label="故事骨架">
+            <t-tab-panel :value="1" :label="$t('workbench.scriptAgent.storySkeleton')">
               <div class="panelContent">
                 <MdPreview v-if="planData.storySkeleton" :modelValue="planData.storySkeleton" />
-                <t-empty v-else title="暂无内容" />
+                <t-empty v-else :title="$t('workbench.scriptAgent.noContent')" />
               </div>
             </t-tab-panel>
-            <t-tab-panel :value="2" label="改编策略">
+            <t-tab-panel :value="2" :label="$t('workbench.scriptAgent.adaptationStrategy')">
               <div class="panelContent">
                 <MdPreview v-if="planData.adaptationStrategy" :modelValue="planData.adaptationStrategy" />
-                <t-empty v-else title="暂无内容" />
+                <t-empty v-else :title="$t('workbench.scriptAgent.noContent')" />
               </div>
             </t-tab-panel>
-            <t-tab-panel :value="3" label="剧本">
+            <t-tab-panel :value="3" :label="$t('workbench.scriptAgent.script')">
               <div class="panelContent">
-                <t-empty v-if="!planData.script?.length" title="暂无内容" />
+                <t-empty v-if="!planData.script?.length" :title="$t('workbench.scriptAgent.noContent')" />
                 <div v-else class="scriptList">
                   <div v-for="(item, index) in planData.script" :key="index" class="scriptCard">
                     <div class="scriptCardHeader">
@@ -90,18 +90,18 @@
                       <div class="scriptCardActions">
                         <t-button size="small" @click="editScript(index)">
                           <template #icon><i-edit size="14" /></template>
-                          编辑
+                          {{ $t('workbench.scriptAgent.edit') }}
                         </t-button>
                       </div>
                     </div>
                     <div class="scriptCardBody">
                       <pre v-if="item.content">{{ item.content }}</pre>
-                      <span v-else class="emptyContent">暂无内容</span>
+                      <span v-else class="emptyContent">{{ $t('workbench.scriptAgent.noContent') }}</span>
                     </div>
                     <div v-if="item.relatedAssets?.length" class="scriptCardFooter ac">
                       <span class="assetsLabel">
                         <i-link size="12" />
-                        关联资产
+                        {{ $t('workbench.scriptAgent.relatedAssets') }}
                       </span>
                       <div class="assetsTags">
                         <t-tag v-for="(asset, ai) in item.relatedAssets" size="small" :key="ai" variant="light" theme="warning">
@@ -122,28 +122,28 @@
     <!-- 剧本编辑对话框 -->
     <t-dialog
       v-model:visible="scriptEditVisible"
-      header="编辑剧本"
+      :header="$t('workbench.scriptAgent.editScript')"
       width="680px"
-      :confirm-btn="{ content: '保存', theme: 'primary' }"
+      :confirm-btn="{ content: $t('workbench.scriptAgent.save'), theme: 'primary' }"
       @confirm="saveScript"
       @close="scriptEditVisible = false">
       <div class="scriptEditForm">
         <div class="scriptEditField">
-          <label>标题</label>
-          <t-input v-model="scriptEditData.name" placeholder="请输入标题" />
+          <label>{{ $t('workbench.scriptAgent.scriptTitle') }}</label>
+          <t-input v-model="scriptEditData.name" :placeholder="$t('workbench.scriptAgent.titlePlaceholder')" />
         </div>
         <div class="scriptEditField">
-          <label>内容</label>
-          <t-textarea v-model="scriptEditData.content" placeholder="请输入剧本内容" :autosize="{ minRows: 8, maxRows: 16 }" />
+          <label>{{ $t('workbench.scriptAgent.content') }}</label>
+          <t-textarea v-model="scriptEditData.content" :placeholder="$t('workbench.scriptAgent.contentPlaceholder')" :autosize="{ minRows: 8, maxRows: 16 }" />
         </div>
         <div class="scriptEditField">
-          <label>关联资产</label>
+          <label>{{ $t('workbench.scriptAgent.relatedAssets') }}</label>
 
           <div class="assets-section">
             <div class="assets-header">
               <t-button size="small" theme="primary" variant="outline" @click="handleSelectAssets">
                 <template #icon><i-plus /></template>
-                选择资产
+                {{ $t('workbench.scriptAgent.selectAssets') }}
               </t-button>
             </div>
             <div class="assets-list" v-if="scriptEditData.relatedAssets.length">
@@ -151,7 +151,7 @@
                 {{ asset.name }}
               </t-tag>
             </div>
-            <div v-else class="assets-empty">暂未关联资产</div>
+            <div v-else class="assets-empty">{{ $t('workbench.scriptAgent.noAssets') }}</div>
           </div>
         </div>
       </div>
@@ -182,7 +182,11 @@ const currentMessageId = ref<string | null>(null);
 
 const dialogVisible = ref(false);
 const editContent = ref("");
-const memoryTypeLabel: Record<string, string> = { message: "消息记忆", summary: "摘要记忆", all: "全部记忆" };
+const memoryTypeLabel: Record<string, string> = {
+  message: $t('workbench.scriptAgent.memoryType.message'),
+  summary: $t('workbench.scriptAgent.memoryType.summary'),
+  all: $t('workbench.scriptAgent.memoryType.all'),
+};
 const currentTable = ref(1);
 interface Asset {
   id: number;
@@ -233,11 +237,11 @@ const welcomeMsg: ChatMessagesData = {
   id: "welcome",
   role: "assistant",
   content: [
-    { type: "text", status: "complete", data: "你好！我是 Toonflow 智能助手，需要我开始为您生成剧本吗？" },
+    { type: "text", status: "complete", data: $t('workbench.scriptAgent.welcomeMsg') },
     {
       type: "suggestion",
       status: "complete",
-      data: [{ title: "开始", prompt: "开始" }],
+      data: [{ title: $t('workbench.scriptAgent.start'), prompt: $t('workbench.scriptAgent.start') }],
     },
   ],
 };
@@ -330,14 +334,14 @@ const handleActions = {
 
 function handleClearMemory(type: "message" | "summary" | "all") {
   const dialog = DialogPlugin.confirm({
-    header: "确认清空",
-    body: `确定要清空${memoryTypeLabel[type]}吗？此操作无法撤销。`,
-    confirmBtn: "确认清空",
-    cancelBtn: "取消",
+    header: $t('workbench.scriptAgent.msg.clearConfirm'),
+    body: $t('workbench.scriptAgent.msg.clearBody', { type: memoryTypeLabel[type] }),
+    confirmBtn: $t('workbench.scriptAgent.msg.confirmClear'),
+    cancelBtn: $t('workbench.scriptAgent.msg.cancel'),
     theme: "warning",
     onConfirm: async () => {
       await axios.post(`/agents/clearMemory`, { projectId: project.value?.id, agentType: "scriptAgent", type });
-      MessagePlugin.success(`${memoryTypeLabel[type]}已清空`);
+      window.$message.success($t('workbench.scriptAgent.msg.memoryCleared', { type: memoryTypeLabel[type] }));
       dialog.destroy();
       getHistory();
     },
@@ -388,11 +392,11 @@ async function saveScript() {
       content: scriptEditData.value.content,
       assets: scriptEditData.value.relatedAssets.map((a) => a.id),
     });
-    MessagePlugin.success("剧本更新成功");
+    window.$message.success($t('workbench.scriptAgent.msg.scriptUpdated'));
     scriptEditVisible.value = false;
   } catch (error) {
     console.error("更新剧本失败:", error);
-    MessagePlugin.error("更新剧本失败，请稍后再试");
+    window.$message.error($t('workbench.scriptAgent.msg.scriptUpdateFailed'));
   } finally {
   }
 }
@@ -421,7 +425,7 @@ function onConfirm(value: string) {
 }
 
 async function handleSelectAssets() {
-  const assets = await openAssetsSelector({ title: "选择关联资产", types: ["role", "tool", "scene"] });
+  const assets = await openAssetsSelector({ title: $t('workbench.scriptAgent.selectAssetsTitle'), types: ["role", "tool", "scene"] });
   if (assets.length) {
     const existing = new Set(scriptEditData.value.relatedAssets.map((a) => a.id));
     for (const a of assets) {
@@ -442,7 +446,7 @@ async function getScriptApi() {
     planData.value.script = res.data;
   } catch (error) {
     console.error("搜索剧本失败:", error);
-    MessagePlugin.error("搜索剧本失败");
+    window.$message.error($t('workbench.scriptAgent.msg.searchScriptFailed'));
   }
 }
 function changeTab(value: TabValue) {

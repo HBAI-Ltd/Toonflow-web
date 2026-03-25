@@ -6,26 +6,26 @@
           <template #icon>
             <t-icon name="add" />
           </template>
-          导入原文
+          {{ $t("workbench.novel.importText") }}
         </t-button>
         <t-button theme="danger" :disabled="selectedRowKeys.length === 0" @click="handleBatchDelete">
           <template #icon>
             <t-icon name="delete" />
           </template>
-          批量删除 {{ selectedRowKeys.length > 0 ? `(${selectedRowKeys.length})` : "" }}
+          {{ $t("workbench.novel.batchDelete") }} {{ selectedRowKeys.length > 0 ? `(${selectedRowKeys.length})` : "" }}
         </t-button>
         <t-button @click="startEventAnalysis" :disabled="selectedRowKeys.length === 0">
           <template #icon>
             <t-icon name="analytics" />
           </template>
-          事件分析 {{ selectedRowKeys.length > 0 ? `(${selectedRowKeys.length})` : "" }}
+          {{ $t("workbench.novel.eventAnalysis") }} {{ selectedRowKeys.length > 0 ? `(${selectedRowKeys.length})` : "" }}
         </t-button>
       </t-space>
       <div class="f">
-        <t-input v-model="searchText" placeholder="搜索原文名称..." clearable style="width: 260px" />
+        <t-input v-model="searchText" :placeholder="$t('workbench.novel.searchPlaceholder')" clearable style="width: 260px" />
         <t-button @click="onChange" style="margin-left: 10px">
           <template #icon><t-icon name="search" /></template>
-          搜索
+          {{ $t("workbench.novel.search") }}
         </t-button>
       </div>
     </div>
@@ -44,6 +44,7 @@
       :pagination="pagination"
       :loading="loading"
       lazy-load
+      resizable
       table-layout="fixed"
       @select-change="handleSelectChange"
       @page-change="handlePageChange">
@@ -51,12 +52,12 @@
         <span>{{ dayjs(row.startTime).format("YYYY-MM-DD HH:mm:ss") }}</span>
       </template>
       <template #event="{ row }">
-        <t-loading v-if="row.eventState == 0" size="small" text="生成中..."></t-loading>
+        <t-loading v-if="row.eventState == 0" size="small" :text="$t('workbench.novel.generating')"></t-loading>
         <t-tooltip v-else-if="row.eventState == -1 && !row.event" :content="row?.errorReason">
-          <div style="color: red; cursor: pointer">生成失败</div>
+          <div style="color: red; cursor: pointer">{{ $t("workbench.novel.genFailed") }}</div>
         </t-tooltip>
         <div v-else>
-          {{ row.event || "无" }}
+          {{ row.event || $t("workbench.novel.none") }}
         </div>
       </template>
       <template #operation="{ row }">
@@ -65,13 +66,13 @@
             <template #icon>
               <t-icon name="edit" />
             </template>
-            编辑
+            {{ $t("workbench.novel.edit") }}
           </t-button>
           <t-button theme="danger" :disabled="row.eventState == 0" variant="text" @click="handleDelete(row)">
             <template #icon>
               <t-icon name="delete" />
             </template>
-            删除
+            {{ $t("workbench.novel.delete") }}
           </t-button>
         </t-space>
       </template>
@@ -101,15 +102,15 @@ const columns = ref<Record<string, unknown>[]>([
   },
   {
     colKey: "id",
-    title: "序号",
+    title: $t("workbench.novel.col.id"),
     width: 50,
     align: "center",
   },
-  { colKey: "reel", title: "卷", width: 100, align: "center", cell: "preview" },
-  { colKey: "chapter", title: "章节名称", width: 100, ellipsis: true },
-  { colKey: "chapterData", title: "章节内容", ellipsis: true },
-  { colKey: "event", title: "事件", ellipsis: true },
-  { colKey: "operation", title: "操作", width: 200, align: "center" },
+  { colKey: "reel", title: $t("workbench.novel.col.reel"), width: 100, align: "center", cell: "preview" },
+  { colKey: "chapter", title: $t("workbench.novel.col.chapter"), width: 100, ellipsis: true },
+  { colKey: "chapterData", title: $t("workbench.novel.col.chapterData"), ellipsis: true },
+  { colKey: "event", title: $t("workbench.novel.col.event"), ellipsis: true },
+  { colKey: "operation", title: $t("workbench.novel.col.operation"), width: 200, align: "center" },
 ]);
 const editNodelShow = ref(false);
 interface OriginalText {
@@ -184,14 +185,14 @@ function handleSelectChange(value: Array<string | number>, context: { selectedRo
 function handleBatchDelete() {
   if (selectedRowKeys.value.length === 0) return;
   const dialog = DialogPlugin.confirm({
-    header: "批量删除",
-    body: `确定要删除选中的 ${selectedRowKeys.value.length} 条数据吗?`,
+    header: $t("workbench.novel.msg.batchDeleteHeader"),
+    body: $t("workbench.novel.msg.batchDeleteBody", { count: selectedRowKeys.value.length }),
     onConfirm: async () => {
       await axios.post("/novel/batchDeleteNovel", {
         ids: selectedRowKeys.value,
       });
       getNovel();
-      MessagePlugin.success("批量删除成功");
+      window.$message.success($t("workbench.novel.msg.batchDeleteSuccess"));
       dialog.destroy();
     },
   });
@@ -204,20 +205,20 @@ function handleEdit(row: OriginalText) {
 // 删除
 function handleDelete(row: OriginalText) {
   const dialog = DialogPlugin.confirm({
-    header: "删除确认",
-    body: `确定要删除章节名称为「${row.chapter}」的数据吗?`,
+    header: $t("workbench.novel.msg.deleteHeader"),
+    body: $t("workbench.novel.msg.deleteBody", { name: row.chapter }),
     onConfirm: async () => {
       try {
         await axios.post("/novel/delNovel", { id: row.id });
-        MessagePlugin.success("小说原文删除成功");
+        window.$message.success($t("workbench.novel.msg.deleteSuccess"));
         if (tableData.value.length === 1 && pagination.value.page > 1) {
           pagination.value.page -= 1;
         }
         getNovel();
       } catch (e) {
-        MessagePlugin.error((e as Error).message);
+        window.$message.error((e as Error).message);
       }
-      MessagePlugin.success("删除成功");
+      window.$message.success($t("workbench.novel.msg.deleteSuccess"));
       dialog.destroy();
     },
   });
@@ -225,8 +226,8 @@ function handleDelete(row: OriginalText) {
 
 function startEventAnalysis() {
   const dialog = DialogPlugin.confirm({
-    header: "事件分析",
-    body: `确定要对选中的 ${selectedRowKeys.value.length} 条数据进行事件分析吗?`,
+    header: $t("workbench.novel.msg.eventAnalysisHeader"),
+    body: $t("workbench.novel.msg.eventAnalysisBody", { count: selectedRowKeys.value.length }),
     onConfirm: () => {
       dialog.destroy();
       axios

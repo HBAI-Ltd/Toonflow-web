@@ -2,7 +2,7 @@
   <div class="batchGeneration">
     <t-dialog
       v-model:visible="batchGenerationShow"
-      header="批量生成"
+      :header="$t('workbench.assets.batch.header')"
       top="3vh"
       width="80vw"
       :maskClosable="false"
@@ -13,11 +13,11 @@
       <div class="content">
         <div class="toolbar">
           <t-space>
-            <span class="selectedInfo">已选择 {{ selectedRowKeys.length }} 项</span>
-            <t-button theme="primary" size="small" @click="handleSelectAll">全选</t-button>
-            <t-button theme="default" size="small" @click="handleClearSelection">清空选择</t-button>
+            <span class="selectedInfo">{{ $t('workbench.assets.batch.selected', { count: selectedRowKeys.length }) }}</span>
+            <t-button theme="primary" size="small" @click="handleSelectAll">{{ $t('workbench.assets.batch.selectAll') }}</t-button>
+            <t-button theme="default" size="small" @click="handleClearSelection">{{ $t('workbench.assets.batch.clearSelection') }}</t-button>
           </t-space>
-          <t-input v-model="searchText" placeholder="搜索资产名称..." clearable style="width: 400px; margin-left: 10px">
+          <t-input v-model="searchText" :placeholder="$t('workbench.assets.searchPlaceholder')" clearable style="width: 400px; margin-left: 10px">
             <template #prefix-icon>
               <t-icon name="search" />
             </template>
@@ -26,13 +26,13 @@
             <t-button theme="primary" @click="handleBatchGeneratePrompt" :loading="textLoading" :disabled="textLoading">
               <div class="ac">
                 <i-translate theme="outline" size="20" />
-                生成提示词
+                {{ $t('workbench.assets.generatePrompt') }}
               </div>
             </t-button>
             <t-button theme="primary" style="margin-left: 10px" @click="handleBatchGenerateImage" :loading="imageLoading" :disabled="imageLoading">
               <div class="ac">
                 <i-pic theme="outline" size="20" />
-                生成图片
+                {{ $t('workbench.assets.generateImage') }}
               </div>
             </t-button>
           </div>
@@ -62,7 +62,7 @@
                     </div>
                     <div v-if="row.filePath" class="imageHoverOverlay">
                       <t-icon name="browse" size="20px" />
-                      <span class="hoverText">预览</span>
+                      <span class="hoverText">{{ $t('workbench.assets.preview') }}</span>
                     </div>
                   </div>
                 </template>
@@ -71,15 +71,15 @@
           </template>
           <template #prompt="{ row }">
             <t-tooltip :content="row.prompt" placement="top">
-              <t-textarea placeholder="请输入内容" v-model="row.prompt" />
+              <t-textarea :placeholder="$t('workbench.assets.batch.inputPh')" v-model="row.prompt" />
             </t-tooltip>
           </template>
         </t-table>
       </div>
       <template #footer>
         <t-space>
-          <t-button theme="default" @click="handleCancel">取消</t-button>
-          <t-button theme="primary" @click="onConfirm" :disabled="selectedRowKeys.length === 0">保存选中 ({{ selectedRowKeys.length }})</t-button>
+          <t-button theme="default" @click="handleCancel">{{ $t('workbench.assets.cancelBtn') }}</t-button>
+          <t-button theme="primary" @click="onConfirm" :disabled="selectedRowKeys.length === 0">{{ $t('workbench.assets.batch.saveSelected', { count: selectedRowKeys.length }) }}</t-button>
         </t-space>
       </template>
     </t-dialog>
@@ -90,7 +90,6 @@
 import { ref, computed } from "vue";
 import settingStore from "@/stores/setting";
 const { otherSetting } = storeToRefs(settingStore());
-import { MessagePlugin } from "tdesign-vue-next";
 import axios from "@/utils/axios";
 import projectStore from "@/stores/project";
 import type { TableProps } from "tdesign-vue-next";
@@ -106,21 +105,21 @@ const columns: TableProps["columns"] = [
   { colKey: "row-select", type: "multiple", width: 50, align: "center", fixed: "left" },
   {
     colKey: "filePath",
-    title: "预览图",
+    title: $t('workbench.assets.batch.colPreviewImg'),
     width: 100,
     align: "center",
     cell: "preview",
   },
   {
     colKey: "name",
-    title: "名称",
+    title: $t('workbench.assets.colName'),
     width: 150,
     align: "left",
     ellipsis: true,
   },
   {
     colKey: "prompt",
-    title: "提示词",
+    title: $t('workbench.assets.colPrompt'),
     minWidth: 200,
     align: "left",
     ellipsis: true,
@@ -139,13 +138,6 @@ interface AssetItem {
   filePath?: string;
   remark?: string;
 }
-
-// 类型映射：中文类型 -> 英文类型
-const typeMap: Record<string, string> = {
-  角色: "character",
-  场景: "scene",
-  道具: "props",
-};
 
 const tableData = ref<AssetItem[]>([]);
 const localData = ref<AssetItem[]>([]);
@@ -258,12 +250,12 @@ const emit = defineEmits(["update"]);
 
 async function onConfirm() {
   if (selectedRowKeys.value.length === 0) {
-    MessagePlugin.warning("请至少选择一个资产");
+    window.$message.warning($t('workbench.assets.selectAtLeastOne'));
     return;
   }
   const selectedAssets = tableData.value.filter((item) => selectedRowKeys.value.includes(item.id));
   if (selectedAssets.length === 0) {
-    MessagePlugin.error("请选择要保存的项目");
+    window.$message.error($t('workbench.assets.batch.selectToSave'));
     return;
   }
 
@@ -288,12 +280,12 @@ async function onConfirm() {
       }
     });
 
-    MessagePlugin.success("保存成功");
+    window.$message.success($t('workbench.assets.batch.saveSuccess'));
     emit("update"); // 通知父组件更新数据
     closeModal();
   } catch (error) {
     console.error("保存失败:", error);
-    MessagePlugin.error("保存失败,请重试");
+    window.$message.error($t('workbench.assets.batch.saveFail'));
   }
 }
 const textLoading = ref(false);
@@ -302,7 +294,7 @@ const promptGenerateCancel = ref(false);
 async function handleBatchGeneratePrompt() {
   const selectedAssets = tableData.value.filter((item) => selectedRowKeys.value.includes(item.id));
   if (selectedAssets.length === 0) {
-    MessagePlugin.error("请至少选择一个资产");
+    window.$message.error($t('workbench.assets.selectAtLeastOne'));
     return;
   }
   promptGenerateCancel.value = false;
@@ -314,10 +306,10 @@ async function handleBatchGeneratePrompt() {
       const batch = selectedAssets.slice(i, i + batchSize);
       await Promise.allSettled(batch.map((item) => generatePrompt(item)));
     }
-    MessagePlugin.success("提示词生成完成");
+    window.$message.success($t('workbench.assets.batch.promptDone'));
   } catch (e) {
     if (e instanceof Error && e.message !== "已取消生成") {
-      MessagePlugin.error(e.message);
+      window.$message.error(e.message);
     }
   } finally {
     textLoading.value = false;
@@ -344,7 +336,7 @@ async function generatePrompt(data: AssetItem) {
       }
     }
   } catch (e: any) {
-    MessagePlugin.error(`"${data.name}" ${e?.message ?? "提示词生成失败"}`);
+    window.$message.error(`"${data.name}" ${e?.message ?? $t('workbench.assets.batch.promptFail')}`);
   } finally {
     rowPromptLoading.value[data.id] = false;
   }
@@ -355,13 +347,13 @@ const imageGenerateCancel = ref(false);
 async function handleBatchGenerateImage() {
   const selectedAssets = tableData.value.filter((item) => selectedRowKeys.value.includes(item.id));
   if (selectedAssets.length === 0) {
-    MessagePlugin.warning("请至少选择一个资产");
+    window.$message.warning($t('workbench.assets.selectAtLeastOne'));
     return;
   }
   // 检查是否所有选中的资产都有提示词
   const assetsWithoutPrompt = selectedAssets.filter((item) => !item.prompt || item.prompt.trim() === "");
   if (assetsWithoutPrompt.length > 0) {
-    MessagePlugin.warning(`有 ${assetsWithoutPrompt.length} 个资产缺少提示词，请先生成提示词`);
+    window.$message.warning($t('workbench.assets.batch.missingPrompts', { count: assetsWithoutPrompt.length }));
     return;
   }
   imageGenerateCancel.value = false;
@@ -382,10 +374,10 @@ async function handleBatchGenerateImage() {
         ),
       );
     }
-    MessagePlugin.success("图片生成完成");
+    window.$message.success($t('workbench.assets.batch.imageDone'));
   } catch (e) {
     if (e instanceof Error && e.message !== "已取消生成") {
-      MessagePlugin.error(e.message);
+      window.$message.error(e.message);
     }
   } finally {
     imageLoading.value = false;
@@ -417,7 +409,7 @@ async function startGenerate(data: { id: number; prompt: string; name: string; t
     }
   } catch (e: any) {
     if (!imageGenerateCancel.value) {
-      MessagePlugin.error(`"${data.name}" 图片生成失败: ${e?.message ?? "未知错误"}`);
+      window.$message.error(`"${data.name}" ${$t('workbench.assets.batch.imageGenFail')}: ${e?.message ?? $t('workbench.assets.batch.unknownError')}`);
     }
   } finally {
     rowImageLoading.value[data.id] = false;

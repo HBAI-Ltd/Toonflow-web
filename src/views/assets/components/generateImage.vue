@@ -4,7 +4,7 @@
       v-model:visible="generateImageShow"
       top="2vh"
       width="80vw"
-      header="图片生成"
+      :header="$t('workbench.assets.gen.header')"
       :maskClosable="false"
       :footer="false"
       @close-btn-click="handleCancel">
@@ -12,8 +12,8 @@
         <t-card :bordered="false" :style="{ width: '40%' }">
           <div class="uploadReferenceImage">
             <div class="jb">
-              <span style="font-size: 16px; font-weight: 900">上传参考图片</span>
-              <t-tag>可选</t-tag>
+              <span style="font-size: 16px; font-weight: 900">{{ $t('workbench.assets.gen.uploadRef') }}</span>
+              <t-tag>{{ $t('workbench.assets.gen.optional') }}</t-tag>
             </div>
             <div class="upload">
               <t-upload
@@ -30,17 +30,17 @@
           </div>
           <div class="rawPicturePrompt">
             <div class="jb">
-              <span style="font-size: 16px; font-weight: 900">生图提示词</span>
+              <span style="font-size: 16px; font-weight: 900">{{ $t('workbench.assets.gen.promptLabel') }}</span>
               <div class="ac" style="cursor: pointer" @click.stop="generatePrompt">
                 <i-magic theme="outline" size="18" />
-                <span style="margin-left: 5px; font-size: 13px">智能生成</span>
+                <span style="margin-left: 5px; font-size: 13px">{{ $t('workbench.assets.gen.smartGenerate') }}</span>
               </div>
             </div>
             <div class="input">
-              <t-loading :loading="promptLoading" text="智能生成提示词中...">
+              <t-loading :loading="promptLoading" :text="$t('workbench.assets.gen.generatingPrompt')">
                 <t-textarea
                   v-model="props.formData.prompt"
-                  placeholder="描述您想要生成的图片内容，例如：一个充满科技感的未来城市,霓虹灯闪烁,赛博朋克风格..."
+                  :placeholder="$t('workbench.assets.gen.promptPlaceholder')"
                   :autosize="{ minRows: 15, maxRows: 15 }"
                   :disabled="generateLoading" />
               </t-loading>
@@ -48,11 +48,11 @@
           </div>
           <div class="selectModel f">
             <div style="width: 60%">
-              <span style="font-size: 16px; font-weight: 900">选择模型</span>
+              <span style="font-size: 16px; font-weight: 900">{{ $t('workbench.assets.gen.selectModel') }}</span>
               <modelSelect v-model="selectValue" :type="`image`" />
             </div>
             <div style="width: 40%; margin-left: 15px">
-              <span style="font-size: 16px; font-weight: 900">选择分辨率</span>
+              <span style="font-size: 16px; font-weight: 900">{{ $t('workbench.assets.gen.selectResolution') }}</span>
               <t-select v-model="resolution">
                 <t-option key="1k" label="1k" value="1k" />
                 <t-option key="2k" label="2k" value="2k" />
@@ -61,13 +61,13 @@
             </div>
           </div>
           <div class="generateButton" style="margin-top: 20px">
-            <t-button theme="primary" size="large" block :loading="generateLoading" @click="handleGenerate">生成图片</t-button>
+            <t-button theme="primary" size="large" block :loading="generateLoading" @click="handleGenerate">{{ $t('workbench.assets.gen.generateBtn') }}</t-button>
           </div>
         </t-card>
         <t-divider layout="vertical" style="height: 700px" />
-        <t-card title="生成结果" :bordered="false" :style="{ width: '60%' }">
+        <t-card :title="$t('workbench.assets.gen.resultTitle')" :bordered="false" :style="{ width: '60%' }">
           <template #actions>
-            <t-tag v-if="resultImages.length">已生成 {{ resultImages.length }} 张，请选择一张</t-tag>
+            <t-tag v-if="resultImages.length">{{ $t('workbench.assets.gen.generatedCount', { count: resultImages.length }) }}</t-tag>
           </template>
           <div class="resultImages" style="gap: 20px; flex-wrap: wrap">
             <div class="image f w">
@@ -80,12 +80,12 @@
                 @mouseenter="hoveredImageIndex = index"
                 @mouseleave="hoveredImageIndex = null">
                 <div v-if="img.state === '生成中'" class="generating-overlay f ac jc">
-                  <t-loading text="生成中..." />
+                  <t-loading :text="$t('workbench.assets.gen.generatingLabel')" />
                 </div>
                 <div v-else-if="img.state === '生成失败' && !img.src" class="failed-overlay f ac jc">
                   <div style="text-align: center">
                     <i-close-one theme="filled" size="40" fill="#d0021b" />
-                    <div style="margin-top: 10px; color: #d0021b; font-weight: bold">生成失败</div>
+                    <div style="margin-top: 10px; color: #d0021b; font-weight: bold">{{ $t('workbench.assets.gen.genFailed') }}</div>
                   </div>
                 </div>
                 <t-image v-else :src="img.src" fit="cover" :style="{ width: '100%', height: '100%', borderRadius: '20px' }">
@@ -125,7 +125,7 @@
             </div>
           </div>
           <div class="keep">
-            <t-button theme="primary" size="large" block :disabled="selectedImageIndex === null" @click="onClick">确认选择</t-button>
+            <t-button theme="primary" size="large" block :disabled="selectedImageIndex === null" @click="onClick">{{ $t('workbench.assets.gen.confirmSelect') }}</t-button>
           </div>
         </t-card>
       </div>
@@ -179,14 +179,14 @@ async function generatePrompt() {
       assetsId: props.formData.id,
       type: props.formData.type ?? "props",
       name: props.formData.name,
-      describe: props.formData.describe ? props.formData.describe : "无描述",
+      describe: props.formData.describe ? props.formData.describe : $t('workbench.assets.noDescription'),
     });
-    MessagePlugin.success("提示词生成成功");
+    window.$message.success($t('workbench.assets.gen.promptSuccess'));
     if (data.assetsId === props.formData.id) {
       props.formData.prompt = data.prompt;
     }
   } catch (e: any) {
-    MessagePlugin.error(e.message ?? "提示词生成失败");
+    window.$message.error(e.message ?? $t('workbench.assets.gen.promptFail'));
   } finally {
     promptLoading.value = false;
   }
@@ -197,17 +197,17 @@ const resolution = ref("1k");
 async function handleGenerate() {
   generateLoading.value = true;
   if (!props.formData.prompt) {
-    MessagePlugin.error("请填写提示词");
+    window.$message.error($t('workbench.assets.gen.fillPrompt'));
     generateLoading.value = false;
     return;
   }
   if (!resolution.value) {
-    MessagePlugin.error("请选择分辨率");
+    window.$message.error($t('workbench.assets.gen.pickResolution'));
     generateLoading.value = false;
     return;
   }
   if (!selectValue.value) {
-    MessagePlugin.error("请选择模型");
+    window.$message.error($t('workbench.assets.gen.pickModel'));
     generateLoading.value = false;
     return;
   }
@@ -229,7 +229,7 @@ async function handleGenerate() {
     const generatePromise = axios.post("/assetsGenerate/generateAssets", {
       type: props.formData.type ?? "props",
       projectId: project.value?.id,
-      name: props.formData.name ?? "未命名",
+      name: props.formData.name ?? $t('workbench.assets.gen.unnamed'),
       base64: referenceImageBase64,
       prompt: props.formData.prompt,
       model: selectValue.value,
@@ -241,18 +241,18 @@ async function handleGenerate() {
 
     generatePromise
       .then(async () => {
-        MessagePlugin.success("资产生成成功");
+        window.$message.success($t('workbench.assets.gen.assetGenSuccess'));
         await fetchGeneratedImages();
       })
       .catch((e: any) => {
-        MessagePlugin.error(e.message ?? "资产生成失败");
+        window.$message.error(e.message ?? $t('workbench.assets.gen.assetGenFail'));
         fetchGeneratedImages();
       })
       .finally(() => {
         generateLoading.value = false;
       });
   } catch (e: any) {
-    MessagePlugin.error(e.message ?? "资产生成失败");
+    window.$message.error(e.message ?? $t('workbench.assets.gen.assetGenFail'));
     generateLoading.value = false;
   }
 }
@@ -271,7 +271,7 @@ function handleCustomUpload(files: any[]): void {
           src: base64,
           state: "生成成功",
         });
-        MessagePlugin.success("上传成功");
+        window.$message.success($t('workbench.assets.gen.uploadOk'));
         customFileList.value = [];
       };
       reader.readAsDataURL(file);
@@ -325,7 +325,7 @@ function selectImage(index: number) {
   const img = resultImages.value[index];
   if (img.state === "生成成功") {
     selectedImageIndex.value = index;
-    MessagePlugin.success("已选择该图片");
+    window.$message.success($t('workbench.assets.gen.imageSelected'));
   }
 }
 
@@ -337,7 +337,7 @@ function deleteImage(index: number) {
   } else if (selectedImageIndex.value !== null && selectedImageIndex.value > index) {
     selectedImageIndex.value--;
   }
-  MessagePlugin.success("已删除该图片");
+  window.$message.success($t('workbench.assets.gen.imageDeleted'));
 }
 //确认选择
 async function onClick() {
@@ -353,7 +353,7 @@ async function onClick() {
       projectId: project.value?.id,
       imageId: isLocalUpload ? undefined : Number(selectedImage.id),
     });
-    MessagePlugin.success("图片已保存");
+    window.$message.success($t('workbench.assets.gen.imageSaved'));
     generateImageShow.value = false;
     emit("update");
   }

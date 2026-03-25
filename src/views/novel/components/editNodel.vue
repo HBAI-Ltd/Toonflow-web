@@ -1,23 +1,23 @@
 <template>
   <div class="editNodel">
-    <t-dialog v-model:visible="editNodelShow" header="编辑小说原文" width="50%" top="10vh" placement="center">
+    <t-dialog v-model:visible="editNodelShow" :header="$t('workbench.novel.editDialog.title')" width="50%" top="10vh" placement="center">
       <div class="data" style="overflow-x: hidden">
         <t-form label-width="80px">
-          <t-form-item label="章节名称">
-            <t-input placeholder="请输入章节名称" v-model="formData.chapter" />
+          <t-form-item :label="$t('workbench.novel.editDialog.chapterName')">
+            <t-input :placeholder="$t('workbench.novel.editDialog.chapterNamePh')" v-model="formData.chapter" />
           </t-form-item>
-          <t-form-item label="事件内容">
-            <t-textarea v-model="formData.event" placeholder="输入事件内容"></t-textarea>
+          <t-form-item :label="$t('workbench.novel.editDialog.eventContent')">
+            <t-textarea v-model="formData.event" :placeholder="$t('workbench.novel.editDialog.eventContentPh')"></t-textarea>
           </t-form-item>
-          <t-form-item label="章节内容">
-            <t-textarea placeholder="请输入章节内容" v-model="formData.chapterData" :autosize="{ minRows: 15, maxRows: 15 }" />
+          <t-form-item :label="$t('workbench.novel.editDialog.chapterContent')">
+            <t-textarea :placeholder="$t('workbench.novel.editDialog.chapterContentPh')" v-model="formData.chapterData" :autosize="{ minRows: 15, maxRows: 15 }" />
           </t-form-item>
         </t-form>
       </div>
       <template #footer>
         <div class="editNodel-footer">
-          <t-button @click="editNodelShow = false">取消</t-button>
-          <t-button theme="primary" @click="saveChanges">保存</t-button>
+          <t-button @click="editNodelShow = false">{{ $t('workbench.novel.editDialog.cancel') }}</t-button>
+          <t-button theme="primary" @click="saveChanges">{{ $t('workbench.novel.editDialog.save') }}</t-button>
         </div>
       </template>
     </t-dialog>
@@ -51,9 +51,9 @@ async function saveChanges() {
       event: props.formData.event,
     });
     emit("select");
-    MessagePlugin.success("小说原文更新成功");
+    window.$message.success($t('workbench.novel.editDialog.msg.updateSuccess'));
   } catch (e) {
-    MessagePlugin.error((e as Error).message);
+    window.$message.error((e as Error).message);
   } finally {
     editNodelShow.value = false;
   }

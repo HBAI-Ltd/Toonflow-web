@@ -333,9 +333,9 @@ async function extractStylePrompt() {
       images: aiImagePreviews.value,
     });
     artStyleForm.value.prompt = data.prompt || data;
-    MessagePlugin.success($t("workbench.project.msg.extractSuccess"));
+    window.$message.success($t("workbench.project.msg.extractSuccess"));
   } catch (e: any) {
-    MessagePlugin.error(e.message ?? $t("workbench.project.msg.extractFailed"));
+    window.$message.error(e.message ?? $t("workbench.project.msg.extractFailed"));
   } finally {
     extractLoading.value = false;
   }
@@ -343,7 +343,7 @@ async function extractStylePrompt() {
 
 async function handleArtStyleSubmit() {
   if (!artStyleForm.value.name.trim()) {
-    MessagePlugin.warning($t("workbench.project.msg.enterArtStyleName"));
+    window.$message.warning($t("workbench.project.msg.enterArtStyleName"));
     return;
   }
   try {
@@ -354,19 +354,19 @@ async function handleArtStyleSubmit() {
         fileUrl: artStyleForm.value.coverUrl,
         prompt: artStyleForm.value.prompt,
       });
-      MessagePlugin.success($t("workbench.project.msg.artStyleUpdated"));
+      window.$message.success($t("workbench.project.msg.artStyleUpdated"));
     } else {
       await axios.post("/artStyle/addArtStyle", {
         name: artStyleForm.value.name,
         fileUrl: artStyleForm.value.coverUrl,
         prompt: artStyleForm.value.prompt,
       });
-      MessagePlugin.success($t("workbench.project.msg.artStyleAdded"));
+      window.$message.success($t("workbench.project.msg.artStyleAdded"));
     }
     resetArtStyleDialog();
     fetchArtStyles();
   } catch (e: any) {
-    MessagePlugin.error(e.message ?? $t("workbench.project.msg.operationFailed"));
+    window.$message.error(e.message ?? $t("workbench.project.msg.operationFailed"));
   }
 }
 

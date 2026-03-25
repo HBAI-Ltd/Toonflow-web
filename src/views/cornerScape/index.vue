@@ -1,43 +1,43 @@
 <template>
   <div class="cornerScape f">
     <div class="left">
-      <t-card shadow title="批量生成设置" class="card">
+      <t-card shadow :title="$t('workbench.cornerScape.batchSettings')" class="card">
         <t-form labelAlign="top">
-          <t-form-item label="快捷指令">
+          <t-form-item :label="$t('workbench.cornerScape.quickActions')">
             <div class="quickActions">
-              <t-button theme="primary" variant="outline" @click="selectByState('')">全选未生成项</t-button>
-              <t-button theme="primary" variant="outline" @click="selectByState('生成成功')">全选已生成项</t-button>
-              <t-button theme="primary" variant="outline" @click="selectByState('生成失败')">全选错误项</t-button>
-              <t-button theme="primary" variant="outline" @click="toggleSelectAll">反选</t-button>
-              <t-button theme="primary" variant="outline" @click="clearSelection">取消选择</t-button>
+              <t-button theme="primary" variant="outline" @click="selectByState('')">{{ $t('workbench.cornerScape.selectUngenerated') }}</t-button>
+              <t-button theme="primary" variant="outline" @click="selectByState('生成成功')">{{ $t('workbench.cornerScape.selectGenerated') }}</t-button>
+              <t-button theme="primary" variant="outline" @click="selectByState('生成失败')">{{ $t('workbench.cornerScape.selectFailed') }}</t-button>
+              <t-button theme="primary" variant="outline" @click="toggleSelectAll">{{ $t('workbench.cornerScape.invertSelection') }}</t-button>
+              <t-button theme="primary" variant="outline" @click="clearSelection">{{ $t('workbench.cornerScape.clearSelection') }}</t-button>
               <t-image-viewer :images="previewImages" :closeOnEscKeydown="true" :closeOnOverlay="true">
                 <template #trigger="{ open }">
-                  <t-button theme="primary" variant="outline" :disabled="!hasPreviewImages" @click="hasPreviewImages && open()">批预览图片</t-button>
+                  <t-button theme="primary" variant="outline" :disabled="!hasPreviewImages" @click="hasPreviewImages && open()">{{ $t('workbench.cornerScape.batchPreview') }}</t-button>
                 </template>
               </t-image-viewer>
             </div>
           </t-form-item>
-          <t-form-item label="素材类型筛选">
-            <t-checkbox-group @change="onChangeFn" v-model="checkboxValue" :options="options" class="filterGroup" />
+          <t-form-item :label="$t('workbench.cornerScape.assetTypeFilter')">
+            <t-checkbox-group @change="onChangeFn" v-model="checkboxValue" :options="translatedOptions" class="filterGroup" />
           </t-form-item>
-          <t-form-item label="生成模型">
+          <t-form-item :label="$t('workbench.cornerScape.genModel')">
             <modelSelect v-model="selectValue" :type="`image`" />
           </t-form-item>
-          <t-form-item label="分辨率">
+          <t-form-item :label="$t('workbench.cornerScape.resolution')">
             <t-select
               v-model="resolution"
-              placeholder="请选择分辨率"
+              :placeholder="$t('workbench.cornerScape.resolutionPh')"
               :options="[
                 { label: '1K', value: '1k' },
                 { label: '2K', value: '2k' },
                 { label: '4K', value: '4k' },
               ]"></t-select>
           </t-form-item>
-          <t-form-item label="并发数量">
-            <t-input-number v-model="concurrentCount" autoWidth placeholder="请输入并发数"></t-input-number>
+          <t-form-item :label="$t('workbench.cornerScape.concurrency')">
+            <t-input-number v-model="concurrentCount" autoWidth :placeholder="$t('workbench.cornerScape.concurrencyPh')"></t-input-number>
           </t-form-item>
           <t-form-item>
-            <t-button theme="primary" block @click="batchGeneration">开始批量生成</t-button>
+            <t-button theme="primary" block @click="batchGeneration">{{ $t('workbench.cornerScape.startBatch') }}</t-button>
           </t-form-item>
         </t-form>
       </t-card>
@@ -46,15 +46,15 @@
       <t-card v-show="dataList.length > 0" shadow class="card" v-for="item in dataList" :key="item.id" @click.stop="openDrawer(item)">
         <div class="imageBox">
           <t-checkbox class="selectBox" :checked="selectedIds.includes(item.id)" @change="toggleSelect(item.id)" />
-          <t-empty v-if="!item.state" type="maintenance" title="等待生成" />
+          <t-empty v-if="!item.state" type="maintenance" :title="$t('workbench.cornerScape.waitingGen')" />
           <div v-else-if="item.state === '生成中'" class="generatingBox">
             <t-loading />
-            <span class="generatingText">生成中</span>
+            <span class="generatingText">{{ $t('workbench.cornerScape.generating') }}</span>
           </div>
-          <t-empty v-else-if="item.state === '生成失败'" type="fail" title="生成失败" />
+          <t-empty v-else-if="item.state === '生成失败'" type="fail" :title="$t('workbench.cornerScape.genFailed')" />
           <t-image v-else class="image" :src="item.filePath ?? undefined" fit="contain" :preview="true" :lazy="true">
             <template #error>
-              <t-empty type="fail" title="图片错误" />
+              <t-empty type="fail" :title="$t('workbench.cornerScape.imageError')" />
             </template>
             <template #overlayContent>
               <div class="imageToolsWrap">
@@ -67,7 +67,7 @@
           <div class="title">{{ item.name }}</div>
           <div class="meta">
             <t-tag size="small" variant="light-outline" theme="warning" class="typeTag">
-              {{ item.type === "role" ? "角色" : item.type === "scene" ? "场景" : item.type === "tool" ? "工具" : "未知" }}
+              {{ item.type === "role" ? $t('workbench.cornerScape.typeRole') : item.type === "scene" ? $t('workbench.cornerScape.typeScene') : item.type === "tool" ? $t('workbench.cornerScape.typeTool') : $t('workbench.cornerScape.typeUnknown') }}
             </t-tag>
             <t-tag size="small" variant="outline" class="stateTag" v-if="item.model">
               {{ item.model }}
@@ -77,30 +77,30 @@
             </t-tag>
           </div>
           <div class="prompt" v-if="item.prompt">
-            {{ item.type === "role" ? "角色" : item.type === "scene" ? "场景" : item.type === "tool" ? "工具" : "未知" }}描述：{{ item.prompt }}
+            {{ item.type === "role" ? $t('workbench.cornerScape.typeRole') : item.type === "scene" ? $t('workbench.cornerScape.typeScene') : item.type === "tool" ? $t('workbench.cornerScape.typeTool') : $t('workbench.cornerScape.typeUnknown') }}{{ $t('workbench.cornerScape.descriptionSuffix') }}{{ item.prompt }}
           </div>
         </div>
       </t-card>
-      <t-empty v-if="dataList.length === 0" type="empty" title="请先操作剧本" />
+      <t-empty v-if="dataList.length === 0" type="empty" :title="$t('workbench.cornerScape.operateScriptFirst')" />
       <t-drawer :closeBtn="true" closeOnEscKeydown :showOverlay="false" :footer="false" v-model:visible="drawerVisible" size="480px">
         <template #header>
           <div class="drawerHeader">
-            <span>{{ currentItem?.name }} - 单独配置</span>
+            <span>{{ currentItem?.name }} - {{ $t('workbench.cornerScape.individualConfig') }}</span>
             <t-tag size="medium" variant="light-outline" theme="warning">
-              {{ currentItem?.type === "role" ? "角色" : currentItem?.type === "scene" ? "场景" : currentItem?.type === "tool" ? "工具" : "未知" }}
+              {{ currentItem?.type === "role" ? $t('workbench.cornerScape.typeRole') : currentItem?.type === "scene" ? $t('workbench.cornerScape.typeScene') : currentItem?.type === "tool" ? $t('workbench.cornerScape.typeTool') : $t('workbench.cornerScape.typeUnknown') }}
             </t-tag>
           </div>
         </template>
         <div v-if="currentItem" class="drawerImageBox">
-          <t-empty v-if="!currentItem.state" type="maintenance" title="等待生成" />
+          <t-empty v-if="!currentItem.state" type="maintenance" :title="$t('workbench.cornerScape.waitingGen')" />
           <div v-else-if="currentItem.state === '生成中'" class="generatingBox">
             <t-loading />
-            <span class="generatingText">生成中</span>
+            <span class="generatingText">{{ $t('workbench.cornerScape.generating') }}</span>
           </div>
-          <t-empty v-else-if="currentItem.state === '生成失败'" type="fail" title="生成失败" />
+          <t-empty v-else-if="currentItem.state === '生成失败'" type="fail" :title="$t('workbench.cornerScape.genFailed')" />
           <t-image v-else-if="currentItem.filePath" class="image" :src="currentItem.filePath" fit="contain">
             <template #error>
-              <t-empty type="fail" title="图片错误" />
+              <t-empty type="fail" :title="$t('workbench.cornerScape.imageError')" />
             </template>
             <template #overlayContent>
               <div class="imageToolsWrap show">
@@ -108,27 +108,27 @@
               </div>
             </template>
           </t-image>
-          <t-empty v-else type="maintenance" title="暂无图片" />
+          <t-empty v-else type="maintenance" :title="$t('workbench.cornerScape.noImage')" />
         </div>
         <t-form v-if="currentItem" labelAlign="top">
-          <t-form-item label="生成模型">
+          <t-form-item :label="$t('workbench.cornerScape.genModel')">
             <modelSelect v-model="selectValue" :type="`image`" />
           </t-form-item>
-          <t-form-item label="分辨率">
-            <t-select v-model="editForm.resolution" placeholder="请选择分辨率" :options="resolutionOptions" />
+          <t-form-item :label="$t('workbench.cornerScape.resolution')">
+            <t-select v-model="editForm.resolution" :placeholder="$t('workbench.cornerScape.resolutionPh')" :options="resolutionOptions" />
           </t-form-item>
-          <t-form-item label="提示词">
-            <t-textarea v-model="editForm.prompt" placeholder="请输入提示词" :autosize="{ minRows: 4, maxRows: 10 }" :disabled="polishing" />
+          <t-form-item :label="$t('workbench.cornerScape.promptLabel')">
+            <t-textarea v-model="editForm.prompt" :placeholder="$t('workbench.cornerScape.promptPh')" :autosize="{ minRows: 4, maxRows: 10 }" :disabled="polishing" />
           </t-form-item>
           <t-form-item>
             <div class="drawerActions">
               <t-button theme="default" variant="outline" :loading="polishing" @click="polishPrompts">
                 <template #icon><t-icon name="edit" /></template>
-                AI 润色
+                {{ $t('workbench.cornerScape.aiPolish') }}
               </t-button>
               <t-button theme="primary" @click="regenerateItem">
                 <template #icon><t-icon name="refresh" /></template>
-                重新生成
+                {{ $t('workbench.cornerScape.regenerate') }}
               </t-button>
             </div>
           </t-form-item>
@@ -167,10 +167,17 @@ const resolutionOptions = [
   { label: "4K", value: "4k" },
 ];
 const options = ref([
-  { label: "人物", value: "role" },
-  { label: "场景", value: "scene" },
-  { label: "道具", value: "tool" },
+  { labelKey: 'workbench.cornerScape.filterRole', value: "role" },
+  { labelKey: 'workbench.cornerScape.filterScene', value: "scene" },
+  { labelKey: 'workbench.cornerScape.filterTool', value: "tool" },
 ]);
+
+const translatedOptions = computed(() =>
+  options.value.map(opt => ({
+    ...opt,
+    label: $t(opt.labelKey)
+  }))
+);
 const dataList = ref<DataItem[]>([]);
 const { project } = storeToRefs(projectStore());
 const loading = ref(false);
@@ -286,15 +293,15 @@ function setItemState(id: number, state: string) {
 function regenerateItem() {
   if (!currentItem.value) return;
   if (!selectValue.value) {
-    MessagePlugin.warning("请选择生成模型");
+    window.$message.warning($t('workbench.cornerScape.msg.selectModel'));
     return;
   }
   if (!editForm.resolution) {
-    MessagePlugin.warning("请选择分辨率");
+    window.$message.warning($t('workbench.cornerScape.msg.selectResolution'));
     return;
   }
   if (!editForm.prompt.trim()) {
-    MessagePlugin.warning("请输入提示词");
+    window.$message.warning($t('workbench.cornerScape.msg.enterPrompt'));
     return;
   }
   const item = currentItem.value;
@@ -307,7 +314,7 @@ function regenerateItem() {
       {
         type: item.type ?? "props",
         projectId: project.value?.id,
-        name: item.name ?? "未命名",
+        name: item.name ?? $t('workbench.cornerScape.unnamed'),
         base64: "",
         prompt: editForm.prompt,
         model: selectValue.value,
@@ -318,12 +325,12 @@ function regenerateItem() {
       { signal: controller.signal },
     )
     .then(async () => {
-      MessagePlugin.success(`${item.name} 生成成功`);
+      window.$message.success($t('workbench.cornerScape.msg.genSuccess', { name: item.name }));
       await getFilteredData();
     })
     .catch((e: any) => {
       if (e.name === "CanceledError" || e.code === "ERR_CANCELED") return;
-      MessagePlugin.error(e.message ?? `${item.name} 生成失败`);
+      window.$message.error(e.message ?? $t('workbench.cornerScape.msg.genFailed', { name: item.name }));
       setItemState(item.id, "生成失败");
     });
 }
@@ -332,7 +339,7 @@ function regenerateItem() {
 const polishing = ref(false);
 async function polishPrompts() {
   if (!editForm.prompt.trim()) {
-    window.$message.warning("请先输入提示词");
+    window.$message.warning($t('workbench.cornerScape.msg.enterPromptFirst'));
     return;
   }
   polishing.value = true;
@@ -342,15 +349,15 @@ async function polishPrompts() {
       assetsId: editForm.assetsId,
       type: editForm.type ?? "props",
       name: editForm.name,
-      describe: editForm.prompt ? editForm.prompt : "无描述",
+      describe: editForm.prompt ? editForm.prompt : $t('workbench.cornerScape.noDescription'),
     });
-    MessagePlugin.success("提示词生成成功");
+    window.$message.success($t('workbench.cornerScape.msg.promptGenSuccess'));
     if (data.assetsId === editForm.assetsId) {
       editForm.prompt = data.prompt;
     }
     getFilteredData();
   } catch {
-    window.$message.error("润色失败，请重试");
+    window.$message.error($t('workbench.cornerScape.msg.polishFailed'));
   } finally {
     polishing.value = false;
   }
@@ -358,15 +365,15 @@ async function polishPrompts() {
 // 批量生成
 async function batchGeneration() {
   if (selectedIds.value.length === 0) {
-    MessagePlugin.warning("请至少选择一个资产进行批量生成");
+    window.$message.warning($t('workbench.cornerScape.msg.selectAtLeastOne'));
     return;
   }
   if (!selectValue.value) {
-    MessagePlugin.warning("请选择生成模型");
+    window.$message.warning($t('workbench.cornerScape.msg.selectModel'));
     return;
   }
   if (!resolution.value) {
-    MessagePlugin.warning("请选择分辨率");
+    window.$message.warning($t('workbench.cornerScape.msg.selectResolution'));
     return;
   }
 
@@ -375,7 +382,7 @@ async function batchGeneration() {
   const limit = pLimit(concurrent);
   const controller = createAbortController();
 
-  MessagePlugin.success(`开始批量生成，共 ${items.length} 个，并发数 ${concurrent}`);
+  window.$message.success($t('workbench.cornerScape.msg.batchStarted', { count: items.length, concurrent }));
 
   const tasks = items.map((item) =>
     limit(async () => {
@@ -387,7 +394,7 @@ async function batchGeneration() {
           {
             type: item.type ?? "props",
             projectId: project.value?.id,
-            name: item.name ?? "未命名",
+            name: item.name ?? $t('workbench.cornerScape.unnamed'),
             base64: "",
             prompt: item.prompt || item.describe,
             model: selectValue.value,
@@ -401,7 +408,7 @@ async function batchGeneration() {
         await getFilteredData();
       } catch (e: any) {
         if (e.name === "CanceledError" || e.code === "ERR_CANCELED") return;
-        MessagePlugin.error(`${item.name} 生成失败：${e.message ?? ""}`);
+        window.$message.error($t('workbench.cornerScape.msg.batchItemFailed', { name: item.name, error: e.message ?? '' }));
         setItemState(item.id, "生成失败");
       }
     }),
@@ -409,7 +416,7 @@ async function batchGeneration() {
 
   await Promise.all(tasks);
   if (!controller.signal.aborted) {
-    MessagePlugin.success("批量生成完成");
+    window.$message.success($t('workbench.cornerScape.msg.batchComplete'));
   }
 }
 </script>

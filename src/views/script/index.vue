@@ -2,23 +2,23 @@
   <div class="script">
     <div class="actionBar">
       <div class="actionBar-left f ac">
-        <t-input placeholder="搜索剧本名称..." v-model="searchQuery" class="searchInput" clearable style="width: 300px" />
+        <t-input :placeholder="$t('workbench.script.searchPlaceholder')" v-model="searchQuery" class="searchInput" clearable style="width: 300px" />
         <t-button theme="primary" @click="onChange">
           <template #icon><i-search /></template>
-          搜索
+          {{ $t('workbench.script.search') }}
         </t-button>
         <t-button theme="primary" @click="handleAddScript">
           <template #icon><i-plus /></template>
-          新建剧本
+          {{ $t('workbench.script.addScript') }}
         </t-button>
       </div>
       <div class="actionBar-right f ac" v-if="scripts.length">
         <t-button :theme="isAllSelected ? 'default' : 'primary'" variant="outline" @click="toggleSelectAll(!isAllSelected)">
-          {{ isAllSelected ? "取消全选" : "全选" }}
+          {{ isAllSelected ? $t('workbench.script.cancelSelectAll') : $t('workbench.script.selectAll') }}
         </t-button>
         <t-button theme="primary" @click="handleExportScript" :disabled="selectedIds.length === 0">
           <template #icon><i-export /></template>
-          导出剧本{{ selectedIds.length ? `(${selectedIds.length})` : "" }}
+          {{ $t('workbench.script.exportScript') }}{{ selectedIds.length ? `(${selectedIds.length})` : "" }}
         </t-button>
       </div>
     </div>
@@ -107,7 +107,7 @@ async function searchScripts() {
     scripts.value = res.data;
   } catch (error) {
     console.error("搜索剧本失败:", error);
-    MessagePlugin.error("搜索剧本失败");
+    window.$message.error($t('workbench.script.msg.searchFailed'));
   }
 }
 onMounted(searchScripts);
@@ -122,7 +122,7 @@ function handleAddScript() {
 //导出剧本
 async function handleExportScript() {
   if (!selectedIds.value.length) {
-    MessagePlugin.warning("请先选择要导出的剧本");
+    window.$message.warning($t('workbench.script.msg.selectExport'));
     return;
   }
   try {
@@ -131,15 +131,15 @@ async function handleExportScript() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `剧本_${new Date().toISOString().slice(0, 10)}.zip`;
+    link.download = `script_${new Date().toISOString().slice(0, 10)}.zip`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-    MessagePlugin.success("导出成功");
+    window.$message.success($t('workbench.script.msg.exportSuccess'));
   } catch (error) {
     console.error("导出剧本失败:", error);
-    MessagePlugin.error("导出剧本失败");
+    window.$message.error($t('workbench.script.msg.exportFailed'));
   }
 }
 const selectedScript = ref<Script>({
@@ -157,20 +157,20 @@ function handleScriptClick(item: Script) {
 // 删除剧本
 async function handleDeleteScript(scriptId: number) {
   const dialog = DialogPlugin.confirm({
-    header: "确认删除",
-    body: "确定要删除这个剧本吗？此操作无法撤销。",
-    confirmBtn: "删除",
-    cancelBtn: "取消",
+    header: $t('workbench.script.msg.deleteHeader'),
+    body: $t('workbench.script.msg.deleteBody'),
+    confirmBtn: $t('workbench.script.msg.deleteConfirm'),
+    cancelBtn: $t('workbench.script.msg.cancel'),
     theme: "warning",
     onConfirm: async () => {
       try {
         await axios.post("/script/delScript", { id: scriptId });
-        MessagePlugin.success("删除成功");
+        window.$message.success($t('workbench.script.msg.deleteSuccess'));
         searchScripts();
         dialog.destroy();
       } catch (error) {
         console.error("删除剧本失败:", error);
-        MessagePlugin.error("删除失败");
+        window.$message.error($t('workbench.script.msg.deleteFailed'));
         dialog.destroy();
       }
     },

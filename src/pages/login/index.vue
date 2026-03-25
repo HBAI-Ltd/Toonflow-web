@@ -43,10 +43,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
 import { useI18n } from "vue-i18n";
 import Router from "@/router/index.ts";
-import { MessagePlugin } from "tdesign-vue-next";
 import logo from "@/assets/logo.png";
 import axios from "@/utils/axios";
 import settingStore from "@/stores/setting";
@@ -75,7 +73,7 @@ const handleSaveSetting = () => {
   baseUrl.value = tempBaseUrl.value;
   wsBaseUrl.value = tempWsBaseUrl.value;
   showSettingModal.value = false;
-  MessagePlugin.success("设置已保存");
+  window.$message.success("设置已保存");
 };
 const state = ref({
   show: true,
@@ -92,7 +90,7 @@ const state = ref({
 
 const handleLogin = () => {
   if (!state.value.user.username || !state.value.user.password) {
-    MessagePlugin.warning($t("login.enterUsernameAndPassword"));
+    window.$message.warning($t("login.enterUsernameAndPassword"));
     return;
   }
   state.value.loginLoading = true;
@@ -103,12 +101,12 @@ const handleLogin = () => {
       localStorage.setItem("token", data.token);
       localStorage.setItem("userId", data.id);
       Router.push("/project");
-      MessagePlugin.success($t("login.loginSuccess"));
+      window.$message.success($t("login.loginSuccess"));
       state.value.loginLoading = false;
     })
     .catch((e) => {
       state.value.loginLoading = false;
-      MessagePlugin.error(e.message);
+      window.$message.error(e.message);
     });
 };
 </script>

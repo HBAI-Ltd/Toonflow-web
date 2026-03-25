@@ -1,9 +1,9 @@
 <template>
   <div class="purgeNovel">
-    <t-dialog :footer="false" v-model:visible="purgeNovelShow" header="上传小说原文" width="50%" placement="center">
+    <t-dialog :footer="false" v-model:visible="purgeNovelShow" :header="$t('workbench.novel.import.title')" width="50%" placement="center">
       <div class="data">
         <t-tabs :value="activeKey" disabled>
-          <t-tab-panel value="To1" label="第一步" style="height: 680px; overflow-y: auto">
+          <t-tab-panel value="To1" :label="$t('workbench.novel.import.step1')" style="height: 680px; overflow-y: auto">
             <div class="uploadArea" @click="triggerUpload" @dragover.prevent @drop.prevent="handleDrop">
               <t-upload
                 ref="uploadRef"
@@ -17,31 +17,31 @@
               <div class="dragIcon">
                 <i-upload-one theme="outline" size="32" fill="var(--td-brand-color)" />
               </div>
-              <p class="uploadText">拖拽小说原文文件到此处或点击上传</p>
-              <p class="uploadHint">支持 .txt, .docx 格式，建议文件大小不超过 10MB</p>
+              <p class="uploadText">{{ $t('workbench.novel.import.dragUpload') }}</p>
+              <p class="uploadHint">{{ $t('workbench.novel.import.uploadHint') }}</p>
             </div>
-            <t-divider>或</t-divider>
+            <t-divider>{{ $t('workbench.novel.import.or') }}</t-divider>
             <div class="formItem">
-              <div class="label">直接粘贴小说原文内容</div>
+              <div class="label">{{ $t('workbench.novel.import.pasteLabel') }}</div>
               <div class="uploadWrap">
-                <t-textarea v-model="content" placeholder="请输入小说原文内容" :autosize="{ minRows: 12, maxRows: 12 }" />
+                <t-textarea v-model="content" :placeholder="$t('workbench.novel.import.pastePlaceholder')" :autosize="{ minRows: 12, maxRows: 12 }" />
               </div>
               <div class="footerInfo f ac jb" style="margin-top: 8px">
                 <div>
-                  <span class="charCount">{{ content.length }} 字符</span>
-                  <span v-if="content.length > 0 && content.length < 100" class="tips warn">内容过短，建议至少100字符</span>
+                  <span class="charCount">{{ content.length }} {{ $t('workbench.novel.import.chars') }}</span>
+                  <span v-if="content.length > 0 && content.length < 100" class="tips warn">{{ $t('workbench.novel.import.tooShort') }}</span>
                 </div>
-                <span>已解析 {{ tableData.length }} 章节</span>
+                <span>{{ $t('workbench.novel.import.parsedChapters', { count: tableData.length }) }}</span>
               </div>
             </div>
 
             <div style="margin-top: 16px; text-align: right">
               <t-button theme="primary" style="margin-left: 10px" :disabled="!content || !tableData.length" @click="activeKey = 'To2'">
-                下一步
+                {{ $t('workbench.novel.import.nextStep') }}
               </t-button>
             </div>
           </t-tab-panel>
-          <t-tab-panel value="To2" label="第二步" style="height: 680px; overflow-y: auto">
+          <t-tab-panel value="To2" :label="$t('workbench.novel.import.step2')" style="height: 680px; overflow-y: auto">
             <div>
               <t-table
                 ref="tableRef"
@@ -58,26 +58,26 @@
                 </template>
               </t-table>
             </div>
-            <div class="selectedInfo">已勾选：{{ selectedTextLength }}字(小于200000字)</div>
+            <div class="selectedInfo">{{ $t('workbench.novel.import.selectedInfo', { count: selectedTextLength }) }}</div>
             <div style="margin-top: 16px; text-align: right">
-              <t-button variant="outline" @click="activeKey = 'To1'">上一步</t-button>
-              <t-button variant="outline" style="margin-left: 10px" @click="activeKey = 'To3'">下一步</t-button>
+              <t-button variant="outline" @click="activeKey = 'To1'">{{ $t('workbench.novel.import.prevStep') }}</t-button>
+              <t-button variant="outline" style="margin-left: 10px" @click="activeKey = 'To3'">{{ $t('workbench.novel.import.nextStep') }}</t-button>
               <!-- <t-button theme="primary" style="margin-left: 10px" :disabled="selectedTextLength > 200000" :loading="nextLoading" @click="keep">
                 保存
               </t-button> -->
             </div>
           </t-tab-panel>
-          <t-tab-panel value="To3" label="第三步" style="height: 680px; overflow-y: auto">
+          <t-tab-panel value="To3" :label="$t('workbench.novel.import.step3')" style="height: 680px; overflow-y: auto">
             <div>
               <div style="margin-top: 20px">
-                <t-empty title="事件分析">
+                <t-empty :title="$t('workbench.novel.import.eventAnalysis')">
                   <template #action>
-                    <t-button @click="keep">保存原文并分析事件</t-button>
+                    <t-button @click="keep">{{ $t('workbench.novel.import.saveAndAnalyze') }}</t-button>
                   </template>
                 </t-empty>
               </div>
               <div style="margin-top: 16px; text-align: right">
-                <t-button variant="outline" @click="activeKey = 'To2'">上一步</t-button>
+                <t-button variant="outline" @click="activeKey = 'To2'">{{ $t('workbench.novel.import.prevStep') }}</t-button>
               </div>
             </div>
           </t-tab-panel>
@@ -92,10 +92,8 @@ import { LoadingPlugin } from "tdesign-vue-next";
 import axios from "@/utils/axios";
 import parseNovel from "@/utils/parseNovel";
 import mammoth from "mammoth";
-import { MessagePlugin } from "tdesign-vue-next";
 import type { UploadFile, PrimaryTableCol, TableRowData } from "tdesign-vue-next";
 import projectStore from "@/stores/project";
-import eventAnalysis from "./eventAnalysis.vue";
 const { project } = storeToRefs(projectStore());
 interface ChapterItem {
   index: number;
@@ -116,10 +114,10 @@ const nextLoading = ref(false);
 
 const columns: PrimaryTableCol<TableRowData>[] = [
   { colKey: "row-select", type: "multiple", width: 60 },
-  { colKey: "index", title: "章", width: 100 },
-  { colKey: "reel", title: "卷", width: 100 },
-  { colKey: "chapter", title: "章节名称", width: 200, ellipsis: true },
-  { colKey: "chapterData", title: "章节内容", ellipsis: true },
+  { colKey: "index", title: $t('workbench.novel.import.col.chapter'), width: 100 },
+  { colKey: "reel", title: $t('workbench.novel.import.col.reel'), width: 100 },
+  { colKey: "chapter", title: $t('workbench.novel.import.col.chapterName'), width: 200, ellipsis: true },
+  { colKey: "chapterData", title: $t('workbench.novel.import.col.chapterData'), ellipsis: true },
 ];
 
 // 解析后的章节数据
@@ -179,21 +177,21 @@ function requestMethod() {
 async function handleBeforeUpload(file: UploadFile) {
   const rawFile = file.raw;
   if (!rawFile) {
-    MessagePlugin.error("请先选择文件");
+    window.$message.error($t('workbench.novel.import.msg.selectFile'));
     return false;
   }
   const allowTypes = ["text/plain", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"];
 
   if (rawFile.type === "application/msword") {
-    MessagePlugin.warning(".doc文件不支持解析，请转换为.txt或.docx文件");
+    window.$message.warning($t('workbench.novel.import.msg.docNotSupported'));
     return false;
   }
   if (!allowTypes.includes(rawFile.type)) {
-    MessagePlugin.error("不支持的文件类型");
+    window.$message.error($t('workbench.novel.import.msg.unsupportedType'));
     return false;
   }
   if (rawFile.size > 10 * 1024 * 1024) {
-    MessagePlugin.error("文件大小超过10MB，请上传更小的文件");
+    window.$message.error($t('workbench.novel.import.msg.fileTooLarge'));
     return false;
   }
 
@@ -201,7 +199,7 @@ async function handleBeforeUpload(file: UploadFile) {
   try {
     content.value = await readFile(rawFile);
   } catch {
-    MessagePlugin.error("文件解析失败，请重新上传");
+    window.$message.error($t('workbench.novel.import.msg.parseFailed'));
   } finally {
     LoadingPlugin(false);
   }
@@ -217,7 +215,7 @@ const emit = defineEmits(["select"]);
 async function keep() {
   nextLoading.value = true;
   if (!selectedRows.value.length) {
-    MessagePlugin.warning("请先勾选章节");
+    window.$message.warning($t('workbench.novel.import.msg.selectChapters'));
     nextLoading.value = false;
     return;
   }
@@ -225,9 +223,9 @@ async function keep() {
     await axios.post("/novel/addNovel", { projectId: project.value?.id, data: selectedRows.value });
     nextLoading.value = false;
     emit("select");
-    MessagePlugin.success("小说原文保存成功");
+    window.$message.success($t('workbench.novel.import.msg.saveSuccess'));
   } catch (e) {
-    MessagePlugin.error((e as Error).message);
+    window.$message.error((e as Error).message);
     nextLoading.value = false;
   } finally {
     nextLoading.value = false;

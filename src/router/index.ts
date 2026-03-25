@@ -36,12 +36,12 @@ const router = createRouter({
           component: () => import("@/views/novel/index.vue"),
         },
         {
-          path: "/agent",
-          component: () => import("@/views/agent/index.vue"),
-        },
-        {
           path: "/script",
           component: () => import("@/views/script/index.vue"),
+        },
+        {
+          path: "/scriptAgent",
+          component: () => import("@/views/scriptAgent/index.vue"),
         },
         {
           path: "/cornerScape",

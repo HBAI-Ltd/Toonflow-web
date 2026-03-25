@@ -11,17 +11,17 @@
       @cancel="handleCancel">
       <div class="data">
         <t-form :data="props.formData" :rules="rules" ref="formRef">
-          <t-form-item label="名称" name="name">
-            <t-input v-model="props.formData.name" placeholder="请输入名称"></t-input>
+          <t-form-item :label="$t('workbench.assets.add.name')" name="name">
+            <t-input v-model="props.formData.name" :placeholder="$t('workbench.assets.add.namePh')"></t-input>
           </t-form-item>
-          <t-form-item label="描述" name="describe">
-            <t-textarea v-model="props.formData.describe" placeholder="请输入描述"></t-textarea>
+          <t-form-item :label="$t('workbench.assets.add.describe')" name="describe">
+            <t-textarea v-model="props.formData.describe" :placeholder="$t('workbench.assets.add.describePh')"></t-textarea>
           </t-form-item>
-          <t-form-item label="备注" name="remark">
-            <t-input v-model="props.formData.remark" placeholder="请输入备注"></t-input>
+          <t-form-item :label="$t('workbench.assets.add.remark')" name="remark">
+            <t-input v-model="props.formData.remark" :placeholder="$t('workbench.assets.add.remarkPh')"></t-input>
           </t-form-item>
-          <t-form-item label="提示词" name="prompt" v-if="props.type !== 'clip'">
-            <t-textarea v-model="props.formData.prompt" :autosize="{ minRows: 3, maxRows: 5 }" placeholder="请输入提示词"></t-textarea>
+          <t-form-item :label="$t('workbench.assets.add.prompt')" name="prompt" v-if="props.type !== 'clip'">
+            <t-textarea v-model="props.formData.prompt" :autosize="{ minRows: 3, maxRows: 5 }" :placeholder="$t('workbench.assets.add.promptPh')"></t-textarea>
           </t-form-item>
         </t-form>
       </div>
@@ -33,7 +33,6 @@
 import axios from "@/utils/axios";
 import projectStore from "@/stores/project";
 const { project } = storeToRefs(projectStore());
-import { MessagePlugin } from "tdesign-vue-next";
 const props = defineProps<{
   type: "role" | "tool" | "scene" | "clip";
   title: string;
@@ -49,9 +48,9 @@ const addAssetsShow = defineModel<boolean>({
   default: false,
 });
 const rules = ref<{}>({
-  name: [{ required: true, message: "请输入名称", trigger: "blur" }],
-  describe: [{ required: true, message: "请输入详情", trigger: "blur" }],
-  remark: [{ required: true, message: "请输入备注", trigger: "blur" }],
+  name: [{ required: true, message: $t('workbench.assets.add.nameRequired'), trigger: "blur" }],
+  describe: [{ required: true, message: $t('workbench.assets.add.describeRequired'), trigger: "blur" }],
+  remark: [{ required: true, message: $t('workbench.assets.add.remarkRequired'), trigger: "blur" }],
 });
 function handleCancel() {
   addAssetsShow.value = false;
@@ -70,7 +69,7 @@ function onConfirm() {
           prompt: props.formData.prompt,
         })
         .then(() => {
-          MessagePlugin.success("资产更新成功");
+          window.$message.success($t('workbench.assets.add.updateSuccess'));
           emit("getFilteredData");
           addAssetsShow.value = false;
         });
@@ -86,7 +85,7 @@ function onConfirm() {
           prompt: props.formData.prompt,
         })
         .then(() => {
-          MessagePlugin.success("资产添加成功");
+          window.$message.success($t('workbench.assets.add.addSuccess'));
           emit("getFilteredData");
           addAssetsShow.value = false;
         });

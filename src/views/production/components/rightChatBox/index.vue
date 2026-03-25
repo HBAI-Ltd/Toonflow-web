@@ -86,7 +86,7 @@
 import _ from "lodash";
 import axios from "@/utils/axios";
 import type { ChatMessagesData } from "@tdesign-vue-next/chat";
-import { DialogPlugin, MessagePlugin } from "tdesign-vue-next";
+import { DialogPlugin } from "tdesign-vue-next";
 import { useMousePressed, useMouse } from "@vueuse/core";
 import projectStore from "@/stores/project";
 import settingStore from "@/stores/setting";
@@ -286,7 +286,7 @@ function handleClearMemory(type: "message" | "summary" | "all") {
     theme: "warning",
     onConfirm: async () => {
       await axios.post(`/agents/clearMemory`, { projectId: project.value?.id, agentType: "productionAgent", episodesId: props.episodesId, type });
-      MessagePlugin.success(`${memoryTypeLabel[type]}已清空`);
+      window.$message.success(`${memoryTypeLabel[type]}已清空`);
       dialog.destroy();
       getHistory();
     },

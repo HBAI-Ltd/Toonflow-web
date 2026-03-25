@@ -972,10 +972,10 @@ function handleDeleteHistoryVideo(videoId: number | string) {
       try {
         await axios.post("/production/workbench/delVideo", { videoId });
         getProductionData();
-        MessagePlugin.success("视频删除成功");
+        window.$message.success("视频删除成功");
         dialog.destroy();
       } catch (error) {
-        MessagePlugin.error("删除失败");
+        window.$message.error("删除失败");
         dialog.destroy();
       }
     },
@@ -1150,20 +1150,20 @@ function stopPolling() {
 }
 function handleConfirmSelection() {
   if (!currentShot.value?.selectedVideoId) {
-    MessagePlugin.warning("请先选择一个视频");
+    window.$message.warning("请先选择一个视频");
     return;
   }
   axios
     .post("/production/workbench/confirmSelection", { storyboardId: currentShot.value?.id, videoId: currentShot.value?.selectedVideoId })
     .then(() => {
-      MessagePlugin.success("确认选中成功");
+      window.$message.success("确认选中成功");
       getProductionData();
     });
 }
 async function handleBatchGenerate() {
   // 批量生成逻辑：从每个分镜的 config.data 读取，只传 id 和 type
   const checkedShots = shotList.value.filter((item) => checkedIds.value.has(item.id));
-  MessagePlugin.success("已提交批量生成请求，正在处理中...");
+  window.$message.success("已提交批量生成请求，正在处理中...");
   for (const shot of checkedShots) {
     const list = {
       scriptId: shot.scriptId,

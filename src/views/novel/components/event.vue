@@ -5,13 +5,13 @@
         <template #icon>
           <i-flash-payment theme="outline" />
         </template>
-        重新生成事件
+        {{ $t('workbench.novel.event.regenerate') }}
       </t-button>
       <t-button theme="danger" :disabled="selectedRowKeys.length === 0" @click="handleBatchDelete">
         <template #icon>
           <t-icon name="delete" />
         </template>
-        批量删除 {{ selectedRowKeys.length > 0 ? `(${selectedRowKeys.length})` : "" }}
+        {{ $t('workbench.novel.event.batchDelete') }} {{ selectedRowKeys.length > 0 ? `(${selectedRowKeys.length})` : "" }}
       </t-button>
     </t-space>
 
@@ -34,19 +34,19 @@
         @page-change="handlePageChange">
         <template #empty>
           <div class="empty c" style="flex-direction: column; gap: 12px">
-            <span>暂无事件数据，点击开始生成</span>
+            <span>{{ $t('workbench.novel.event.noData') }}</span>
             <t-button v-if="!isGenerating" theme="primary" @click="generateEvent">
               <template #icon>
                 <i-flash-payment theme="outline" />
               </template>
-              生成事件
+              {{ $t('workbench.novel.event.generate') }}
             </t-button>
           </div>
         </template>
         <template #loading>
           <div class="t-table--loading-message">
-            <span v-if="isGenerating">🎬 事件生成中，请稍候...</span>
-            <span v-else>加载中...</span>
+            <span v-if="isGenerating">🎬 {{ $t('workbench.novel.event.generatingHint') }}</span>
+            <span v-else>{{ $t('workbench.novel.event.loading') }}</span>
           </div>
         </template>
         <template #chapters="{ row }">
@@ -61,7 +61,7 @@
               <template #icon>
                 <t-icon name="delete" />
               </template>
-              删除
+              {{ $t('workbench.novel.event.delete') }}
             </t-button>
           </t-space>
         </template>
@@ -95,12 +95,12 @@ const columns = ref<Record<string, unknown>[]>([
     width: 50,
     align: "center",
   },
-  { colKey: "id", title: "事件ID", width: 50, align: "center" },
-  { colKey: "eventName", title: "事件名称", width: 150, align: "center" },
-  { colKey: "chapters", title: "来源章节", width: 150, align: "center" },
-  { colKey: "detail", title: "事件过程", width: 400, ellipsis: true },
-  { colKey: "createTime", title: "创建时间", width: 200, align: "center" },
-  { colKey: "operation", title: "操作", width: 150, align: "center" },
+  { colKey: "id", title: $t('workbench.novel.event.col.id'), width: 50, align: "center" },
+  { colKey: "eventName", title: $t('workbench.novel.event.col.eventName'), width: 150, align: "center" },
+  { colKey: "chapters", title: $t('workbench.novel.event.col.chapters'), width: 150, align: "center" },
+  { colKey: "detail", title: $t('workbench.novel.event.col.detail'), width: 400, ellipsis: true },
+  { colKey: "createTime", title: $t('workbench.novel.event.col.createTime'), width: 200, align: "center" },
+  { colKey: "operation", title: $t('workbench.novel.event.col.operation'), width: 150, align: "center" },
 ]);
 // 生成状态
 const isGenerating = ref(false);
@@ -132,14 +132,14 @@ async function getEvents() {
 // 处理删除事件
 function handleDelete(row: Record<string, unknown>) {
   const dialog = DialogPlugin.confirm({
-    header: "删除事件",
-    body: `确定要删除这个事件吗？`,
+    header: $t('workbench.novel.event.msg.deleteHeader'),
+    body: $t('workbench.novel.event.msg.deleteBody'),
     onConfirm: async () => {
       await axios.post("/novel/event/deletEvent", {
         id: row.id,
       });
       getEvents();
-      MessagePlugin.success("删除成功");
+      window.$message.success($t('workbench.novel.event.msg.deleteSuccess'));
       dialog.destroy();
     },
   });
@@ -155,10 +155,10 @@ function generateEvent() {
     })
     .then((response) => {
       getEvents();
-      MessagePlugin.success("事件生成成功");
+      window.$message.success($t('workbench.novel.event.msg.generateSuccess'));
     })
     .catch((e) => {
-      MessagePlugin.error((e as Error).message);
+      window.$message.error((e as Error).message);
     })
     .finally(() => {
       isGenerating.value = false;
@@ -182,14 +182,14 @@ function handleSelectChange(value: Array<string | number>, context: { selectedRo
 function handleBatchDelete() {
   if (selectedRowKeys.value.length === 0) return;
   const dialog = DialogPlugin.confirm({
-    header: "批量删除",
-    body: `确定要删除选中的 ${selectedRowKeys.value.length} 条数据吗?`,
+    header: $t('workbench.novel.event.msg.batchDeleteHeader'),
+    body: $t('workbench.novel.event.msg.batchDeleteBody', { count: selectedRowKeys.value.length }),
     onConfirm: async () => {
       await axios.post("/novel/event/batchDeleteEvent", {
         ids: selectedRowKeys.value,
       });
       getEvents();
-      MessagePlugin.success("批量删除成功");
+      window.$message.success($t('workbench.novel.event.msg.batchDeleteSuccess'));
       dialog.destroy();
     },
   });

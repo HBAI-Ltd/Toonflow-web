@@ -17,22 +17,22 @@
                   <template #icon>
                     <t-icon name="add" />
                   </template>
-                  新增{{ item.name }}
+                  {{ $t('workbench.assets.addPrefix') }}{{ item.name }}
                 </t-button>
                 <t-popup placement="bottom">
                   <t-button theme="primary" v-if="assetOptions != 'clip'">
                     <template #icon>
                       <t-icon name="indent-left" />
                     </template>
-                    批量生成
+                    {{ $t('workbench.assets.batchGenerate') }}
                   </t-button>
                   <template #content>
                     <div class="data">
                       <div class="generatePrompt">
-                        <span @click="batchGeneration(1)">生成提示词</span>
+                        <span @click="batchGeneration(1)">{{ $t('workbench.assets.generatePrompt') }}</span>
                       </div>
                       <div class="generateImage">
-                        <span @click="batchGeneration(2)">生成图片</span>
+                        <span @click="batchGeneration(2)">{{ $t('workbench.assets.generateImage') }}</span>
                       </div>
                     </div>
                   </template>
@@ -41,16 +41,16 @@
                   <template #icon>
                     <t-icon name="delete" />
                   </template>
-                  批量删除
+                  {{ $t('workbench.assets.batchDelete') }}
                 </t-button>
               </t-space>
               <div class="f ac">
-                <t-input v-model="searchText" placeholder="搜索资产名称..." clearable style="width: 260px" />
+                <t-input v-model="searchText" :placeholder="$t('workbench.assets.searchPlaceholder')" clearable style="width: 260px" />
                 <t-button style="margin-left: 5px" @click="handleSearch">
                   <template #icon>
                     <t-icon name="search" />
                   </template>
-                  搜索
+                  {{ $t('workbench.assets.search') }}
                 </t-button>
               </div>
             </div>
@@ -88,7 +88,7 @@
                                 </div>
                                 <div v-if="subRow.src" class="imageHoverOverlay">
                                   <t-icon name="browse" size="20px" />
-                                  <span class="hoverText">预览</span>
+                                  <span class="hoverText">{{ $t('workbench.assets.preview') }}</span>
                                 </div>
                               </div>
                             </template>
@@ -101,19 +101,19 @@
                             <template #icon>
                               <i-magic :size="18" />
                             </template>
-                            生成
+                            {{ $t('workbench.assets.generate') }}
                           </t-button>
                           <t-button theme="primary" variant="text" @click="handleEdit(subRow)">
                             <template #icon>
                               <t-icon name="edit" />
                             </template>
-                            编辑
+                            {{ $t('workbench.assets.edit') }}
                           </t-button>
                           <t-button theme="danger" variant="text" @click="handleDelete(subRow)">
                             <template #icon>
                               <t-icon name="delete" />
                             </template>
-                            删除
+                            {{ $t('workbench.assets.delete') }}
                           </t-button>
                         </t-space>
                       </template>
@@ -131,7 +131,7 @@
                           </div>
                           <div v-if="row.src" class="imageHoverOverlay">
                             <t-icon name="browse" size="20px" />
-                            <span class="hoverText">预览</span>
+                            <span class="hoverText">{{ $t('workbench.assets.preview') }}</span>
                           </div>
                         </div>
                       </template>
@@ -148,7 +148,7 @@
                   <div class="previewCell">
                     <div v-if="generatingImageIds.has(row.id)" class="imageTrigger generatingImage">
                       <t-loading size="small" />
-                      <span class="generatingLabel">生成中</span>
+                      <span class="generatingLabel">{{ $t('workbench.assets.generating') }}</span>
                     </div>
                     <t-image-viewer v-else :images="[row.src]" :closeOnEscKeydown="true" :closeOnOverlay="true">
                       <template #trigger="{ open }">
@@ -159,7 +159,7 @@
                           </div>
                           <div v-if="row.src" class="imageHoverOverlay">
                             <t-icon name="browse" size="20px" />
-                            <span class="hoverText">预览</span>
+                            <span class="hoverText">{{ $t('workbench.assets.preview') }}</span>
                           </div>
                         </div>
                       </template>
@@ -175,19 +175,19 @@
                       <template #icon>
                         <i-magic :size="18" />
                       </template>
-                      生成
+                      {{ $t('workbench.assets.generate') }}
                     </t-button>
                     <t-button theme="primary" variant="text" @click="handleEdit(row)">
                       <template #icon>
                         <t-icon name="edit" />
                       </template>
-                      编辑
+                      {{ $t('workbench.assets.edit') }}
                     </t-button>
                     <t-button theme="danger" variant="text" :disabled="isGenerating(row.id)" @click="handleDelete(row)">
                       <template #icon>
                         <t-icon name="delete" />
                       </template>
-                      删除
+                      {{ $t('workbench.assets.delete') }}
                     </t-button>
                   </t-space>
                 </template>
@@ -217,7 +217,7 @@
                           <img :src="row.src" :alt="row.name" />
                           <div class="mediaHoverOverlay">
                             <t-icon name="browse" size="20px" />
-                            <span class="hoverText">预览</span>
+                            <span class="hoverText">{{ $t('workbench.assets.preview') }}</span>
                           </div>
                         </div>
                       </template>
@@ -226,14 +226,14 @@
                       <video :src="row.src" class="thumbVideo" />
                       <div class="mediaHoverOverlay">
                         <t-icon name="play-circle" size="24px" />
-                        <span class="hoverText">播放</span>
+                        <span class="hoverText">{{ $t('workbench.assets.play') }}</span>
                       </div>
                     </div>
                     <div v-else-if="getMediaType(row.src) === 'audio'" class="mediaTrigger audioThumb" @click="openMediaPreview(row.src, row.name)">
                       <t-icon name="music" size="28px" />
                       <div class="mediaHoverOverlay">
                         <t-icon name="play-circle" size="24px" />
-                        <span class="hoverText">播放</span>
+                        <span class="hoverText">{{ $t('workbench.assets.play') }}</span>
                       </div>
                     </div>
                     <div v-else class="mediaTrigger noMedia">
@@ -250,13 +250,13 @@
                       <template #icon>
                         <t-icon name="edit" />
                       </template>
-                      编辑
+                      {{ $t('workbench.assets.edit') }}
                     </t-button>
                     <t-button theme="danger" variant="text" @click="handleDelete(row)">
                       <template #icon>
                         <t-icon name="delete" />
                       </template>
-                      删除
+                      {{ $t('workbench.assets.delete') }}
                     </t-button>
                   </t-space>
                 </template>
@@ -276,7 +276,7 @@
 
     <t-dialog
       v-model:visible="mediaPreviewShow"
-      :header="mediaPreviewName || '媒体预览'"
+      :header="mediaPreviewName || $t('workbench.assets.mediaPreview')"
       :footer="false"
       width="600px"
       placement="center"
@@ -303,13 +303,13 @@
       @confirm="keep"
       @close="batchGenerationShow = false">
       <div class="batch">
-        <span>是否确认{{ batchType }}!</span>
+        <span>{{ $t('workbench.assets.confirmBatch', { type: batchType }) }}</span>
         <t-form labelAlign="top">
-          <t-form-item label="模型" name="selectValue" v-if="batchType === '批量生成图片'">
+          <t-form-item :label="$t('workbench.assets.model')" name="selectValue" v-if="batchType === $t('workbench.assets.batchGenImage')">
             <modelSelect v-model="selectValue" :type="`image`" />
           </t-form-item>
-          <t-form-item label="分辨率" name="resolution" v-if="batchType === '批量生成图片'">
-            <t-select v-model="resolution" placeholder="请选择分辨率">
+          <t-form-item :label="$t('workbench.assets.resolution')" name="resolution" v-if="batchType === $t('workbench.assets.batchGenImage')">
+            <t-select v-model="resolution" :placeholder="$t('workbench.assets.resolutionPh')">
               <t-option key="1k" label="1k" value="1k" />
               <t-option key="2k" label="2k" value="2k" />
               <t-option key="4k" label="4k" value="4k" />
@@ -353,22 +353,22 @@ const { project } = storeToRefs(projectStore());
 
 const allThemeData = [
   {
-    name: "角色",
+    name: $t('workbench.assets.role'),
     value: "role",
     icon: "i-permissions",
   },
   {
-    name: "道具",
+    name: $t('workbench.assets.prop'),
     value: "tool",
     icon: "i-tool",
   },
   {
-    name: "场景",
+    name: $t('workbench.assets.scene'),
     value: "scene",
     icon: "i-landscape",
   },
   {
-    name: "素材",
+    name: $t('workbench.assets.clip'),
     value: "clip",
     icon: "i-editing",
   },
@@ -379,7 +379,7 @@ const initialTab = (themeData.value[0]?.value || "role") as "role" | "tool" | "s
 const assetOptions = ref<"role" | "tool" | "scene" | "clip">(initialTab);
 const searchText = ref("");
 
-const tabNameMap: Record<string, string> = { role: "角色", tool: "道具", scene: "场景", clip: "素材" };
+const tabNameMap: Record<string, string> = { role: $t('workbench.assets.role'), tool: $t('workbench.assets.prop'), scene: $t('workbench.assets.scene'), clip: $t('workbench.assets.clip') };
 const selectedRowKeys = ref<Array<string | number>>([]);
 const expandedRowKeys = ref<Array<string | number>>([]);
 const loading = ref(false);
@@ -490,7 +490,7 @@ async function handleAdd(type: string) {
         base64Data: base64,
         name: file.name,
       });
-      MessagePlugin.success("上传成功");
+      window.$message.success($t('workbench.assets.uploadSuccess'));
       getFilteredData(assetOptions.value);
     };
     reader.readAsDataURL(file);
@@ -510,13 +510,13 @@ const selectValue = ref(""); //选择的模型
 const resolution = ref("1k"); //选择的分辨率
 const batchType = ref("");
 function batchGeneration(type: number) {
-  batchType.value = type === 1 ? "批量生成提示词" : "批量生成图片";
+  batchType.value = type === 1 ? $t('workbench.assets.batchGenPrompt') : $t('workbench.assets.batchGenImage');
   batchGenerationShow.value = true;
 }
 function keep() {
-  if (batchType.value === "批量生成提示词") {
+  if (batchType.value === $t('workbench.assets.batchGenPrompt')) {
     handleBatchGeneratePrompt();
-  } else if (batchType.value === "批量生成图片") {
+  } else if (batchType.value === $t('workbench.assets.batchGenImage')) {
     handleBatchGenerateImage();
   }
 }
@@ -524,7 +524,7 @@ function keep() {
 async function handleBatchGeneratePrompt() {
   const selectedAssets = tableData.value.filter((item: any) => selectedRowKeys.value.includes(item.id));
   if (selectedAssets.length === 0) {
-    MessagePlugin.warning("请至少选择一个资产");
+    window.$message.warning($t('workbench.assets.selectAtLeastOne'));
     return;
   }
   const newSet = new Set(generatingIds.value);
@@ -540,12 +540,12 @@ async function handleBatchGeneratePrompt() {
         assetsId: asset.id,
         type: asset.type ?? "props",
         name: asset.name,
-        describe: asset.describe ? asset.describe : "无描述",
+        describe: asset.describe ? asset.describe : $t('workbench.assets.noDescription'),
       });
       await getFilteredData(assetOptions.value);
-      MessagePlugin.success(`「${asset.name}」提示词生成成功`);
+      window.$message.success($t('workbench.assets.promptGenSuccess', { name: asset.name }));
     } catch (e: any) {
-      MessagePlugin.error(`「${asset.name}」提示词生成失败：${e.message ?? ""}`);
+      window.$message.error($t('workbench.assets.promptGenFail', { name: asset.name, error: e.message ?? '' }));
     } finally {
       const s = new Set(generatingIds.value);
       s.delete(asset.id);
@@ -557,15 +557,15 @@ async function handleBatchGeneratePrompt() {
 async function handleBatchGenerateImage() {
   const selectedAssets = tableData.value.filter((item: any) => selectedRowKeys.value.includes(item.id));
   if (selectedAssets.length === 0) {
-    MessagePlugin.warning("请至少选择一个资产");
+    window.$message.warning($t('workbench.assets.selectAtLeastOne'));
     return;
   }
   if (!selectValue.value) {
-    MessagePlugin.error("请选择模型");
+    window.$message.error($t('workbench.assets.selectModel'));
     return;
   }
   if (!resolution.value) {
-    MessagePlugin.error("请选择分辨率");
+    window.$message.error($t('workbench.assets.selectResolution'));
     return;
   }
 
@@ -577,7 +577,7 @@ async function handleBatchGenerateImage() {
 
   for (const asset of selectedAssets) {
     if (!asset.prompt) {
-      MessagePlugin.warning(`「${asset.name}」没有提示词，无法生成图片`);
+      window.$message.warning($t('workbench.assets.noPromptForImage', { name: asset.name }));
       const s = new Set(generatingImageIds.value);
       s.delete(asset.id);
       generatingImageIds.value = s;
@@ -595,9 +595,9 @@ async function handleBatchGenerateImage() {
         resolution: resolution.value,
       });
       await getFilteredData(assetOptions.value);
-      MessagePlugin.success(`「${asset.name}」图片生成成功`);
+      window.$message.success($t('workbench.assets.imageGenSuccess', { name: asset.name }));
     } catch (e: any) {
-      MessagePlugin.error(`「${asset.name}」图片生成失败：${e.message ?? ""}`);
+      window.$message.error($t('workbench.assets.imageGenFail', { name: asset.name, error: e.message ?? '' }));
     } finally {
       const s = new Set(generatingImageIds.value);
       s.delete(asset.id);
@@ -609,18 +609,18 @@ async function handleBatchGenerateImage() {
 function handleBatchDelete() {
   const selectedAssets = tableData.value.filter((item: any) => selectedRowKeys.value.includes(item.id));
   if (selectedAssets.length === 0) {
-    MessagePlugin.warning("请至少选择一个资产");
+    window.$message.warning($t('workbench.assets.selectAtLeastOne'));
     return;
   }
   const dialog = DialogPlugin.confirm({
-    header: "确认删除",
-    body: "确定要批量删除这些资产吗？此操作无法撤销。",
-    confirmBtn: "删除",
-    cancelBtn: "取消",
+    header: $t('workbench.assets.confirmDeleteHeader'),
+    body: $t('workbench.assets.confirmBatchDeleteBody'),
+    confirmBtn: $t('workbench.assets.deleteBtn'),
+    cancelBtn: $t('workbench.assets.cancelBtn'),
     theme: "warning",
     onConfirm: async () => {
       await axios.post("/assets/batchDelete", { id: selectedAssets.map((asset) => asset.id) });
-      MessagePlugin.success("资产删除成功");
+      window.$message.success($t('workbench.assets.deleteSuccess'));
       getFilteredData(assetOptions.value);
       dialog.destroy();
     },
@@ -639,21 +639,21 @@ const columns: TableProps["columns"] = [
   },
   {
     colKey: "src",
-    title: "预览",
+    title: $t('workbench.assets.colPreview'),
     width: 100,
     align: "center",
     cell: "previewWithLoading",
   },
   {
     colKey: "name",
-    title: "名称",
+    title: $t('workbench.assets.colName'),
     width: 100,
     align: "left",
     ellipsis: true,
   },
   {
     colKey: "prompt",
-    title: "提示词",
+    title: $t('workbench.assets.colPrompt'),
     width: 200,
     align: "left",
     ellipsis: true,
@@ -661,28 +661,28 @@ const columns: TableProps["columns"] = [
   },
   {
     colKey: "describe",
-    title: "描述",
+    title: $t('workbench.assets.colDescribe'),
     width: 200,
     align: "left",
     ellipsis: true,
   },
   {
     colKey: "remark",
-    title: "备注",
+    title: $t('workbench.assets.colRemark'),
     minWidth: 200,
     align: "left",
     ellipsis: true,
   },
   {
     colKey: "startTime",
-    title: "创建时间",
+    title: $t('workbench.assets.colCreateTime'),
     width: 200,
     align: "center",
     cell: "startTime",
   },
   {
     colKey: "operation",
-    title: "操作",
+    title: $t('workbench.assets.colOperation'),
     width: 280,
     align: "center",
     fixed: "right",
@@ -694,42 +694,42 @@ const columns: TableProps["columns"] = [
 const subColumns: TableProps["columns"] = [
   {
     colKey: "src",
-    title: "预览",
+    title: $t('workbench.assets.colPreview'),
     width: 100,
     align: "center",
     cell: "preview",
   },
   {
     colKey: "name",
-    title: "名称",
+    title: $t('workbench.assets.colName'),
     width: 200,
     align: "left",
     ellipsis: true,
   },
   {
     colKey: "prompt",
-    title: "提示词",
+    title: $t('workbench.assets.colPrompt'),
     width: 200,
     align: "left",
     ellipsis: true,
   },
   {
     colKey: "describe",
-    title: "描述",
+    title: $t('workbench.assets.colDescribe'),
     width: 200,
     align: "left",
     ellipsis: true,
   },
   {
     colKey: "remark",
-    title: "备注",
+    title: $t('workbench.assets.colRemark'),
     minWidth: 200,
     align: "left",
     ellipsis: true,
   },
   {
     colKey: "operation",
-    title: "操作",
+    title: $t('workbench.assets.colOperation'),
     width: 180,
     align: "center",
     fixed: "right",
@@ -742,42 +742,42 @@ const clipColumns: TableProps["columns"] = [
   { colKey: "row-select", type: "multiple", width: 50, align: "center", fixed: "left" },
   {
     colKey: "src",
-    title: "预览",
+    title: $t('workbench.assets.colPreview'),
     width: 100,
     align: "center",
     cell: "preview",
   },
   {
     colKey: "name",
-    title: "名称",
+    title: $t('workbench.assets.colName'),
     width: 200,
     align: "left",
     ellipsis: true,
   },
   {
     colKey: "describe",
-    title: "描述",
+    title: $t('workbench.assets.colDescribe'),
     width: 200,
     align: "left",
     ellipsis: true,
   },
   {
     colKey: "remark",
-    title: "备注",
+    title: $t('workbench.assets.colRemark'),
     minWidth: 200,
     align: "left",
     ellipsis: true,
   },
   {
     colKey: "startTime",
-    title: "创建时间",
+    title: $t('workbench.assets.colCreateTime'),
     width: 200,
     align: "center",
     cell: "startTime",
   },
   {
     colKey: "operation",
-    title: "操作",
+    title: $t('workbench.assets.colOperation'),
     width: 180,
     align: "center",
     fixed: "right",
@@ -846,20 +846,20 @@ function handleEdit(row: any) {
 // 删除
 function handleDelete(row: any) {
   const dialog = DialogPlugin.confirm({
-    header: "确认删除",
-    body: "确定要删除这资产吗？此操作无法撤销。",
-    confirmBtn: "删除",
-    cancelBtn: "取消",
+    header: $t('workbench.assets.confirmDeleteHeader'),
+    body: $t('workbench.assets.confirmDeleteBody'),
+    confirmBtn: $t('workbench.assets.deleteBtn'),
+    cancelBtn: $t('workbench.assets.cancelBtn'),
     theme: "warning",
     onConfirm: async () => {
       try {
         await axios.post("/assets/delAssets", { id: row.id });
-        MessagePlugin.success("资产删除成功");
+        window.$message.success($t('workbench.assets.deleteSuccess'));
         getFilteredData(assetOptions.value);
         dialog.destroy();
       } catch (error) {
         console.error("删除资产失败:", error);
-        MessagePlugin.error("资产删除失败");
+        window.$message.error($t('workbench.assets.deleteFail'));
         dialog.destroy();
       }
     },

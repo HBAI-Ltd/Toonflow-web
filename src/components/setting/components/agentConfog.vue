@@ -127,7 +127,7 @@ function getFallbackText(name: string) {
 }
 
 function startConfig(item: ModelType) {
-  if (item.disabled) return MessagePlugin.warning($t("settings.agent.msg.notAvailable"));
+  if (item.disabled) return window.$message.warning($t("settings.agent.msg.notAvailable"));
   currentItem.value = item;
   selectValue.value = item.modelName;
   modelDataShow.value = true;
@@ -154,7 +154,7 @@ function confirmConfig() {
       getAgentDeploy();
     })
     .catch((err) => {
-      MessagePlugin.error(`${$t("settings.agent.msg.updateConfigFailed")}${err.message}`);
+      window.$message.error(`${$t("settings.agent.msg.updateConfigFailed")}${err.message}`);
     })
     .finally(() => {
       modelDataShow.value = false;
@@ -183,18 +183,18 @@ function testModel() {
     })
     .then(() => {
       loading.value = false;
-      MessagePlugin.success($t("settings.agent.msg.keyValid"));
+      window.$message.success($t("settings.agent.msg.keyValid"));
       testKeyShow.value = false;
       fillIn.value = true;
     })
     .catch((err) => {
       loading.value = false;
-      MessagePlugin.error(`${$t("settings.agent.msg.keyInvalid")}${err.message}`);
+      window.$message.error(`${$t("settings.agent.msg.keyInvalid")}${err.message}`);
     });
 }
 function keep() {
   if (!key.value) {
-    MessagePlugin.warning($t("settings.agent.msg.enterKey"));
+    window.$message.warning($t("settings.agent.msg.enterKey"));
     return false;
   }
   loading.value = true;
@@ -215,7 +215,7 @@ function keep() {
       testModel();
     })
     .catch((err) => {
-      MessagePlugin.error(`${$t("settings.agent.msg.saveFailed")}${err.message}`);
+      window.$message.error(`${$t("settings.agent.msg.saveFailed")}${err.message}`);
     });
 }
 //查询Agent配置列表
@@ -237,7 +237,7 @@ function getAgentDeploy() {
       });
     })
     .catch((err) => {
-      MessagePlugin.error(`${$t("settings.agent.msg.getAgentListFailed")}${err.message}`);
+      window.$message.error(`${$t("settings.agent.msg.getAgentListFailed")}${err.message}`);
     })
     .finally(() => {});
 }
@@ -252,11 +252,11 @@ function oneClickToFillIn() {
       id: id,
     })
     .then(() => {
-      MessagePlugin.success($t("settings.agent.msg.configSuccess"));
+      window.$message.success($t("settings.agent.msg.configSuccess"));
       getAgentDeploy();
     })
     .catch((err) => {
-      MessagePlugin.error(`${$t("settings.agent.msg.updateConfigFailed")}${err.message}`);
+      window.$message.error(`${$t("settings.agent.msg.updateConfigFailed")}${err.message}`);
     })
     .finally(() => {
       modelDataShow.value = false;

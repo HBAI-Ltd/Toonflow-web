@@ -1,17 +1,17 @@
 <template>
   <div class="">
     <div v-if="!eventDatas.length">
-      <t-empty title="请先分析事件">
+      <t-empty :title="$t('workbench.novel.analysis.analyzeFirst')">
         <template #action>
-          <t-button @click="startEventAnalysis">开始分析</t-button>
+          <t-button @click="startEventAnalysis">{{ $t('workbench.novel.analysis.startAnalysis') }}</t-button>
         </template>
       </t-empty>
     </div>
     <div>
       <t-collapse>
-        <t-collapse-panel v-for="item in novelIndexData" defaultExpandAll :key="item.id" :header="`第${item.index}章 - ${item.chapter}`">
+        <t-collapse-panel v-for="item in novelIndexData" defaultExpandAll :key="item.id" :header="$t('workbench.novel.analysis.chapterHeader', { index: item.index, name: item.chapter })">
           <template #headerRightContent v-if="!item?.compluted">
-            <t-loading text="事件分析中" size="small"></t-loading>
+            <t-loading :text="$t('workbench.novel.analysis.analyzing')" size="small"></t-loading>
           </template>
           <div>
             <div v-for="sub in item.eventData">
@@ -22,8 +22,8 @@
       </t-collapse>
     </div>
     <div style="margin-top: 16px; text-align: right">
-      <t-button variant="outline" @click="activeKey = 'To1'">上一步</t-button>
-      <t-button variant="outline" @click="activeKey = 'To3'">下一步</t-button>
+      <t-button variant="outline" @click="activeKey = 'To1'">{{ $t('workbench.novel.import.prevStep') }}</t-button>
+      <t-button variant="outline" @click="activeKey = 'To3'">{{ $t('workbench.novel.import.nextStep') }}</t-button>
     </div>
   </div>
 </template>
@@ -48,7 +48,6 @@ const novelIndexData = ref<
   }[]
 >([]);
 async function startEventAnalysis() {
-  console.log("开始分析事件");
   await getNovelData();
   axios
     .post(
