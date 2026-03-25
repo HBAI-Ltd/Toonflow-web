@@ -31,13 +31,10 @@
           <div class="frameSection" v-if="currentModeKey !== 'text' && mode.length > 0 && (!isMixedRefMode || mixedRefTypes.length > 0)">
             <template v-if="currentMode === 'singleImage'">
               <div class="frameItem">
-                <div
-                  class="frameThumbnail"
-                  :class="{ addFrame: !currentShot?.config?.data?.[0]?.url }"
-                  @click="!currentShot?.config?.data?.[0]?.url && handleAddImage()">
-                  <img v-if="currentShot?.config?.data?.[0]?.url" :src="currentShot.config!.data![0].url" class="frameImage" />
+                <div class="frameThumbnail" :class="{ addFrame: !shotFrame0Url }" @click="!shotFrame0Url && handleAddImage()">
+                  <img v-if="shotFrame0Url" :src="shotFrame0Url" class="frameImage" />
                   <i-plus v-else size="24" fill="#999" />
-                  <div v-if="currentShot?.config?.data?.[0]?.url" class="frameRemoveBtn" @click.stop="handleRemoveImage()">
+                  <div v-if="shotFrame0Url" class="frameRemoveBtn" @click.stop="handleClearImage()">
                     <i-close size="12" fill="#fff" />
                   </div>
                 </div>
@@ -132,13 +129,10 @@
 
             <template v-else-if="isDualFrameMode">
               <div class="frameItem">
-                <div
-                  class="frameThumbnail"
-                  :class="{ addFrame: !currentShot?.config?.data?.[0]?.url }"
-                  @click="!currentShot?.config?.data?.[0]?.url && handleAddImage()">
-                  <img v-if="currentShot?.config?.data?.[0]?.url" :src="currentShot.config!.data![0].url" class="frameImage" />
+                <div class="frameThumbnail" :class="{ addFrame: !shotFrame0Url }" @click="!shotFrame0Url && handleAddImage()">
+                  <img v-if="shotFrame0Url" :src="shotFrame0Url" class="frameImage" />
                   <i-plus v-else size="24" fill="#999" />
-                  <div v-if="currentShot?.config?.data?.[0]?.url" class="frameRemoveBtn" @click.stop="handleRemoveImage()">
+                  <div v-if="shotFrame0Url" class="frameRemoveBtn" @click.stop="handleClearImage()">
                     <i-close size="12" fill="#fff" />
                   </div>
                 </div>
@@ -163,7 +157,6 @@
             <div class="actionBarRow">
               <div class="actionBarRowLeft">
                 <modelSelect v-model="modelDd" :changeConfig="true" type="video" size="small" @change="handleModelChange" class="modelSelectItem" />
-                {{ currentModeKey }}
                 <t-select v-if="modelLoaded && mode.length > 0" v-model="currentModeKey" style="width: 180px" size="small">
                   <t-option v-for="m in mode" :key="m.value" :label="m.label" :value="m.value" />
                 </t-select>
@@ -367,6 +360,9 @@
                 <div v-else class="shotPlaceholder"><i-pic size="16" fill="#999" /></div>
               </template>
               <t-tag class="shotNumber" size="small" variant="dark">#{{ index + 1 }}</t-tag>
+              <div class="shotStateTag" :class="getVideoRecord(item) ? 'shotStateTagSuccess' : 'shotStateTagPending'">
+                {{ getVideoRecord(item) ? $t("workbench.production.generate.stateSuccess") : $t("workbench.production.generate.statePending") }}
+              </div>
             </div>
           </div>
         </div>
@@ -721,7 +717,6 @@ interface VideoModel {
 
 //模型切换时：更新选项列表，并按优先级（待回显值 > 当前已选值 > 默认第一个）确定选中值
 function handleModelChange(value: string, data: VideoModel) {
-  console.log("%c Line:724 🍪 data", "background:#ffdd4d", data);
   // 更新选项列表
   const newResolutions = [...new Set(data.durationResolutionMap.flatMap((m) => m.resolution))];
   const newDurations = [...new Set(data.durationResolutionMap.flatMap((m) => m.duration))].sort((a, b) => a - b);
@@ -735,7 +730,6 @@ function handleModelChange(value: string, data: VideoModel) {
   durationOptions.value = newDurations;
   audioOptions.value = newAudio;
   mode.value = newModes;
-  console.log("%c Line:737 🥃 newModes", "background:#7f2b82", newModes);
   modelLoaded.value = true;
 
   // 判断是否有待回显的 config 值（选中了有 config 的分镜）
@@ -788,6 +782,23 @@ const mixedRefTypes = computed<VideoMixedRef[]>(() => {
 /** 是否首尾帧模式 */
 const isDualFrameMode = computed(() => isDualFrame(currentMode.value ?? undefined));
 
+/**
+ * 首帧展示 url：
+ * - config.data 存在且有内容：取 data[0].url
+ * - config.data 为 undefined/null（未配置）：回显分镜原图 filePath
+ * - config.data 为空数组（用户主动清除）：返回空字符串，显示加号占位
+ */
+const shotFrame0Url = computed(() => {
+  if (!currentShot.value) return "";
+  const data = currentShot.value.config?.data;
+  if (data === undefined || data === null) {
+    // 未配置过，回显分镜原图
+    return currentShot.value.filePath || "";
+  }
+  // 已配置（包括用户主动清除得到空数组的情况）
+  return data[0]?.url || "";
+});
+
 /** 首帧标签 */
 const startFrameLabel = computed(() => {
   if (currentMode.value === "startFrameOptional") return $t("workbench.production.generate.startFrameOptional");
@@ -812,6 +823,26 @@ function syncShotToList(shot: StoryboardItem) {
 /** 获取分镜 config.data，无则返回空数组 */
 function getShotData(shot: StoryboardItem) {
   return shot.config?.data ?? [];
+}
+
+/**
+ * 构建发送给后端的 data 列表（只含 id 和 type）：
+ * - 文生视频模式（text）直接返回 []，不需要图片；
+ * - 有 config.data 且不为空时直接使用；
+ * - config.data 为空数组（用户主动清除）返回 [];
+ * - 无 config.data 但有 filePath 时，将分镜原图作为默认首帧。
+ */
+function buildDataPayload(shot: StoryboardItem, mode: string): { id: string | number; type: string }[] {
+  if (mode === "text") return [];
+  const configData = shot.config?.data;
+  if (configData !== undefined && configData !== null) {
+    // config.data 存在（含空数组）时直接使用，空数组表示用户主动清除
+    return configData.map((d) => ({ id: d.id, type: d.type }));
+  }
+  if (shot.filePath) {
+    return [{ id: shot.id, type: "storyboard" }];
+  }
+  return [];
 }
 
 /** 更新分镜的 config.data（内部工具函数） */
@@ -841,6 +872,13 @@ function handleRemoveImage() {
   const shot = currentShot.value;
   const newData = shot.filePath ? [{ id: shot.id, url: shot.filePath, type: "storyboard" }] : [];
   currentShot.value = updateShotData(shot, newData);
+  syncShotToList(currentShot.value);
+}
+
+/** 单图/首帧：彻底清除图片（包括分镜原图回显，清空后显示加号占位） */
+function handleClearImage() {
+  if (!currentShot.value) return;
+  currentShot.value = updateShotData(currentShot.value, []);
   syncShotToList(currentShot.value);
 }
 
@@ -1005,9 +1043,6 @@ async function handleGenerate() {
   const shot = currentShot.value;
   if (!shot) return;
 
-  // 从 config.data 读取，只传 id 和 type 给后端
-  const dataList = getShotData(shot).map((d) => ({ id: d.id, type: d.type }));
-
   const payload = {
     projectId: project.value?.id,
     scriptId: shot.scriptId,
@@ -1018,7 +1053,7 @@ async function handleGenerate() {
     resolution: selectedResolution.value,
     duration: selectedDuration.value,
     audio: selectedAudio.value,
-    data: dataList,
+    data: buildDataPayload(shot, currentModeKey.value),
   };
   const { data } = await axios.post("/production/workbench/generateVideo", payload);
   // data 为新生成的视频 ID 列表
@@ -1179,7 +1214,6 @@ async function handleBatchGenerate() {
   const checkedShots = shotList.value.filter((item) => checkedIds.value.has(item.id));
   window.$message.success($t("workbench.production.generate.batchSubmitted"));
   for (const shot of checkedShots) {
-    console.log("%c Line:1169 🌮 shot", "background:#ed9ec7", shot);
     const list = {
       scriptId: shot.scriptId,
       projectId: project.value?.id,
@@ -1190,7 +1224,7 @@ async function handleBatchGenerate() {
       resolution: shot.config?.resolution || shot.resolution || "",
       duration: shot.config?.duration ?? Number(shot.duration) ?? 0,
       audio: shot.config?.audio == 0 ? false : true,
-      data: getShotData(shot).map((d) => ({ id: d.id, type: d.type })),
+      data: buildDataPayload(shot, shot.config?.mode || shot.mode || ""),
     };
     const { data } = await axios.post("/production/workbench/generateVideo", list);
     const newVideoIds: Array<number | string> = Array.isArray(data) ? data : [data];
@@ -1704,6 +1738,26 @@ function refresh() {
               top: 8px;
               left: 8px;
               z-index: 2;
+            }
+
+            .shotStateTag {
+              position: absolute;
+              bottom: 6px;
+              right: 6px;
+              z-index: 2;
+              font-size: 11px;
+              padding: 2px 6px;
+              border-radius: 4px;
+              font-weight: 500;
+              line-height: 1.6;
+              &.shotStateTagSuccess {
+                background: rgba(0, 180, 100, 0.85);
+                color: #fff;
+              }
+              &.shotStateTagPending {
+                background: rgba(0, 0, 0, 0.45);
+                color: #ddd;
+              }
             }
 
             .shotStateOverlay {

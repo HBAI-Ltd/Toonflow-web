@@ -955,7 +955,9 @@
         "selectVideoFirst": "กรุณาเลือกวิดีโอก่อน",
         "confirmSuccess": "ยืนยันการเลือกสำเร็จ",
         "batchSubmitted": "ส่งคำขอสร้างหลายรายการแล้ว กำลังดำเนินการ...",
-        "configNotFound": "การกำหนดค่าไม่พบ"
+        "configNotFound": "การกำหนดค่าไม่พบ",
+        "stateSuccess": "สร้างสำเร็จ",
+        "statePending": "รอดำเนินการ"
       },
       "editVideo": {
         "reset": "รีเซ็ต",

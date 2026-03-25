@@ -188,7 +188,7 @@ function appendClipsToStore(videoList: any[], subtitleData: any[] | null) {
   }
 
   let subtitleTrack = tracksStore.tracks.find((t) => t.type === "subtitle");
-  if (!subtitleTrack && subtitleData) {
+  if (!subtitleTrack) {
     subtitleTrack = {
       id: generateId("track-"),
       type: "subtitle",
@@ -227,8 +227,8 @@ function appendClipsToStore(videoList: any[], subtitleData: any[] | null) {
     currentTime += duration;
   });
 
-  // 追加字幕片段（如果有），时间与视频对齐
-  if (subtitleData && subtitleTrack) {
+  // 追加字幕片段，时间与视频对齐（即使没有字幕数据也传空字幕）
+  if (subtitleTrack) {
     const existingSubtitleClips = subtitleTrack.clips;
     let subtitleStart = existingSubtitleClips.reduce((max, c) => Math.max(max, c.endTime), 0);
     // 字幕起点对齐视频追加的起点
@@ -237,11 +237,7 @@ function appendClipsToStore(videoList: any[], subtitleData: any[] | null) {
 
     videoList.forEach((item: any, index: number) => {
       const duration = item.duration || 5;
-      const text = subtitleData[index]?.prompt || subtitleData[index]?.text || "";
-      if (!text) {
-        subtitleStart += duration;
-        return;
-      }
+      const text = subtitleData?.[index]?.prompt || subtitleData?.[index]?.text || "";
       const clip: SubtitleClip = {
         id: generateId("clip-"),
         trackId: subtitleTrack!.id,

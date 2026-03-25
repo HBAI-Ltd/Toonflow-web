@@ -956,7 +956,9 @@
                 "selectVideoFirst": "Chọn video trước",
                 "confirmSuccess": "Xác nhận đã chọn thành công",
                 "batchSubmitted": "Đã gửi yêu cầu sinh hàng loạt, đang xử lý...",
-                "configNotFound": "Không tìm thấy cấu hình"
+                "configNotFound": "Không tìm thấy cấu hình",
+                "stateSuccess": "Tạo thành công",
+                "statePending": "Chờ tạo"
             },
             "editVideo": {
                 "reset": "Đặt lại",

@@ -956,7 +956,9 @@
         "selectVideoFirst": "Сначала выберите видео",
         "confirmSuccess": "Выбор успешно подтверждён",
         "batchSubmitted": "Массовый запрос отправлен, выполняется...",
-        "configNotFound": "Конфигурация отсутствует"
+        "configNotFound": "Конфигурация отсутствует",
+        "stateSuccess": "生成成功",
+        "statePending": "生成待ち"
       },
       "editVideo": {
         "reset": "Сброс",

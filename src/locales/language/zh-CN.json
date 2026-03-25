@@ -956,7 +956,9 @@
         "selectVideoFirst": "请先选择一个视频",
         "confirmSuccess": "确认选中成功",
         "batchSubmitted": "已提交批量生成请求，正在处理中...",
-        "configNotFound": "配置不存在"
+        "configNotFound": "配置不存在",
+        "stateSuccess": "生成成功",
+        "statePending": "待生产"
       },
       "editVideo": {
         "reset": "重置",

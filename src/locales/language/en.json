@@ -949,7 +949,9 @@
         "selectVideoFirst": "Please select a video first",
         "confirmSuccess": "Selection confirmed",
         "batchSubmitted": "Batch generation request submitted, processing...",
-        "configNotFound": "Configuration not found"
+        "configNotFound": "Configuration not found",
+        "stateSuccess": "Generated",
+        "statePending": "Pending"
       },
       "editVideo": {
         "reset": "Reset",
