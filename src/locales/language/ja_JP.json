@@ -845,7 +845,7 @@
         "generatedResult": "生成結果",
         "waitingGenerate": "生成待ち"
       },
-      "save": "保存",
+      "save": "選択",
       "cancel": "キャンセル",
       "chatBox": {
         "inputPlaceholder": "メッセージを入力...",

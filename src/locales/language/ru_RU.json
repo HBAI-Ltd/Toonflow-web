@@ -845,7 +845,7 @@
         "generatedResult": "Результаты",
         "waitingGenerate": "В очереди"
       },
-      "save": "Сохранить",
+      "save": "Выбирать",
       "cancel": "Отмена",
       "chatBox": {
         "inputPlaceholder": "Введите сообщение...",

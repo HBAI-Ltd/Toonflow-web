@@ -1,6 +1,6 @@
 <template>
   <div class="generatedNode">
-    <Handle type="target" :position="Position.Left" style="z-index: 999999" />
+    <Handle type="target" :position="Position.Left" />
     <div class="data" @click="selectedFn">
       <div class="title ac">
         <i-pic theme="outline" size="16" fill="#000000" />
@@ -27,8 +27,8 @@
         </t-tooltip>
       </div>
     </div>
-    <div v-show="selected" class="parameter">
-      <div class="image-refs f">
+    <div v-show="selected" class="parameter" @wheel.stop @mousedown.stop>
+      <div class="image-refs f w">
         <div v-for="(item, index) in data.references" :key="index" class="ref-thumb">
           <t-image :src="item.image" fit="cover" class="ref-img" />
         </div>
@@ -90,6 +90,7 @@
         </div>
       </div>
     </div>
+    <Handle type="source" :position="Position.Right" style="z-index: 999999" />
   </div>
 </template>
 
@@ -108,7 +109,7 @@ const popupPosition = ref({ left: 0, top: 0 });
 const generating = ref(false);
 const editorContent = ref("");
 const emit = defineEmits(["keep"]);
-const { removeNodes } = useVueFlow({ id: "editStoryboard" });
+const { removeNodes, updateNodeData } = useVueFlow({ id: "editStoryboard" });
 
 // 保存 @ 触发时的范围，用于后续替换
 let savedRange: Range | null = null;
@@ -131,6 +132,27 @@ const props = defineProps<{
 function selectedFn() {
   selected.value = !selected.value;
 }
+
+// 初始化编辑器内容
+onMounted(() => {
+  if (editorRef.value && props.data.prompt) {
+    editorRef.value.textContent = props.data.prompt;
+    editorContent.value = props.data.prompt;
+  }
+});
+
+// 监听外部 prompt 变化，同步到编辑器
+watch(
+  () => props.data.prompt,
+  (newVal) => {
+    if (!editorRef.value) return;
+    const currentText = editorRef.value.textContent?.replace(/\u200B/g, "") || "";
+    if (newVal !== undefined && newVal !== currentText) {
+      editorRef.value.textContent = newVal;
+      editorContent.value = newVal;
+    }
+  },
+);
 
 // 获取光标前的文本内容
 function getTextBeforeCursor(): string {
@@ -277,15 +299,12 @@ function selectReference(index: number) {
 
   showReferences.value = false;
   savedRange = null;
-
   editorContent.value = editorRef.value?.textContent || "";
   syncPrompt();
 }
 
 // 将编辑器内容同步回 data.prompt（纯文本，tag 转为 @图X）
 function syncPrompt() {
-  console.log("%c Line:288 🍪 editorRef.value", "background:#4fff4B", editorRef.value);
-
   if (!editorRef.value) return;
   let result = "";
   editorRef.value.childNodes.forEach((node) => {
@@ -355,6 +374,7 @@ function kepp() {
 
 <style lang="scss" scoped>
 .generatedNode {
+  position: relative;
   width: 320px;
   display: flex;
   flex-direction: column;
@@ -450,20 +470,25 @@ function kepp() {
   }
 
   .parameter {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
     margin-top: 10px;
     width: 500px;
     height: 200px;
     border: 1px solid #d4d4d4;
     background-color: #fff;
     border-radius: 10px;
+    z-index: 9999;
 
     .image-refs {
       height: 50px;
+      overflow: auto;
       padding: 10px;
 
       .ref-thumb {
         margin-left: 8px;
-
         .ref-img {
           width: 45px;
           height: 45px;

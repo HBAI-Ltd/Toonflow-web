@@ -845,7 +845,7 @@
         "generatedResult": "生成結果",
         "waitingGenerate": "等待生成"
       },
-      "save": "儲存",
+      "save": "選取",
       "cancel": "取消",
       "chatBox": {
         "inputPlaceholder": "輸入訊息...",
