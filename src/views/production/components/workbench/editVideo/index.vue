@@ -37,37 +37,37 @@
           @transition-added="onTransitionAdded">
           <!-- 自定义操作按钮 -->
           <template #custom-operation-reset>
-            <t-button variant="text" size="small" @click="videoTrackRef?.reset()" title="重置">
+            <t-button variant="text" size="small" @click="videoTrackRef?.reset()" :title="$t('workbench.production.editVideo.reset')">
               <template #icon><i-refresh size="16" /></template>
-              重置
+              {{ $t('workbench.production.editVideo.reset') }}
             </t-button>
           </template>
 
           <template #custom-operation-undo>
-            <t-button variant="text" size="small" :disabled="!historyStore.canUndo" @click="historyStore.undo()" title="撤销">
+            <t-button variant="text" size="small" :disabled="!historyStore.canUndo" @click="historyStore.undo()" :title="$t('workbench.production.editVideo.undo')">
               <template #icon><i-undo size="16" /></template>
-              撤销
+              {{ $t('workbench.production.editVideo.undo') }}
             </t-button>
           </template>
 
           <template #custom-operation-redo>
-            <t-button variant="text" size="small" :disabled="!historyStore.canRedo" @click="historyStore.redo()" title="重做">
+            <t-button variant="text" size="small" :disabled="!historyStore.canRedo" @click="historyStore.redo()" :title="$t('workbench.production.editVideo.redo')">
               <template #icon><i-redo size="16" /></template>
-              重做
+              {{ $t('workbench.production.editVideo.redo') }}
             </t-button>
           </template>
 
           <template #custom-operation-split>
-            <t-button variant="text" size="small" :disabled="tracksStore.selectedClipIds.size === 0" @click="handleSplit" title="分割">
+            <t-button variant="text" size="small" :disabled="tracksStore.selectedClipIds.size === 0" @click="handleSplit" :title="$t('workbench.production.editVideo.split')">
               <template #icon><i-cutting-one size="16" /></template>
-              分割
+              {{ $t('workbench.production.editVideo.split') }}
             </t-button>
           </template>
 
           <template #custom-operation-delete>
-            <t-button variant="text" size="small" @click="handleDeleteClips" title="删除">
+            <t-button variant="text" size="small" @click="handleDeleteClips" :title="$t('workbench.production.editVideo.delete')">
               <template #icon><i-delete size="16" /></template>
-              删除
+              {{ $t('workbench.production.editVideo.delete') }}
             </t-button>
           </template>
           <!-- <template #custom-operation-import>
@@ -77,9 +77,9 @@
             </t-button>
           </template> -->
           <template #scale-append>
-            <t-button theme="danger" @click="handleExport" :loading="isExporting" title="导出项目">
+            <t-button theme="danger" @click="handleExport" :loading="isExporting" :title="$t('workbench.production.editVideo.exportProject')">
               <template #icon><i-export size="16" style="margin-right: 4px" /></template>
-              {{ isExporting ? "渲染中..." : "导出视频" }}
+              {{ isExporting ? $t('workbench.production.editVideo.rendering') : $t('workbench.production.editVideo.exportVideo') }}
             </t-button>
           </template>
         </VideoTrack>
@@ -215,10 +215,10 @@ async function handleExport() {
   isExporting.value = true;
   try {
     await videoPreviewRef.value.exportVideo();
-    window.$message.success("视频导出完成");
+    window.$message.success($t('workbench.production.editVideo.exportSuccess'));
   } catch (error: any) {
     if (error.name === "AbortError") return; // 用户取消保存
-    window.$message.error(error.message || "导出失败");
+    window.$message.error(error.message || $t('workbench.production.editVideo.exportFailed'));
   } finally {
     isExporting.value = false;
   }
@@ -233,14 +233,14 @@ function handleSplit() {
     if (!clip || currentTime <= clip.startTime || currentTime >= clip.endTime) return;
     tracksStore.splitClip(id, currentTime);
   });
-  historyStore.pushSnapshot("分割片段");
+  historyStore.pushSnapshot($t('workbench.production.editVideo.splitClip'));
 }
 
 function handleDeleteClips() {
   const selectedIds = Array.from(tracksStore.selectedClipIds);
   if (selectedIds.length === 0) return;
   tracksStore.removeClips(selectedIds);
-  historyStore.pushSnapshot("删除片段");
+  historyStore.pushSnapshot($t('workbench.production.editVideo.deleteClip'));
 }
 
 // 处理从资源库拖拽媒体到轨道
@@ -278,7 +278,7 @@ async function handleDropMedia(mediaData: any, trackId: string, startTime: numbe
       } as Partial<MediaClip>;
 
       tracksStore.addClip(track.id, clip as Clip);
-      historyStore.pushSnapshot(`添加 ${mediaData.name}`);
+      historyStore.pushSnapshot($t('workbench.production.editVideo.addClip', { name: mediaData.name }));
 
       if (!mediaData.thumbnails || mediaData.thumbnails.length === 0) {
         loadVideoClipThumbnails(tracksStore, clip.id!, sourceUrl);
@@ -300,7 +300,7 @@ async function handleDropMedia(mediaData: any, trackId: string, startTime: numbe
       };
 
       tracksStore.addClip(track.id, clip as Clip);
-      historyStore.pushSnapshot(`添加 ${mediaData.name}`);
+      historyStore.pushSnapshot($t('workbench.production.editVideo.addClip', { name: mediaData.name }));
       return;
     } else if (mediaData.type === "audio") {
       const sourceUrl = mediaData.sourceUrl || mediaData.url || mediaData.id;
@@ -319,16 +319,16 @@ async function handleDropMedia(mediaData: any, trackId: string, startTime: numbe
       } as Partial<MediaClip>;
 
       tracksStore.addClip(track.id, clip as Clip);
-      historyStore.pushSnapshot(`添加 ${mediaData.name}`);
+      historyStore.pushSnapshot($t('workbench.production.editVideo.addClip', { name: mediaData.name }));
 
       if (!mediaData.waveformData || mediaData.waveformData.length === 0) {
         loadAudioClipWaveform(tracksStore, clip.id!, sourceUrl);
       }
       return;
     } else if (mediaData.type === "subtitle") {
-      clip = { ...clip, type: "subtitle", name: mediaData.name, endTime: normalizeTime(startTime + duration), text: "示例字幕文本" };
+      clip = { ...clip, type: "subtitle", name: mediaData.name, endTime: normalizeTime(startTime + duration), text: $t('workbench.production.editVideo.sampleSubtitle') };
     } else if (mediaData.type === "text") {
-      clip = { ...clip, type: "text", name: mediaData.name, endTime: normalizeTime(startTime + duration), text: "自定义文本内容" };
+      clip = { ...clip, type: "text", name: mediaData.name, endTime: normalizeTime(startTime + duration), text: $t('workbench.production.editVideo.customText') };
     } else if (mediaData.type === "sticker") {
       clip = { ...clip, type: "sticker", name: mediaData.name, endTime: normalizeTime(startTime + duration), sourceUrl: mediaData.id };
     } else if (mediaData.type === "filter") {
@@ -352,7 +352,7 @@ async function handleDropMedia(mediaData: any, trackId: string, startTime: numbe
     }
 
     tracksStore.addClip(track.id, clip as Clip);
-    historyStore.pushSnapshot(`添加 ${mediaData.name}`);
+    historyStore.pushSnapshot($t('workbench.production.editVideo.addClip', { name: mediaData.name }));
   } catch (error: any) {
     alert(error.message);
   }
@@ -365,13 +365,13 @@ function handleDropTransition(transitionData: any, trackId: string, dropTime: nu
 
   const clips = track.clips.filter((c) => c.type !== "transition").sort((a, b) => a.startTime - b.startTime);
   if (clips.length === 0) {
-    window.$message.warning("转场需要添加在两个相邻的 Clip 之间");
+    window.$message.warning($t('workbench.production.editVideo.transitionBetweenClips'));
     return;
   }
 
   const result = findAdjacentClipsAtTime(clips, dropTime);
   if (!result) {
-    window.$message.warning("转场需要添加在两个相邻的 Clip 之间");
+    window.$message.warning($t('workbench.production.editVideo.transitionBetweenClips'));
     return;
   }
 
@@ -393,7 +393,7 @@ function applyTransition(beforeClipId: string, afterClipId: string, transitionTy
 }
 
 function onTransitionAdded(transitionClip: any, beforeClipId: string, afterClipId: string) {
-  window.$message.success(`已添加转场: ${transitionClip.name}`);
+  window.$message.success($t('workbench.production.editVideo.transitionAdded', { name: transitionClip.name }));
   playbackStore.seekTo(transitionClip.startTime);
 }
 

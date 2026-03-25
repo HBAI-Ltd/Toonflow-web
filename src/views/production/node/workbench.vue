@@ -3,7 +3,7 @@
     <Handle :id="props.handleIds.target" type="target" :position="Position.Left" />
     <Handle :id="props.handleIds.source" type="source" :position="Position.Right" />
     <div class="titleBar dragHandle">
-      <div class="title">视频工作台</div>
+      <div class="title">{{ $t('workbench.production.node.workbench.title') }}</div>
     </div>
     <div class="videoPreview">
       <div class="videoPlaceholder" :style="{ background: workbenchData?.gradient }">

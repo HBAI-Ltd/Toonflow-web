@@ -52,7 +52,7 @@ const props = defineProps({
   },
   placeholder: {
     type: String,
-    default: "请选择模型",
+    default: $t("components.modelSelect.placeholder"),
   },
   changeConfig: {
     type: Boolean,
@@ -78,9 +78,9 @@ onMounted(() => {
   handleModelChange();
 });
 const titleMap = {
-  image: "图像",
-  text: "文本",
-  video: "视频",
+  image: $t("components.modelSelect.type.image"),
+  text: $t("components.modelSelect.type.text"),
+  video: $t("components.modelSelect.type.video"),
 };
 //获取模型选择API数据
 function handleModelChange() {
@@ -117,7 +117,7 @@ function handleModelChange() {
       }
     })
     .catch((error) => {
-      console.error("获取模型数据失败:", error);
+      console.error($t("components.modelSelect.msg.fetchModelFailed"), error);
     });
 }
 

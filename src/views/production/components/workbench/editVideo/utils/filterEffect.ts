@@ -1,4 +1,4 @@
-import type { Clip, FilterClip, EffectClip, Track } from "vue-clip-track";
+import type { FilterClip, EffectClip, Track } from "vue-clip-track";
 
 /** 当前时间应用的滤镜 */
 export interface ActiveFilter {

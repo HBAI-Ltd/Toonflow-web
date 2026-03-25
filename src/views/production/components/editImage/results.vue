@@ -5,7 +5,7 @@
     <div class="header">
       <div class="title">
         <i-pic theme="outline" size="16" />
-        <span>生成结果</span>
+        <span>{{ $t('workbench.production.editImage.generatedResult') }}</span>
       </div>
       <div class="toolbar">
         <i-full-screen-one theme="outline" size="18" class="toolbarIcon" />
@@ -16,8 +16,8 @@
     <div class="content">
       <div class="generatedImageWrapper">
         <img v-if="data.generateResults" :src="data.generateResults" class="generatedImage" />
-        <div v-else class="placeholder">等待生成</div>
-        <t-tag v-if="data.generateResults" class="imageTag">生成结果</t-tag>
+        <div v-else class="placeholder">{{ $t('workbench.production.editImage.waitingGenerate') }}</div>
+        <t-tag v-if="data.generateResults" class="imageTag">{{ $t('workbench.production.editImage.generatedResult') }}</t-tag>
       </div>
     </div>
   </t-card>

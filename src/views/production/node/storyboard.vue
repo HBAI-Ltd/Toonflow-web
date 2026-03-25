@@ -3,7 +3,7 @@
     <Handle :id="props.handleIds.target" type="target" :position="Position.Left" />
     <Handle :id="props.handleIds.source" type="source" :position="Position.Right" />
     <div class="titleBar dragHandle">
-      <div class="title">分镜面板</div>
+      <div class="title">{{ $t('workbench.production.node.storyboard.title') }}</div>
     </div>
     <div class="content">
       <div class="frameGrid">
@@ -37,7 +37,7 @@
                 </t-image>
                 <div v-else class="generatingPlaceholder">
                   <t-loading v-if="item.state === '生成中'" size="small" />
-                  <t-empty v-else size="small" title="未生成" />
+                  <t-empty v-else size="small" :title="$t('workbench.production.node.storyboard.notGenerated')" />
                 </div>
               </div>
               <div class="frameInfo" :title="item.description">{{ item.title }}</div>
@@ -54,10 +54,10 @@
         </template>
       </div>
       <div class="scaleControl">
-        <span>缩放比例</span>
+        <span>{{ $t('workbench.production.node.storyboard.scaleRatio') }}</span>
         <t-input-number v-model="gridScale" :min="0.1" :max="3" :step="0.1" :decimal-places="1" size="small" style="width: 120px" />
       </div>
-      <t-button block @click="previewAll">宫格预览</t-button>
+      <t-button block @click="previewAll">{{ $t('workbench.production.node.storyboard.gridPreview') }}</t-button>
     </div>
     <editImage
       v-model:visible="visible"
@@ -126,7 +126,7 @@ async function previewAll() {
   LoadingPlugin(true);
   const allImages = (storyboard.value ?? []).filter((s) => s.src).map((s) => s.src!);
   if (!allImages.length) {
-    window.$message.warning("没有可预览的图片");
+    window.$message.warning($t("workbench.production.node.storyboard.noPreviewImages"));
     LoadingPlugin(false);
     return;
   }
@@ -139,7 +139,7 @@ async function previewAll() {
             const img = new Image();
             img.crossOrigin = "anonymous";
             img.onload = () => resolve(img);
-            img.onerror = () => reject(new Error(`加载失败: ${src}`));
+            img.onerror = () => reject(new Error($t('workbench.production.node.storyboard.loadFailed', { src })));
             img.src = src;
           }),
       ),
@@ -193,7 +193,7 @@ async function previewAll() {
     previewImages.value = [canvas.toDataURL("image/png")];
     previewVisible.value = true;
   } catch {
-    window.$message.error("图片加载失败，无法生成预览");
+    window.$message.error($t("workbench.production.node.storyboard.imageLoadFailed"));
   } finally {
     LoadingPlugin(false);
   }

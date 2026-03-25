@@ -8,7 +8,8 @@
     "build": "vue-tsc --build --force && vite build",
     "build-only": "vite build",
     "type-check": "vue-tsc --build --force",
-    "license": "bun run scripts/license.ts"
+    "license": "node scripts/license.ts",
+    "i18n:check": "node scripts/findUnusedI18n.ts"
   },
   "dependencies": {
     "@devui-design/icons": "^1.4.0",

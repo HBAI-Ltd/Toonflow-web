@@ -635,27 +635,32 @@ export function getSupportedTransitionTypes(): string[] {
 }
 
 /**
- * 转场类型的中文名称映射
+ * 转场类型的 i18n key 映射
  */
-export const transitionTypeNames: Record<string, string> = {
-  fade: "淡入淡出",
-  dissolve: "溶解",
-  slide: "滑动",
-  "slide-left": "向左滑动",
-  "slide-right": "向右滑动",
-  "slide-up": "向上滑动",
-  "slide-down": "向下滑动",
-  wipe: "擦除",
-  "wipe-left": "向左擦除",
-  "wipe-right": "向右擦除",
-  "wipe-up": "向上擦除",
-  "wipe-down": "向下擦除",
-  zoom: "缩放",
-  "zoom-in": "放大",
-  "zoom-out": "缩小",
-  rotate: "旋转",
-  circle: "圆形",
-  diamond: "菱形",
-  clock: "时钟",
-  blur: "模糊",
+const transitionTypeKeys: Record<string, string> = {
+  fade: "workbench.production.transition.fade",
+  dissolve: "workbench.production.transition.dissolve",
+  slide: "workbench.production.transition.slide",
+  "slide-left": "workbench.production.transition.slideLeft",
+  "slide-right": "workbench.production.transition.slideRight",
+  "slide-up": "workbench.production.transition.slideUp",
+  "slide-down": "workbench.production.transition.slideDown",
+  wipe: "workbench.production.transition.wipe",
+  "wipe-left": "workbench.production.transition.wipeLeft",
+  "wipe-right": "workbench.production.transition.wipeRight",
+  "wipe-up": "workbench.production.transition.wipeUp",
+  "wipe-down": "workbench.production.transition.wipeDown",
+  zoom: "workbench.production.transition.zoom",
+  "zoom-in": "workbench.production.transition.zoomIn",
+  "zoom-out": "workbench.production.transition.zoomOut",
+  rotate: "workbench.production.transition.rotate",
+  circle: "workbench.production.transition.circle",
+  diamond: "workbench.production.transition.diamond",
+  clock: "workbench.production.transition.clock",
+  blur: "workbench.production.transition.blur",
 };
+
+export function getTransitionTypeName(type: string): string {
+  const key = transitionTypeKeys[type];
+  return key ? $t(key) : type;
+}

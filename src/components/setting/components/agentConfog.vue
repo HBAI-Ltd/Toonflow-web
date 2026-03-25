@@ -282,7 +282,7 @@ function oneClickToFillIn() {
       .btnList {
         .rightBtnList {
           & > * {
-            margin: 2px;
+            margin-left: 0.5em;
           }
         }
       }

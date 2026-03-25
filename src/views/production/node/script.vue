@@ -2,8 +2,8 @@
   <t-card class="script">
     <Handle :id="props.handleIds.source" type="source" :position="Position.Right" />
     <div class="titleBar dragHandle">
-      <div class="title c">剧本</div>
-      <t-button size="small" variant="text" @click="openEdit">编辑</t-button>
+      <div class="title c">{{ $t('workbench.production.node.script.title') }}</div>
+      <t-button size="small" variant="text" @click="openEdit">{{ $t('workbench.production.edit') }}</t-button>
     </div>
     <div class="content">
       <MdPreview v-model="script" :theme="'light'" />
@@ -13,10 +13,10 @@
 
   <t-dialog
     v-model:visible="dialogVisible"
-    header="编辑剧本"
+    :header="$t('workbench.production.node.script.editDialog')"
     :width="'90vw'"
-    :confirm-btn="'保存'"
-    :cancel-btn="'取消'"
+    :confirm-btn="$t('workbench.production.save')"
+    :cancel-btn="$t('workbench.production.cancel')"
     @confirm="onConfirm"
     @cancel="onCancel"
     @close="onCancel"

@@ -1,13 +1,13 @@
 <template>
   <div class="imageTools" :style="positionStyle">
-    <t-tooltip theme="primary" content="复制图片" :placement>
+    <t-tooltip theme="primary" :content="$t('components.imageTools.copy')" :placement="placement">
       <t-button variant="outline" size="small" shape="square" @click.stop="handleCopy">
         <template #icon>
           <i-copy size="16" />
         </template>
       </t-button>
     </t-tooltip>
-    <t-tooltip theme="primary" content="预览" :placement>
+    <t-tooltip theme="primary" :content="$t('components.imageTools.preview')" :placement="placement">
       <t-image-viewer v-model:visible="previewVisible" :images="[props.src]">
         <template #trigger>
           <t-button variant="outline" size="small" shape="square" @click.stop="handlePreview">
@@ -18,7 +18,7 @@
         </template>
       </t-image-viewer>
     </t-tooltip>
-    <t-tooltip theme="primary" content="下载" :placement>
+    <t-tooltip theme="primary" :content="$t('components.imageTools.download')" :placement="placement">
       <t-button variant="outline" size="small" shape="square" @click.stop="handleDownload">
         <template #icon>
           <i-download size="16" />
@@ -69,7 +69,7 @@ async function handleCopy() {
         resolve();
       };
       img.onerror = function () {
-        reject(new Error("图片加载失败"));
+        reject(new Error($t("components.imageTools.msg.imageLoadFailed")));
       };
     });
     const canvas = document.createElement("canvas");
@@ -83,13 +83,13 @@ async function handleCopy() {
           resolve(b);
           return;
         }
-        reject(new Error("转换失败"));
+        reject(new Error($t("components.imageTools.msg.convertFailed")));
       }, "image/png");
     });
     await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
-    window.$message.success("已复制到剪贴板");
+    window.$message.success($t("components.imageTools.msg.copied"));
   } catch {
-    window.$message.error("复制失败");
+    window.$message.error($t("components.imageTools.msg.copyFailed"));
   }
 }
 
@@ -98,7 +98,7 @@ async function handleDownload() {
   try {
     const response = await fetch(props.src, { mode: "cors" });
     if (!response.ok) {
-      throw new Error("下载失败");
+      throw new Error($t("components.imageTools.msg.downloadFailed"));
     }
     const blob = await response.blob();
     objectUrl = URL.createObjectURL(blob);
@@ -108,7 +108,7 @@ async function handleDownload() {
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-    window.$message.success("开始下载");
+    window.$message.success($t("components.imageTools.msg.downloadStarted"));
   } catch {
     const a = document.createElement("a");
     a.href = props.src;
@@ -118,7 +118,7 @@ async function handleDownload() {
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-    window.$message.warning("当前图片源可能限制下载，已尝试在新窗口打开");
+    window.$message.warning($t("components.imageTools.msg.downloadBlockedOpenNewWindow"));
   } finally {
     if (objectUrl) {
       URL.revokeObjectURL(objectUrl);

@@ -1,7 +1,7 @@
 <template>
   <div class="propertyPanel">
     <div class="panelHeader">
-      <h3 class="panelTitle">属性面板</h3>
+      <h3 class="panelTitle">{{ $t('workbench.production.editVideo.propertyPanel') }}</h3>
     </div>
 
     <div class="panelContent">
@@ -9,7 +9,7 @@
         <div class="emptyIconWrapper">
           <i-inbox theme="outline" size="32" fill="#999" />
         </div>
-        <div class="emptyText">选择一个 Clip 查看属性</div>
+        <div class="emptyText">{{ $t('workbench.production.editVideo.selectClip') }}</div>
       </div>
 
       <div v-else class="properties">
@@ -19,17 +19,17 @@
             <div class="sectionIconBadge">
               <component :is="getClipIcon(selectedClip)" theme="outline" size="16" />
             </div>
-            <span class="sectionLabel">基础信息</span>
+            <span class="sectionLabel">{{ $t('workbench.production.editVideo.basicInfo') }}</span>
             <t-tag size="small" theme="primary" variant="light">{{ getClipTypeName(selectedClip.type) }}</t-tag>
           </div>
           <div class="sectionBody">
             <div class="propRow">
-              <label class="propLabel">名称</label>
-              <t-input v-model="clipName" size="small" placeholder="Clip 名称" @change="handleUpdateClip('name', clipName)" />
+              <label class="propLabel">{{ $t('workbench.production.editVideo.name') }}</label>
+              <t-input v-model="clipName" size="small" :placeholder="$t('workbench.production.editVideo.clipNamePlaceholder')" @change="handleUpdateClip('name', clipName)" />
             </div>
             <div class="propRowInline">
               <div class="propField">
-                <label class="propLabel">开始</label>
+                <label class="propLabel">{{ $t('workbench.production.editVideo.startTime') }}</label>
                 <t-input-number
                   :value="Number(selectedClip.startTime.toFixed(2))"
                   size="small"
@@ -40,7 +40,7 @@
                   @change="(val: any) => handleUpdateClip('startTime', Number(val))" />
               </div>
               <div class="propField">
-                <label class="propLabel">结束</label>
+                <label class="propLabel">{{ $t('workbench.production.editVideo.endTime') }}</label>
                 <t-input-number
                   :value="Number(selectedClip.endTime.toFixed(2))"
                   size="small"
@@ -52,7 +52,7 @@
               </div>
             </div>
             <div class="propRowInline durationRow">
-              <span class="durationLabel">总时长</span>
+              <span class="durationLabel">{{ $t('workbench.production.editVideo.totalDuration') }}</span>
               <t-tag size="small" theme="default" variant="outline">{{ (selectedClip.endTime - selectedClip.startTime).toFixed(2) }}s</t-tag>
             </div>
           </div>
@@ -64,25 +64,25 @@
             <div class="sectionIconBadge">
               <i-video theme="outline" size="16" />
             </div>
-            <span class="sectionLabel">视频属性</span>
+            <span class="sectionLabel">{{ $t('workbench.production.editVideo.videoProperties') }}</span>
           </div>
           <div class="sectionBody">
             <div class="propRow">
               <div class="propRowHead">
-                <label class="propLabel">不透明度</label>
+                <label class="propLabel">{{ $t('workbench.production.editVideo.opacity') }}</label>
                 <span class="propValueText">{{ Math.round(videoOpacity) }}%</span>
               </div>
               <t-slider v-model="videoOpacity" :min="0" :max="100" :step="1" @change="handleUpdateClip('opacity', Math.round(videoOpacity) / 100)" />
             </div>
             <div class="propRow">
               <div class="propRowHead">
-                <label class="propLabel">音量</label>
+                <label class="propLabel">{{ $t('workbench.production.editVideo.volume') }}</label>
                 <span class="propValueText">{{ Math.round(videoVolume) }}%</span>
               </div>
               <t-slider v-model="videoVolume" :min="0" :max="200" :step="1" @change="handleUpdateClip('volume', Math.round(videoVolume) / 100)" />
             </div>
             <div class="propRow">
-              <label class="propLabel">播放速度</label>
+              <label class="propLabel">{{ $t('workbench.production.editVideo.playbackSpeed') }}</label>
               <t-input-number
                 v-model="videoSpeed"
                 size="small"
@@ -103,21 +103,19 @@
             <div class="sectionIconBadge">
               <i-music theme="outline" size="16" />
             </div>
-            <span class="sectionLabel">音频属性</span>
+            <span class="sectionLabel">{{ $t('workbench.production.editVideo.audioProperties') }}</span>
           </div>
           <div class="sectionBody">
             <div class="propRow">
               <div class="propRowHead">
-                <label class="propLabel">音量</label>
+                <label class="propLabel">{{ $t('workbench.production.editVideo.volume') }}</label>
                 <span class="propValueText">{{ Math.round(audioVolume) }}%</span>
               </div>
               <t-slider v-model="audioVolume" :min="0" :max="200" :step="1" @change="handleUpdateClip('volume', Math.round(audioVolume) / 100)" />
             </div>
             <div class="propRowInline">
               <div class="propField">
-                <label class="propLabel">淡入</label>
-                <t-input-number
-                  v-model="audioFadeIn"
+                <label class="propLabel">{{ $t('workbench.production.editVideo.fadeIn') }}</label>
                   size="small"
                   :min="0"
                   :step="0.1"
@@ -127,7 +125,7 @@
                   @change="handleUpdateClip('fadeIn', audioFadeIn)" />
               </div>
               <div class="propField">
-                <label class="propLabel">淡出</label>
+                <label class="propLabel">{{ $t('workbench.production.editVideo.fadeOut') }}</label>
                 <t-input-number
                   v-model="audioFadeOut"
                   size="small"
@@ -148,22 +146,22 @@
             <div class="sectionIconBadge">
               <i-exchange theme="outline" size="16" />
             </div>
-            <span class="sectionLabel">转场属性</span>
+            <span class="sectionLabel">{{ $t('workbench.production.editVideo.transitionProperties') }}</span>
           </div>
           <div class="sectionBody">
             <div class="propRow">
-              <label class="propLabel">转场类型</label>
+              <label class="propLabel">{{ $t('workbench.production.editVideo.transitionType') }}</label>
               <t-select v-model="transitionType" size="small" @change="handleUpdateClip('transitionType', transitionType)">
-                <t-option value="fade" label="淡入淡出" />
-                <t-option value="slide" label="滑动" />
-                <t-option value="wipe" label="擦除" />
-                <t-option value="dissolve" label="溶解" />
-                <t-option value="zoom" label="缩放" />
-                <t-option value="rotate" label="旋转" />
+                <t-option value="fade" :label="$t('workbench.production.editVideo.transFade')" />
+                <t-option value="slide" :label="$t('workbench.production.editVideo.transSlide')" />
+                <t-option value="wipe" :label="$t('workbench.production.editVideo.transWipe')" />
+                <t-option value="dissolve" :label="$t('workbench.production.editVideo.transDissolve')" />
+                <t-option value="zoom" :label="$t('workbench.production.editVideo.transZoom')" />
+                <t-option value="rotate" :label="$t('workbench.production.editVideo.transRotate')" />
               </t-select>
             </div>
             <div class="propRow">
-              <label class="propLabel">转场时长</label>
+              <label class="propLabel">{{ $t('workbench.production.editVideo.transitionDuration') }}</label>
               <t-input-number
                 v-model="transitionDuration"
                 size="small"
@@ -184,15 +182,15 @@
             <div class="sectionIconBadge">
               <i-editor theme="outline" size="16" />
             </div>
-            <span class="sectionLabel">字幕属性</span>
+            <span class="sectionLabel">{{ $t('workbench.production.editVideo.subtitleProperties') }}</span>
           </div>
           <div class="sectionBody">
             <div class="propRow">
-              <label class="propLabel">文本内容</label>
+              <label class="propLabel">{{ $t('workbench.production.editVideo.textContent') }}</label>
               <t-textarea v-model="subtitleText" :autosize="{ minRows: 3, maxRows: 6 }" @change="handleUpdateClip('text', subtitleText)" />
             </div>
             <div class="propRow">
-              <label class="propLabel">字体大小</label>
+              <label class="propLabel">{{ $t('workbench.production.editVideo.fontSize') }}</label>
               <t-input-number
                 v-model="subtitleFontSize"
                 size="small"
@@ -209,11 +207,11 @@
         <div class="actions">
           <t-button theme="default" variant="outline" block @click="handleDuplicateClip">
             <template #icon><i-copy theme="outline" size="16" /></template>
-            复制
+            {{ $t('workbench.production.editVideo.copy') }}
           </t-button>
           <t-button theme="danger" variant="text" block @click="handleDeleteClip">
             <template #icon><i-delete theme="outline" size="16" /></template>
-            删除
+            {{ $t('workbench.production.editVideo.delete') }}
           </t-button>
         </div>
       </div>
@@ -347,8 +345,8 @@ function handleDeleteClip() {
   if (!selectedClip.value) return;
 
   const dialog = DialogPlugin.confirm({
-    header: "删除确认",
-    body: "确定要删除这个 Clip 吗？",
+    header: $t('workbench.production.editVideo.deleteConfirm'),
+    body: $t('workbench.production.editVideo.deleteClipConfirm'),
     onConfirm: () => {
       tracksStore.removeClips([selectedClip.value!.id]);
       historyStore.pushSnapshot("删除 Clip");

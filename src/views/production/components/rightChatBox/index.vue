@@ -30,7 +30,7 @@
         class="inputBox"
         v-model="inputValue"
         :loading="status === 'pending' || status === 'streaming'"
-        placeholder="请输入内容"
+        :placeholder="$t('workbench.production.chatBox.inputPlaceholder')"
         @send="handleSend"
         @stop="handleStop">
         <template #footer-prefix>
@@ -43,33 +43,33 @@
               </t-button>
               <template #content>
                 <div class="settingMenu">
-                  <div class="settingMenuItem" @click="handleSend('调整偏好模型')">
+                  <div class="settingMenuItem" @click="handleSend($t('workbench.production.chatBox.adjustModel'))">
                     <i-setting-config size="14" />
-                    <span>调整偏好模型</span>
+                    <span>{{ $t('workbench.production.chatBox.adjustModel') }}</span>
                   </div>
                   <div class="settingMenuItem" @click="handleClearMemory('message')">
                     <i-delete size="14" />
-                    <span>清空消息记忆</span>
+                    <span>{{ $t('workbench.production.chatBox.clearMessageMemory') }}</span>
                   </div>
                   <div class="settingMenuItem" @click="handleClearMemory('summary')">
                     <i-close size="14" />
-                    <span>清空摘要记忆</span>
+                    <span>{{ $t('workbench.production.chatBox.clearSummaryMemory') }}</span>
                   </div>
                   <div class="settingMenuItem danger" @click="handleClearMemory('all')">
                     <i-delete-one size="14" />
-                    <span>清空全部记忆</span>
+                    <span>{{ $t('workbench.production.chatBox.clearAllMemory') }}</span>
                   </div>
                 </div>
               </template>
             </t-popup>
             <div class="ac modelSelCls">
               <modelSelect class="paramSelect" v-model="imageModelData.modelId" type="image" size="small" />
-              <t-select v-model="imageModelData.ratio" class="paramSelect ml-5" size="small" placeholder="比例">
+              <t-select v-model="imageModelData.ratio" class="paramSelect ml-5" size="small" :placeholder="$t('workbench.production.editImage.ratio')">
                 <t-option value="16:9" label="16:9" />
                 <t-option value="9:16" label="9:16" />
                 <t-option value="1:1" label="1:1" />
               </t-select>
-              <t-select v-model="imageModelData.quality" class="paramSelect ml-5" size="small" placeholder="质量">
+              <t-select v-model="imageModelData.quality" class="paramSelect ml-5" size="small" :placeholder="$t('workbench.production.editImage.quality')">
                 <t-option value="1K" label="1K" />
                 <t-option value="2K" label="2K" />
                 <t-option value="4K" label="4K" />
@@ -102,7 +102,7 @@ const props = defineProps({
 });
 const emit = defineEmits(["close"]);
 // const inputValue = ref("请输出500字小作文，去洗车店洗车走路更快还是开车更快");
-const inputValue = ref("生成衍生资产");
+const inputValue = ref($t('workbench.production.chatBox.generateDerivedAssets'));
 const loadingHistory = ref(false);
 const status = ref<"idle" | "pending" | "streaming">("idle");
 const currentMessageId = ref<string | null>(null);
@@ -111,13 +111,13 @@ const welcomeMsg: ChatMessagesData = {
   id: "welcome",
   role: "assistant",
   content: [
-    { type: "text", status: "complete", data: "你好！我是 Toonflow 智能助手，需要我开始为您制作视频吗？" },
+    { type: "text", status: "complete", data: $t("workbench.production.chatBox.welcomeMessage") },
     {
       type: "suggestion",
       status: "complete",
       data: [
-        { title: "调整偏好模型", prompt: "调整偏好模型" },
-        { title: "开始制作视频", prompt: "请开始制作视频" },
+        { title: $t("workbench.production.chatBox.adjustModel"), prompt: $t("workbench.production.chatBox.adjustModel") },
+        { title: $t("workbench.production.chatBox.startMakingVideo"), prompt: $t("workbench.production.chatBox.startMakingVideoPrompt") },
       ],
     },
   ],
@@ -275,18 +275,18 @@ const handleActions = {
 
 // ============== Memory ==============
 
-const memoryTypeLabel: Record<string, string> = { message: "消息记忆", summary: "摘要记忆", all: "全部记忆" };
+const memoryTypeLabel: Record<string, string> = { message: $t("workbench.production.chatBox.messageMemory"), summary: $t("workbench.production.chatBox.summaryMemory"), all: $t("workbench.production.chatBox.allMemory") };
 
 function handleClearMemory(type: "message" | "summary" | "all") {
   const dialog = DialogPlugin.confirm({
-    header: "确认清空",
-    body: `确定要清空${memoryTypeLabel[type]}吗？此操作无法撤销。`,
-    confirmBtn: "确认清空",
-    cancelBtn: "取消",
+    header: $t("workbench.production.chatBox.confirmClear"),
+    body: $t("workbench.production.chatBox.confirmClearBody", { type: memoryTypeLabel[type] }),
+    confirmBtn: $t("workbench.production.chatBox.confirmClearBtn"),
+    cancelBtn: $t("workbench.production.cancel"),
     theme: "warning",
     onConfirm: async () => {
       await axios.post(`/agents/clearMemory`, { projectId: project.value?.id, agentType: "productionAgent", episodesId: props.episodesId, type });
-      window.$message.success(`${memoryTypeLabel[type]}已清空`);
+      window.$message.success($t("workbench.production.chatBox.memoryCleared", { type: memoryTypeLabel[type] }));
       dialog.destroy();
       getHistory();
     },

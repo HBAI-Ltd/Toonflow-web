@@ -3,8 +3,8 @@
     <Handle :id="props.handleIds.target" type="target" :position="Position.Left" />
     <Handle :id="props.handleIds.source" type="source" :position="Position.Right" />
     <div class="titleBar dragHandle">
-      <div class="title c">分镜表</div>
-      <t-button size="small" variant="text" @click="openEdit">编辑</t-button>
+      <div class="title c">{{ $t('workbench.production.node.storyboardTable.title') }}</div>
+      <t-button size="small" variant="text" @click="openEdit">{{ $t('workbench.production.edit') }}</t-button>
     </div>
     <div class="storyboardList">
       <MdPreview v-model="storyboardTable" :theme="'light'" />
@@ -13,10 +13,10 @@
 
   <t-dialog
     v-model:visible="dialogVisible"
-    header="编辑分镜表"
+    :header="$t('workbench.production.node.storyboardTable.editDialog')"
     :width="'90vw'"
-    :confirm-btn="'保存'"
-    :cancel-btn="'取消'"
+    :confirm-btn="$t('workbench.production.save')"
+    :cancel-btn="$t('workbench.production.cancel')"
     @confirm="onConfirm"
     @cancel="onCancel"
     @close="onCancel"

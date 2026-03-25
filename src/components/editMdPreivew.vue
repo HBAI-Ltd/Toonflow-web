@@ -1,10 +1,10 @@
 <template>
   <t-dialog
     v-model:visible="dialogVisible"
-    header="编辑剧本"
+    :header="$t('components.editMdPreivew.title')"
     :width="'90vw'"
-    :confirm-btn="'保存'"
-    :cancel-btn="'取消'"
+    :confirm-btn="$t('components.editMdPreivew.confirm')"
+    :cancel-btn="$t('components.editMdPreivew.cancel')"
     @confirm="onConfirm"
     @cancel="onCancel"
     @close="onCancel"

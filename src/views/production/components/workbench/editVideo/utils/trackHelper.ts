@@ -1,14 +1,14 @@
 import { generateId } from "vue-clip-track";
 
-const TRACK_NAMES: Record<string, string> = {
-  video: "视频",
-  image: "图片",
-  audio: "音频",
-  subtitle: "字幕",
-  text: "文本",
-  sticker: "贴纸",
-  filter: "滤镜",
-  effect: "特效",
+const TRACK_NAME_KEYS: Record<string, string> = {
+  video: 'workbench.production.track.video',
+  image: 'workbench.production.track.image',
+  audio: 'workbench.production.track.audio',
+  subtitle: 'workbench.production.track.subtitle',
+  text: 'workbench.production.track.text',
+  sticker: 'workbench.production.track.sticker',
+  filter: 'workbench.production.track.filter',
+  effect: 'workbench.production.track.effect',
 };
 
 const DEFAULT_DURATIONS: Record<string, number> = {
@@ -71,7 +71,7 @@ export function findOrCreateTrackWithSpace(
   const newTrack = {
     id: generateId("track-"),
     type: mediaType,
-    name: `${TRACK_NAMES[mediaType] || mediaType}${trackCount + 1}`,
+    name: `${TRACK_NAME_KEYS[mediaType] ? $t(TRACK_NAME_KEYS[mediaType]) : mediaType}${trackCount + 1}`,
     visible: true,
     locked: false,
     clips: [],

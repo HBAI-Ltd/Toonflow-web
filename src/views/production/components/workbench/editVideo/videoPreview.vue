@@ -4,7 +4,7 @@
     <div ref="canvasContainer" class="previewScreen">
       <div v-if="!hasSprites" class="previewScreenPlaceholder">
         <div class="placeholderIcon"><i-film theme="outline" size="48" fill="#999" /></div>
-        <div class="placeholderText">视频预览区域</div>
+        <div class="placeholderText">{{ $t('workbench.production.editVideo.videoPreviewArea') }}</div>
         <div class="placeholderTime">{{ formatTime(currentTimeInSeconds) }}</div>
       </div>
 
@@ -163,11 +163,6 @@ const transitionFrameCache = new Map<
     ctx: OffscreenCanvasRenderingContext2D;
   }
 >();
-
-// 当前激活的滤镜列表
-const activeFilters = ref<ActiveFilter[]>([]);
-// 当前激活的特效列表
-const activeEffects = ref<ActiveEffect[]>([]);
 
 // AVCanvas 调试数据
 const avCanvasDebugData = reactive<AVCanvasDebugData>({
@@ -1482,10 +1477,10 @@ function handleSeek(event: Event) {
 // 导出视频
 async function exportVideo() {
   if (!avCanvas) {
-    throw new Error("AVCanvas 尚未初始化");
+    throw new Error($t('workbench.production.editVideo.avCanvasNotInit'));
   }
   if (clipSpriteMap.size === 0) {
-    throw new Error("没有可导出的内容");
+    throw new Error($t('workbench.production.editVideo.noExportContent'));
   }
 
   // 导出前暂停播放

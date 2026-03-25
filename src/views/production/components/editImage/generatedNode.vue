@@ -4,12 +4,12 @@
     <div class="data" @click="selectedFn">
       <div class="title ac">
         <i-pic theme="outline" size="16" fill="#000000" />
-        <span class="title-text">图片生成</span>
+        <span class="title-text">{{ $t('workbench.production.editImage.imageGeneration') }}</span>
       </div>
       <div class="image">
         <div v-if="generating" class="imageLoading">
           <div class="loadingSpinner"></div>
-          <span class="loadingText">生成中...</span>
+          <span class="loadingText">{{ $t('workbench.production.editImage.generating') }}</span>
         </div>
         <div v-else class="imageWrapper">
           <t-image class="image" :src="data.generatedImage" fit="cover" :class="['nodeImage', { selected }]">
@@ -20,7 +20,7 @@
             </template>
           </t-image>
         </div>
-        <t-tooltip theme="primary" content="删除节点">
+        <t-tooltip theme="primary" :content="$t('workbench.production.editImage.deleteNode')">
           <div class="remove ac" @click="removeNodes(props.id)">
             <i-delete theme="outline" size="18" fill="#fff" />
           </div>
@@ -39,7 +39,7 @@
             ref="editorRef"
             class="promptEditor"
             contenteditable="true"
-            :data-placeholder="editorContent.length === 0 ? '描述任何你想要生成的内容，按@引用素材' : ''"
+            :data-placeholder="editorContent.length === 0 ? $t('workbench.production.editImage.promptPlaceholder') : ''"
             @input="handleInput"
             @keydown="handleKeydown"
             @blur="handleBlur"
@@ -53,10 +53,10 @@
                 :class="{ active: activeIndex === index }"
                 @mousedown.prevent="selectReference(index)">
                 <t-image :src="item.image" fit="cover" class="ref-popup-img" />
-                <span class="reference-label">图{{ index + 1 }}</span>
+                <span class="reference-label">{{ $t('workbench.production.editImage.imageRef', { index: index + 1 }) }}</span>
                 <span class="ref-index-badge">#{{ index + 1 }}</span>
               </div>
-              <div v-if="!data.references?.length" class="no-references">暂无可引用的图片</div>
+              <div v-if="!data.references?.length" class="no-references">{{ $t('workbench.production.editImage.noReferences') }}</div>
             </div>
           </div>
         </div>
@@ -64,12 +64,12 @@
       <div class="operate ac jb">
         <div class="ac">
           <modelSelect v-model="data.model" type="image" size="small" />
-          <t-select v-model="data.ratio" class="paramSelect ml-5" size="small" placeholder="比例">
+          <t-select v-model="data.ratio" class="paramSelect ml-5" size="small" :placeholder="$t('workbench.production.editImage.ratio')">
             <t-option value="16:9" label="16:9" />
             <t-option value="9:16" label="9:16" />
             <t-option value="1:1" label="1:1" />
           </t-select>
-          <t-select v-model="data.quality" class="paramSelect ml-5" size="small" placeholder="质量">
+          <t-select v-model="data.quality" class="paramSelect ml-5" size="small" :placeholder="$t('workbench.production.editImage.quality')">
             <t-option value="1K" label="1K" />
             <t-option value="2K" label="2K" />
             <t-option value="4K" label="4K" />
@@ -77,12 +77,12 @@
         </div>
 
         <div class="f" style="gap: 5px; margin-left: 5px">
-          <t-popup content="生成">
+          <t-popup :content="$t('workbench.production.editImage.generateBtn')">
             <t-button theme="primary" size="small" class="generateBtn" :disabled="generating" :loading="generating" @click="handleGenerate">
               <template #icon><i-arrow-up /></template>
             </t-button>
           </t-popup>
-          <t-popup content="保存">
+          <t-popup :content="$t('workbench.production.save')">
             <t-button theme="primary" size="small" class="keepBtn" :disabled="generating" :loading="generating" @click="kepp">
               <template #icon><i-save /></template>
             </t-button>
@@ -317,9 +317,9 @@ function handleBlur() {
 
 // 生成
 async function handleGenerate() {
-  if (!props.data.model) return window.$message.error("请先选择模型");
-  if (!props.data.quality) return window.$message.error("请先选择质量");
-  if (!props.data.ratio) return window.$message.error("请先选择比例");
+  if (!props.data.model) return window.$message.error($t("workbench.production.editImage.selectModel"));
+  if (!props.data.quality) return window.$message.error($t("workbench.production.editImage.selectQuality"));
+  if (!props.data.ratio) return window.$message.error($t("workbench.production.editImage.selectRatio"));
 
   generating.value = true;
   try {
@@ -335,13 +335,13 @@ async function handleGenerate() {
     });
     props.data.generatedImage = data.url;
   } catch (e) {
-    return window.$message.error((e as any)?.message || "生成失败");
+    return window.$message.error((e as any)?.message || $t("workbench.production.editImage.generateFailed"));
   } finally {
     generating.value = false;
   }
 }
 function kepp() {
-  if (!props.data.generatedImage) return window.$message.error("请先生成图片");
+  if (!props.data.generatedImage) return window.$message.error($t("workbench.production.editImage.generateFirst"));
   emit("keep", props.data.generatedImage);
 }
 </script>

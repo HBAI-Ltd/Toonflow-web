@@ -2,28 +2,28 @@
   <div class="updateDialog">
     <t-dialog
       v-model:visible="showUpdate"
-      header="发现新版本"
+      :header="$t('components.update.title')"
       :footer="false"
       width="400px"
     >
       <div class="updateContent">
         <div class="versionInfo">
           <div class="versionRow">
-            <span class="label">当前版本：</span>
+            <span class="label">{{ $t("components.update.currentVersion") }}</span>
             <!-- <span class="version">{{ updateInfo.currentVersion }}</span> -->
           </div>
           <div class="versionRow">
-            <span class="label">最新版本：</span>
+            <span class="label">{{ $t("components.update.latestVersion") }}</span>
             <!-- <span class="version latestVersion">{{ updateInfo.latestVersion }}</span> -->
           </div>
         </div>
         <div class="updateTip">
           <t-icon name="info-circle" />
-          <span>发现新版本，建议您更新以获得更好的体验</span>
+          <span>{{ $t("components.update.tip") }}</span>
         </div>
         <div class="updateActions">
-          <t-button theme="default" @click="handleLater">稍后提醒</t-button>
-          <t-button theme="primary" @click="handleUpdate">立即更新</t-button>
+          <t-button theme="default" @click="handleLater">{{ $t("components.update.later") }}</t-button>
+          <t-button theme="primary" @click="handleUpdate">{{ $t("components.update.updateNow") }}</t-button>
         </div>
       </div>
     </t-dialog>

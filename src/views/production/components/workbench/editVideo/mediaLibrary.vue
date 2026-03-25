@@ -2,7 +2,7 @@
   <div class="mediaLibrary">
     <div class="mediaLibraryHeader">
       <div class="headerTitle">
-        <h3 class="mediaLibraryTitle">剪辑素材</h3>
+        <h3 class="mediaLibraryTitle">{{ $t('workbench.production.editVideo.clipMaterials') }}</h3>
       </div>
       <div class="mediaLibraryTabs">
         <t-button
@@ -160,11 +160,11 @@ import { extractVideoThumbnails, extractAudioWaveform } from "vue-clip-track";
 import {
   type MediaItem,
   type AudioItem,
-  textItems as staticTextItems,
-  transitionItems as staticTransitionItems,
-  effectItems as staticEffectItems,
-  filterItems as staticFilterItems,
-  libraryTabs,
+  getTextItems,
+  getTransitionItems,
+  getEffectItems,
+  getFilterItems,
+  getLibraryTabs,
   formatDuration,
 } from "./utils/mediaData";
 
@@ -183,15 +183,15 @@ const props = withDefaults(
 
 const activeTab = ref("media");
 
-const tabs = libraryTabs;
+const tabs = getLibraryTabs();
 
 const mediaItems = ref<MediaItem[]>([...props.initialMediaItems]);
 const audioItems = ref<AudioItem[]>([...props.initialAudioItems]);
 const imageItems = ref<MediaItem[]>([...props.initialImageItems]);
-const textItems = ref(staticTextItems);
-const transitionItems = ref(staticTransitionItems);
-const effectItems = ref(staticEffectItems);
-const filterItems = ref(staticFilterItems);
+const textItems = ref(getTextItems());
+const transitionItems = ref(getTransitionItems());
+const effectItems = ref(getEffectItems());
+const filterItems = ref(getFilterItems());
 
 // 加载视频缩略图和时长
 async function loadVideoThumbnails() {

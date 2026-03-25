@@ -33,7 +33,7 @@
     <Controls />
     <div class="floatingWindow">
       <div class="episodesSelect f ac">
-        <t-select v-model="episodesId" placeholder="-请选择-" autoWidth :options="episodesOptions" filterable>
+        <t-select v-model="episodesId" :placeholder="$t('workbench.production.selectPlaceholder')" autoWidth :options="episodesOptions" filterable>
           <template #label>
             <i-document-folder size="24" />
           </template>
@@ -100,13 +100,7 @@ const flowData = ref<FlowData>({
   // 分镜（合并为一个 node）
   storyboard: [],
   // 工作台（单个 node）
-  workbench: {
-    name: "第2集 - 真相大白",
-    duration: "01:03",
-    resolution: "1920×1080",
-    fps: "30fps",
-    gradient: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-  },
+  workbench: {},
   // 封面（单个 node）
   poster: {
     items: [
@@ -137,8 +131,8 @@ const current = useLocalStorage("productionGuideCurrent", 0);
 const steps = [
   {
     element: ".episodesSelect",
-    title: "切换集数",
-    body: "切换集数挪移到这里了哦",
+    title: $t("workbench.production.guideSwitchEpisode"),
+    body: $t("workbench.production.guideSwitchEpisodeBody"),
     placement: "bottom",
   },
 ] as any;

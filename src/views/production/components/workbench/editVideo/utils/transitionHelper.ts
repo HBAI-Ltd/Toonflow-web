@@ -5,13 +5,13 @@ import {
   type Clip,
 } from "vue-clip-track";
 
-const TRANSITION_NAMES: Record<string, string> = {
-  fade: "淡入淡出",
-  slide: "滑动",
-  wipe: "擦除",
-  dissolve: "溶解",
-  zoom: "缩放",
-  rotate: "旋转",
+const TRANSITION_NAME_KEYS: Record<string, string> = {
+  fade: 'workbench.production.transition.fade',
+  slide: 'workbench.production.transition.slide',
+  wipe: 'workbench.production.transition.wipe',
+  dissolve: 'workbench.production.transition.dissolve',
+  zoom: 'workbench.production.transition.zoom',
+  rotate: 'workbench.production.transition.rotate',
 };
 
 /** 在已排序的非转场 clips 中，根据 dropTime 查找相邻的两个 clip */
@@ -84,7 +84,7 @@ export function addTransitionBetweenClips(
   );
 
   if (hasExistingTransition) {
-    window.$message.warning("该位置已存在转场");
+    window.$message.warning($t('workbench.production.editVideo.transitionExists'));
     return null;
   }
 
@@ -98,7 +98,7 @@ export function addTransitionBetweenClips(
     selected: false,
     transitionType,
     transitionDuration: normalizeTime(transitionDuration),
-    name: TRANSITION_NAMES[transitionType] || transitionType,
+    name: TRANSITION_NAME_KEYS[transitionType] ? $t(TRANSITION_NAME_KEYS[transitionType]) : transitionType,
   };
 
   tracksStore.addClip(beforeClip.trackId, transitionClip);

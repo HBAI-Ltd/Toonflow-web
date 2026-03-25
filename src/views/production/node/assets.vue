@@ -2,7 +2,7 @@
   <t-card class="assets">
     <Handle :id="props.handleIds.target" type="target" :position="Position.Top" />
     <div class="titleBar dragHandle">
-      <div class="title">衍生资产</div>
+      <div class="title">{{ $t('workbench.production.node.assets.title') }}</div>
     </div>
     <div class="content">
       <div class="cardGrid">
@@ -19,13 +19,13 @@
             </div>
             <div v-else class="assetImageWrap assetImagePlaceholder">
               <t-loading v-if="asset.state == '生成中'" size="small" />
-              <span v-else-if="asset.state == '生成失败'" style="color: red">生成失败</span>
-              <t-empty v-else size="small" title="未生成" />
+              <span v-else-if="asset.state == '生成失败'" style="color: red">{{ $t('workbench.production.node.assets.generateFailed') }}</span>
+              <t-empty v-else size="small" :title="$t('workbench.production.node.assets.notGenerated')" />
             </div>
             <div class="cardInfo">
               <div class="cardName">
                 <span class="nameText">{{ asset.name }}</span>
-                <t-tag theme="success">原资产</t-tag>
+                <t-tag theme="success">{{ $t('workbench.production.node.assets.originalAsset') }}</t-tag>
               </div>
               <div class="cardDesc">{{ asset.desc }}</div>
             </div>
@@ -46,18 +46,18 @@
               </div>
               <div v-else class="assetImageWrap assetImagePlaceholder">
                 <t-loading v-if="item.state == '生成中'" size="small" />
-                <t-empty v-else size="small" title="未生成" />
+                <t-empty v-else size="small" :title="$t('workbench.production.node.assets.notGenerated')" />
               </div>
               <div class="cardInfo">
                 <div class="cardName">
                   <span class="nameText">{{ item.name }}</span>
-                  <t-tag theme="warning">衍生</t-tag>
+                  <t-tag theme="warning">{{ $t('workbench.production.node.assets.derived') }}</t-tag>
                 </div>
                 <div class="cardDesc">{{ item.desc }}</div>
               </div>
             </t-card>
             <t-card v-if="asset.derive.length <= 0" class="assetCard emptyCard">
-              <t-empty title="无衍生资产"></t-empty>
+              <t-empty :title="$t('workbench.production.node.assets.noDerivedAssets')"></t-empty>
             </t-card>
           </div>
         </div>

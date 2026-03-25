@@ -24,9 +24,9 @@
         </t-image>
         <div class="upload ac" @click="uploadFn">
           <i-upload theme="outline" size="18" fill="#fff" />
-          <span style="margin-left: 5px; color: #fff">上传</span>
+          <span style="margin-left: 5px; color: #fff">{{ $t('workbench.production.editImage.upload') }}</span>
         </div>
-        <t-tooltip theme="primary" content="删除节点">
+        <t-tooltip theme="primary" :content="$t('workbench.production.editImage.deleteNode')">
           <div class="remove ac" @click="removeFn">
             <i-delete theme="outline" size="18" fill="#fff" />
           </div>
@@ -72,7 +72,7 @@ const emit = defineEmits(["upload"]);
 async function uploadFn() {
   const selectedAssets = await openAssetsSelector({
     multiple: false,
-    title: "选择图片",
+    title: $t("workbench.production.editImage.selectImage"),
   });
   if (selectedAssets.length > 0) {
     const filePath = selectedAssets[0].src!;

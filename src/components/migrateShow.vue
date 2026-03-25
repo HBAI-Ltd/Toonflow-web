@@ -1,15 +1,15 @@
 <template>
   <div class="migrateShow">
-    <t-dialog v-model:visible="visible" header="迁移数据" width="500px">
+    <t-dialog v-model:visible="visible" :header="$t('components.migrateShow.title')" width="500px">
       <div class="taskList">
         <div class="item">
-          <span>检测到您有旧版本的数据，是否需要迁移？</span>
+          <span>{{ $t("components.migrateShow.desc") }}</span>
         </div>
       </div>
       <template #footer>
         <t-space>
-          <t-button theme="default" @click="() => (visible = false)">不在显示</t-button>
-          <t-button theme="primary" @click="onConfirm">确定</t-button>
+          <t-button theme="default" @click="() => (visible = false)">{{ $t("components.migrateShow.hide") }}</t-button>
+          <t-button theme="primary" @click="onConfirm">{{ $t("components.migrateShow.confirm") }}</t-button>
         </t-space>
       </template>
     </t-dialog>
@@ -25,10 +25,10 @@ function onConfirm() {
   axios
     .post("/migrate/migrateData")
     .then(() => {
-      window.$message.success("数据迁移成功");
+      window.$message.success($t("components.migrateShow.msg.migrateSuccess"));
     })
     .catch(() => {
-      window.$message.error("数据迁移失败");
+      window.$message.error($t("components.migrateShow.msg.migrateFailed"));
     })
     .finally(() => {
       //   visible.value = false; // 关闭对话框

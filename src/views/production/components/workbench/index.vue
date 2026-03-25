@@ -14,17 +14,17 @@
       <i-close-small theme="outline" size="24" fill="#4a4a4a" @click="visible = false" />
     </div>
     <div class="topMenu f ac">
-      <t-tooltip content="快速预览" placement="bottom" theme="light" destroyOnClose :showArrow="false">
+      <t-tooltip :content="$t('workbench.production.wb.quickPreview')" placement="bottom" theme="light" destroyOnClose :showArrow="false">
         <div class="item fc c" :class="{ active: activeMenu === 'preview' }" @click="activeMenu = 'preview'">
           <i-blackboard class="icon" />
         </div>
       </t-tooltip>
-      <t-tooltip content="视频生成" placement="bottom" theme="light" destroyOnClose :showArrow="false">
+      <t-tooltip :content="$t('workbench.production.wb.videoGeneration')" placement="bottom" theme="light" destroyOnClose :showArrow="false">
         <div class="item fc c" :class="{ active: activeMenu === 'generate' }" @click="activeMenu = 'generate'">
           <i-playback-progress class="icon" />
         </div>
       </t-tooltip>
-      <t-tooltip content="视频剪辑" placement="bottom" theme="light" destroyOnClose :showArrow="false">
+      <t-tooltip :content="$t('workbench.production.wb.videoEditing')" placement="bottom" theme="light" destroyOnClose :showArrow="false">
         <div class="item fc c" :class="{ active: activeMenu === 'editVideo' }" @click="activeMenu = 'editVideo'">
           <i-editing class="icon" />
         </div>
@@ -44,20 +44,20 @@
     </div>
     <div v-if="importLoading" class="importLoadingMask">
       <div class="importLoadingContent">
-        <t-loading size="large" text="正在导入剪辑台，请稍候..." />
+        <t-loading size="large" :text="$t('workbench.production.wb.importingLoading')" />
       </div>
     </div>
-    <t-dialog theme="info" header="提示" body="是否从提取台词" v-model:visible="visible1">
+    <t-dialog theme="info" :header="$t('workbench.production.wb.hint')" :body="$t('workbench.production.wb.extractLines')" v-model:visible="visible1">
       <template #footer>
         <div class="f ac" style="display: flex; justify-content: flex-end">
-          <t-button variant="outline" @click="visible1 = false">取 消</t-button>
-          <t-button variant="outline" @click="noFn">否</t-button>
-          <t-button @click="onConfirm">确 定</t-button>
+          <t-button variant="outline" @click="visible1 = false">{{ $t("workbench.production.cancel") }}</t-button>
+          <t-button variant="outline" @click="noFn">{{ $t("workbench.production.wb.no") }}</t-button>
+          <t-button @click="onConfirm">{{ $t("workbench.production.wb.confirm") }}</t-button>
         </div>
       </template>
       <template #default>
         <div class="f f-column" style="gap: 12px">
-          <span>是否从提取台词？</span>
+          <span>{{ $t("workbench.production.wb.extractLinesQuestion") }}</span>
         </div>
       </template>
     </t-dialog>
@@ -69,7 +69,7 @@ import axios from "@/utils/axios";
 import preview from "./preview.vue";
 import generate from "./generate.vue";
 import editVideo from "./editVideo/index.vue";
-import { generateId, useTracksStore, type Track, type MediaClip, type SubtitleClip, type Clip } from "vue-clip-track";
+import { generateId, useTracksStore, type MediaClip, type SubtitleClip, type Clip } from "vue-clip-track";
 import type { MediaItem, AudioItem } from "./editVideo/utils/mediaData";
 
 const visible = defineModel("visible", {
@@ -78,7 +78,6 @@ const visible = defineModel("visible", {
 });
 
 const activeMenu = ref("preview");
-const editVideoRef = ref();
 const tracksStore = useTracksStore();
 
 // 画布尺寸配置
@@ -106,12 +105,19 @@ const mockAudioItems: AudioItem[] = [
   {
     id: "audio-1",
     type: "audio",
-    name: "44.1kHz 立体声",
+    name: $t("workbench.production.wb.stereo441"),
     duration: 0,
     url: "https://webav-tech.github.io/WebAV/audio/16kHz-1chan.mp3",
     loading: true,
   },
-  { id: "audio-2", type: "audio", name: "16kHz 单声道", duration: 0, url: "https://webav-tech.github.io/WebAV/audio/16kHz-1chan.mp3", loading: true },
+  {
+    id: "audio-2",
+    type: "audio",
+    name: $t("workbench.production.wb.mono16"),
+    duration: 0,
+    url: "https://webav-tech.github.io/WebAV/audio/16kHz-1chan.mp3",
+    loading: true,
+  },
 ];
 
 /** 资源库 - 图片素材 */
@@ -119,7 +125,7 @@ const mockImageItems: MediaItem[] = [
   {
     id: "image-1",
     type: "image",
-    name: "示例图片 1",
+    name: $t("workbench.production.wb.sampleImage1"),
     duration: 5,
     icon: "🖼️",
     color: "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
@@ -170,7 +176,7 @@ function appendClipsToStore(videoList: any[], subtitleData: any[] | null) {
     videoTrack = {
       id: generateId("track-"),
       type: "video",
-      name: "主轨道（视频）",
+      name: $t("workbench.production.wb.mainTrackVideo"),
       visible: true,
       locked: false,
       clips: [],
@@ -186,7 +192,7 @@ function appendClipsToStore(videoList: any[], subtitleData: any[] | null) {
     subtitleTrack = {
       id: generateId("track-"),
       type: "subtitle",
-      name: "字幕1",
+      name: $t("workbench.production.wb.subtitle1"),
       visible: true,
       locked: false,
       clips: [],

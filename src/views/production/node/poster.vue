@@ -2,8 +2,8 @@
   <t-card class="poster">
     <Handle :id="props.handleIds.target" type="target" :position="Position.Left" />
     <div class="titleBar dragHandle">
-      <div class="title">视频封面</div>
-      <t-tag size="small" variant="outline">{{ poster?.items.length }}张</t-tag>
+      <div class="title">{{ $t('workbench.production.node.poster.title') }}</div>
+      <t-tag size="small" variant="outline">{{ $t('workbench.production.node.poster.coverCount', { count: poster?.items.length }) }}</t-tag>
     </div>
     <div class="posterGrid">
       <div v-for="(item, index) in poster?.items" :key="item.id" class="posterCard">
