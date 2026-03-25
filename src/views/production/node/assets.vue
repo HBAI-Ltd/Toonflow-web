@@ -2,7 +2,7 @@
   <t-card class="assets">
     <Handle :id="props.handleIds.target" type="target" :position="Position.Top" />
     <div class="titleBar dragHandle">
-      <div class="title">{{ $t('workbench.production.node.assets.title') }}</div>
+      <div class="title">{{ $t("workbench.production.node.assets.title") }}</div>
     </div>
     <div class="content">
       <div class="cardGrid">
@@ -19,13 +19,13 @@
             </div>
             <div v-else class="assetImageWrap assetImagePlaceholder">
               <t-loading v-if="asset.state == '生成中'" size="small" />
-              <span v-else-if="asset.state == '生成失败'" style="color: red">{{ $t('workbench.production.node.assets.generateFailed') }}</span>
+              <span v-else-if="asset.state == '生成失败'" style="color: red">{{ $t("workbench.production.node.assets.generateFailed") }}</span>
               <t-empty v-else size="small" :title="$t('workbench.production.node.assets.notGenerated')" />
             </div>
             <div class="cardInfo">
               <div class="cardName">
                 <span class="nameText">{{ asset.name }}</span>
-                <t-tag theme="success">{{ $t('workbench.production.node.assets.originalAsset') }}</t-tag>
+                <t-tag theme="success">{{ $t("workbench.production.node.assets.originalAsset") }}</t-tag>
               </div>
               <div class="cardDesc">{{ asset.desc }}</div>
             </div>
@@ -35,7 +35,7 @@
           </div>
           <div class="deriveAssets">
             <t-card v-for="(item, index) in asset.derive" :key="index" class="assetCard">
-              <div v-if="item.src" class="assetImageWrap" @click="generateAssetsImage(item)">
+              <div v-if="item.src" class="assetImageWrap" @click="generateAssetsImage(item, asset.src)">
                 <t-image :src="item.src" fit="contain" class="assetImage" :preview="true" :lazy="true">
                   <template #overlayContent>
                     <div class="imageToolsWrap show">
@@ -51,7 +51,7 @@
               <div class="cardInfo">
                 <div class="cardName">
                   <span class="nameText">{{ item.name }}</span>
-                  <t-tag theme="warning">{{ $t('workbench.production.node.assets.derived') }}</t-tag>
+                  <t-tag theme="warning">{{ $t("workbench.production.node.assets.derived") }}</t-tag>
                 </div>
                 <div class="cardDesc">{{ item.desc }}</div>
               </div>
@@ -83,15 +83,20 @@ const props = defineProps<{
 const assets = defineModel<AssetItem[]>({ required: true });
 const currentRow = ref<{
   id: null | number;
-  images: string[];
+  resultImages: string[];
+  referanceImages: string[];
   type?: string;
 }>({
-  images: [],
   id: null,
+  resultImages: [],
+  referanceImages: [],
 });
 const visible = ref(false);
-function generateAssetsImage(row: DeriveAsset) {
-  currentRow.value = { id: row.id, images: [row.src], type: row.type };
+function generateAssetsImage(row: DeriveAsset, referanceImageUrl: string) {
+  console.log("%c Line:96 🍻 row", "background:#4fff4B", row);
+  console.log("%c Line:96 🌭 referanceImageUrl", "background:#4fff4B", referanceImageUrl);
+  currentRow.value = { id: row.id, resultImages: [row.src], referanceImages: [referanceImageUrl], type: row.type };
+
   visible.value = true;
 }
 

@@ -21,7 +21,7 @@
       <assets :id="props.id" v-model="flowData.assets" :handleIds="props.data.handleIds" />
     </template>
     <template #node-storyboard="props">
-      <storyboard :id="props.id" v-model="flowData.storyboard" :handleIds="props.data.handleIds" />
+      <storyboard :id="props.id" v-model="flowData.storyboard" :assetsData="flowData.assets" :handleIds="props.data.handleIds" />
     </template>
     <template #node-workbench="props">
       <workbench :id="props.id" v-model="flowData.workbench" :handleIds="props.data.handleIds" />
@@ -100,7 +100,12 @@ const flowData = ref<FlowData>({
   // 分镜（合并为一个 node）
   storyboard: [],
   // 工作台（单个 node）
-  workbench: {},
+  workbench: {
+    name: "",
+    duration: "",
+    resolution: "",
+    fps: "",
+  },
   // 封面（单个 node）
   poster: {
     items: [
@@ -208,6 +213,7 @@ onMounted(() => {
       top: 10px;
       left: 0px;
       z-index: 9999;
+      cursor: pointer;
       cursor: pointer;
     }
     .openRightChatBoxBtn {

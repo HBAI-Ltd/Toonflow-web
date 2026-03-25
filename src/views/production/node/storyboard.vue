@@ -8,15 +8,11 @@
     <div class="content">
       <div class="frameGrid">
         <template v-for="(item, index) in storyboard" :key="item.id">
-          <div
-            class="frameItem"
-            @mouseenter="setHoveredFrame(index)"
-            @mouseleave="setHoveredFrame(null)"
-            @click="editStoryboaryImage([item.src!], item.id)">
+          <div class="frameItem" @mouseenter="setHoveredFrame(index)" @mouseleave="setHoveredFrame(null)">
             <div
               class="addBetween addBetween--left"
               :class="{ expanded: hoveredIndex === index }"
-              @click.stop="editStoryboaryImage([index > 0 ? storyboard[index - 1]?.src || '' : '', item.src || ''], null, index - 1)">
+              @click.stop="editStoryboaryImage(item, [index > 0 ? storyboard[index - 1]?.src || '' : '', item.src || ''], null, index - 1)">
               <t-button theme="primary" variant="outline" shape="circle">
                 <template #icon><i-plus /></template>
               </t-button>
@@ -32,7 +28,7 @@
                 <t-tag class="frameTypeTag" :style="{ backgroundColor: tagColors[index % tagColors.length] }">
                   S{{ String(index + 1).padStart(2, "0") }}
                 </t-tag>
-                <t-image v-if="item.src" :src="item.src" fit="contain" class="frameImg" @click="editStoryboaryImage([item.src], item.id)">
+                <t-image v-if="item.src" :src="item.src" fit="contain" class="frameImg" @click="editStoryboaryImage(item, [item.src], item.id)">
                   <template #overlayContent>
                     <div class="imageToolsWrap show">
                       <ImageTools :src="item.src" position="br" />
@@ -50,7 +46,12 @@
               class="addBetween addBetween--right"
               :class="{ expanded: hoveredIndex === index }"
               @click.stop="
-                editStoryboaryImage([item.src || '', index < (storyboard?.length ?? 0) - 1 ? storyboard[index + 1]?.src || '' : ''], null, index)
+                editStoryboaryImage(
+                  item,
+                  [item.src || '', index < (storyboard?.length ?? 0) - 1 ? storyboard[index + 1]?.src || '' : ''],
+                  null,
+                  index,
+                )
               ">
               <t-button theme="primary" variant="outline" shape="circle">
                 <template #icon><i-plus /></template>
@@ -77,6 +78,7 @@ import { LoadingPlugin } from "tdesign-vue-next";
 import { Handle, Position, type Edge } from "@vue-flow/core";
 import axios from "@/utils/axios";
 import type { NodeType } from "../utils/editImageType";
+import type { AssetItem } from "../utils/flowBuilder";
 interface Storyboard {
   id: number;
   title: string;
@@ -88,6 +90,7 @@ interface Storyboard {
   lines: string | null;
   sound: string | null;
   associateAssetsIds: number[];
+  referenceIds?: number[];
   src: string | null;
   state: "未生成" | "生成中" | "已完成" | "生成失败";
 }
@@ -98,6 +101,7 @@ const props = defineProps<{
     target: string;
     source: string;
   };
+  assetsData: AssetItem[];
 }>();
 
 const storyboard = defineModel<Storyboard[]>({ required: true });
@@ -114,13 +118,15 @@ function setHoveredFrame(index: number | null) {
 }
 
 const currentRow = ref<{
-  images: string[];
   id: number | null;
+  resultImages: string[];
+  referanceImages: string[];
   insertAfterIndex: number | null;
 }>({
-  images: [],
   id: null,
   insertAfterIndex: null,
+  resultImages: [],
+  referanceImages: [],
 });
 
 const tagColors = ["#5bccb3", "#9c7cfc", "#fbbf24", "#5b9afc", "#e86b6b", "#7cb8fc", "#e8a855", "#34d399"];
@@ -202,12 +208,43 @@ async function previewAll() {
   }
 }
 
-function editStoryboaryImage(images: string[], id: number | null = null, insertAfterIndex: number | null = null) {
+function editStoryboaryImage(item: Storyboard, images: string[], id: number | null = null, insertAfterIndex: number | null = null) {
+  console.log("%c Line:216 🥟 item", "background:#465975", item);
   currentRow.value = {
-    images: images.filter(Boolean),
     id,
     insertAfterIndex,
+    resultImages: [],
+    referanceImages: [],
   };
+  if (id) {
+    let imagesPush = [];
+
+    if (item.associateAssetsIds && item.associateAssetsIds.length > 0) {
+      const assetsImages: string[] = [];
+      for (const asset of props.assetsData) {
+        if (item.associateAssetsIds.includes(asset.id) && asset.src) {
+          assetsImages.push(asset.src);
+        }
+        asset.derive?.forEach((d) => {
+          if (item.associateAssetsIds.includes(d.id) && d.src) {
+            assetsImages.push(d.src);
+          }
+        });
+      }
+      imagesPush = imagesPush.concat(assetsImages);
+    }
+    if (item?.referenceIds && item.referenceIds.length > 0) {
+      const referenImages = storyboard.value
+        .filter((s) => item.referenceIds!.includes(s.id))
+        .map((s) => s.src)
+        .filter(Boolean) as string[];
+      imagesPush = imagesPush.concat(referenImages);
+    }
+    currentRow.value.referanceImages = imagesPush;
+    currentRow.value.resultImages = images.filter(Boolean);
+  } else {
+    currentRow.value.referanceImages = images.filter(Boolean);
+  }
   visible.value = true;
 }
 

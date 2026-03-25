@@ -50,6 +50,7 @@ interface Storyboard {
   associateAssetsIds: number[];
   src: string | null;
   state: "未生成" | "生成中" | "已完成" | "生成失败";
+  referenceIds?: number[];
 }
 
 interface WorkbenchData {

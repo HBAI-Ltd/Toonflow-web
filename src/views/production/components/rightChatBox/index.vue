@@ -45,26 +45,30 @@
                 <div class="settingMenu">
                   <div class="settingMenuItem" @click="handleSend($t('workbench.production.chatBox.adjustModel'))">
                     <i-setting-config size="14" />
-                    <span>{{ $t('workbench.production.chatBox.adjustModel') }}</span>
+                    <span>{{ $t("workbench.production.chatBox.adjustModel") }}</span>
                   </div>
                   <div class="settingMenuItem" @click="handleClearMemory('message')">
                     <i-delete size="14" />
-                    <span>{{ $t('workbench.production.chatBox.clearMessageMemory') }}</span>
+                    <span>{{ $t("workbench.production.chatBox.clearMessageMemory") }}</span>
                   </div>
                   <div class="settingMenuItem" @click="handleClearMemory('summary')">
                     <i-close size="14" />
-                    <span>{{ $t('workbench.production.chatBox.clearSummaryMemory') }}</span>
+                    <span>{{ $t("workbench.production.chatBox.clearSummaryMemory") }}</span>
                   </div>
                   <div class="settingMenuItem danger" @click="handleClearMemory('all')">
                     <i-delete-one size="14" />
-                    <span>{{ $t('workbench.production.chatBox.clearAllMemory') }}</span>
+                    <span>{{ $t("workbench.production.chatBox.clearAllMemory") }}</span>
                   </div>
                 </div>
               </template>
             </t-popup>
             <div class="ac modelSelCls">
               <modelSelect class="paramSelect" v-model="imageModelData.modelId" type="image" size="small" />
-              <t-select v-model="imageModelData.quality" class="paramSelect ml-5" size="small" :placeholder="$t('workbench.production.editImage.quality')">
+              <t-select
+                v-model="imageModelData.quality"
+                class="paramSelect ml-5"
+                size="small"
+                :placeholder="$t('workbench.production.editImage.quality')">
                 <t-option value="1K" label="1K" />
                 <t-option value="2K" label="2K" />
                 <t-option value="4K" label="4K" />
@@ -97,7 +101,7 @@ const props = defineProps({
 });
 const emit = defineEmits(["close"]);
 // const inputValue = ref("请输出500字小作文，去洗车店洗车走路更快还是开车更快");
-const inputValue = ref($t('workbench.production.chatBox.generateDerivedAssets'));
+const inputValue = ref($t("workbench.production.chatBox.generateDerivedAssets"));
 const loadingHistory = ref(false);
 const status = ref<"idle" | "pending" | "streaming">("idle");
 const currentMessageId = ref<string | null>(null);
@@ -173,21 +177,15 @@ onMounted(() => {
     if (key == "setAssetsImage") {
       const { id, src, state } = value as any;
       // 先在父资产中查找
-      const parentIndex = flowData.value.assets.findIndex((i) => i.id == id);
-
-      if (parentIndex !== -1) {
-        flowData.value.assets[parentIndex] = { ...flowData.value.assets[parentIndex], src, state };
-      } else {
-        // 再在子资产（derive）中查找
-        for (let ai = 0; ai < flowData.value.assets.length; ai++) {
-          const asset = flowData.value.assets[ai];
-          const deriveIndex = asset.derive?.findIndex((d) => d.id == id);
-          if (deriveIndex !== undefined && deriveIndex !== -1) {
-            const newDerive = [...asset.derive];
-            newDerive[deriveIndex] = { ...newDerive[deriveIndex], src, state };
-            flowData.value.assets[ai] = { ...asset, derive: newDerive };
-            break;
-          }
+      // 再在子资产（derive）中查找
+      for (let ai = 0; ai < flowData.value.assets.length; ai++) {
+        const asset = flowData.value.assets[ai];
+        const deriveIndex = asset.derive?.findIndex((d) => d.id == id);
+        if (deriveIndex !== undefined && deriveIndex !== -1) {
+          const newDerive = [...asset.derive];
+          newDerive[deriveIndex] = { ...newDerive[deriveIndex], src, state };
+          flowData.value.assets[ai] = { ...asset, derive: newDerive };
+          break;
         }
       }
 
@@ -214,7 +212,12 @@ onMounted(() => {
       const parentIndex = flowData.value.storyboard.findIndex((i) => i.id == id);
 
       if (parentIndex !== -1) {
-        flowData.value.storyboard[parentIndex] = { ...flowData.value.storyboard[parentIndex], src, state };
+        flowData.value.storyboard[parentIndex] = {
+          ...flowData.value.storyboard[parentIndex],
+          src,
+          state,
+          referenceIds: value?.referenceIds ? value.referenceIds : [],
+        };
       }
       return;
     }
@@ -261,7 +264,11 @@ const handleActions = {
 
 // ============== Memory ==============
 
-const memoryTypeLabel: Record<string, string> = { message: $t("workbench.production.chatBox.messageMemory"), summary: $t("workbench.production.chatBox.summaryMemory"), all: $t("workbench.production.chatBox.allMemory") };
+const memoryTypeLabel: Record<string, string> = {
+  message: $t("workbench.production.chatBox.messageMemory"),
+  summary: $t("workbench.production.chatBox.summaryMemory"),
+  all: $t("workbench.production.chatBox.allMemory"),
+};
 
 function handleClearMemory(type: "message" | "summary" | "all") {
   const dialog = DialogPlugin.confirm({
