@@ -64,11 +64,6 @@
             </t-popup>
             <div class="ac modelSelCls">
               <modelSelect class="paramSelect" v-model="imageModelData.modelId" type="image" size="small" />
-              <t-select v-model="imageModelData.ratio" class="paramSelect ml-5" size="small" placeholder="比例">
-                <t-option value="16:9" label="16:9" />
-                <t-option value="9:16" label="9:16" />
-                <t-option value="1:1" label="1:1" />
-              </t-select>
               <t-select v-model="imageModelData.quality" class="paramSelect ml-5" size="small" placeholder="质量">
                 <t-option value="1K" label="1K" />
                 <t-option value="2K" label="2K" />
@@ -175,15 +170,11 @@ onMounted(() => {
   });
 
   socket.on("setFlowData", ({ key, value }) => {
-    console.log("%c Line:156 🍇 value", "background:#ffdd4d", value);
-    console.log("%c Line:156 🍐 key", "background:#6ec1c2", key);
     if (key == "setAssetsImage") {
       const { id, src, state } = value as any;
       // 先在父资产中查找
       const parentIndex = flowData.value.assets.findIndex((i) => i.id == id);
 
-      console.log("%c Line:163 🍫 flowData.value.assets", "background:#42b983", flowData.value.assets);
-      console.log("资产查找索引", parentIndex);
       if (parentIndex !== -1) {
         flowData.value.assets[parentIndex] = { ...flowData.value.assets[parentIndex], src, state };
       } else {
@@ -199,7 +190,6 @@ onMounted(() => {
           }
         }
       }
-      console.log("%c Line:169 🍎 flowData.value", "background:#7f2b82", flowData.value);
 
       return;
     }
@@ -209,15 +199,12 @@ onMounted(() => {
         if (!deriveMap[i.assetsId]) deriveMap[i.assetsId] = [i];
         else deriveMap[i.assetsId].push(i);
       });
-      console.log("%c Line:208 🍉 deriveMap", "background:#7f2b82", deriveMap);
 
       flowData.value.assets.forEach((i) => {
         if (deriveMap[i.id]) {
           i.derive = [...i.derive, ...deriveMap[i.id]];
-          console.log("%c Line:217 🍅 i.derive", "background:#f5ce50", i.derive);
         }
       });
-      console.log("%c Line:215 🍖 flowData.value", "background:#93c0a4", flowData.value);
 
       return;
     }
@@ -225,9 +212,8 @@ onMounted(() => {
       const { id, src, state } = value as any;
       // 先在父资产中查找
       const parentIndex = flowData.value.storyboard.findIndex((i) => i.id == id);
-      console.log("%c Line:183 🍋 parentIndex", "background:#e41a6a", parentIndex);
+
       if (parentIndex !== -1) {
-        console.log("%c Line:185 🌮", "background:#ffdd4d");
         flowData.value.storyboard[parentIndex] = { ...flowData.value.storyboard[parentIndex], src, state };
       }
       return;

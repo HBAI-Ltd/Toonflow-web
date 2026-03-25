@@ -95,7 +95,7 @@ function generateAssetsImage(row: DeriveAsset) {
   visible.value = true;
 }
 
-async function save(imageUrl: string) {
+async function save({ imageUrl, insertId }: { imageUrl: string; insertId: number }) {
   // 更新对应分镜的 src
   if (!imageUrl) return;
   for (const i of assets.value) {

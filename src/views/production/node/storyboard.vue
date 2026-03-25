@@ -12,7 +12,7 @@
             <div
               class="addBetween addBetween--left"
               :class="{ expanded: hoveredIndex === index }"
-              @click.stop="editStoryboaryImage([index > 0 ? storyboard[index - 1]?.src || '' : '', item.src || ''])">
+              @click.stop="editStoryboaryImage([index > 0 ? storyboard[index - 1]?.src || '' : '', item.src || ''], null, index - 1)">
               <t-button theme="primary" variant="outline" shape="circle">
                 <template #icon><i-plus /></template>
               </t-button>
@@ -45,7 +45,9 @@
             <div
               class="addBetween addBetween--right"
               :class="{ expanded: hoveredIndex === index }"
-              @click.stop="editStoryboaryImage([item.src || '', index < (storyboard?.length ?? 0) - 1 ? storyboard[index + 1]?.src || '' : ''])">
+              @click.stop="
+                editStoryboaryImage([item.src || '', index < (storyboard?.length ?? 0) - 1 ? storyboard[index + 1]?.src || '' : ''], null, index)
+              ">
               <t-button theme="primary" variant="outline" shape="circle">
                 <template #icon><i-plus /></template>
               </t-button>
@@ -77,6 +79,7 @@ interface Storyboard {
   description: string;
   camera: string;
   duration: number;
+  prompt?: string;
   frameMode: "firstFrame" | "endFrame" | "linesSoundEffects";
   lines: string | null;
   sound: string | null;
@@ -109,9 +112,11 @@ function setHoveredFrame(index: number | null) {
 const currentRow = ref<{
   images: string[];
   id: number | null;
+  insertAfterIndex: number | null;
 }>({
   images: [],
   id: null,
+  insertAfterIndex: null,
 });
 
 const tagColors = ["#5bccb3", "#9c7cfc", "#fbbf24", "#5b9afc", "#e86b6b", "#7cb8fc", "#e8a855", "#34d399"];
@@ -193,32 +198,43 @@ async function previewAll() {
   }
 }
 
-function editStoryboaryImage(images: string[], id: number | null = null) {
+function editStoryboaryImage(images: string[], id: number | null = null, insertAfterIndex: number | null = null) {
   currentRow.value = {
     images: images.filter(Boolean),
     id,
+    insertAfterIndex,
   };
   visible.value = true;
 }
 
-async function getStoryboardFlowData() {
-  console.log("%c Line:103 🍩", "background:#2eafb0", "获取分镜工作流数据");
-  if (!currentRow.value.id) return null;
-  try {
-    const { data } = await axios.post("/production/editImage/getImageFlow", {
-      id: currentRow.value?.id,
-      type: "storyboard",
-    });
-    return data;
-  } catch (e) {
-    throw e;
-  }
-}
-
-async function save(imageUrl: string) {
-  // 更新对应分镜的 src
+async function save({ imageUrl, insertId }: { imageUrl: string; insertId: number }) {
   if (!imageUrl) return;
-  const target = storyboard.value.find((s) => s.id === currentRow.value.id);
+
+  const { id, insertAfterIndex } = currentRow.value;
+
+  // 插入模式：在两张图之间新增一条分镜
+  if (id === null && insertAfterIndex !== null) {
+    const newId = insertId;
+    const newFrame: Storyboard = {
+      id: newId,
+      title: "",
+      description: "",
+      camera: "",
+      duration: 0,
+      prompt: "",
+      frameMode: "firstFrame",
+      lines: null,
+      sound: null,
+      associateAssetsIds: [],
+      src: imageUrl,
+      state: "已完成",
+    };
+    storyboard.value.splice(insertAfterIndex + 1, 0, newFrame);
+    return;
+  }
+
+  // 更新模式：更新对应分镜的 src
+  const target = storyboard.value.find((s) => s.id === id);
   if (target) target.src = imageUrl;
 }
 </script>

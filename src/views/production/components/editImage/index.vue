@@ -197,6 +197,7 @@ const addUploadNode = (type: string, image: string = "") => {
 async function sureNode(imageUrl: string = "") {
   try {
     const id = props.editData?.id;
+    let insertId = "";
     if (flowId.value) {
       await axios.post("/production/editImage/updateImageFlow", {
         id: id,
@@ -207,15 +208,16 @@ async function sureNode(imageUrl: string = "") {
         type: props.type,
       });
     } else {
-      await axios.post("/production/editImage/saveImageFlow", {
+      const { data } = await axios.post("/production/editImage/saveImageFlow", {
         id: id,
         nodes: nodes.value,
         edges: edges.value,
         imageUrl,
         type: props.type,
       });
+      insertId = data?.id || null;
     }
-    emit("save", imageUrl);
+    emit("save", { imageUrl, insertId });
     visible.value = false;
   } catch (e) {
     window.$message.error((e as any).message || "保存失败");
