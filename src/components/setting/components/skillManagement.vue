@@ -4,48 +4,48 @@
       <div class="leftTools">
         <t-button theme="danger" @click="scanSkills">
           <template #icon><t-icon name="refresh" /></template>
-          扫描Skills
+          {{ $t("settings.skill.scanSkills") }}
         </t-button>
         <t-button theme="primary" @click="openSkillEditor(null)">
           <template #icon><t-icon name="add" /></template>
-          新增 Skill
+          {{ $t("settings.skill.addSkill") }}
         </t-button>
         <t-button theme="default" variant="outline" @click="showImportSkill = !showImportSkill" v-if="false">
           <template #icon><t-icon name="upload" /></template>
-          Toonflow-Hub 导入
+          {{ $t("settings.skill.importFromHub") }}
         </t-button>
       </div>
       <div class="rightTools">
-        <t-select v-model="filterType" placeholder="类型" clearable style="width: 120px" @change="getData">
-          <t-option value="main" label="核心" />
-          <t-option value="references" label="技法" />
+        <t-select v-model="filterType" :placeholder="$t('settings.skill.filterType')" clearable style="width: 120px" @change="getData">
+          <t-option value="main" :label="$t('settings.skill.typeMain')" />
+          <t-option value="references" :label="$t('settings.skill.typeReferences')" />
         </t-select>
         <t-select
           v-model="filterAttributions"
-          placeholder="归属"
+          :placeholder="$t('settings.skill.filterAttribution')"
           multiple
           clearable
           :options="attributionOptions"
           style="width: 200px"
           @change="getData" />
-        <t-input v-model="searchText" placeholder="按名称搜索 skill" clearable style="width: 220px" @enter="getData" />
+        <t-input v-model="searchText" :placeholder="$t('settings.skill.searchPlaceholder')" clearable style="width: 220px" @enter="getData" />
         <t-button theme="default" @click="getData">
           <template #icon><t-icon name="search" /></template>
-          查询
+          {{ $t("settings.skill.search") }}
         </t-button>
       </div>
     </div>
 
     <t-loading :loading="loading" class="skillLoading">
       <div class="table">
-        <div class="info">共 {{ pagination.total }} 条 Skill</div>
+        <div class="info">{{ $t("settings.skill.totalCount", { count: pagination.total }) }}</div>
         <div class="item" v-for="(item, index) in tableData" :key="index">
           <div class="topInfo f ac jb">
             <div class="f ac">
               <div class="name">{{ item.type === "main" ? getAttributionLabel(item.path) : item.name }}</div>
               <div class="type f">
-                <t-tag size="small" v-if="item.type == 'main'" theme="danger" variant="outline">核心</t-tag>
-                <t-tag size="small" v-if="item.type == 'references'" theme="success" variant="outline">技法</t-tag>
+                <t-tag size="small" v-if="item.type == 'main'" theme="danger" variant="outline">{{ $t("settings.skill.typeMain") }}</t-tag>
+                <t-tag size="small" v-if="item.type == 'references'" theme="success" variant="outline">{{ $t("settings.skill.typeReferences") }}</t-tag>
                 <t-tag
                   size="small"
                   v-if="item.attributions && item.attributions.length > 0"
@@ -56,22 +56,22 @@
                   {{ getAttributionLabel(attr) }}
                 </t-tag>
                 <template v-else-if="item.type !== 'main'">
-                  <t-tag size="small" theme="danger">无归属</t-tag>
-                  <span>⚠️无归属，无法启用Skill</span>
+                  <t-tag size="small" theme="danger">{{ $t("settings.skill.noAttribution") }}</t-tag>
+                  <span>{{ $t("settings.skill.noAttributionTip") }}</span>
                 </template>
-                <span v-if="!item.embedding && item.type !== 'main'">⚠️未向量化，无法启用Skill</span>
+                <span v-if="!item.embedding && item.type !== 'main'">{{ $t("settings.skill.noEmbeddingTip") }}</span>
               </div>
             </div>
             <div class="state">
               <template v-if="!item.embedding && item.type !== 'main'">
-                <t-tag size="small" theme="danger">未向量化</t-tag>
+                <t-tag size="small" theme="danger">{{ $t("settings.skill.notEmbedded") }}</t-tag>
               </template>
               <template v-else>
-                <t-tag size="small" v-if="item.state == 1 || item.type == 'main'" theme="success">正常</t-tag>
-                <t-tag size="small" v-else-if="item.state == 0" theme="warning">生成描述中</t-tag>
-                <t-tag size="small" v-else-if="item.state == -1" theme="danger">描述为空</t-tag>
-                <t-tag size="small" v-else-if="item.state == -2" theme="danger">归属异常</t-tag>
-                <t-tag size="small" v-else-if="item.state == -3" theme="danger" variant="outline">MD5变动，建议更新描述</t-tag>
+                <t-tag size="small" v-if="item.state == 1 || item.type == 'main'" theme="success">{{ $t("settings.skill.stateNormal") }}</t-tag>
+                <t-tag size="small" v-else-if="item.state == 0" theme="warning">{{ $t("settings.skill.stateGenerating") }}</t-tag>
+                <t-tag size="small" v-else-if="item.state == -1" theme="danger">{{ $t("settings.skill.stateEmptyDesc") }}</t-tag>
+                <t-tag size="small" v-else-if="item.state == -2" theme="danger">{{ $t("settings.skill.stateAttrError") }}</t-tag>
+                <t-tag size="small" v-else-if="item.state == -3" theme="danger" variant="outline">{{ $t("settings.skill.stateMd5Changed") }}</t-tag>
               </template>
             </div>
           </div>
@@ -89,15 +89,15 @@
                 :loading="embeddingSkillIds.has(item.id)"
                 @click="embeddingSkill(item)">
                 <template #icon><i-coordinate-system /></template>
-                向量化
+                {{ $t("settings.skill.embedding") }}
               </t-button>
               <t-button variant="text" size="small" @click="openSkillEditor(item)">
                 <template #icon><t-icon name="edit" /></template>
-                编辑
+                {{ $t("settings.skill.edit") }}
               </t-button>
               <t-button theme="danger" variant="text" size="small" @click="deleteSkill(item)" v-if="item.type !== 'main'">
                 <template #icon><t-icon name="delete" /></template>
-                删除
+                {{ $t("settings.skill.delete") }}
               </t-button>
             </div>
           </div>
@@ -113,9 +113,9 @@
         @page-size-change="getData" />
     </t-loading>
   </div>
-  <t-dialog placement="top" header="从 Toonflow-Hub 导入" v-model:visible="showImportSkill">
+  <t-dialog placement="top" :header="$t('settings.skill.importFromHubDialog')" v-model:visible="showImportSkill">
     <div class="inputBox f ac">
-      <span class="title">分享链接</span>
+      <span class="title">{{ $t("settings.skill.shareLink") }}</span>
       <t-input v-model="shareUrl"></t-input>
     </div>
     <div class="tips" @click="jumpToonflowHub">
@@ -126,7 +126,7 @@
   <!-- 新增 / 编辑 统一弹窗 -->
   <t-dialog
     v-model:visible="editorVisible"
-    :header="isEdit ? `编辑 Skill-${editorForm.name}` : '新增 Skill'"
+    :header="isEdit ? `${$t('settings.skill.editSkillTitle')}${editorForm.name}` : $t('settings.skill.addSkillTitle')"
     :confirm-btn="null"
     :cancel-btn="null"
     placement="center"
@@ -137,19 +137,19 @@
       <div class="editorBody">
         <div class="editorSidebar" v-if="editorForm.type !== 'main'">
           <t-form labelAlign="top">
-            <t-form-item label="Skill 名称">
-              <t-input v-model="editorForm.name" placeholder="例如：writing-assistant" />
+            <t-form-item :label="$t('settings.skill.skillName')">
+              <t-input v-model="editorForm.name" :placeholder="$t('settings.skill.skillNamePlaceholder')" />
             </t-form-item>
-            <t-form-item label="路径" v-if="editorForm.path">
+            <t-form-item :label="$t('settings.skill.path')" v-if="editorForm.path">
               <t-input v-model="editorForm.path" disabled />
             </t-form-item>
-            <t-form-item label="归属 Agent">
-              <t-select v-model="editorForm.attributions" multiple :options="attributionOptions" placeholder="选择归属 Agent" />
+            <t-form-item :label="$t('settings.skill.attributionAgent')">
+              <t-select v-model="editorForm.attributions" multiple :options="attributionOptions" :placeholder="$t('settings.skill.selectAttribution')" />
             </t-form-item>
             <t-form-item class="descItem">
               <template #label>
                 <div class="descLabel">
-                  <span>描述</span>
+                  <span>{{ $t("settings.skill.description") }}</span>
                   <t-button
                     theme="primary"
                     size="small"
@@ -157,7 +157,7 @@
                     :disabled="!editorForm.content.trim()"
                     @click="generateDescription">
                     <template #icon><i-star /></template>
-                    AI生成
+                    {{ $t("settings.skill.aiGenerate") }}
                   </t-button>
                 </div>
               </template>
@@ -165,7 +165,7 @@
                 v-model="editorForm.description"
                 :autosize="false"
                 :disabled="generatingDescription"
-                placeholder="描述这个 skill 的用途"
+                :placeholder="$t('settings.skill.descriptionPlaceholder')"
                 class="descTextarea" />
             </t-form-item>
           </t-form>
@@ -185,9 +185,9 @@
     </div>
     <template #footer>
       <div class="editorFooter">
-        <t-button theme="default" @click="editorVisible = false">取消</t-button>
+        <t-button theme="default" @click="editorVisible = false">{{ $t("settings.skill.cancel") }}</t-button>
         <t-button theme="primary" @click="saveSkill">
-          {{ isEdit ? "保存" : "创建 Skill" }}
+          {{ isEdit ? $t("settings.skill.save") : $t("settings.skill.createSkill") }}
         </t-button>
       </div>
     </template>
@@ -239,13 +239,13 @@ type SkillAttribution =
   | "universal_agent.md";
 
 const attributionOptions = [
-  { value: "production_agent_decision.md", label: "视频生产-执行导演" },
-  { value: "production_agent_execution.md", label: "视频生产-摄影指导" },
-  { value: "production_agent_supervision.md", label: "视频生产-监制" },
-  { value: "script_agent_decision.md", label: "剧本Agent-统筹" },
-  { value: "script_agent_execution.md", label: "剧本Agent-编剧" },
-  { value: "script_agent_supervision.md", label: "剧本Agent-编辑" },
-  { value: "universal_agent.md", label: "制片助理" },
+  { value: "production_agent_decision.md", label: $t("settings.skill.attr.productionDecision") },
+  { value: "production_agent_execution.md", label: $t("settings.skill.attr.productionExecution") },
+  { value: "production_agent_supervision.md", label: $t("settings.skill.attr.productionSupervision") },
+  { value: "script_agent_decision.md", label: $t("settings.skill.attr.scriptDecision") },
+  { value: "script_agent_execution.md", label: $t("settings.skill.attr.scriptExecution") },
+  { value: "script_agent_supervision.md", label: $t("settings.skill.attr.scriptSupervision") },
+  { value: "universal_agent.md", label: $t("settings.skill.attr.universalAgent") },
 ];
 
 interface SkillListItem {
@@ -265,7 +265,7 @@ const tableData = ref<SkillListItem[]>([]);
 
 async function scanSkills() {
   const { data } = await axios.post("/setting/skillManagement/scanSkills");
-  window.$message.success(`扫描成功，共扫描到 ${data.totalFiles} 个 Skill 文件`);
+  window.$message.success($t("settings.skill.msg.scanSuccess", { count: data.totalFiles }));
   getData();
 }
 
@@ -283,7 +283,7 @@ async function getData() {
     tableData.value = data.list;
     pagination.value.total = Number(data.total);
   } catch (error: any) {
-    window.$message.error(error?.message || "获取 skill 列表失败");
+    window.$message.error(error?.message || $t("settings.skill.msg.fetchListFailed"));
     tableData.value = [];
     pagination.value.total = 0;
   } finally {
@@ -337,7 +337,7 @@ function onMdPaste(e: ClipboardEvent) {
 async function generateDescription() {
   const content = editorForm.value.content.trim();
   if (!content) {
-    window.$message.warning("请先填写 Markdown 内容");
+    window.$message.warning($t("settings.skill.msg.fillContentFirst"));
     return;
   }
   generatingDescription.value = true;
@@ -346,9 +346,9 @@ async function generateDescription() {
       content,
     });
     editorForm.value.description = data || "";
-    window.$message.success("描述生成成功");
+    window.$message.success($t("settings.skill.msg.descGenSuccess"));
   } catch (error: any) {
-    window.$message.error(error?.message || "描述生成失败");
+    window.$message.error(error?.message || $t("settings.skill.msg.descGenFailed"));
   } finally {
     generatingDescription.value = false;
   }
@@ -356,11 +356,11 @@ async function generateDescription() {
 
 async function saveSkill() {
   if (!editorForm.value.name.trim()) {
-    window.$message.warning("请先填写 Skill 名称");
+    window.$message.warning($t("settings.skill.msg.fillNameFirst"));
     return;
   }
   if (!editorForm.value.content.trim()) {
-    window.$message.warning("请先填写 Markdown 内容");
+    window.$message.warning($t("settings.skill.msg.fillContentFirst"));
     return;
   }
   try {
@@ -372,7 +372,7 @@ async function saveSkill() {
         content: editorForm.value.content,
         attributions: editorForm.value.attributions,
       });
-      window.$message.success("Skill 更新成功");
+      window.$message.success($t("settings.skill.msg.updateSuccess"));
     } else {
       await axios.post("/setting/skillManagement/addSkill", {
         name: editorForm.value.name,
@@ -380,26 +380,26 @@ async function saveSkill() {
         content: editorForm.value.content,
         attributions: editorForm.value.attributions,
       });
-      window.$message.success("Skill 创建成功");
+      window.$message.success($t("settings.skill.msg.createSuccess"));
     }
     editorVisible.value = false;
     getData();
   } catch (error: any) {
-    window.$message.error(error?.message || (isEdit.value ? "Skill 更新失败" : "Skill 创建失败"));
+    window.$message.error(error?.message || (isEdit.value ? $t("settings.skill.msg.updateFailed") : $t("settings.skill.msg.createFailed")));
   }
 }
 
 async function deleteSkill(row: SkillListItem) {
   const dialog = DialogPlugin.confirm({
-    header: "确认删除",
-    body: `确定要删除 Skill「${row.name}」吗？此操作不可恢复。`,
+    header: $t("settings.skill.msg.deleteConfirmTitle"),
+    body: $t("settings.skill.msg.deleteConfirmBody", { name: row.name }),
     onConfirm: async () => {
       try {
         await axios.post("/setting/skillManagement/deleteSkill", { id: row.id });
-        window.$message.success("删除成功");
+        window.$message.success($t("settings.skill.msg.deleteSuccess"));
         getData();
       } catch (error: any) {
-        window.$message.error(error?.message || "删除失败");
+        window.$message.error(error?.message || $t("settings.skill.msg.deleteFailed"));
       }
       dialog.destroy();
     },
@@ -437,10 +437,10 @@ async function embeddingSkill(row: SkillListItem) {
   embeddingSkillIds.value.add(row.id);
   try {
     await axios.post("/setting/skillManagement/embeddingSkill", { id: row.id });
-    window.$message.success("向量化成功");
+    window.$message.success($t("settings.skill.msg.embeddingSuccess"));
     getData();
   } catch (error: any) {
-    window.$message.error(error?.message || "向量化失败");
+    window.$message.error(error?.message || $t("settings.skill.msg.embeddingFailed"));
   } finally {
     embeddingSkillIds.value.delete(row.id);
   }

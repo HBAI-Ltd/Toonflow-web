@@ -332,6 +332,9 @@
         "serveDesc": "バックエンドサービス関連ファイル。"
       },
       "openFailed": "フォルダを開けませんでした"
+    },
+    "skill": {
+      "scanSkills": "スキャンスキル"
     }
   },
   "workbench": {

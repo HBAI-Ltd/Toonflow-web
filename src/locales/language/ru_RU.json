@@ -332,6 +332,9 @@
         "serveDesc": "Файлы бэкенд-сервисов."
       },
       "openFailed": "Не удалось открыть папку"
+    },
+    "skill": {
+      "scanSkills": "ScanSkills"
     }
   },
   "workbench": {

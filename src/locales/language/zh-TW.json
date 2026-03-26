@@ -332,6 +332,9 @@
         "serveDesc": "後端服務相關檔案。"
       },
       "openFailed": "開啟資料夾失敗"
+    },
+    "skill": {
+      "scanSkills": "掃描Skills"
     }
   },
   "workbench": {
