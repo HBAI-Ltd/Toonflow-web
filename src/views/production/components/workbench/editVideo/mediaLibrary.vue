@@ -189,6 +189,37 @@ const mediaItems = ref<MediaItem[]>([...props.initialMediaItems]);
 const audioItems = ref<AudioItem[]>([...props.initialAudioItems]);
 const imageItems = ref<MediaItem[]>([...props.initialImageItems]);
 const textItems = ref(getTextItems());
+
+// 监听 props 变化，同步更新本地数据并加载缩略图/波形
+watch(
+  () => props.initialMediaItems,
+  (newItems) => {
+    mediaItems.value = [...newItems];
+    if (newItems.length > 0) {
+      loadVideoThumbnails();
+    }
+  },
+);
+
+watch(
+  () => props.initialAudioItems,
+  (newItems) => {
+    audioItems.value = [...newItems];
+    if (newItems.length > 0) {
+      loadAudioWaveforms();
+    }
+  },
+);
+
+watch(
+  () => props.initialImageItems,
+  (newItems) => {
+    imageItems.value = [...newItems];
+    if (newItems.length > 0) {
+      loadImageThumbnails();
+    }
+  },
+);
 const transitionItems = ref(getTransitionItems());
 const effectItems = ref(getEffectItems());
 const filterItems = ref(getFilterItems());

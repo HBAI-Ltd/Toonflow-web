@@ -17,22 +17,22 @@
                   <template #icon>
                     <t-icon name="add" />
                   </template>
-                  {{ $t('workbench.assets.addPrefix') }}{{ item.name }}
+                  {{ $t("workbench.assets.addPrefix") }}{{ item.name }}
                 </t-button>
                 <t-popup placement="bottom">
                   <t-button theme="primary" v-if="assetOptions != 'clip'">
                     <template #icon>
                       <t-icon name="indent-left" />
                     </template>
-                    {{ $t('workbench.assets.batchGenerate') }}
+                    {{ $t("workbench.assets.batchGenerate") }}
                   </t-button>
                   <template #content>
                     <div class="data">
                       <div class="generatePrompt">
-                        <span @click="batchGeneration(1)">{{ $t('workbench.assets.generatePrompt') }}</span>
+                        <span @click="batchGeneration(1)">{{ $t("workbench.assets.generatePrompt") }}</span>
                       </div>
                       <div class="generateImage">
-                        <span @click="batchGeneration(2)">{{ $t('workbench.assets.generateImage') }}</span>
+                        <span @click="batchGeneration(2)">{{ $t("workbench.assets.generateImage") }}</span>
                       </div>
                     </div>
                   </template>
@@ -41,7 +41,7 @@
                   <template #icon>
                     <t-icon name="delete" />
                   </template>
-                  {{ $t('workbench.assets.batchDelete') }}
+                  {{ $t("workbench.assets.batchDelete") }}
                 </t-button>
               </t-space>
               <div class="f ac">
@@ -50,7 +50,7 @@
                   <template #icon>
                     <t-icon name="search" />
                   </template>
-                  {{ $t('workbench.assets.search') }}
+                  {{ $t("workbench.assets.search") }}
                 </t-button>
               </div>
             </div>
@@ -88,7 +88,7 @@
                                 </div>
                                 <div v-if="subRow.src" class="imageHoverOverlay">
                                   <t-icon name="browse" size="20px" />
-                                  <span class="hoverText">{{ $t('workbench.assets.preview') }}</span>
+                                  <span class="hoverText">{{ $t("workbench.assets.preview") }}</span>
                                 </div>
                               </div>
                             </template>
@@ -101,19 +101,19 @@
                             <template #icon>
                               <i-magic :size="18" />
                             </template>
-                            {{ $t('workbench.assets.generate') }}
+                            {{ $t("workbench.assets.generate") }}
                           </t-button>
                           <t-button theme="primary" variant="text" @click="handleEdit(subRow)">
                             <template #icon>
                               <t-icon name="edit" />
                             </template>
-                            {{ $t('workbench.assets.edit') }}
+                            {{ $t("workbench.assets.edit") }}
                           </t-button>
                           <t-button theme="danger" variant="text" @click="handleDelete(subRow)">
                             <template #icon>
                               <t-icon name="delete" />
                             </template>
-                            {{ $t('workbench.assets.delete') }}
+                            {{ $t("workbench.assets.delete") }}
                           </t-button>
                         </t-space>
                       </template>
@@ -131,7 +131,7 @@
                           </div>
                           <div v-if="row.src" class="imageHoverOverlay">
                             <t-icon name="browse" size="20px" />
-                            <span class="hoverText">{{ $t('workbench.assets.preview') }}</span>
+                            <span class="hoverText">{{ $t("workbench.assets.preview") }}</span>
                           </div>
                         </div>
                       </template>
@@ -148,7 +148,7 @@
                   <div class="previewCell">
                     <div v-if="generatingImageIds.has(row.id)" class="imageTrigger generatingImage">
                       <t-loading size="small" />
-                      <span class="generatingLabel">{{ $t('workbench.assets.generating') }}</span>
+                      <span class="generatingLabel">{{ $t("workbench.assets.generating") }}</span>
                     </div>
                     <t-image-viewer v-else :images="[row.src]" :closeOnEscKeydown="true" :closeOnOverlay="true">
                       <template #trigger="{ open }">
@@ -159,7 +159,7 @@
                           </div>
                           <div v-if="row.src" class="imageHoverOverlay">
                             <t-icon name="browse" size="20px" />
-                            <span class="hoverText">{{ $t('workbench.assets.preview') }}</span>
+                            <span class="hoverText">{{ $t("workbench.assets.preview") }}</span>
                           </div>
                         </div>
                       </template>
@@ -175,19 +175,19 @@
                       <template #icon>
                         <i-magic :size="18" />
                       </template>
-                      {{ $t('workbench.assets.generate') }}
+                      {{ $t("workbench.assets.generate") }}
                     </t-button>
                     <t-button theme="primary" variant="text" @click="handleEdit(row)">
                       <template #icon>
                         <t-icon name="edit" />
                       </template>
-                      {{ $t('workbench.assets.edit') }}
+                      {{ $t("workbench.assets.edit") }}
                     </t-button>
                     <t-button theme="danger" variant="text" :disabled="isGenerating(row.id)" @click="handleDelete(row)">
                       <template #icon>
                         <t-icon name="delete" />
                       </template>
-                      {{ $t('workbench.assets.delete') }}
+                      {{ $t("workbench.assets.delete") }}
                     </t-button>
                   </t-space>
                 </template>
@@ -217,7 +217,7 @@
                           <img :src="row.src" :alt="row.name" />
                           <div class="mediaHoverOverlay">
                             <t-icon name="browse" size="20px" />
-                            <span class="hoverText">{{ $t('workbench.assets.preview') }}</span>
+                            <span class="hoverText">{{ $t("workbench.assets.preview") }}</span>
                           </div>
                         </div>
                       </template>
@@ -226,14 +226,14 @@
                       <video :src="row.src" class="thumbVideo" />
                       <div class="mediaHoverOverlay">
                         <t-icon name="play-circle" size="24px" />
-                        <span class="hoverText">{{ $t('workbench.assets.play') }}</span>
+                        <span class="hoverText">{{ $t("workbench.assets.play") }}</span>
                       </div>
                     </div>
                     <div v-else-if="getMediaType(row.src) === 'audio'" class="mediaTrigger audioThumb" @click="openMediaPreview(row.src, row.name)">
                       <t-icon name="music" size="28px" />
                       <div class="mediaHoverOverlay">
                         <t-icon name="play-circle" size="24px" />
-                        <span class="hoverText">{{ $t('workbench.assets.play') }}</span>
+                        <span class="hoverText">{{ $t("workbench.assets.play") }}</span>
                       </div>
                     </div>
                     <div v-else class="mediaTrigger noMedia">
@@ -250,13 +250,13 @@
                       <template #icon>
                         <t-icon name="edit" />
                       </template>
-                      {{ $t('workbench.assets.edit') }}
+                      {{ $t("workbench.assets.edit") }}
                     </t-button>
                     <t-button theme="danger" variant="text" @click="handleDelete(row)">
                       <template #icon>
                         <t-icon name="delete" />
                       </template>
-                      {{ $t('workbench.assets.delete') }}
+                      {{ $t("workbench.assets.delete") }}
                     </t-button>
                   </t-space>
                 </template>
@@ -303,7 +303,7 @@
       @confirm="keep"
       @close="batchGenerationShow = false">
       <div class="batch">
-        <span>{{ $t('workbench.assets.confirmBatch', { type: batchType }) }}</span>
+        <span>{{ $t("workbench.assets.confirmBatch", { type: batchType }) }}</span>
         <t-form labelAlign="top">
           <t-form-item :label="$t('workbench.assets.model')" name="selectValue" v-if="batchType === $t('workbench.assets.batchGenImage')">
             <modelSelect v-model="selectValue" :type="`image`" />
@@ -353,22 +353,22 @@ const { project } = storeToRefs(projectStore());
 
 const allThemeData = [
   {
-    name: $t('workbench.assets.role'),
+    name: $t("workbench.assets.role"),
     value: "role",
     icon: "i-permissions",
   },
   {
-    name: $t('workbench.assets.prop'),
+    name: $t("workbench.assets.prop"),
     value: "tool",
     icon: "i-tool",
   },
   {
-    name: $t('workbench.assets.scene'),
+    name: $t("workbench.assets.scene"),
     value: "scene",
     icon: "i-landscape",
   },
   {
-    name: $t('workbench.assets.clip'),
+    name: $t("workbench.assets.clip"),
     value: "clip",
     icon: "i-editing",
   },
@@ -379,7 +379,12 @@ const initialTab = (themeData.value[0]?.value || "role") as "role" | "tool" | "s
 const assetOptions = ref<"role" | "tool" | "scene" | "clip">(initialTab);
 const searchText = ref("");
 
-const tabNameMap: Record<string, string> = { role: $t('workbench.assets.role'), tool: $t('workbench.assets.prop'), scene: $t('workbench.assets.scene'), clip: $t('workbench.assets.clip') };
+const tabNameMap: Record<string, string> = {
+  role: $t("workbench.assets.role"),
+  tool: $t("workbench.assets.prop"),
+  scene: $t("workbench.assets.scene"),
+  clip: $t("workbench.assets.clip"),
+};
 const selectedRowKeys = ref<Array<string | number>>([]);
 const expandedRowKeys = ref<Array<string | number>>([]);
 const loading = ref(false);
@@ -484,13 +489,12 @@ async function handleAdd(type: string) {
     const reader = new FileReader();
     reader.onload = async (e) => {
       const base64 = reader.result as string;
-
       await axios.post("/assets/uploadClip", {
         projectId: project.value?.id,
         base64Data: base64,
         name: file.name,
       });
-      window.$message.success($t('workbench.assets.uploadSuccess'));
+      window.$message.success($t("workbench.assets.uploadSuccess"));
       getFilteredData(assetOptions.value);
     };
     reader.readAsDataURL(file);
@@ -510,13 +514,13 @@ const selectValue = ref(""); //选择的模型
 const resolution = ref("1k"); //选择的分辨率
 const batchType = ref("");
 function batchGeneration(type: number) {
-  batchType.value = type === 1 ? $t('workbench.assets.batchGenPrompt') : $t('workbench.assets.batchGenImage');
+  batchType.value = type === 1 ? $t("workbench.assets.batchGenPrompt") : $t("workbench.assets.batchGenImage");
   batchGenerationShow.value = true;
 }
 function keep() {
-  if (batchType.value === $t('workbench.assets.batchGenPrompt')) {
+  if (batchType.value === $t("workbench.assets.batchGenPrompt")) {
     handleBatchGeneratePrompt();
-  } else if (batchType.value === $t('workbench.assets.batchGenImage')) {
+  } else if (batchType.value === $t("workbench.assets.batchGenImage")) {
     handleBatchGenerateImage();
   }
 }
@@ -524,7 +528,7 @@ function keep() {
 async function handleBatchGeneratePrompt() {
   const selectedAssets = tableData.value.filter((item: any) => selectedRowKeys.value.includes(item.id));
   if (selectedAssets.length === 0) {
-    window.$message.warning($t('workbench.assets.selectAtLeastOne'));
+    window.$message.warning($t("workbench.assets.selectAtLeastOne"));
     return;
   }
   const newSet = new Set(generatingIds.value);
@@ -540,12 +544,12 @@ async function handleBatchGeneratePrompt() {
         assetsId: asset.id,
         type: asset.type ?? "props",
         name: asset.name,
-        describe: asset.describe ? asset.describe : $t('workbench.assets.noDescription'),
+        describe: asset.describe ? asset.describe : $t("workbench.assets.noDescription"),
       });
       await getFilteredData(assetOptions.value);
-      window.$message.success($t('workbench.assets.promptGenSuccess', { name: asset.name }));
+      window.$message.success($t("workbench.assets.promptGenSuccess", { name: asset.name }));
     } catch (e: any) {
-      window.$message.error($t('workbench.assets.promptGenFail', { name: asset.name, error: e.message ?? '' }));
+      window.$message.error($t("workbench.assets.promptGenFail", { name: asset.name, error: e.message ?? "" }));
     } finally {
       const s = new Set(generatingIds.value);
       s.delete(asset.id);
@@ -557,15 +561,15 @@ async function handleBatchGeneratePrompt() {
 async function handleBatchGenerateImage() {
   const selectedAssets = tableData.value.filter((item: any) => selectedRowKeys.value.includes(item.id));
   if (selectedAssets.length === 0) {
-    window.$message.warning($t('workbench.assets.selectAtLeastOne'));
+    window.$message.warning($t("workbench.assets.selectAtLeastOne"));
     return;
   }
   if (!selectValue.value) {
-    window.$message.error($t('workbench.assets.selectModel'));
+    window.$message.error($t("workbench.assets.selectModel"));
     return;
   }
   if (!resolution.value) {
-    window.$message.error($t('workbench.assets.selectResolution'));
+    window.$message.error($t("workbench.assets.selectResolution"));
     return;
   }
 
@@ -577,7 +581,7 @@ async function handleBatchGenerateImage() {
 
   for (const asset of selectedAssets) {
     if (!asset.prompt) {
-      window.$message.warning($t('workbench.assets.noPromptForImage', { name: asset.name }));
+      window.$message.warning($t("workbench.assets.noPromptForImage", { name: asset.name }));
       const s = new Set(generatingImageIds.value);
       s.delete(asset.id);
       generatingImageIds.value = s;
@@ -595,9 +599,9 @@ async function handleBatchGenerateImage() {
         resolution: resolution.value,
       });
       await getFilteredData(assetOptions.value);
-      window.$message.success($t('workbench.assets.imageGenSuccess', { name: asset.name }));
+      window.$message.success($t("workbench.assets.imageGenSuccess", { name: asset.name }));
     } catch (e: any) {
-      window.$message.error($t('workbench.assets.imageGenFail', { name: asset.name, error: e.message ?? '' }));
+      window.$message.error($t("workbench.assets.imageGenFail", { name: asset.name, error: e.message ?? "" }));
     } finally {
       const s = new Set(generatingImageIds.value);
       s.delete(asset.id);
@@ -609,18 +613,18 @@ async function handleBatchGenerateImage() {
 function handleBatchDelete() {
   const selectedAssets = tableData.value.filter((item: any) => selectedRowKeys.value.includes(item.id));
   if (selectedAssets.length === 0) {
-    window.$message.warning($t('workbench.assets.selectAtLeastOne'));
+    window.$message.warning($t("workbench.assets.selectAtLeastOne"));
     return;
   }
   const dialog = DialogPlugin.confirm({
-    header: $t('workbench.assets.confirmDeleteHeader'),
-    body: $t('workbench.assets.confirmBatchDeleteBody'),
-    confirmBtn: $t('workbench.assets.deleteBtn'),
-    cancelBtn: $t('workbench.assets.cancelBtn'),
+    header: $t("workbench.assets.confirmDeleteHeader"),
+    body: $t("workbench.assets.confirmBatchDeleteBody"),
+    confirmBtn: $t("workbench.assets.deleteBtn"),
+    cancelBtn: $t("workbench.assets.cancelBtn"),
     theme: "warning",
     onConfirm: async () => {
       await axios.post("/assets/batchDelete", { id: selectedAssets.map((asset) => asset.id) });
-      window.$message.success($t('workbench.assets.deleteSuccess'));
+      window.$message.success($t("workbench.assets.deleteSuccess"));
       getFilteredData(assetOptions.value);
       dialog.destroy();
     },
@@ -639,21 +643,21 @@ const columns: TableProps["columns"] = [
   },
   {
     colKey: "src",
-    title: $t('workbench.assets.colPreview'),
+    title: $t("workbench.assets.colPreview"),
     width: 100,
     align: "center",
     cell: "previewWithLoading",
   },
   {
     colKey: "name",
-    title: $t('workbench.assets.colName'),
+    title: $t("workbench.assets.colName"),
     width: 100,
     align: "left",
     ellipsis: true,
   },
   {
     colKey: "prompt",
-    title: $t('workbench.assets.colPrompt'),
+    title: $t("workbench.assets.colPrompt"),
     width: 200,
     align: "left",
     ellipsis: true,
@@ -661,28 +665,28 @@ const columns: TableProps["columns"] = [
   },
   {
     colKey: "describe",
-    title: $t('workbench.assets.colDescribe'),
+    title: $t("workbench.assets.colDescribe"),
     width: 200,
     align: "left",
     ellipsis: true,
   },
   {
     colKey: "remark",
-    title: $t('workbench.assets.colRemark'),
+    title: $t("workbench.assets.colRemark"),
     minWidth: 200,
     align: "left",
     ellipsis: true,
   },
   {
     colKey: "startTime",
-    title: $t('workbench.assets.colCreateTime'),
+    title: $t("workbench.assets.colCreateTime"),
     width: 200,
     align: "center",
     cell: "startTime",
   },
   {
     colKey: "operation",
-    title: $t('workbench.assets.colOperation'),
+    title: $t("workbench.assets.colOperation"),
     width: 280,
     align: "center",
     fixed: "right",
@@ -694,42 +698,42 @@ const columns: TableProps["columns"] = [
 const subColumns: TableProps["columns"] = [
   {
     colKey: "src",
-    title: $t('workbench.assets.colPreview'),
+    title: $t("workbench.assets.colPreview"),
     width: 100,
     align: "center",
     cell: "preview",
   },
   {
     colKey: "name",
-    title: $t('workbench.assets.colName'),
+    title: $t("workbench.assets.colName"),
     width: 200,
     align: "left",
     ellipsis: true,
   },
   {
     colKey: "prompt",
-    title: $t('workbench.assets.colPrompt'),
+    title: $t("workbench.assets.colPrompt"),
     width: 200,
     align: "left",
     ellipsis: true,
   },
   {
     colKey: "describe",
-    title: $t('workbench.assets.colDescribe'),
+    title: $t("workbench.assets.colDescribe"),
     width: 200,
     align: "left",
     ellipsis: true,
   },
   {
     colKey: "remark",
-    title: $t('workbench.assets.colRemark'),
+    title: $t("workbench.assets.colRemark"),
     minWidth: 200,
     align: "left",
     ellipsis: true,
   },
   {
     colKey: "operation",
-    title: $t('workbench.assets.colOperation'),
+    title: $t("workbench.assets.colOperation"),
     width: 180,
     align: "center",
     fixed: "right",
@@ -742,42 +746,42 @@ const clipColumns: TableProps["columns"] = [
   { colKey: "row-select", type: "multiple", width: 50, align: "center", fixed: "left" },
   {
     colKey: "src",
-    title: $t('workbench.assets.colPreview'),
+    title: $t("workbench.assets.colPreview"),
     width: 100,
     align: "center",
     cell: "preview",
   },
   {
     colKey: "name",
-    title: $t('workbench.assets.colName'),
+    title: $t("workbench.assets.colName"),
     width: 200,
     align: "left",
     ellipsis: true,
   },
   {
     colKey: "describe",
-    title: $t('workbench.assets.colDescribe'),
+    title: $t("workbench.assets.colDescribe"),
     width: 200,
     align: "left",
     ellipsis: true,
   },
   {
     colKey: "remark",
-    title: $t('workbench.assets.colRemark'),
+    title: $t("workbench.assets.colRemark"),
     minWidth: 200,
     align: "left",
     ellipsis: true,
   },
   {
     colKey: "startTime",
-    title: $t('workbench.assets.colCreateTime'),
+    title: $t("workbench.assets.colCreateTime"),
     width: 200,
     align: "center",
     cell: "startTime",
   },
   {
     colKey: "operation",
-    title: $t('workbench.assets.colOperation'),
+    title: $t("workbench.assets.colOperation"),
     width: 180,
     align: "center",
     fixed: "right",
@@ -846,20 +850,20 @@ function handleEdit(row: any) {
 // 删除
 function handleDelete(row: any) {
   const dialog = DialogPlugin.confirm({
-    header: $t('workbench.assets.confirmDeleteHeader'),
-    body: $t('workbench.assets.confirmDeleteBody'),
-    confirmBtn: $t('workbench.assets.deleteBtn'),
-    cancelBtn: $t('workbench.assets.cancelBtn'),
+    header: $t("workbench.assets.confirmDeleteHeader"),
+    body: $t("workbench.assets.confirmDeleteBody"),
+    confirmBtn: $t("workbench.assets.deleteBtn"),
+    cancelBtn: $t("workbench.assets.cancelBtn"),
     theme: "warning",
     onConfirm: async () => {
       try {
         await axios.post("/assets/delAssets", { id: row.id });
-        window.$message.success($t('workbench.assets.deleteSuccess'));
+        window.$message.success($t("workbench.assets.deleteSuccess"));
         getFilteredData(assetOptions.value);
         dialog.destroy();
       } catch (error) {
         console.error("删除资产失败:", error);
-        window.$message.error($t('workbench.assets.deleteFail'));
+        window.$message.error($t("workbench.assets.deleteFail"));
         dialog.destroy();
       }
     },

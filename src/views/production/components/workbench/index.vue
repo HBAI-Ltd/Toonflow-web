@@ -86,57 +86,69 @@ const canvasHeight = ref(1080);
 // ============ 演示数据（可替换为在线资源地址） ============
 
 /** 资源库 - 视频素材 */
-const mockMediaItems: MediaItem[] = [
-  {
-    id: "video-1",
-    type: "video",
-    name: "Bunny 0",
-    duration: 0,
-    icon: "🎥",
-    color: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-    url: "https://webav-tech.github.io/WebAV/video/bunny_0.mp4",
-    loading: true,
-  },
-];
+const mockMediaItems = ref<MediaItem[]>([]);
 
 /** 资源库 - 音频素材 */
-const mockAudioItems: AudioItem[] = [
-  {
-    id: "audio-1",
-    type: "audio",
-    name: $t("workbench.production.wb.stereo441"),
-    duration: 0,
-    url: "https://webav-tech.github.io/WebAV/audio/16kHz-1chan.mp3",
-    loading: true,
-  },
-  {
-    id: "audio-2",
-    type: "audio",
-    name: $t("workbench.production.wb.mono16"),
-    duration: 0,
-    url: "https://webav-tech.github.io/WebAV/audio/16kHz-1chan.mp3",
-    loading: true,
-  },
-];
+const mockAudioItems = ref<AudioItem[]>([]);
 
 /** 资源库 - 图片素材 */
-const mockImageItems: MediaItem[] = [
-  {
-    id: "image-1",
-    type: "image",
-    name: $t("workbench.production.wb.sampleImage1"),
-    duration: 5,
-    icon: "🖼️",
-    color: "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
-    url: "https://webav-tech.github.io/WebAV/img/bunny.png",
-    loading: true,
-  },
-];
+const mockImageItems = ref<MediaItem[]>([]);
 
 const visible1 = ref(false);
 const extractLines = ref(false);
 const batchDownloadValue = ref<any>(null);
 const importLoading = ref(false);
+
+onMounted(() => {
+  editFootage();
+});
+type MediaType = "image" | "video" | "audio" | "unknown";
+
+function getMediaType(src?: string): MediaType {
+  if (!src) return "unknown";
+  const ext = src.split("?")[0].split(".").pop()?.toLowerCase() ?? "";
+  if (["png", "jpg", "jpeg", "gif", "webp", "bmp", "svg"].includes(ext)) return "image";
+  if (["mp4", "webm", "ogg", "mov", "avi", "mkv"].includes(ext)) return "video";
+  if (["mp3", "wav", "ogg", "aac", "flac", "m4a"].includes(ext)) return "audio";
+  return "unknown";
+}
+//查询剪辑素材
+function editFootage() {
+  axios.post("/assets/getMaterialData").then(({ data }) => {
+    const videoList = data.filter((item: any) => getMediaType(item.filePath) === "video");
+    const audioList = data.filter((item: any) => getMediaType(item.filePath) === "audio");
+    const imageList = data.filter((item: any) => getMediaType(item.filePath) === "image");
+
+    mockMediaItems.value = videoList.map((item: any) => ({
+      id: `video-${item.id}`,
+      type: "video",
+      name: item.name,
+      duration: item.duration || 0,
+      icon: "🎥",
+      color: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+      url: item.filePath,
+      loading: true,
+    }));
+    mockAudioItems.value = audioList.map((item: any) => ({
+      id: `audio-${item.id}`,
+      type: "audio",
+      name: item.name,
+      duration: item.duration || 0,
+      url: item.filePath,
+      loading: true,
+    }));
+    mockImageItems.value = imageList.map((item: any) => ({
+      id: `image-${item.id}`,
+      type: "image",
+      name: item.name,
+      duration: item.duration || 5,
+      icon: "🖼️",
+      color: "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
+      url: item.filePath,
+      loading: true,
+    }));
+  });
+}
 
 async function onConfirm() {
   visible1.value = false;
