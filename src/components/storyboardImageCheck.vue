@@ -156,7 +156,7 @@ async function getFilteredData() {
   try {
     loading.value = true;
     const { data } = await axios.post("/production/storyboard/getStoryboardData", {
-      scriptId: 1,
+      scriptId: props.scriptId,
       name: searchText.value || undefined,
       page: pagination.value.page,
       limit: pagination.value.pageSize,

@@ -369,6 +369,7 @@
         </div>
       </div>
     </div>
+    <storyboardImageCheck v-model="dialogVisible" :scriptId="episodesId ?? 0" :multiple="storyboardMultiple" @confirm="handleStoryboardConfirm" />
   </div>
 </template>
 
@@ -379,6 +380,7 @@ import axios from "@/utils/axios";
 import projectStore from "@/stores/project";
 import modelSelect from "@/components/modelSelect.vue";
 import openAssetsSelector from "@/utils/assetsCheck";
+import storyboardImageCheck from "@/components/storyboardImageCheck.vue";
 const episodesId = inject<Ref<number>>("episodesId");
 
 /** 视频最后一帧缓存：key 为视频 filePath，value 为 canvas 截帧的 dataURL */
@@ -477,6 +479,52 @@ type VideoModelMode =
 const shotList = ref<StoryboardItem[]>([]);
 // 底部轨道滚动容器
 const trackListRef = ref<HTMLElement | null>(null);
+
+const dialogVisible = ref(false);
+// 分镜图弹窗确认后的回调：不同入口（单图、多图、尾帧、混合参考）注册不同处理逻辑
+type StoryboardConfirmCallback = (rows: { id: number; src: string | null }[]) => void;
+const storyboardConfirmCallback = ref<StoryboardConfirmCallback | null>(null);
+// 控制分镜选择弹窗是否多选
+const storyboardMultiple = ref(true);
+
+/**
+ * 弹出图片来源选择：分镜图 / 资产图
+ * @param onAssets  用户选"资产图"后的回调（即原来的 openAssetsSelector 流程）
+ * @param onStoryboard 用户选"分镜图"后的回调（打开 storyboardImageCheck 弹窗确认后执行）
+ * @param multiple 分镜弹窗是否多选，默认 false
+ */
+function showImageSourcePicker(onAssets: () => void, onStoryboard: StoryboardConfirmCallback, multiple = false) {
+  const dialog = DialogPlugin.confirm({
+    header: $t("workbench.production.generate.selectImageSource"),
+    body: $t("workbench.production.generate.fromStoryboardDesc") + " / " + $t("workbench.production.generate.fromAssetsDesc"),
+    confirmBtn: $t("workbench.production.generate.fromStoryboard"),
+    cancelBtn: $t("workbench.production.generate.fromAssets"),
+    onConfirm: () => {
+      dialog.destroy();
+      // 注册回调，打开分镜选择弹窗
+      storyboardConfirmCallback.value = onStoryboard;
+      storyboardMultiple.value = multiple;
+      dialogVisible.value = true;
+    },
+    onCancel: () => {
+      dialog.destroy();
+      // 走资产图流程
+      onAssets();
+    },
+    onClose: () => {
+      dialog.destroy();
+    },
+  });
+}
+
+/** 分镜弹窗确认：调用之前注册的回调 */
+function handleStoryboardConfirm(rows: { id: number; src: string | null }[]) {
+  if (storyboardConfirmCallback.value) {
+    storyboardConfirmCallback.value(rows);
+    storyboardConfirmCallback.value = null;
+  }
+  dialogVisible.value = false;
+}
 
 onMounted(() => {
   getProductionData();
@@ -873,17 +921,30 @@ function updateShotData(shot: StoryboardItem, newData: { id: string | number; ur
   };
 }
 
-/** 单图模式：替换参考图 */
-async function handleAddImage() {
+/** 单图模式：替换参考图（弹出来源选择：分镜图 / 资产图） */
+function handleAddImage() {
   if (!currentShot.value) return;
-  const selected = await openAssetsSelector({ multiple: false, title: $t("workbench.production.generate.selectRefImage") });
-  if (!selected.length) return;
-  const asset = selected[0];
-  const url = asset.src ?? "";
-  if (!url) return;
-  const newData = [{ id: asset.id, url, type: "assets" }];
-  currentShot.value = updateShotData(currentShot.value, newData);
-  syncShotToList(currentShot.value);
+  showImageSourcePicker(
+    // 资产图
+    async () => {
+      const selected = await openAssetsSelector({ multiple: false, title: $t("workbench.production.generate.selectRefImage") });
+      if (!selected.length) return;
+      const asset = selected[0];
+      const url = asset.src ?? "";
+      if (!url) return;
+      const newData = [{ id: asset.id, url, type: "assets" }];
+      currentShot.value = updateShotData(currentShot.value!, newData);
+      syncShotToList(currentShot.value!);
+    },
+    // 分镜图
+    (rows) => {
+      if (!rows.length || !rows[0].src) return;
+      const row = rows[0];
+      const newData = [{ id: row.id, url: row.src!, type: "storyboard" }];
+      currentShot.value = updateShotData(currentShot.value!, newData);
+      syncShotToList(currentShot.value!);
+    },
+  );
 }
 
 /** 单图模式：删除参考图（恢复为分镜原图） */
@@ -902,19 +963,36 @@ function handleClearImage() {
   syncShotToList(currentShot.value);
 }
 
-/** 多图模式：添加图片 */
-async function handleAddImageMulti() {
+/** 多图模式：添加图片（弹出来源选择：分镜图 / 资产图） */
+function handleAddImageMulti() {
   if (!currentShot.value) return;
-  const selected = await openAssetsSelector({ multiple: true, title: $t("workbench.production.generate.selectRefImages") });
-  if (!selected.length) return;
-  const shot = currentShot.value;
-  const existingData = getShotData(shot);
-  const newItems = selected.filter((a) => a.src).map((a) => ({ id: a.id, url: a.src ?? "", type: "assets" }));
-  // 去重（以 url 为标识）
-  const urlSet = new Set(existingData.map((d) => d.url));
-  const merged = [...existingData, ...newItems.filter((d) => !urlSet.has(d.url))];
-  currentShot.value = updateShotData(shot, merged);
-  syncShotToList(currentShot.value);
+  showImageSourcePicker(
+    // 资产图
+    async () => {
+      const selected = await openAssetsSelector({ multiple: true, title: $t("workbench.production.generate.selectRefImages") });
+      if (!selected.length) return;
+      const shot = currentShot.value!;
+      const existingData = getShotData(shot);
+      const newItems = selected.filter((a) => a.src).map((a) => ({ id: a.id, url: a.src ?? "", type: "assets" }));
+      // 去重（以 url 为标识）
+      const urlSet = new Set(existingData.map((d) => d.url));
+      const merged = [...existingData, ...newItems.filter((d) => !urlSet.has(d.url))];
+      currentShot.value = updateShotData(shot, merged);
+      syncShotToList(currentShot.value!);
+    },
+    // 分镜图
+    (rows) => {
+      if (!rows.length) return;
+      const shot = currentShot.value!;
+      const existingData = getShotData(shot);
+      const newItems = rows.filter((r) => r.src).map((r) => ({ id: r.id, url: r.src!, type: "storyboard" }));
+      const urlSet = new Set(existingData.map((d) => d.url));
+      const merged = [...existingData, ...newItems.filter((d) => !urlSet.has(d.url))];
+      currentShot.value = updateShotData(shot, merged);
+      syncShotToList(currentShot.value!);
+    },
+    true, // 多图模式允许多选
+  );
 }
 
 /** 多图模式：删除指定索引图片 */
@@ -926,21 +1004,36 @@ function handleRemoveImageAt(idx: number) {
   syncShotToList(currentShot.value);
 }
 
-/** 首尾帧：添加尾帧 */
-async function handleAddEndFrame() {
+/** 首尾帧：添加尾帧（弹出来源选择：分镜图 / 资产图） */
+function handleAddEndFrame() {
   if (!currentShot.value) return;
-  const selected = await openAssetsSelector({ multiple: false, title: $t("workbench.production.generate.selectEndFrame") });
-  if (!selected.length) return;
-  const asset = selected[0];
-  const url = asset.src ?? "";
-  if (!url) return;
-  const shot = currentShot.value;
-  const existingData = getShotData(shot);
-  // 首帧取 data[0]，尾帧更新/设置为 data[1]
-  const startItem = existingData[0] ?? { id: shot.id, url: shot.filePath ?? "", type: "storyboard" };
-  const newData = [startItem, { id: asset.id, url, type: "assets" }];
-  currentShot.value = updateShotData(shot, newData);
-  syncShotToList(currentShot.value);
+  showImageSourcePicker(
+    // 资产图
+    async () => {
+      const selected = await openAssetsSelector({ multiple: false, title: $t("workbench.production.generate.selectEndFrame") });
+      if (!selected.length) return;
+      const asset = selected[0];
+      const url = asset.src ?? "";
+      if (!url) return;
+      const shot = currentShot.value!;
+      const existingData = getShotData(shot);
+      const startItem = existingData[0] ?? { id: shot.id, url: shot.filePath ?? "", type: "storyboard" };
+      const newData = [startItem, { id: asset.id, url, type: "assets" }];
+      currentShot.value = updateShotData(shot, newData);
+      syncShotToList(currentShot.value!);
+    },
+    // 分镜图
+    (rows) => {
+      if (!rows.length || !rows[0].src) return;
+      const row = rows[0];
+      const shot = currentShot.value!;
+      const existingData = getShotData(shot);
+      const startItem = existingData[0] ?? { id: shot.id, url: shot.filePath ?? "", type: "storyboard" };
+      const newData = [startItem, { id: row.id, url: row.src!, type: "storyboard" }];
+      currentShot.value = updateShotData(shot, newData);
+      syncShotToList(currentShot.value!);
+    },
+  );
 }
 
 /** 首尾帧：删除尾帧 */
@@ -967,28 +1060,50 @@ function handleSwapFrames() {
 }
 
 /** 混合参考：添加某类型资源 */
-async function handleAddMixedRef(refType: "videoReference" | "imageReference" | "audioReference") {
+function handleAddMixedRef(refType: "videoReference" | "imageReference" | "audioReference") {
   if (!currentShot.value) return;
   const isVideo = refType === "videoReference";
   const isAudio = refType === "audioReference";
-  const selected = await openAssetsSelector({
+  const isImage = refType === "imageReference";
+
+  // 图片类型走来源选择（分镜图 / 资产图）
+  if (isImage) {
+    showImageSourcePicker(
+      // 资产图
+      async () => {
+        const selected = await openAssetsSelector({ multiple: false, title: $t("workbench.production.generate.selectRefImageAsset") });
+        if (!selected.length) return;
+        applyMixedRefData(refType, selected[0].id, selected[0].src ?? "");
+      },
+      // 分镜图
+      (rows) => {
+        if (!rows.length || !rows[0].src) return;
+        applyMixedRefData(refType, rows[0].id, rows[0].src!);
+      },
+    );
+    return;
+  }
+
+  // 视频/音频走原有流程
+  openAssetsSelector({
     multiple: false,
     title: isVideo
       ? $t("workbench.production.generate.selectRefVideoAsset")
-      : isAudio
-        ? $t("workbench.production.generate.selectRefAudioAsset")
-        : $t("workbench.production.generate.selectRefImageAsset"),
+      : $t("workbench.production.generate.selectRefAudioAsset"),
+  }).then((selected) => {
+    if (!selected.length) return;
+    applyMixedRefData(refType, selected[0].id, selected[0].src ?? "");
   });
-  if (!selected.length) return;
-  const asset = selected[0];
-  const url = asset.src ?? "";
-  if (!url) return;
+}
+
+/** 混合参考：将选中的资源写入 config.data */
+function applyMixedRefData(refType: VideoMixedRef, id: number | string, url: string) {
+  if (!currentShot.value || !url) return;
   const refTypeOrder: VideoMixedRef[] = ["videoReference", "imageReference", "audioReference"];
   const shot = currentShot.value;
   const existingData = getShotData(shot);
-  // 混合模式用 type 字段区分不同类型，这里用 refType 作为 type 存入 data
   const idx = existingData.findIndex((d) => d.type === refType);
-  const newItem = { id: asset.id, url, type: refType };
+  const newItem = { id, url, type: refType };
   let newData: typeof existingData;
   if (idx !== -1) {
     newData = existingData.map((d, i) => (i === idx ? newItem : d));
