@@ -405,7 +405,14 @@
         "artStyleUpdated": "Visual manual updated",
         "artStyleAdded": "Visual manual added",
         "operationFailed": "Operation failed",
-        "emptyFields": "Parameter missing"
+        "emptyFields": "Parameter missing",
+        "enterProjectName": "Please enter project name",
+        "enterProjectIntro": "Please enter the novel introduction",
+        "enterProjectType": "Please enter project type",
+        "enterArtStyle": "Please select a project visual brochure",
+        "enterVideoRatio": "Please select video ratio",
+        "enterImageModel": "Please select a picture model",
+        "enterVideoModel": "Please select a video model"
       }
     },
     "novel": {
@@ -1077,7 +1084,8 @@
         "effect": "Effect",
         "filter": "Filter",
         "loading": "Loading...",
-        "subtitlePreview": "Text"
+        "subtitlePreview": "Text",
+        "video": "video"
       },
       "effect": {
         "fadeIn": "Fade In",

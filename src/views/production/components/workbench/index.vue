@@ -15,17 +15,17 @@
     </div>
     <div class="topMenu f ac">
       <t-tooltip :content="$t('workbench.production.wb.quickPreview')" placement="bottom" theme="light" destroyOnClose :showArrow="false">
-        <div class="item fc c" :class="{ active: activeMenu === 'preview' }" @click="activeMenu = 'preview'">
+        <div class="item fc c" :class="{ active: activeMenu === 'preview' }" @click="changeMenu('preview')">
           <i-blackboard class="icon" />
         </div>
       </t-tooltip>
       <t-tooltip :content="$t('workbench.production.wb.videoGeneration')" placement="bottom" theme="light" destroyOnClose :showArrow="false">
-        <div class="item fc c" :class="{ active: activeMenu === 'generate' }" @click="activeMenu = 'generate'">
+        <div class="item fc c" :class="{ active: activeMenu === 'generate' }" @click="changeMenu('generate')">
           <i-playback-progress class="icon" />
         </div>
       </t-tooltip>
       <t-tooltip :content="$t('workbench.production.wb.videoEditing')" placement="bottom" theme="light" destroyOnClose :showArrow="false">
-        <div class="item fc c" :class="{ active: activeMenu === 'editVideo' }" @click="activeMenu = 'editVideo'">
+        <div class="item fc c" :class="{ active: activeMenu === 'editVideo' }" @click="changeMenu('editVideo')">
           <i-editing class="icon" />
         </div>
       </t-tooltip>
@@ -35,6 +35,7 @@
       <generate v-show="activeMenu === 'generate'" @close="handleBatchDownload" v-model="extractLines" />
       <editVideo
         v-show="activeMenu === 'editVideo'"
+        :initial-video-items="initialVideoItems"
         :initial-media-items="mockMediaItems"
         :initial-audio-items="mockAudioItems"
         :initial-image-items="mockImageItems"
@@ -85,6 +86,9 @@ const canvasHeight = ref(1080);
 
 // ============ 演示数据（可替换为在线资源地址） ============
 
+/** 资源库 - 分镜视频 */
+const initialVideoItems = ref<MediaItem[]>([]);
+
 /** 资源库 - 视频素材 */
 const mockMediaItems = ref<MediaItem[]>([]);
 
@@ -112,13 +116,29 @@ function getMediaType(src?: string): MediaType {
   if (["mp3", "wav", "ogg", "aac", "flac", "m4a"].includes(ext)) return "audio";
   return "unknown";
 }
+
+//切换菜单
+function changeMenu(type: string) {
+  activeMenu.value = type;
+  editFootage();
+}
 //查询剪辑素材
 function editFootage() {
   axios.post("/assets/getMaterialData").then(({ data }) => {
-    const videoList = data.filter((item: any) => getMediaType(item.filePath) === "video");
-    const audioList = data.filter((item: any) => getMediaType(item.filePath) === "audio");
-    const imageList = data.filter((item: any) => getMediaType(item.filePath) === "image");
+    const videoList = data.data.filter((item: any) => getMediaType(item.filePath) === "video");
+    const audioList = data.data.filter((item: any) => getMediaType(item.filePath) === "audio");
+    const imageList = data.data.filter((item: any) => getMediaType(item.filePath) === "image");
 
+    initialVideoItems.value = data.video.map((item: any) => ({
+      id: `video-${item.id}`,
+      type: "video",
+      name: `分镜视频-${item.storyboard}.mp4`,
+      duration: item.duration || 0,
+      icon: "🎬",
+      color: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+      url: item.filePath,
+      selected: item.selected || false,
+    }));
     mockMediaItems.value = videoList.map((item: any) => ({
       id: `video-${item.id}`,
       type: "video",

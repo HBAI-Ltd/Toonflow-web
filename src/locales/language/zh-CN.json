@@ -405,7 +405,14 @@
         "artStyleUpdated": "视觉手册已更新",
         "artStyleAdded": "视觉手册已添加",
         "operationFailed": "操作失败",
-        "emptyFields": "参数缺失"
+        "emptyFields": "参数缺失",
+        "enterProjectName": "请输入项目名称",
+        "enterProjectIntro": "请输入小说简介",
+        "enterProjectType": "请输入小说类型",
+        "enterArtStyle": "请选择项目视觉手册",
+        "enterVideoRatio": "请选择影片比例",
+        "enterImageModel": "请选择图片模型",
+        "enterVideoModel": "请选择视频模型"
       }
     },
     "novel": {
@@ -1079,7 +1086,8 @@
         "effect": "特效",
         "filter": "滤镜",
         "loading": "加载中...",
-        "subtitlePreview": "字"
+        "subtitlePreview": "字",
+        "video": "视频"
       },
       "effect": {
         "fadeIn": "淡入",

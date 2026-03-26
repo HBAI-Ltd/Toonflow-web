@@ -2,7 +2,7 @@
   <div class="mediaLibrary">
     <div class="mediaLibraryHeader">
       <div class="headerTitle">
-        <h3 class="mediaLibraryTitle">{{ $t('workbench.production.editVideo.clipMaterials') }}</h3>
+        <h3 class="mediaLibraryTitle">{{ $t("workbench.production.editVideo.clipMaterials") }}</h3>
       </div>
       <div class="mediaLibraryTabs">
         <t-button
@@ -21,6 +21,35 @@
     </div>
 
     <div class="mediaLibraryContent">
+      <!-- 分镜视频 -->
+      <div v-if="activeTab === 'video'" class="mediaList">
+        <div
+          v-for="item in videoItems"
+          :key="item.id"
+          class="mediaItem"
+          draggable="true"
+          @dragstart="handleDragStart($event, item)"
+          @dragend="handleDragEnd">
+          <div class="mediaItemPreview">
+            <t-image v-if="item.thumbnail" :src="item.thumbnail" fit="cover" class="mediaItemThumbnail" />
+            <component v-else :is="item.icon" theme="outline" size="18" />
+            <div v-if="item.loading" class="mediaItemLoading">
+              <t-loading size="small" />
+            </div>
+          </div>
+          <div class="mediaItemInfo">
+            <div class="selected" v-if="item.selected">
+              <i-check-one theme="filled" size="16" fill="#000000" />
+            </div>
+            <div class="mediaItemName">
+              <t-popup :content="item.name">
+                {{ item.name }}
+              </t-popup>
+            </div>
+            <t-tag v-if="item.duration" size="small" theme="default" variant="light">{{ formatDuration(item.duration) }}</t-tag>
+          </div>
+        </div>
+      </div>
       <!-- 媒体素材 -->
       <div v-if="activeTab === 'media'" class="mediaList">
         <div
@@ -38,7 +67,11 @@
             </div>
           </div>
           <div class="mediaItemInfo">
-            <div class="mediaItemName">{{ item.name }}</div>
+            <div class="mediaItemName">
+              <t-popup :content="item.name">
+                {{ item.name }}
+              </t-popup>
+            </div>
             <t-tag v-if="item.duration" size="small" theme="default" variant="light">{{ formatDuration(item.duration) }}</t-tag>
           </div>
         </div>
@@ -61,7 +94,11 @@
             </div>
           </div>
           <div class="mediaItemInfo">
-            <div class="mediaItemName">{{ item.name }}</div>
+            <div class="mediaItemName">
+              <t-popup :content="item.name">
+                {{ item.name }}
+              </t-popup>
+            </div>
           </div>
         </div>
       </div>
@@ -78,7 +115,11 @@
           <div class="transitionItemPreview">
             <span class="transitionItemIcon"><component :is="transition.icon" theme="outline" size="18" /></span>
           </div>
-          <div class="transitionItemName">{{ transition.name }}</div>
+          <div class="transitionItemName">
+            <t-popup :content="transition.name">
+              {{ transition.name }}
+            </t-popup>
+          </div>
         </div>
       </div>
 
@@ -94,7 +135,11 @@
           <div class="effectItemPreview">
             <component :is="effect.icon" theme="outline" size="18" />
           </div>
-          <div class="effectItemName">{{ effect.name }}</div>
+          <div class="effectItemName">
+            <t-popup :content="effect.name">
+              {{ effect.name }}
+            </t-popup>
+          </div>
         </div>
       </div>
 
@@ -110,7 +155,11 @@
           <div class="filterItemPreview">
             <component :is="filter.icon" theme="outline" size="18" />
           </div>
-          <div class="filterItemName">{{ filter.name }}</div>
+          <div class="filterItemName">
+            <t-popup :content="filter.name">
+              {{ filter.name }}
+            </t-popup>
+          </div>
         </div>
       </div>
 
@@ -130,7 +179,11 @@
             </div>
           </div>
           <div class="audioItemInfo">
-            <div class="audioItemName">{{ audio.name }}</div>
+            <div class="audioItemName">
+              <t-popup :content="audio.name">
+                {{ audio.name }}
+              </t-popup>
+            </div>
             <t-tag v-if="audio.duration" size="small" theme="default" variant="light">{{ formatDuration(audio.duration) }}</t-tag>
           </div>
         </div>
@@ -148,7 +201,11 @@
           <div class="textItemPreview">
             <span class="textItemContent">{{ text.preview }}</span>
           </div>
-          <div class="textItemName">{{ text.name }}</div>
+          <div class="textItemName">
+            <t-popup :content="text.name">
+              {{ text.name }}
+            </t-popup>
+          </div>
         </div>
       </div>
     </div>
@@ -170,27 +227,40 @@ import {
 
 const props = withDefaults(
   defineProps<{
+    initialVideoItems?: MediaItem[];
     initialMediaItems?: MediaItem[];
     initialAudioItems?: AudioItem[];
     initialImageItems?: MediaItem[];
   }>(),
   {
+    initialVideoItems: () => [],
     initialMediaItems: () => [],
     initialAudioItems: () => [],
     initialImageItems: () => [],
   },
 );
 
-const activeTab = ref("media");
+const activeTab = ref("video");
 
 const tabs = getLibraryTabs();
 
+const videoItems = ref<MediaItem[]>([...props.initialVideoItems]);
 const mediaItems = ref<MediaItem[]>([...props.initialMediaItems]);
 const audioItems = ref<AudioItem[]>([...props.initialAudioItems]);
 const imageItems = ref<MediaItem[]>([...props.initialImageItems]);
 const textItems = ref(getTextItems());
 
 // 监听 props 变化，同步更新本地数据并加载缩略图/波形
+watch(
+  () => props.initialVideoItems,
+  (newItems) => {
+    videoItems.value = [...newItems];
+    if (newItems.length > 0) {
+      loadVideoThumbnails();
+    }
+  },
+);
+
 watch(
   () => props.initialMediaItems,
   (newItems) => {
@@ -227,6 +297,19 @@ const filterItems = ref(getFilterItems());
 // 加载视频缩略图和时长
 async function loadVideoThumbnails() {
   for (const item of mediaItems.value) {
+    try {
+      const result = await extractVideoThumbnails(item.url, { count: 10, width: 120 });
+      item.duration = result.duration;
+      item.thumbnails = result.thumbnails;
+      item.thumbnail = result.thumbnails[0] || "";
+      item.loading = false;
+    } catch (error) {
+      console.error(`Failed to load thumbnails for ${item.name}:`, error);
+      item.loading = false;
+      item.duration = 5; // 默认时长
+    }
+  }
+  for (const item of videoItems.value) {
     try {
       const result = await extractVideoThumbnails(item.url, { count: 10, width: 120 });
       item.duration = result.duration;
@@ -374,7 +457,7 @@ onMounted(() => {
     // 媒体/图片列表
     .mediaList {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: repeat(auto-fill, minmax(0, 150px));
       gap: 10px;
 
       .mediaItem {
@@ -387,7 +470,7 @@ onMounted(() => {
         border-radius: 12px;
         cursor: grab;
         transition: all 0.2s;
-
+        position: relative;
         &:hover {
           border-color: var(--td-brand-color-10);
           transform: translateY(-2px);
@@ -431,7 +514,12 @@ onMounted(() => {
         .mediaItemInfo {
           flex: 1;
           min-width: 0;
-
+          .selected {
+            position: absolute;
+            top: 0px;
+            right: 2px;
+            z-index: 1;
+          }
           .mediaItemName {
             font-size: 12px;
             font-weight: 400;
@@ -440,6 +528,9 @@ onMounted(() => {
             overflow: hidden;
             text-overflow: ellipsis;
             line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
           }
         }
       }
@@ -448,7 +539,7 @@ onMounted(() => {
     // 转场列表
     .transitionList {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: repeat(auto-fill, minmax(0, 150px));
       gap: 10px;
 
       .transitionItem {
@@ -496,7 +587,7 @@ onMounted(() => {
     // 特效列表
     .effectList {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: repeat(auto-fill, minmax(0, 150px));
       gap: 10px;
 
       .effectItem {
@@ -543,7 +634,7 @@ onMounted(() => {
     // 滤镜列表
     .filterList {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: repeat(auto-fill, minmax(0, 150px));
       gap: 10px;
 
       .filterItem {
@@ -590,7 +681,7 @@ onMounted(() => {
     // 音频列表
     .audioList {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: repeat(auto-fill, minmax(0, 150px));
       gap: 10px;
 
       .audioItem {
@@ -654,9 +745,8 @@ onMounted(() => {
     // 文本列表
     .textList {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: repeat(auto-fill, minmax(0, 150px));
       gap: 10px;
-
       .textItem {
         display: flex;
         align-items: center;

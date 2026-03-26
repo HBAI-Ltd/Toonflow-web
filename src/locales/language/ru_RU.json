@@ -405,7 +405,14 @@
         "artStyleUpdated": "Обновлено визуальное руководство",
         "artStyleAdded": "Добавлен визуальный мануал",
         "operationFailed": "Ошибка операции",
-        "emptyFields": "Параметр отсутствует"
+        "emptyFields": "Параметр отсутствует",
+        "enterProjectName": "Пожалуйста, введите название проекта",
+        "enterProjectIntro": "Пожалуйста, введите вступление к роману",
+        "enterProjectType": "Пожалуйста, введите тип проекта",
+        "enterArtStyle": "Пожалуйста, выберите визуальную брошюру проекта",
+        "enterVideoRatio": "Пожалуйста, выберите соотношение видео",
+        "enterImageModel": "Пожалуйста, выберите модель изображения",
+        "enterVideoModel": "Пожалуйста, выберите модель видео"
       }
     },
     "novel": {
@@ -1077,7 +1084,8 @@
         "effect": "Эффект",
         "filter": "Фильтр",
         "loading": "Загрузка...",
-        "subtitlePreview": "Т"
+        "subtitlePreview": "Т",
+        "video": "видео"
       },
       "effect": {
         "fadeIn": "Появление",

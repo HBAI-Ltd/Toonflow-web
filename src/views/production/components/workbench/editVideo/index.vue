@@ -5,6 +5,7 @@
         <splitpanes :push-other-panes="false">
           <pane size="20" min-size="10">
             <mediaLibrary
+              :initial-video-items="initialVideoItems"
               :initial-media-items="initialMediaItems"
               :initial-audio-items="initialAudioItems"
               :initial-image-items="initialImageItems" />
@@ -39,35 +40,50 @@
           <template #custom-operation-reset>
             <t-button variant="text" size="small" @click="videoTrackRef?.reset()" :title="$t('workbench.production.editVideo.reset')">
               <template #icon><i-refresh size="16" /></template>
-              {{ $t('workbench.production.editVideo.reset') }}
+              {{ $t("workbench.production.editVideo.reset") }}
             </t-button>
           </template>
 
           <template #custom-operation-undo>
-            <t-button variant="text" size="small" :disabled="!historyStore.canUndo" @click="historyStore.undo()" :title="$t('workbench.production.editVideo.undo')">
+            <t-button
+              variant="text"
+              size="small"
+              :disabled="!historyStore.canUndo"
+              @click="historyStore.undo()"
+              :title="$t('workbench.production.editVideo.undo')">
               <template #icon><i-undo size="16" /></template>
-              {{ $t('workbench.production.editVideo.undo') }}
+              {{ $t("workbench.production.editVideo.undo") }}
             </t-button>
           </template>
 
           <template #custom-operation-redo>
-            <t-button variant="text" size="small" :disabled="!historyStore.canRedo" @click="historyStore.redo()" :title="$t('workbench.production.editVideo.redo')">
+            <t-button
+              variant="text"
+              size="small"
+              :disabled="!historyStore.canRedo"
+              @click="historyStore.redo()"
+              :title="$t('workbench.production.editVideo.redo')">
               <template #icon><i-redo size="16" /></template>
-              {{ $t('workbench.production.editVideo.redo') }}
+              {{ $t("workbench.production.editVideo.redo") }}
             </t-button>
           </template>
 
           <template #custom-operation-split>
-            <t-button variant="text" size="small" :disabled="tracksStore.selectedClipIds.size === 0" @click="handleSplit" :title="$t('workbench.production.editVideo.split')">
+            <t-button
+              variant="text"
+              size="small"
+              :disabled="tracksStore.selectedClipIds.size === 0"
+              @click="handleSplit"
+              :title="$t('workbench.production.editVideo.split')">
               <template #icon><i-cutting-one size="16" /></template>
-              {{ $t('workbench.production.editVideo.split') }}
+              {{ $t("workbench.production.editVideo.split") }}
             </t-button>
           </template>
 
           <template #custom-operation-delete>
             <t-button variant="text" size="small" @click="handleDeleteClips" :title="$t('workbench.production.editVideo.delete')">
               <template #icon><i-delete size="16" /></template>
-              {{ $t('workbench.production.editVideo.delete') }}
+              {{ $t("workbench.production.editVideo.delete") }}
             </t-button>
           </template>
           <!-- <template #custom-operation-import>
@@ -79,7 +95,7 @@
           <template #scale-append>
             <t-button theme="danger" @click="handleExport" :loading="isExporting" :title="$t('workbench.production.editVideo.exportProject')">
               <template #icon><i-export size="16" style="margin-right: 4px" /></template>
-              {{ isExporting ? $t('workbench.production.editVideo.rendering') : $t('workbench.production.editVideo.exportVideo') }}
+              {{ isExporting ? $t("workbench.production.editVideo.rendering") : $t("workbench.production.editVideo.exportVideo") }}
             </t-button>
           </template>
         </VideoTrack>
@@ -118,6 +134,7 @@ import { findAdjacentClipsAtTime, addTransitionBetweenClips } from "./utils/tran
 const props = withDefaults(
   defineProps<{
     initialTracks?: Track[];
+    initialVideoItems?: MediaItem[];
     initialMediaItems?: MediaItem[];
     initialAudioItems?: AudioItem[];
     initialImageItems?: MediaItem[];
@@ -215,10 +232,10 @@ async function handleExport() {
   isExporting.value = true;
   try {
     await videoPreviewRef.value.exportVideo();
-    window.$message.success($t('workbench.production.editVideo.exportSuccess'));
+    window.$message.success($t("workbench.production.editVideo.exportSuccess"));
   } catch (error: any) {
     if (error.name === "AbortError") return; // 用户取消保存
-    window.$message.error(error.message || $t('workbench.production.editVideo.exportFailed'));
+    window.$message.error(error.message || $t("workbench.production.editVideo.exportFailed"));
   } finally {
     isExporting.value = false;
   }
@@ -233,14 +250,14 @@ function handleSplit() {
     if (!clip || currentTime <= clip.startTime || currentTime >= clip.endTime) return;
     tracksStore.splitClip(id, currentTime);
   });
-  historyStore.pushSnapshot($t('workbench.production.editVideo.splitClip'));
+  historyStore.pushSnapshot($t("workbench.production.editVideo.splitClip"));
 }
 
 function handleDeleteClips() {
   const selectedIds = Array.from(tracksStore.selectedClipIds);
   if (selectedIds.length === 0) return;
   tracksStore.removeClips(selectedIds);
-  historyStore.pushSnapshot($t('workbench.production.editVideo.deleteClip'));
+  historyStore.pushSnapshot($t("workbench.production.editVideo.deleteClip"));
 }
 
 // 处理从资源库拖拽媒体到轨道
@@ -278,7 +295,7 @@ async function handleDropMedia(mediaData: any, trackId: string, startTime: numbe
       } as Partial<MediaClip>;
 
       tracksStore.addClip(track.id, clip as Clip);
-      historyStore.pushSnapshot($t('workbench.production.editVideo.addClip', { name: mediaData.name }));
+      historyStore.pushSnapshot($t("workbench.production.editVideo.addClip", { name: mediaData.name }));
 
       if (!mediaData.thumbnails || mediaData.thumbnails.length === 0) {
         loadVideoClipThumbnails(tracksStore, clip.id!, sourceUrl);
@@ -300,7 +317,7 @@ async function handleDropMedia(mediaData: any, trackId: string, startTime: numbe
       };
 
       tracksStore.addClip(track.id, clip as Clip);
-      historyStore.pushSnapshot($t('workbench.production.editVideo.addClip', { name: mediaData.name }));
+      historyStore.pushSnapshot($t("workbench.production.editVideo.addClip", { name: mediaData.name }));
       return;
     } else if (mediaData.type === "audio") {
       const sourceUrl = mediaData.sourceUrl || mediaData.url || mediaData.id;
@@ -319,16 +336,28 @@ async function handleDropMedia(mediaData: any, trackId: string, startTime: numbe
       } as Partial<MediaClip>;
 
       tracksStore.addClip(track.id, clip as Clip);
-      historyStore.pushSnapshot($t('workbench.production.editVideo.addClip', { name: mediaData.name }));
+      historyStore.pushSnapshot($t("workbench.production.editVideo.addClip", { name: mediaData.name }));
 
       if (!mediaData.waveformData || mediaData.waveformData.length === 0) {
         loadAudioClipWaveform(tracksStore, clip.id!, sourceUrl);
       }
       return;
     } else if (mediaData.type === "subtitle") {
-      clip = { ...clip, type: "subtitle", name: mediaData.name, endTime: normalizeTime(startTime + duration), text: $t('workbench.production.editVideo.sampleSubtitle') };
+      clip = {
+        ...clip,
+        type: "subtitle",
+        name: mediaData.name,
+        endTime: normalizeTime(startTime + duration),
+        text: $t("workbench.production.editVideo.sampleSubtitle"),
+      };
     } else if (mediaData.type === "text") {
-      clip = { ...clip, type: "text", name: mediaData.name, endTime: normalizeTime(startTime + duration), text: $t('workbench.production.editVideo.customText') };
+      clip = {
+        ...clip,
+        type: "text",
+        name: mediaData.name,
+        endTime: normalizeTime(startTime + duration),
+        text: $t("workbench.production.editVideo.customText"),
+      };
     } else if (mediaData.type === "sticker") {
       clip = { ...clip, type: "sticker", name: mediaData.name, endTime: normalizeTime(startTime + duration), sourceUrl: mediaData.id };
     } else if (mediaData.type === "filter") {
@@ -352,7 +381,7 @@ async function handleDropMedia(mediaData: any, trackId: string, startTime: numbe
     }
 
     tracksStore.addClip(track.id, clip as Clip);
-    historyStore.pushSnapshot($t('workbench.production.editVideo.addClip', { name: mediaData.name }));
+    historyStore.pushSnapshot($t("workbench.production.editVideo.addClip", { name: mediaData.name }));
   } catch (error: any) {
     alert(error.message);
   }
@@ -365,13 +394,13 @@ function handleDropTransition(transitionData: any, trackId: string, dropTime: nu
 
   const clips = track.clips.filter((c) => c.type !== "transition").sort((a, b) => a.startTime - b.startTime);
   if (clips.length === 0) {
-    window.$message.warning($t('workbench.production.editVideo.transitionBetweenClips'));
+    window.$message.warning($t("workbench.production.editVideo.transitionBetweenClips"));
     return;
   }
 
   const result = findAdjacentClipsAtTime(clips, dropTime);
   if (!result) {
-    window.$message.warning($t('workbench.production.editVideo.transitionBetweenClips'));
+    window.$message.warning($t("workbench.production.editVideo.transitionBetweenClips"));
     return;
   }
 
@@ -393,7 +422,7 @@ function applyTransition(beforeClipId: string, afterClipId: string, transitionTy
 }
 
 function onTransitionAdded(transitionClip: any, beforeClipId: string, afterClipId: string) {
-  window.$message.success($t('workbench.production.editVideo.transitionAdded', { name: transitionClip.name }));
+  window.$message.success($t("workbench.production.editVideo.transitionAdded", { name: transitionClip.name }));
   playbackStore.seekTo(transitionClip.startTime);
 }
 

@@ -241,18 +241,13 @@ function handleCancel() {
 }
 
 function handleOk() {
-  if (
-    !formState.value.name ||
-    !formState.value.intro ||
-    !formState.value.type ||
-    !formState.value.artStyle ||
-    !formState.value.videoRatio ||
-    !formState.value.imageModel ||
-    !formState.value.videoModel
-  ) {
-    window.$message.warning($t("workbench.project.msg.emptyFields"));
-    return;
-  }
+  if (!formState.value.name) return window.$message.warning($t("workbench.project.msg.enterProjectName"));
+  if (!formState.value.type) return window.$message.warning($t("workbench.project.msg.enterProjectType"));
+  if (!formState.value.imageModel) return window.$message.warning($t("workbench.project.msg.enterImageModel"));
+  if (!formState.value.videoModel) return window.$message.warning($t("workbench.project.msg.enterVideoModel"));
+  if (!formState.value.artStyle) return window.$message.warning($t("workbench.project.msg.enterArtStyle"));
+  if (!formState.value.videoRatio) return window.$message.warning($t("workbench.project.msg.enterVideoRatio"));
+  if (!formState.value.intro) return window.$message.warning($t("workbench.project.msg.enterProjectIntro"));
   if (isEdit.value) {
     emit("edit", {
       id: formState.value.id as unknown as string,

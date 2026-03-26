@@ -405,7 +405,14 @@
         "artStyleUpdated": "視覺手冊已更新",
         "artStyleAdded": "視覺手冊已添加",
         "operationFailed": "操作失敗",
-        "emptyFields": "參數缺失"
+        "emptyFields": "參數缺失",
+        "enterProjectName": "請輸入項目名稱",
+        "enterProjectIntro": "請輸入小說簡介",
+        "enterProjectType": "請輸入項目類型",
+        "enterArtStyle": "請選擇項目視覺手冊",
+        "enterVideoRatio": "請選擇影片比例",
+        "enterImageModel": "請選擇圖片模型",
+        "enterVideoModel": "請選擇視訊模型"
       }
     },
     "novel": {
@@ -1077,7 +1084,8 @@
         "effect": "特效",
         "filter": "濾鏡",
         "loading": "載入中...",
-        "subtitlePreview": "字"
+        "subtitlePreview": "字",
+        "video": "影片"
       },
       "effect": {
         "fadeIn": "淡入",

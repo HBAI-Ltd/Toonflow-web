@@ -405,7 +405,14 @@
         "artStyleUpdated": "Hướng dẫn trực quan được cập nhật",
         "artStyleAdded": "Đã thêm hướng dẫn trực quan",
         "operationFailed": "Thao tác thất bại",
-        "emptyFields": "Thiếu tham số"
+        "emptyFields": "Thiếu tham số",
+        "enterProjectName": "Vui lòng nhập tên dự án",
+        "enterProjectIntro": "Vui lòng nhập phần giới thiệu tiểu thuyết",
+        "enterProjectType": "Vui lòng nhập loại dự án",
+        "enterArtStyle": "Vui lòng chọn một tài liệu trực quan của dự án",
+        "enterVideoRatio": "Vui lòng chọn tỷ lệ video",
+        "enterImageModel": "Vui lòng chọn mẫu hình ảnh",
+        "enterVideoModel": "Vui lòng chọn một mẫu video"
       }
     },
     "novel": {
@@ -1077,7 +1084,8 @@
         "effect": "Hiệu ứng",
         "filter": "Bộ lọc",
         "loading": "Đang tải...",
-        "subtitlePreview": "Chữ"
+        "subtitlePreview": "Chữ",
+        "video": "băng hình"
       },
       "effect": {
         "fadeIn": "Rõ dần",

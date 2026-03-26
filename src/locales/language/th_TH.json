@@ -405,7 +405,14 @@
         "artStyleUpdated": "อัปเดตคู่มือภาพแล้ว",
         "artStyleAdded": "เพิ่มคู่มือภาพแล้ว",
         "operationFailed": "การดำเนินการล้มเหลว",
-        "emptyFields": "พารามิเตอร์หายไป"
+        "emptyFields": "พารามิเตอร์หายไป",
+        "enterProjectName": "กรุณากรอกชื่อโครงการ",
+        "enterProjectIntro": "กรุณากรอกคำนำนวนิยาย",
+        "enterProjectType": "กรุณากรอกประเภทโครงการ",
+        "enterArtStyle": "โปรดเลือกโบรชัวร์ภาพโครงการ",
+        "enterVideoRatio": "โปรดเลือกอัตราส่วนวิดีโอ",
+        "enterImageModel": "กรุณาเลือกรุ่นรูปภาพ",
+        "enterVideoModel": "โปรดเลือกรุ่นวิดีโอ"
       }
     },
     "novel": {
@@ -1077,7 +1084,8 @@
         "effect": "เอฟเฟกต์",
         "filter": "ฟิลเตอร์",
         "loading": "กำลังโหลด...",
-        "subtitlePreview": "ข้อความ"
+        "subtitlePreview": "ข้อความ",
+        "video": "วิดีโอ"
       },
       "effect": {
         "fadeIn": "เฟดอิน",
