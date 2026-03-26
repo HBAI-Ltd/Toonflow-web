@@ -974,7 +974,8 @@
         "selectVideoFirst": "โปรดเลือกวิดีโอก่อน",
         "confirmSuccess": "ยืนยันการเลือกสำเร็จ",
         "batchSubmitted": "ส่งคำขอสร้างเป็นชุดแล้ว กำลังดำเนินการ...",
-        "configNotFound": "ไม่พบการตั้งค่า"
+        "configNotFound": "ไม่พบการตั้งค่า",
+        "pollingFailed": "การค้นหาสถานะวิดีโอล้มเหลว โปรดรีเฟรชด้วยตนเอง"
       },
       "editVideo": {
         "reset": "รีเซ็ต",

@@ -1041,7 +1041,8 @@
         "batchSubmitted": "已提交批量生成请求，正在处理中...",
         "configNotFound": "配置不存在",
         "stateSuccess": "生成成功",
-        "statePending": "待生产"
+        "statePending": "待生产",
+        "pollingFailed": "视频状态查询失败，请手动刷新"
       },
       "editVideo": {
         "reset": "重置",

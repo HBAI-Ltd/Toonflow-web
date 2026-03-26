@@ -971,7 +971,8 @@
         "selectVideoFirst": "Vui lòng chọn một video trước",
         "confirmSuccess": "Xác nhận chọn thành công",
         "batchSubmitted": "Đã gửi yêu cầu tạo hàng loạt, đang xử lý...",
-        "configNotFound": "Cấu hình không tồn tại"
+        "configNotFound": "Cấu hình không tồn tại",
+        "pollingFailed": "Truy vấn trạng thái video không thành công, vui lòng làm mới theo cách thủ công"
       },
       "editVideo": {
         "reset": "Đặt lại",

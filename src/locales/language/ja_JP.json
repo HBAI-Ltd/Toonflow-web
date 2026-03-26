@@ -974,7 +974,8 @@
         "selectVideoFirst": "先に動画を1つ選択してください",
         "confirmSuccess": "選択の確定に成功しました",
         "batchSubmitted": "一括生成リクエストを送信しました。処理中です...",
-        "configNotFound": "設定が見つかりません"
+        "configNotFound": "設定が見つかりません",
+        "pollingFailed": "ビデオ ステータスのクエリに失敗しました。手動で更新してください"
       },
       "editVideo": {
         "reset": "リセット",

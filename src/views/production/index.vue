@@ -38,9 +38,6 @@
             <i-document-folder size="24" />
           </template>
         </t-select>
-<<<<<<< HEAD
-        <i-loading-four class="spin" size="16" style="margin-left: 8px" v-show="loading"></i-loading-four>
-=======
         <i-loading-four class="spin" size="16" style="margin-left: 0.5rem" v-show="loading"></i-loading-four>
         <t-tooltip theme="primary" content="自动排版-左右布局">
           <div class="item c" @click="layoutGraph('LR')">
@@ -52,7 +49,6 @@
             <i-branch-one theme="outline" size="24" />
           </div>
         </t-tooltip>
->>>>>>> 86279dc4b809932030b64e41be327e2ab499f180
       </div>
       <div class="openRightChatBoxBtn c" v-show="!openShowVisible" @click.stop="openShowVisible = true">
         <i-menu-unfold-one theme="outline" size="24" fill="#000000" />

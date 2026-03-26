@@ -1037,7 +1037,8 @@
         "selectVideoFirst": "Please select a video first",
         "confirmSuccess": "Selection confirmed",
         "batchSubmitted": "Batch generation request submitted. Processing...",
-        "configNotFound": "Configuration not found"
+        "configNotFound": "Configuration not found",
+        "pollingFailed": "Video status query failed, please refresh manually"
       },
       "editVideo": {
         "reset": "Reset",
