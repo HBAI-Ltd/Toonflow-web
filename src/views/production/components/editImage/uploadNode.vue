@@ -68,10 +68,11 @@ const storyboardVisable = ref(false);
 const currentImageUrl = ref(props.data?.image || "");
 const currentObjectUrl = ref<string | null>(null);
 
-const options = [
-  { content: "资产图片上传", value: 1 },
-  { content: "分镜图片上传", value: 2 },
-];
+const { t: $t } = useI18n();
+const options = computed(() => [
+  { content: $t("workbench.production.editImage.uploadAssetImage"), value: 1 },
+  { content: $t("workbench.production.editImage.uploadStoryboardImage"), value: 2 },
+]);
 
 watch(
   () => props.data?.image,
