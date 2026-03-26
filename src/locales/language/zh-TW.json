@@ -382,7 +382,9 @@
         "uploadCover": "上傳封面",
         "artStylePrompt": "視覺手冊提示詞",
         "aiExtract": "AI 萃取提示詞",
-        "promptPlaceholder": "描述視覺手冊提示詞，用於產生圖片時指定視覺手冊"
+        "promptPlaceholder": "描述視覺手冊提示詞，用於產生圖片時指定視覺手冊",
+        "modelData": "選擇圖片模型",
+        "videoModelData": "選擇視訊模型"
       },
       "msg": {
         "fetchFailed": "取得專案列表失敗",
@@ -845,7 +847,7 @@
         "generatedResult": "生成結果",
         "waitingGenerate": "等待生成"
       },
-      "save": "儲存",
+      "save": "選取",
       "cancel": "取消",
       "chatBox": {
         "inputPlaceholder": "輸入訊息...",

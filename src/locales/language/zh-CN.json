@@ -382,7 +382,9 @@
         "uploadCover": "上传封面",
         "artStylePrompt": "视觉手册提示词",
         "aiExtract": "AI提取提示词",
-        "promptPlaceholder": "描述视觉手册提示词，用于生成图片时指定视觉手册"
+        "promptPlaceholder": "描述视觉手册提示词，用于生成图片时指定视觉手册",
+        "modelData": "选择图片模型",
+        "videoModelData": "选择视频模型"
       },
       "msg": {
         "fetchFailed": "获取项目列表失败",
@@ -845,7 +847,7 @@
         "generatedResult": "生成结果",
         "waitingGenerate": "等待生成"
       },
-      "save": "保存",
+      "save": "选取",
       "cancel": "取消",
       "chatBox": {
         "inputPlaceholder": "输入消息...",

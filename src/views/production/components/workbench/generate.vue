@@ -338,12 +338,13 @@
                   @loadedmetadata="(e: Event) => extractLastFrame(getVideoRecord(item)!.filePath, e.target as HTMLVideoElement)" />
               </template>
               <template v-else-if="isDualFrame(item.config?.mode as VideoModelMode)">
-                <div class="shotDualFrame">
-                  <img v-if="item.config?.data?.[0]?.url || item.filePath" :src="item.config?.data?.[0]?.url || item.filePath" class="shotFrameImg" />
-                  <div v-else class="shotFramePlaceholder"><i-pic size="16" fill="#999" /></div>
-                  <img v-if="item.config?.data?.[1]?.url" :src="item.config.data[1].url" class="shotFrameImg" />
-                  <div v-else class="shotFramePlaceholder"><i-pic size="16" fill="#999" /></div>
+                <div v-if="(item.config?.data?.[0]?.url || item.filePath) && item.config?.data?.[1]?.url" class="shotDualFrame">
+                  <img :src="item.config?.data?.[0]?.url || item.filePath" class="shotFrameImg" />
+                  <img :src="item.config.data[1].url" class="shotFrameImg" />
                 </div>
+                <img v-else-if="item.config?.data?.[0]?.url || item.filePath" :src="item.config?.data?.[0]?.url || item.filePath" class="shotImage" />
+                <img v-else-if="item.config?.data?.[1]?.url" :src="item.config.data[1].url" class="shotImage" />
+                <div v-else class="shotPlaceholder"><i-pic size="16" fill="#999" /></div>
               </template>
               <template v-else-if="item.config?.data && item.config.data.length > 1">
                 <div
@@ -372,7 +373,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, nextTick, onUnmounted, reactive, type Ref } from "vue";
+import { ref, computed, onMounted, nextTick, onUnmounted, reactive, watch, type Ref } from "vue";
 import { storeToRefs } from "pinia";
 import axios from "@/utils/axios";
 import projectStore from "@/stores/project";
@@ -758,6 +759,24 @@ function handleModelChange(value: string, data: VideoModel) {
 }
 // ---- 提示词 ----
 const promptText = ref<string>("");
+
+/**
+ * 监听模式切换：当分镜没有 config.data 但有 filePath 时，
+ * 自动将分镜原图初始化到 config.data 中，以保证各模式都能正确回显图片。
+ * 仅在非 text 模式下生效。
+ */
+watch(currentModeKey, (newMode) => {
+  if (!newMode || newMode === "text" || !currentShot.value) return;
+  const shot = currentShot.value;
+  // config.data 已有内容，无需自动填充
+  if (shot.config?.data !== undefined && shot.config?.data !== null) return;
+  // 无分镜原图可用
+  if (!shot.filePath) return;
+  // 将分镜原图作为默认首帧写入 config.data
+  const defaultData = [{ id: shot.id, url: shot.filePath, type: "storyboard" }];
+  currentShot.value = updateShotData(shot, defaultData);
+  syncShotToList(currentShot.value);
+});
 
 // ---- frameSection 计算属性 ----
 

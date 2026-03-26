@@ -382,7 +382,9 @@
         "uploadCover": "Tải lên ảnh bìa",
         "artStylePrompt": "Lời nhắc hướng dẫn sử dụng trực quan",
         "aiExtract": "AI trích xuất Prompt",
-        "promptPlaceholder": "Mô tả từ nhắc hướng dẫn sử dụng trực quan, được sử dụng để chỉ định hướng dẫn trực quan khi tạo hình ảnh."
+        "promptPlaceholder": "Mô tả từ nhắc hướng dẫn sử dụng trực quan, được sử dụng để chỉ định hướng dẫn trực quan khi tạo hình ảnh.",
+        "modelData": "Chọn mô hình hình ảnh",
+        "videoModelData": "Chọn mô hình video"
       },
       "msg": {
         "fetchFailed": "Lấy danh sách dự án thất bại",
@@ -845,7 +847,7 @@
         "generatedResult": "Kết quả tạo",
         "waitingGenerate": "Đang chờ tạo"
       },
-      "save": "Lưu",
+      "save": "Lựa chọn",
       "cancel": "Hủy",
       "chatBox": {
         "inputPlaceholder": "Nhập tin nhắn...",

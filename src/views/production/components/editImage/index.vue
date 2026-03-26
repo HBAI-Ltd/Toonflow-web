@@ -140,15 +140,16 @@ function _doSyncReferences() {
 
 // 连接处理
 const onConnect = (params: any) => {
-  // 禁止重复连线：同一 source → target 已存在则忽略
-  const isDuplicate = getEdges.value.some((e) => e.source === params.source && e.target === params.target);
-  if (isDuplicate) return;
+  // 禁止自己连接自己
+  if (params.source === params.target) return;
 
-  // 禁止同类节点连接
-  const allNodes = getNodes.value;
-  const sourceNode = allNodes.find((n) => n.id === params.source);
-  const targetNode = allNodes.find((n) => n.id === params.target);
-  if (sourceNode && targetNode && sourceNode.type === targetNode.type) return;
+  // 禁止重复连线及反向连线：A→B 或 B→A 已存在则忽略
+  const isDuplicate = getEdges.value.some(
+    (e) =>
+      (e.source === params.source && e.target === params.target) ||
+      (e.source === params.target && e.target === params.source)
+  );
+  if (isDuplicate) return;
 
   addEdges([
     {

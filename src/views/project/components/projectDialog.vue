@@ -23,6 +23,12 @@
         <t-form-item :label="$t('workbench.project.dialog.novelType')">
           <t-input v-model="formState.type" :placeholder="$t('workbench.project.dialog.novelTypePh')" />
         </t-form-item>
+        <t-form-item :label="$t('workbench.project.dialog.modelData')">
+          <modelSelect v-model="imageModel" type="image" />
+        </t-form-item>
+        <t-form-item :label="$t('workbench.project.dialog.videoModelData')">
+          <modelSelect v-model="videoModel" type="video" />
+        </t-form-item>
         <t-form-item :label="$t('workbench.project.dialog.artStyle')">
           <div class="artStylePicker">
             <div class="artStyleHeader">
@@ -145,14 +151,20 @@ import axios from "@/utils/axios";
 import { MdEditor } from "md-editor-v3";
 import type { ToolbarNames } from "md-editor-v3";
 import "md-editor-v3/lib/style.css";
+import modelSelect from "@/components/modelSelect.vue";
 
 const addProjectShow = defineModel<boolean>();
+const imageModel = ref(""); // 保存图片模型选择的数据
+const videoModel = ref(""); // 保存视频模型选择的数据
 const props = defineProps<{
   projectData?: ProjectData | null;
 }>();
 const emit = defineEmits<{
   (e: "add", data: ProjectFormData): void;
-  (e: "edit", data: { id: string; name: string; intro: string; type: string; artStyle: string; videoRatio: string }): void;
+  (
+    e: "edit",
+    data: { id: string; name: string; intro: string; type: string; artStyle: string; videoRatio: string; imageModel: string; videoModel: string },
+  ): void;
 }>();
 
 // ===== 类型定义 =====
@@ -172,6 +184,8 @@ interface ProjectFormData {
   type: string;
   artStyle: string;
   videoRatio: string;
+  imageModel: string;
+  videoModel: string;
 }
 
 interface ArtStyleItem {
@@ -200,6 +214,8 @@ const DEFAULT_FORM: () => ProjectFormData & { id: number; era: string; createTim
   videoRatio: "16:9",
   createTime: 0,
   userId: 0,
+  imageModel: "",
+  videoModel: "",
 });
 
 // ===== 表单 =====
@@ -223,6 +239,8 @@ function handleOk() {
       type: formState.value.type,
       artStyle: formState.value.artStyle,
       videoRatio: formState.value.videoRatio,
+      imageModel: imageModel.value,
+      videoModel: videoModel.value,
     });
   } else {
     emit("add", {
@@ -232,6 +250,8 @@ function handleOk() {
       type: formState.value.type,
       artStyle: formState.value.artStyle,
       videoRatio: formState.value.videoRatio || "16:9",
+      imageModel: imageModel.value,
+      videoModel: videoModel.value,
     });
   }
   resetForm();

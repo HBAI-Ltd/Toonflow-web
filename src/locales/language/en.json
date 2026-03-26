@@ -382,7 +382,9 @@
         "uploadCover": "Upload Cover",
         "artStylePrompt": "Visual Manual Prompt Words",
         "aiExtract": "AI Extract Prompt",
-        "promptPlaceholder": "Describes the visual manual prompt word, used to specify the visual manual when generating images"
+        "promptPlaceholder": "Describes the visual manual prompt word, used to specify the visual manual when generating images",
+        "modelData": "Select image model",
+        "videoModelData": "Select video model"
       },
       "msg": {
         "fetchFailed": "Failed to fetch project list",
@@ -845,7 +847,7 @@
         "generatedResult": "Results",
         "waitingGenerate": "Waiting..."
       },
-      "save": "Save",
+      "save": "Select",
       "cancel": "Cancel",
       "chatBox": {
         "inputPlaceholder": "Type a message...",
