@@ -57,7 +57,7 @@
                 </t-tag>
                 <template v-else-if="item.type !== 'main'">
                   <t-tag size="small" theme="danger">无归属</t-tag>
-                  <span>⚠️无归属Skill无法启用</span>
+                  <span>⚠️无归属，无法启用Skill</span>
                 </template>
                 <span v-if="!item.embedding && item.type !== 'main'">⚠️未向量化，无法启用Skill</span>
               </div>
@@ -71,13 +71,13 @@
                 <t-tag size="small" v-else-if="item.state == 0" theme="warning">生成描述中</t-tag>
                 <t-tag size="small" v-else-if="item.state == -1" theme="danger">描述为空</t-tag>
                 <t-tag size="small" v-else-if="item.state == -2" theme="danger">归属异常</t-tag>
-                <t-tag size="small" v-else-if="item.state == -3" theme="danger">MD5变动，建议更新描述</t-tag>
+                <t-tag size="small" v-else-if="item.state == -3" theme="danger" variant="outline">MD5变动，建议更新描述</t-tag>
               </template>
             </div>
           </div>
           <div class="md5">MD5：{{ item.md5 }}</div>
           <div class="path">路径：{{ item.path }}</div>
-          <div class="description" v-if="item.type !== 'main'">{{ item.description || "⚠️描述为空将会影响技能调用" }}</div>
+          <div class="description" v-if="item.type !== 'main'">{{ item.description }}</div>
           <div class="flootInfo f ac jb">
             <div class="createTime">{{ dayjs(item.createTime).format("YYYY-MM-DD HH:mm:ss") }}</div>
             <div class="btnList">

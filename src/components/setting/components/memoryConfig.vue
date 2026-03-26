@@ -9,7 +9,9 @@
           <template #help>向量模型文件路径：/data/models/{{ formData.modelOnnxFile ? formData.modelOnnxFile.join("/") : "" }}</template>
         </t-form-item>
         <t-form-item :label="$t('settings.memory.quantizationType')" name="modelDtype">
-          <t-input v-model="formData.modelDtype" :placeholder="$t('settings.memory.quantizationPlaceholder')" />
+          <t-select v-model="formData.modelDtype" :placeholder="$t('settings.memory.quantizationPlaceholder')">
+            <t-option v-for="item in dtypeOptions" :key="item" :value="item" :label="item" />
+          </t-select>
           <template #help></template>
         </t-form-item>
       </t-card>
@@ -76,6 +78,8 @@ const formData = ref<MemoryConfigForm>({
   modelDtype: "fp16",
 });
 
+const dtypeOptions = ["fp16", "auto", "fp32", "q8", "int8", "uint8", "q4", "bnb4", "q4f16"];
+
 const loading = ref(false);
 const saving = ref(false);
 const clearing = ref(false);
@@ -125,6 +129,7 @@ async function handleClearMemory() {
     onConfirm: async () => {
       clearing.value = true;
       try {
+        await axios.post("/setting/memoryConfig/delAllMemory");
         window.$message.success($t("settings.memory.msg.cleared"));
         dialog.hide();
       } catch (error: any) {

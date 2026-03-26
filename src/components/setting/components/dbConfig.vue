@@ -49,6 +49,7 @@
 import { ref, computed } from "vue";
 import axios from "@/utils/axios";
 import { LoadingPlugin } from "tdesign-vue-next";
+import router from "@/router";
 
 const firstConfirmVisible = ref(false);
 const secondConfirmVisible = ref(false);
@@ -100,6 +101,7 @@ async function handleSecondConfirm() {
   try {
     await axios.get("/setting/dbConfig/clearData");
     window.$message.success($t("settings.db.msg.cleared"));
+    router.push("/login");
   } catch {
     window.$message.error($t("settings.db.msg.operationFailed"));
   } finally {
