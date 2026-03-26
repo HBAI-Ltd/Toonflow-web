@@ -50,7 +50,9 @@
       </div>
       <div class="viewBox">
         <router-view v-slot="{ Component }">
-          <component :is="Component" :key="$route.fullPath" />
+          <keepAlive>
+            <component :is="Component" :key="$route.fullPath" />
+          </keepAlive>
         </router-view>
       </div>
     </div>

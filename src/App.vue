@@ -2,7 +2,6 @@
   <div class="app">
     <t-config-provider :global-config="globalConfig">
       <router-view></router-view>
-      <init />
     </t-config-provider>
   </div>
 </template>
@@ -14,7 +13,7 @@ import { merge } from "lodash-es";
 import zhConfig from "tdesign-vue-next/es/locale/zh_CN";
 import enConfig from "tdesign-vue-next/es/locale/en_US";
 import { cachedLocale } from "@/locales";
-
+import { initTheme } from "@/utils/theme";
 import { type GlobalConfigProvider } from "tdesign-vue-next";
 import scanSkills from "@/utils/scanSkills";
 import checkUpdate from "@/utils/checkUpdate";
@@ -32,6 +31,7 @@ onBeforeMount(() => {
 
 // 初始化主题
 onMounted(() => {
+  initTheme();
   scanSkills();
   checkUpdate();
   setTimeout(() => {
