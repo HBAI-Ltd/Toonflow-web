@@ -5,14 +5,18 @@
         <t-form labelAlign="top">
           <t-form-item :label="$t('workbench.cornerScape.quickActions')">
             <div class="quickActions">
-              <t-button theme="primary" variant="outline" @click="selectByState('')">{{ $t('workbench.cornerScape.selectUngenerated') }}</t-button>
-              <t-button theme="primary" variant="outline" @click="selectByState('生成成功')">{{ $t('workbench.cornerScape.selectGenerated') }}</t-button>
-              <t-button theme="primary" variant="outline" @click="selectByState('生成失败')">{{ $t('workbench.cornerScape.selectFailed') }}</t-button>
-              <t-button theme="primary" variant="outline" @click="toggleSelectAll">{{ $t('workbench.cornerScape.invertSelection') }}</t-button>
-              <t-button theme="primary" variant="outline" @click="clearSelection">{{ $t('workbench.cornerScape.clearSelection') }}</t-button>
+              <t-button theme="primary" variant="outline" @click="selectByState('')">{{ $t("workbench.cornerScape.selectUngenerated") }}</t-button>
+              <t-button theme="primary" variant="outline" @click="selectByState('生成成功')">
+                {{ $t("workbench.cornerScape.selectGenerated") }}
+              </t-button>
+              <t-button theme="primary" variant="outline" @click="selectByState('生成失败')">{{ $t("workbench.cornerScape.selectFailed") }}</t-button>
+              <t-button theme="primary" variant="outline" @click="toggleSelectAll">{{ $t("workbench.cornerScape.invertSelection") }}</t-button>
+              <t-button theme="primary" variant="outline" @click="clearSelection">{{ $t("workbench.cornerScape.clearSelection") }}</t-button>
               <t-image-viewer :images="previewImages" :closeOnEscKeydown="true" :closeOnOverlay="true">
                 <template #trigger="{ open }">
-                  <t-button theme="primary" variant="outline" :disabled="!hasPreviewImages" @click="hasPreviewImages && open()">{{ $t('workbench.cornerScape.batchPreview') }}</t-button>
+                  <t-button theme="primary" variant="outline" :disabled="!hasPreviewImages" @click="hasPreviewImages && open()">
+                    {{ $t("workbench.cornerScape.batchPreview") }}
+                  </t-button>
                 </template>
               </t-image-viewer>
             </div>
@@ -37,7 +41,7 @@
             <t-input-number v-model="concurrentCount" autoWidth :placeholder="$t('workbench.cornerScape.concurrencyPh')"></t-input-number>
           </t-form-item>
           <t-form-item>
-            <t-button theme="primary" block @click="batchGeneration">{{ $t('workbench.cornerScape.startBatch') }}</t-button>
+            <t-button theme="primary" block @click="batchGeneration">{{ $t("workbench.cornerScape.startBatch") }}</t-button>
           </t-form-item>
         </t-form>
       </t-card>
@@ -49,7 +53,7 @@
           <t-empty v-if="!item.state" type="maintenance" :title="$t('workbench.cornerScape.waitingGen')" />
           <div v-else-if="item.state === '生成中'" class="generatingBox">
             <t-loading />
-            <span class="generatingText">{{ $t('workbench.cornerScape.generating') }}</span>
+            <span class="generatingText">{{ $t("workbench.cornerScape.generating") }}</span>
           </div>
           <t-empty v-else-if="item.state === '生成失败'" type="fail" :title="$t('workbench.cornerScape.genFailed')" />
           <t-image v-else class="image" :src="item.filePath ?? undefined" fit="contain" :preview="true" :lazy="true">
@@ -67,7 +71,15 @@
           <div class="title">{{ item.name }}</div>
           <div class="meta">
             <t-tag size="small" variant="light-outline" theme="warning" class="typeTag">
-              {{ item.type === "role" ? $t('workbench.cornerScape.typeRole') : item.type === "scene" ? $t('workbench.cornerScape.typeScene') : item.type === "tool" ? $t('workbench.cornerScape.typeTool') : $t('workbench.cornerScape.typeUnknown') }}
+              {{
+                item.type === "role"
+                  ? $t("workbench.cornerScape.typeRole")
+                  : item.type === "scene"
+                    ? $t("workbench.cornerScape.typeScene")
+                    : item.type === "tool"
+                      ? $t("workbench.cornerScape.typeTool")
+                      : $t("workbench.cornerScape.typeUnknown")
+              }}
             </t-tag>
             <t-tag size="small" variant="outline" class="stateTag" v-if="item.model">
               {{ item.model }}
@@ -77,17 +89,40 @@
             </t-tag>
           </div>
           <div class="prompt" v-if="item.prompt">
-            {{ item.type === "role" ? $t('workbench.cornerScape.typeRole') : item.type === "scene" ? $t('workbench.cornerScape.typeScene') : item.type === "tool" ? $t('workbench.cornerScape.typeTool') : $t('workbench.cornerScape.typeUnknown') }}{{ $t('workbench.cornerScape.descriptionSuffix') }}{{ item.prompt }}
+            {{
+              item.type === "role"
+                ? $t("workbench.cornerScape.typeRole")
+                : item.type === "scene"
+                  ? $t("workbench.cornerScape.typeScene")
+                  : item.type === "tool"
+                    ? $t("workbench.cornerScape.typeTool")
+                    : $t("workbench.cornerScape.typeUnknown")
+            }}{{ $t("workbench.cornerScape.descriptionSuffix") }}{{ item.prompt }}
           </div>
         </div>
       </t-card>
       <t-empty v-if="dataList.length === 0" type="empty" :title="$t('workbench.cornerScape.operateScriptFirst')" />
-      <t-drawer :closeBtn="true" closeOnEscKeydown :showOverlay="false" :footer="false" v-model:visible="drawerVisible" size="480px">
+      <t-drawer
+        :closeBtn="true"
+        closeOnEscKeydown
+        :showOverlay="false"
+        :footer="false"
+        v-model:visible="drawerVisible"
+        size="480px"
+        style="top: 15px; bottom: 0px; height: auto">
         <template #header>
           <div class="drawerHeader">
-            <span>{{ currentItem?.name }} - {{ $t('workbench.cornerScape.individualConfig') }}</span>
+            <span>{{ currentItem?.name }} - {{ $t("workbench.cornerScape.individualConfig") }}</span>
             <t-tag size="medium" variant="light-outline" theme="warning">
-              {{ currentItem?.type === "role" ? $t('workbench.cornerScape.typeRole') : currentItem?.type === "scene" ? $t('workbench.cornerScape.typeScene') : currentItem?.type === "tool" ? $t('workbench.cornerScape.typeTool') : $t('workbench.cornerScape.typeUnknown') }}
+              {{
+                currentItem?.type === "role"
+                  ? $t("workbench.cornerScape.typeRole")
+                  : currentItem?.type === "scene"
+                    ? $t("workbench.cornerScape.typeScene")
+                    : currentItem?.type === "tool"
+                      ? $t("workbench.cornerScape.typeTool")
+                      : $t("workbench.cornerScape.typeUnknown")
+              }}
             </t-tag>
           </div>
         </template>
@@ -95,7 +130,7 @@
           <t-empty v-if="!currentItem.state" type="maintenance" :title="$t('workbench.cornerScape.waitingGen')" />
           <div v-else-if="currentItem.state === '生成中'" class="generatingBox">
             <t-loading />
-            <span class="generatingText">{{ $t('workbench.cornerScape.generating') }}</span>
+            <span class="generatingText">{{ $t("workbench.cornerScape.generating") }}</span>
           </div>
           <t-empty v-else-if="currentItem.state === '生成失败'" type="fail" :title="$t('workbench.cornerScape.genFailed')" />
           <t-image v-else-if="currentItem.filePath" class="image" :src="currentItem.filePath" fit="contain">
@@ -118,17 +153,21 @@
             <t-select v-model="editForm.resolution" :placeholder="$t('workbench.cornerScape.resolutionPh')" :options="resolutionOptions" />
           </t-form-item>
           <t-form-item :label="$t('workbench.cornerScape.promptLabel')">
-            <t-textarea v-model="editForm.prompt" :placeholder="$t('workbench.cornerScape.promptPh')" :autosize="{ minRows: 4, maxRows: 10 }" :disabled="polishing" />
+            <t-textarea
+              v-model="editForm.prompt"
+              :placeholder="$t('workbench.cornerScape.promptPh')"
+              :autosize="{ minRows: 4, maxRows: 10 }"
+              :disabled="polishing" />
           </t-form-item>
           <t-form-item>
             <div class="drawerActions">
               <t-button theme="default" variant="outline" :loading="polishing" @click="polishPrompts">
                 <template #icon><t-icon name="edit" /></template>
-                {{ $t('workbench.cornerScape.aiPolish') }}
+                {{ $t("workbench.cornerScape.aiPolish") }}
               </t-button>
               <t-button theme="primary" @click="regenerateItem">
                 <template #icon><t-icon name="refresh" /></template>
-                {{ $t('workbench.cornerScape.regenerate') }}
+                {{ $t("workbench.cornerScape.regenerate") }}
               </t-button>
             </div>
           </t-form-item>
@@ -154,6 +193,7 @@ interface DataItem {
   model: string;
   resolution: string;
   describe: string;
+  promptState: string;
 }
 
 const checkboxValue = ref<string[]>([]);
@@ -167,16 +207,16 @@ const resolutionOptions = [
   { label: "4K", value: "4k" },
 ];
 const options = ref([
-  { labelKey: 'workbench.cornerScape.filterRole', value: "role" },
-  { labelKey: 'workbench.cornerScape.filterScene', value: "scene" },
-  { labelKey: 'workbench.cornerScape.filterTool', value: "tool" },
+  { labelKey: "workbench.cornerScape.filterRole", value: "role" },
+  { labelKey: "workbench.cornerScape.filterScene", value: "scene" },
+  { labelKey: "workbench.cornerScape.filterTool", value: "tool" },
 ]);
 
 const translatedOptions = computed(() =>
-  options.value.map(opt => ({
+  options.value.map((opt) => ({
     ...opt,
-    label: $t(opt.labelKey)
-  }))
+    label: $t(opt.labelKey),
+  })),
 );
 const dataList = ref<DataItem[]>([]);
 const { project } = storeToRefs(projectStore());
@@ -200,6 +240,8 @@ onUnmounted(() => {
     abortController.abort();
     abortController = null;
   }
+  stopPolling();
+  stopImagePolling();
   // 将所有"生成中"的项重置为空状态
   dataList.value.forEach((item) => {
     if (item.state === "生成中") item.state = "";
@@ -293,15 +335,15 @@ function setItemState(id: number, state: string) {
 function regenerateItem() {
   if (!currentItem.value) return;
   if (!selectValue.value) {
-    window.$message.warning($t('workbench.cornerScape.msg.selectModel'));
+    window.$message.warning($t("workbench.cornerScape.msg.selectModel"));
     return;
   }
   if (!editForm.resolution) {
-    window.$message.warning($t('workbench.cornerScape.msg.selectResolution'));
+    window.$message.warning($t("workbench.cornerScape.msg.selectResolution"));
     return;
   }
   if (!editForm.prompt.trim()) {
-    window.$message.warning($t('workbench.cornerScape.msg.enterPrompt'));
+    window.$message.warning($t("workbench.cornerScape.msg.enterPrompt"));
     return;
   }
   const item = currentItem.value;
@@ -314,7 +356,7 @@ function regenerateItem() {
       {
         type: item.type ?? "props",
         projectId: project.value?.id,
-        name: item.name ?? $t('workbench.cornerScape.unnamed'),
+        name: item.name ?? $t("workbench.cornerScape.unnamed"),
         base64: "",
         prompt: editForm.prompt,
         model: selectValue.value,
@@ -325,12 +367,12 @@ function regenerateItem() {
       { signal: controller.signal },
     )
     .then(async () => {
-      window.$message.success($t('workbench.cornerScape.msg.genSuccess', { name: item.name }));
+      window.$message.success($t("workbench.cornerScape.msg.genSuccess", { name: item.name }));
       await getFilteredData();
     })
     .catch((e: any) => {
       if (e.name === "CanceledError" || e.code === "ERR_CANCELED") return;
-      window.$message.error(e.message ?? $t('workbench.cornerScape.msg.genFailed', { name: item.name }));
+      window.$message.error(e.message ?? $t("workbench.cornerScape.msg.genFailed", { name: item.name }));
       setItemState(item.id, "生成失败");
     });
 }
@@ -339,7 +381,7 @@ function regenerateItem() {
 const polishing = ref(false);
 async function polishPrompts() {
   if (!editForm.prompt.trim()) {
-    window.$message.warning($t('workbench.cornerScape.msg.enterPromptFirst'));
+    window.$message.warning($t("workbench.cornerScape.msg.enterPromptFirst"));
     return;
   }
   polishing.value = true;
@@ -349,15 +391,15 @@ async function polishPrompts() {
       assetsId: editForm.assetsId,
       type: editForm.type ?? "props",
       name: editForm.name,
-      describe: editForm.prompt ? editForm.prompt : $t('workbench.cornerScape.noDescription'),
+      describe: editForm.prompt ? editForm.prompt : $t("workbench.cornerScape.noDescription"),
     });
-    window.$message.success($t('workbench.cornerScape.msg.promptGenSuccess'));
+    window.$message.success($t("workbench.cornerScape.msg.promptGenSuccess"));
     if (data.assetsId === editForm.assetsId) {
       editForm.prompt = data.prompt;
     }
     getFilteredData();
   } catch {
-    window.$message.error($t('workbench.cornerScape.msg.polishFailed'));
+    window.$message.error($t("workbench.cornerScape.msg.polishFailed"));
   } finally {
     polishing.value = false;
   }
@@ -365,15 +407,15 @@ async function polishPrompts() {
 // 批量生成
 async function batchGeneration() {
   if (selectedIds.value.length === 0) {
-    window.$message.warning($t('workbench.cornerScape.msg.selectAtLeastOne'));
+    window.$message.warning($t("workbench.cornerScape.msg.selectAtLeastOne"));
     return;
   }
   if (!selectValue.value) {
-    window.$message.warning($t('workbench.cornerScape.msg.selectModel'));
+    window.$message.warning($t("workbench.cornerScape.msg.selectModel"));
     return;
   }
   if (!resolution.value) {
-    window.$message.warning($t('workbench.cornerScape.msg.selectResolution'));
+    window.$message.warning($t("workbench.cornerScape.msg.selectResolution"));
     return;
   }
 
@@ -382,8 +424,7 @@ async function batchGeneration() {
   const limit = pLimit(concurrent);
   const controller = createAbortController();
 
-  window.$message.success($t('workbench.cornerScape.msg.batchStarted', { count: items.length, concurrent }));
-
+  window.$message.success($t("workbench.cornerScape.msg.batchStarted", { count: items.length, concurrent }));
   const tasks = items.map((item) =>
     limit(async () => {
       if (controller.signal.aborted) return;
@@ -394,7 +435,7 @@ async function batchGeneration() {
           {
             type: item.type ?? "props",
             projectId: project.value?.id,
-            name: item.name ?? $t('workbench.cornerScape.unnamed'),
+            name: item.name ?? $t("workbench.cornerScape.unnamed"),
             base64: "",
             prompt: item.prompt || item.describe,
             model: selectValue.value,
@@ -408,7 +449,7 @@ async function batchGeneration() {
         await getFilteredData();
       } catch (e: any) {
         if (e.name === "CanceledError" || e.code === "ERR_CANCELED") return;
-        window.$message.error($t('workbench.cornerScape.msg.batchItemFailed', { name: item.name, error: e.message ?? '' }));
+        window.$message.error($t("workbench.cornerScape.msg.batchItemFailed", { name: item.name, error: e.message ?? "" }));
         setItemState(item.id, "生成失败");
       }
     }),
@@ -416,9 +457,108 @@ async function batchGeneration() {
 
   await Promise.all(tasks);
   if (!controller.signal.aborted) {
-    window.$message.success($t('workbench.cornerScape.msg.batchComplete'));
+    window.$message.success($t("workbench.cornerScape.msg.batchComplete"));
   }
 }
+//轮询
+const notCompultedData = computed(() => {
+  return dataList.value.filter((item) => item.promptState == "生成中");
+});
+const generatingData = computed(() => {
+  return dataList.value.filter((item) => item.state === "生成中");
+});
+// 轮询相关
+let pollingTimer: ReturnType<typeof setInterval> | null = null;
+let imagePollingTimer: ReturnType<typeof setInterval> | null = null;
+//轮询提示词生成
+async function pollingPromptAssets() {
+  if (notCompultedData.value.length === 0) return;
+  const ids = notCompultedData.value.map((item) => item.id);
+  try {
+    const { data } = await axios.post("/assets/pollingPromptAssets", { ids });
+    if (Array.isArray(data)) {
+      data.forEach((item: { id: number; promptState: string; prompt: string }) => {
+        const target = dataList.value.find((row) => row.id === item.id);
+        if (target) {
+          target.promptState = item.promptState;
+          if (item.prompt !== undefined) target.prompt = item.prompt;
+        }
+      });
+    }
+  } catch (e) {
+    console.error("轮询提示词状态失败:", e);
+  }
+}
+//轮询图片生成
+async function pollingImageAssets() {
+  if (generatingData.value.length === 0) return;
+  const ids = generatingData.value.map((item) => item.id);
+  try {
+    const { data } = await axios.post("/assets/pollingImageAssets", { ids });
+    if (Array.isArray(data)) {
+      data.forEach((item: { id: number; state: string; filePath: string }) => {
+        const target = dataList.value.find((row) => row.id === item.id);
+        if (target) {
+          target.state = item.state;
+          if (item.filePath !== undefined) target.filePath = item.filePath;
+        }
+      });
+    }
+  } catch (e) {
+    console.error("轮询图片生成状态失败:", e);
+  }
+}
+function startPolling() {
+  if (pollingTimer) return;
+  pollingTimer = setInterval(async () => {
+    if (notCompultedData.value.length === 0) {
+      stopPolling();
+      return;
+    }
+    await pollingPromptAssets();
+  }, 3000);
+}
+
+function stopPolling() {
+  if (pollingTimer) {
+    clearInterval(pollingTimer);
+    pollingTimer = null;
+  }
+}
+
+function startImagePolling() {
+  if (imagePollingTimer) return;
+  imagePollingTimer = setInterval(async () => {
+    if (generatingData.value.length === 0) {
+      stopImagePolling();
+      return;
+    }
+    await pollingImageAssets();
+  }, 3000);
+}
+
+function stopImagePolling() {
+  if (imagePollingTimer) {
+    clearInterval(imagePollingTimer);
+    imagePollingTimer = null;
+  }
+}
+
+watch(notCompultedData, (val) => {
+  if (val.length > 0) {
+    startPolling();
+  } else {
+    stopPolling();
+  }
+});
+
+watch(generatingData, (val) => {
+  if (val.length > 0) {
+    startImagePolling();
+  } else {
+    stopImagePolling();
+  }
+});
 </script>
 
 <style lang="scss" scoped>

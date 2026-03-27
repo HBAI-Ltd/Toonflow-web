@@ -140,13 +140,13 @@
                 </template>
                 <template #prompt="{ row }">
                   <div class="promptCell">
-                    <t-loading v-if="generatingIds.has(row.id)" size="small" style="margin-right: 4px" />
-                    <span :class="{ 'generating-text': generatingIds.has(row.id) }">{{ row.prompt }}</span>
+                    <t-loading v-if="row.promptState === '生成中'" size="small" style="margin-right: 4px" />
+                    <span :class="{ 'generating-text': row.promptState === '生成中' }">{{ row.prompt }}</span>
                   </div>
                 </template>
                 <template #previewWithLoading="{ row }">
                   <div class="previewCell">
-                    <div v-if="generatingImageIds.has(row.id)" class="imageTrigger generatingImage">
+                    <div v-if="row.state === '生成中'" class="imageTrigger generatingImage">
                       <t-loading size="small" />
                       <span class="generatingLabel">{{ $t("workbench.assets.generating") }}</span>
                     </div>
@@ -349,6 +349,12 @@ const props = withDefaults(
 onMounted(() => {
   loadCurrentTabData();
 });
+
+onUnmounted(() => {
+  stopPolling();
+  stopImagePolling();
+});
+
 const { project } = storeToRefs(projectStore());
 
 const allThemeData = [
@@ -388,12 +394,11 @@ const tabNameMap: Record<string, string> = {
 const selectedRowKeys = ref<Array<string | number>>([]);
 const expandedRowKeys = ref<Array<string | number>>([]);
 const loading = ref(false);
-// 正在生成提示词的资产 id 集合
-const generatingIds = ref<Set<number>>(new Set());
-// 正在生成图片的资产 id 集合
-const generatingImageIds = ref<Set<number>>(new Set());
-// 是否正在处于任意生成中（提示词或图片）
-const isGenerating = (id: number) => generatingIds.value.has(id) || generatingImageIds.value.has(id);
+// 是否正在处于任意生成中（提示词或图片），基于 item 的实际 state/promptState 判断
+const isGenerating = (id: number) => {
+  const item = tableData.value.find((row) => row.id === id);
+  return item?.promptState === "生成中" || item?.state === "生成中";
+};
 //表格数据类型定义
 interface Asset {
   id: number;
@@ -404,9 +409,11 @@ interface Asset {
   remark: string;
   src: string;
   type: "role" | "tool" | "scene" | "clip"; // "角色" | "道具" | "场景" | "素材"
-  state: "未生成" | "生成中" | "已完成" | "生成失败";
+  state: string;
   sonAssets?: Asset[]; // 子资产列表
   imageId: number;
+  promptState: string;
+  filePath: string;
 }
 const tableData = ref<Asset[]>([]);
 // 分页配置
@@ -531,9 +538,11 @@ async function handleBatchGeneratePrompt() {
     window.$message.warning($t("workbench.assets.selectAtLeastOne"));
     return;
   }
-  const newSet = new Set(generatingIds.value);
-  selectedAssets.forEach((asset) => newSet.add(asset.id));
-  generatingIds.value = newSet;
+  // 设置 promptState 为 '生成中'，让轮询自动接管状态跟踪
+  selectedAssets.forEach((asset) => {
+    const target = tableData.value.find((row) => row.id === asset.id);
+    if (target) target.promptState = "生成中";
+  });
   selectedRowKeys.value = selectedRowKeys.value.filter((key) => !selectedAssets.some((a) => a.id === key));
   batchGenerationShow.value = false;
 
@@ -546,14 +555,11 @@ async function handleBatchGeneratePrompt() {
         name: asset.name,
         describe: asset.describe ? asset.describe : $t("workbench.assets.noDescription"),
       });
-      await getFilteredData(assetOptions.value);
-      window.$message.success($t("workbench.assets.promptGenSuccess", { name: asset.name }));
+      // 轮询会自动更新 promptState 和 prompt
     } catch (e: any) {
       window.$message.error($t("workbench.assets.promptGenFail", { name: asset.name, error: e.message ?? "" }));
-    } finally {
-      const s = new Set(generatingIds.value);
-      s.delete(asset.id);
-      generatingIds.value = s;
+      const target = tableData.value.find((row) => row.id === asset.id);
+      if (target) target.promptState = "";
     }
   }
 }
@@ -573,18 +579,18 @@ async function handleBatchGenerateImage() {
     return;
   }
 
-  const newSet = new Set(generatingImageIds.value);
-  selectedAssets.forEach((asset) => newSet.add(asset.id));
-  generatingImageIds.value = newSet;
+  // 设置 state 为 '生成中'，让轮询自动接管状态跟踪
+  selectedAssets.forEach((asset) => {
+    if (!asset.prompt) return;
+    const target = tableData.value.find((row) => row.id === asset.id);
+    if (target) target.state = "生成中";
+  });
   selectedRowKeys.value = selectedRowKeys.value.filter((key) => !selectedAssets.some((a) => a.id === key));
   batchGenerationShow.value = false;
 
   for (const asset of selectedAssets) {
     if (!asset.prompt) {
       window.$message.warning($t("workbench.assets.noPromptForImage", { name: asset.name }));
-      const s = new Set(generatingImageIds.value);
-      s.delete(asset.id);
-      generatingImageIds.value = s;
       continue;
     }
     try {
@@ -598,14 +604,11 @@ async function handleBatchGenerateImage() {
         id: asset.id,
         resolution: resolution.value,
       });
-      await getFilteredData(assetOptions.value);
-      window.$message.success($t("workbench.assets.imageGenSuccess", { name: asset.name }));
+      // 轮询会自动更新 state 和 filePath
     } catch (e: any) {
       window.$message.error($t("workbench.assets.imageGenFail", { name: asset.name, error: e.message ?? "" }));
-    } finally {
-      const s = new Set(generatingImageIds.value);
-      s.delete(asset.id);
-      generatingImageIds.value = s;
+      const target = tableData.value.find((row) => row.id === asset.id);
+      if (target) target.state = "生成失败";
     }
   }
 }
@@ -903,6 +906,107 @@ function closeMediaPreview() {
   mediaPreviewShow.value = false;
   mediaPreviewSrc.value = "";
 }
+//轮询
+const notCompultedData = computed(() => {
+  return tableData.value.filter((item) => item.promptState == "生成中");
+});
+const generatingData = computed(() => {
+  return tableData.value.filter((item) => item.state === "生成中");
+});
+// 轮询相关
+let pollingTimer: ReturnType<typeof setInterval> | null = null;
+let imagePollingTimer: ReturnType<typeof setInterval> | null = null;
+//轮询提示词生成
+async function pollingPromptAssets() {
+  if (notCompultedData.value.length === 0) return;
+  const ids = notCompultedData.value.map((item) => item.id);
+  try {
+    const { data } = await axios.post("/assets/pollingPromptAssets", { ids });
+    if (Array.isArray(data)) {
+      data.forEach((item: { id: number; promptState: string; prompt: string }) => {
+        const target = tableData.value.find((row) => row.id === item.id);
+        if (target) {
+          target.promptState = item.promptState;
+          if (item.prompt !== undefined) target.prompt = item.prompt;
+          loadCurrentTabData();
+        }
+      });
+    }
+  } catch (e) {
+    console.error("轮询提示词状态失败:", e);
+  }
+}
+//轮询图片生成
+async function pollingImageAssets() {
+  if (generatingData.value.length === 0) return;
+  const ids = generatingData.value.map((item) => item.id);
+  try {
+    const { data } = await axios.post("/assets/pollingImageAssets", { ids });
+    if (Array.isArray(data)) {
+      data.forEach((item: { id: number; state: string; filePath: string }) => {
+        const target = tableData.value.find((row) => row.id === item.id);
+        if (target) {
+          target.state = item.state;
+          if (item.filePath !== undefined) target.filePath = item.filePath;
+          loadCurrentTabData();
+        }
+      });
+    }
+  } catch (e) {
+    console.error("轮询图片生成状态失败:", e);
+  }
+}
+function startPolling() {
+  if (pollingTimer) return;
+  pollingTimer = setInterval(async () => {
+    if (notCompultedData.value.length === 0) {
+      stopPolling();
+      return;
+    }
+    await pollingPromptAssets();
+  }, 3000);
+}
+
+function stopPolling() {
+  if (pollingTimer) {
+    clearInterval(pollingTimer);
+    pollingTimer = null;
+  }
+}
+
+function startImagePolling() {
+  if (imagePollingTimer) return;
+  imagePollingTimer = setInterval(async () => {
+    if (generatingData.value.length === 0) {
+      stopImagePolling();
+      return;
+    }
+    await pollingImageAssets();
+  }, 3000);
+}
+
+function stopImagePolling() {
+  if (imagePollingTimer) {
+    clearInterval(imagePollingTimer);
+    imagePollingTimer = null;
+  }
+}
+
+watch(notCompultedData, (val) => {
+  if (val.length > 0) {
+    startPolling();
+  } else {
+    stopPolling();
+  }
+});
+
+watch(generatingData, (val) => {
+  if (val.length > 0) {
+    startImagePolling();
+  } else {
+    stopImagePolling();
+  }
+});
 </script>
 
 <style lang="scss" scoped>

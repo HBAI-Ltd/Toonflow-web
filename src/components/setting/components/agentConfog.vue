@@ -179,7 +179,7 @@ function testModel() {
       type: "text",
       modelName: "gpt-4.1",
       apiKey: "",
-      id: 1,
+      id: "toonflow",
     })
     .then(() => {
       loading.value = false;
