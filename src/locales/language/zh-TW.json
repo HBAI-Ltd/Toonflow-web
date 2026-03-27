@@ -620,7 +620,8 @@
         "selectAtLeastOne": "請至少選擇一個資產進行批次生成",
         "batchStarted": "開始批次生成，共 {count} 個，並發數 {concurrent}",
         "batchItemFailed": "{name} 生成失敗：{error}",
-        "batchComplete": "批次生成完成"
+        "batchComplete": "批次生成完成",
+        "batchFailed": "批量生成失敗"
       }
     },
     "script": {

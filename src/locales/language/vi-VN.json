@@ -603,7 +603,8 @@
         "selectAtLeastOne": "Vui lòng chọn ít nhất một tài nguyên để tạo hàng loạt",
         "batchStarted": "Bắt đầu tạo hàng loạt, tổng cộng {count} mục, số luồng đồng thời {concurrent}",
         "batchItemFailed": "Tạo {name} thất bại: {error}",
-        "batchComplete": "Tạo hàng loạt hoàn tất"
+        "batchComplete": "Tạo hàng loạt hoàn tất",
+        "batchFailed": "Tạo hàng loạt không thành công"
       }
     },
     "script": {

@@ -545,22 +545,18 @@ async function handleBatchGeneratePrompt() {
   });
   selectedRowKeys.value = selectedRowKeys.value.filter((key) => !selectedAssets.some((a) => a.id === key));
   batchGenerationShow.value = false;
-
-  for (const asset of selectedAssets) {
-    try {
-      await axios.post("/assetsGenerate/polishAssetsPrompt", {
-        projectId: project.value?.id,
-        assetsId: asset.id,
-        type: asset.type ?? "props",
-        name: asset.name,
-        describe: asset.describe ? asset.describe : $t("workbench.assets.noDescription"),
-      });
-      // 轮询会自动更新 promptState 和 prompt
-    } catch (e: any) {
-      window.$message.error($t("workbench.assets.promptGenFail", { name: asset.name, error: e.message ?? "" }));
-      const target = tableData.value.find((row) => row.id === asset.id);
-      if (target) target.promptState = "";
-    }
+  try {
+    await axios.post("/assetsGenerate/batchPolishAssetsPrompt", {
+      projectId: project.value?.id,
+      items: selectedAssets.map((item: { id: number; name: string; type: string; describe: string }) => ({
+        assetsId: item.id,
+        type: item.type ?? "props",
+        name: item.name,
+        describe: item.describe ? item.describe : $t("workbench.assets.noDescription"),
+      })),
+    });
+  } catch (e: any) {
+    window.$message.error($t("workbench.assets.promptGenFail"));
   }
 }
 // 批量生成图片
@@ -579,37 +575,43 @@ async function handleBatchGenerateImage() {
     return;
   }
 
+  // 过滤掉没有 prompt 的资产
+  const validAssets = selectedAssets.filter((asset) => {
+    if (!asset.prompt) {
+      window.$message.warning($t("workbench.assets.noPromptForImage", { name: asset.name }));
+      return false;
+    }
+    return true;
+  });
+  if (validAssets.length === 0) return;
+
   // 设置 state 为 '生成中'，让轮询自动接管状态跟踪
-  selectedAssets.forEach((asset) => {
-    if (!asset.prompt) return;
+  validAssets.forEach((asset) => {
     const target = tableData.value.find((row) => row.id === asset.id);
     if (target) target.state = "生成中";
   });
-  selectedRowKeys.value = selectedRowKeys.value.filter((key) => !selectedAssets.some((a) => a.id === key));
+  selectedRowKeys.value = selectedRowKeys.value.filter((key) => !validAssets.some((a) => a.id === key));
   batchGenerationShow.value = false;
 
-  for (const asset of selectedAssets) {
-    if (!asset.prompt) {
-      window.$message.warning($t("workbench.assets.noPromptForImage", { name: asset.name }));
-      continue;
-    }
-    try {
-      await axios.post("/assetsGenerate/generateAssets", {
-        type: asset.type ?? "props",
-        projectId: project.value?.id,
-        name: asset.name,
-        base64: "",
-        prompt: asset.prompt,
-        model: selectValue.value,
-        id: asset.id,
-        resolution: resolution.value,
-      });
-      // 轮询会自动更新 state 和 filePath
-    } catch (e: any) {
-      window.$message.error($t("workbench.assets.imageGenFail", { name: asset.name, error: e.message ?? "" }));
+  try {
+    await axios.post("/assetsGenerate/batchGenerateImageAssets", {
+      projectId: project.value?.id,
+      model: selectValue.value,
+      resolution: resolution.value,
+      concurrentCount: 5,
+      items: validAssets.map((item) => ({
+        id: item.id,
+        type: item.type ?? "props",
+        name: item.name ?? $t("workbench.cornerScape.unnamed"),
+        prompt: item.prompt || item.describe,
+      })),
+    });
+  } catch (e: any) {
+    window.$message.error($t("workbench.assets.imageGenFail", { name: "", error: e.message ?? "" }));
+    validAssets.forEach((asset) => {
       const target = tableData.value.find((row) => row.id === asset.id);
       if (target) target.state = "生成失败";
-    }
+    });
   }
 }
 // 批量删除
@@ -928,7 +930,6 @@ async function pollingPromptAssets() {
         if (target) {
           target.promptState = item.promptState;
           if (item.prompt !== undefined) target.prompt = item.prompt;
-          loadCurrentTabData();
         }
       });
     }
@@ -948,7 +949,6 @@ async function pollingImageAssets() {
         if (target) {
           target.state = item.state;
           if (item.filePath !== undefined) target.filePath = item.filePath;
-          loadCurrentTabData();
         }
       });
     }
@@ -961,6 +961,7 @@ function startPolling() {
   pollingTimer = setInterval(async () => {
     if (notCompultedData.value.length === 0) {
       stopPolling();
+      loadCurrentTabData();
       return;
     }
     await pollingPromptAssets();
@@ -979,6 +980,7 @@ function startImagePolling() {
   imagePollingTimer = setInterval(async () => {
     if (generatingData.value.length === 0) {
       stopImagePolling();
+      loadCurrentTabData();
       return;
     }
     await pollingImageAssets();
@@ -997,6 +999,7 @@ watch(notCompultedData, (val) => {
     startPolling();
   } else {
     stopPolling();
+    loadCurrentTabData();
   }
 });
 
@@ -1005,6 +1008,7 @@ watch(generatingData, (val) => {
     startImagePolling();
   } else {
     stopImagePolling();
+    loadCurrentTabData();
   }
 });
 </script>

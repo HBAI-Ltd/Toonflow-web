@@ -702,7 +702,8 @@
         "selectAtLeastOne": "请至少选择一个资产进行批量生成",
         "batchStarted": "开始批量生成，共 {count} 个，并发数 {concurrent}",
         "batchItemFailed": "{name} 生成失败：{error}",
-        "batchComplete": "批量生成完成"
+        "batchComplete": "批量生成完成",
+        "batchFailed": "批量生成失败"
       }
     },
     "script": {
@@ -713,20 +714,8 @@
       "selectAll": "全选",
       "exportScript": "导出剧本",
       "msg": {
-        "searchFailed": "搜索剧本失败",
-        "selectExport": "请先选择要导出的剧本",
-        "exportSuccess": "导出成功",
-        "exportFailed": "导出剧本失败",
-        "deleteHeader": "确认删除",
-        "deleteBody": "确定要删除这个剧本吗？此操作无法撤销。",
-        "deleteConfirm": "删除",
-        "cancel": "取消",
-        "deleteSuccess": "删除成功",
-        "deleteFailed": "删除失败",
-        "selectDelScript": "请选择删除剧本",
-        "batchDeleteHeader": "批量删除",
-        "batchDeleteBody": "确定要删除选中的 {count} 个剧本吗？此操作无法撤销。",
-        "batchDeleteSuccess": "批量删除成功"
+        "extracting": "资产提取中",
+        "extractFailed": "资产提取失败"
       },
       "add": {
         "title": "新增剧本",
@@ -772,11 +761,7 @@
         }
       },
       "deleteScript": "批量删除剧本",
-      "extractAssets": "提取资产",
-      "msg": {
-        "extracting": "资产提取中",
-        "extractFailed": "资产提取失败"
-      }
+      "extractAssets": "提取资产"
     },
     "assets": {
       "addPrefix": "新增",

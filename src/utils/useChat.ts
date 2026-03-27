@@ -34,6 +34,20 @@ export interface ContentUpdateEvent {
   status?: ChatMessageStatus;
 }
 
+export interface XmlTagEvent {
+  messageId: string;
+  contentId?: string;
+  type: "text" | "markdown";
+  tag: string;
+  value: string;
+  status: ChatMessageStatus;
+}
+
+export interface XmlTagOption {
+  tag: string;
+  keepInMessage?: boolean;
+}
+
 export interface ChatSocketEvents {
   // 发送事件
   chat: { content: string; attachments?: any[] };
@@ -52,19 +66,36 @@ export interface UseChatOptions {
   url: string;
   auth?: Record<string, any>;
   autoConnect?: boolean;
+  xmlTags?: Array<string | XmlTagOption>;
+  keepXmlInMessage?: boolean;
+  onXmlTag?: (event: XmlTagEvent) => void;
   onError?: (error: { code: string; message: string }) => void;
   onConnect?: () => void;
   onDisconnect?: () => void;
 }
 
 export function useChat(options: UseChatOptions) {
-  const { url, auth, autoConnect = true, onError, onConnect, onDisconnect } = options;
+  const { url, auth, autoConnect = true, xmlTags = [], keepXmlInMessage = true, onXmlTag, onError, onConnect, onDisconnect } = options;
 
   const socket = shallowRef<Socket | null>(null);
   const connected = ref(false);
   const connecting = ref(false);
   const messages = ref<ChatMessagesData[]>([]);
   const currentMessageId = ref<string | null>(null);
+  const xmlData = ref<Record<string, string>>({});
+  const xmlDataByMessage = ref<Record<string, Record<string, string>>>({});
+  const normalizedXmlTagOptions = Array.from(
+    new Map(
+      xmlTags
+        .map((item) => (typeof item === "string" ? { tag: item } : item))
+        .filter((item): item is XmlTagOption => Boolean(item?.tag))
+        .map((item) => [item.tag, item]),
+    ).values(),
+  );
+  const normalizedXmlTags = normalizedXmlTagOptions.map((item) => item.tag);
+  const hiddenXmlTags = normalizedXmlTagOptions.filter((item) => item.keepInMessage ?? keepXmlInMessage ? false : true).map((item) => item.tag);
+  const emittedXmlState = new Map<string, Record<string, string>>();
+  const rawContentState = new Map<string, string>();
 
   // 计算属性 - 修复：增加对内容流状态的判断
   const isGenerating = computed(() => {
@@ -97,6 +128,111 @@ export function useChat(options: UseChatOptions) {
 
   const findContent = (msg: AIMessage, contentId: string): AIMessageContent | undefined => {
     return msg.content?.find((c) => c.id === contentId);
+  };
+
+  const isXmlTextContent = (content: AIMessageContent): content is Extract<AIMessageContent, { type: "text" | "markdown" }> => {
+    return (content.type === "text" || content.type === "markdown") && typeof content.data === "string";
+  };
+
+  const getContentKey = (messageId: string, content: Pick<AIMessageContent, "id" | "type">) => `${messageId}:${content.id ?? content.type}`;
+
+  const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+  const parseXmlTag = (text: string, tag: string) => {
+    const openTag = `<${tag}>`;
+    const closeTag = `</${tag}>`;
+    const openIndex = text.lastIndexOf(openTag);
+
+    if (openIndex === -1) return null;
+
+    const contentStart = openIndex + openTag.length;
+    const closeIndex = text.indexOf(closeTag, contentStart);
+    const isComplete = closeIndex !== -1;
+    const value = text.slice(contentStart, isComplete ? closeIndex : text.length).trim();
+
+    return {
+      value,
+      isComplete,
+    };
+  };
+
+  const stripXmlFromMessage = (text: string) => {
+    let sanitized = text;
+
+    for (const tag of hiddenXmlTags) {
+      const escapedTag = escapeRegExp(tag);
+      sanitized = sanitized.replace(new RegExp(`<${escapedTag}>[\\s\\S]*?<\\/${escapedTag}>`, "g"), "");
+      sanitized = sanitized.replace(new RegExp(`<${escapedTag}>[\\s\\S]*$`, "g"), "");
+    }
+
+    return sanitized;
+  };
+
+  const getRawContentData = (messageId: string, content: AIMessageContent) => {
+    if (!isXmlTextContent(content)) return null;
+    return rawContentState.get(getContentKey(messageId, content)) ?? content.data;
+  };
+
+  const syncContentDisplay = (messageId: string, content: AIMessageContent) => {
+    if (!isXmlTextContent(content)) return;
+    const rawText = getRawContentData(messageId, content) ?? "";
+    content.data = hiddenXmlTags.length ? stripXmlFromMessage(rawText) : rawText;
+  };
+
+  const syncXmlData = (messageId: string, content: AIMessageContent, messageStatus?: ChatMessageStatus) => {
+    if (!normalizedXmlTags.length) return;
+    if (!isXmlTextContent(content)) return;
+
+    const contentKey = getContentKey(messageId, content);
+    const prevState = emittedXmlState.get(contentKey) ?? {};
+    const nextState = { ...prevState };
+    const nextMessageData = { ...(xmlDataByMessage.value[messageId] ?? {}) };
+    const status = content.status ?? messageStatus ?? "pending";
+    const rawText = getRawContentData(messageId, content);
+
+    if (rawText === null) return;
+
+    let changed = false;
+
+    for (const tag of normalizedXmlTags) {
+      const parsed = parseXmlTag(rawText, tag);
+      if (parsed === null) continue;
+
+      const { value, isComplete } = parsed;
+      const eventStatus = isComplete ? status === "error" || status === "stop" ? status : "complete" : status;
+
+      const shouldEmit = prevState[tag] !== value || eventStatus === "complete";
+      if (!shouldEmit) continue;
+
+      nextState[tag] = value;
+      nextMessageData[tag] = value;
+      xmlData.value = { ...xmlData.value, [tag]: value };
+      changed = true;
+
+      onXmlTag?.({
+        messageId,
+        contentId: content.id,
+        type: content.type,
+        tag,
+        value,
+        status: eventStatus,
+      });
+    }
+
+    if (!changed) return;
+
+    emittedXmlState.set(contentKey, nextState);
+    xmlDataByMessage.value = {
+      ...xmlDataByMessage.value,
+      [messageId]: nextMessageData,
+    };
+  };
+
+  const syncMessageXmlData = (messageId: string, message: ChatMessagesData | undefined, messageStatus?: ChatMessageStatus) => {
+    if (!message || message.role !== "assistant") return;
+
+    const aiMessage = message as AIMessage;
+    aiMessage.content?.forEach((content) => syncXmlData(messageId, content, messageStatus ?? aiMessage.status));
   };
 
   // 深度合并工具
@@ -156,10 +292,20 @@ export function useChat(options: UseChatOptions) {
     }
 
     // 无数据时仅更新状态
-    if (data === undefined || data === null) return;
+    if (data === undefined || data === null) {
+      syncXmlData(messageId, content, msg.status);
+      return;
+    }
 
     // 根据策略处理数据
-    if (strategy === "append") {
+    if (isXmlTextContent(content) && typeof data === "string") {
+      const contentKey = getContentKey(messageId, content);
+      const previousRaw = rawContentState.get(contentKey) ?? content.data;
+      const nextRaw = strategy === "append" ? previousRaw + data : data;
+
+      rawContentState.set(contentKey, nextRaw);
+      syncContentDisplay(messageId, content);
+    } else if (strategy === "append") {
       if (typeof data === "string") {
         appendStringData(content, data);
       } else if (typeof data === "object") {
@@ -177,6 +323,8 @@ export function useChat(options: UseChatOptions) {
     if (!status && strategy === "append") {
       content.status = "streaming";
     }
+
+    syncXmlData(messageId, content, msg.status);
   };
 
   // 消息处理器
@@ -195,7 +343,21 @@ export function useChat(options: UseChatOptions) {
         ext: data.ext,
       } as ChatMessagesData;
 
+      if (data.role === "assistant") {
+        const aiMessage = newMessage as AIMessage;
+        aiMessage.content?.forEach((content) => {
+          if (!isXmlTextContent(content)) return;
+          rawContentState.set(getContentKey(data.id, content), content.data);
+          syncContentDisplay(data.id, content);
+        });
+      }
+
       messages.value.push(newMessage);
+
+      if (data.role === "assistant") {
+        const aiMessage = newMessage as AIMessage;
+        aiMessage.content?.forEach((content) => syncXmlData(data.id, content, aiMessage.status));
+      }
 
       if (data.role === "assistant") {
         currentMessageId.value = data.id;
@@ -213,6 +375,10 @@ export function useChat(options: UseChatOptions) {
 
       if (data.ext) {
         msg.ext = { ...msg.ext, ...data.ext };
+      }
+
+      if (data.status) {
+        syncMessageXmlData(data.id, msg, data.status);
       }
 
       if (data.status === "complete" || data.status === "error" || data.status === "stop") {
@@ -235,9 +401,27 @@ export function useChat(options: UseChatOptions) {
       const content = {
         ...data.content,
         status: data.content.status || "pending",
+        // thinking 内容块默认折叠
+        ...(data.content.type === "thinking" ? { ext: { collapsed: true, ...data.content.ext } } : {}),
       };
 
-      msg.content.push(content);
+      if (isXmlTextContent(content)) {
+        rawContentState.set(getContentKey(data.messageId, content), content.data);
+        syncContentDisplay(data.messageId, content);
+      }
+
+      // thinking 内容块需要放在 content 最前面，但如果最前面已经是 thinking 则放在其后
+      if (content.type === "thinking") {
+        const firstNonThinkingIndex = msg.content.findIndex((c: any) => c.type !== "thinking");
+        if (firstNonThinkingIndex === -1) {
+          msg.content.push(content);
+        } else {
+          msg.content.splice(firstNonThinkingIndex, 0, content);
+        }
+      } else {
+        msg.content.push(content);
+      }
+      syncXmlData(data.messageId, content, msg.status);
 
       // 关键修复：只有当内容块状态是 streaming 时才更新消息状态
       // pending 状态的内容块表示还没有真正开始输出
@@ -376,11 +560,23 @@ export function useChat(options: UseChatOptions) {
   const clearMessages = () => {
     messages.value = [];
     currentMessageId.value = null;
+    xmlData.value = {};
+    xmlDataByMessage.value = {};
+    emittedXmlState.clear();
+    rawContentState.clear();
   };
 
   const removeMessage = (id: string) => {
     const idx = findMessageIndex(id);
     if (idx > -1) {
+      const msg = messages.value[idx] as AIMessage | undefined;
+      msg?.content?.forEach((content) => {
+        emittedXmlState.delete(getContentKey(id, content));
+        rawContentState.delete(getContentKey(id, content));
+      });
+      const nextByMessage = { ...xmlDataByMessage.value };
+      delete nextByMessage[id];
+      xmlDataByMessage.value = nextByMessage;
       messages.value.splice(idx, 1);
     }
   };
@@ -422,6 +618,8 @@ export function useChat(options: UseChatOptions) {
     connecting,
     messages,
     currentMessageId,
+    xmlData,
+    xmlDataByMessage,
     isGenerating,
     lastMessage,
     connect,

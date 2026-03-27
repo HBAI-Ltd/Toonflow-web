@@ -612,7 +612,8 @@
         "selectAtLeastOne": "一括生成するアセットを少なくとも1つ選択してください",
         "batchStarted": "一括生成を開始しました。全 {count} 件、同時実行数 {concurrent}",
         "batchItemFailed": "{name} の生成に失敗しました：{error}",
-        "batchComplete": "一括生成が完了しました"
+        "batchComplete": "一括生成が完了しました",
+        "batchFailed": "バッチ生成に失敗しました"
       }
     },
     "script": {

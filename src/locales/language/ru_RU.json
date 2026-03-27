@@ -613,7 +613,8 @@
         "selectAtLeastOne": "Выберите хотя бы один ассет для пакетной генерации",
         "batchStarted": "Начата пакетная генерация. Всего: {count}, Потоков: {concurrent}",
         "batchItemFailed": "Ошибка генерации {name}: {error}",
-        "batchComplete": "Пакетная генерация завершена"
+        "batchComplete": "Пакетная генерация завершена",
+        "batchFailed": "Генерация пакета не удалась"
       }
     },
     "script": {

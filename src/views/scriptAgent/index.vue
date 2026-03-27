@@ -14,9 +14,9 @@
               :handleActions="message.role === 'user' ? {} : handleActions"
               :status="message.status"
               allowContentSegmentCustom>
-              <template #actionbar>
+              <!-- <template #actionbar> -->
                 <!-- <t-chat-actionbar :action-bar="['replay', 'copy']" /> -->
-              </template>
+              <!-- </template> -->
             </t-chat-message>
           </t-chat-list>
           <t-chat-sender
@@ -59,7 +59,10 @@
         <div class="tabsWrapper">
           <t-tabs v-model="currentTable" @change="changeTab">
             <template #action>
-              <div class="ac" v-if="currentTable != 3">
+              <div class="ac" v-if="currentTable == 1 && canEditPlan.storySkeleton">
+                <t-button @click="editMdPreview">{{ $t("workbench.scriptAgent.edit") }}</t-button>
+              </div>
+              <div class="ac" v-else-if="currentTable == 2 && canEditPlan.adaptationStrategy">
                 <t-button @click="editMdPreview">{{ $t("workbench.scriptAgent.edit") }}</t-button>
               </div>
             </template>
@@ -206,14 +209,10 @@ const planData = ref<PlanData>({
   script: [],
 });
 
-watch(
-  () => [planData.value.storySkeleton, planData.value.adaptationStrategy],
-  () => {
-    console.log("%c Line:221 🍰", "background:#4fff4B");
-    setPlanData();
-  },
-  { immediate: false },
-);
+const canEditPlan = ref({
+  storySkeleton: true,
+  adaptationStrategy: true,
+});
 
 async function getPlanData() {
   const { data } = await axios.post("/scriptAgent/getPlanData", { projectId: project.value?.id, agentType: "scriptAgent" });
@@ -242,11 +241,36 @@ const defMsg: ChatMessagesData[] = [
   },
 ];
 
-const { connected, messages, chat, stopGenerate } = useChat({
+const { connected, messages, chat, stopGenerate, socket } = useChat({
   url: `${baseUrl.value}/socket/scriptAgent`,
   auth: {
     isolationKey: `${project.value?.id}:scriptAgent`,
     projectId: project.value?.id,
+  },
+  xmlTags: [
+    { tag: "storySkeleton", keepInMessage: false },
+    { tag: "adaptationStrategy", keepInMessage: false },
+  ],
+  onXmlTag: ({ tag, value, status }) => {
+    if (status === "streaming") {
+      if (tag === "storySkeleton") {
+        planData.value.storySkeleton = value;
+        canEditPlan.value.storySkeleton = false;
+      } else if (tag === "adaptationStrategy") {
+        planData.value.adaptationStrategy = value;
+        canEditPlan.value.adaptationStrategy = false;
+      }
+    }
+    if (status === "complete") {
+      if (tag === "storySkeleton") {
+        planData.value.storySkeleton = value;
+        canEditPlan.value.storySkeleton = true;
+      } else if (tag === "adaptationStrategy") {
+        planData.value.adaptationStrategy = value;
+        canEditPlan.value.adaptationStrategy = true;
+      }
+      setPlanData();
+    }
   },
   autoConnect: true,
 });
@@ -255,6 +279,15 @@ onMounted(() => {
   if (messages.value.length) {
     messages.value = [...defMsg, ...messages.value];
   }
+
+  socket.value?.on("getPlanData", (_, callback) => {
+    callback(planData.value);
+  });
+
+  socket.value?.on("setPlanData", ({ key, value }: any) => {
+    getScriptApi();
+  });
+
   getHistory();
 });
 

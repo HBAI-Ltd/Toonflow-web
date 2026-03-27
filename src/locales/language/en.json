@@ -687,7 +687,8 @@
         "selectAtLeastOne": "Select at least one asset for batch generation",
         "batchStarted": "Batch generation started. Total: {count}, Concurrency: {concurrent}",
         "batchItemFailed": "{name} generation failed: {error}",
-        "batchComplete": "Batch generation completed"
+        "batchComplete": "Batch generation completed",
+        "batchFailed": "Batch generation failed"
       }
     },
     "script": {

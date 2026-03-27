@@ -6,7 +6,7 @@
           <t-form-item :label="$t('workbench.cornerScape.quickActions')">
             <div class="quickActions">
               <t-button theme="primary" variant="outline" @click="selectByState('')">{{ $t("workbench.cornerScape.selectUngenerated") }}</t-button>
-              <t-button theme="primary" variant="outline" @click="selectByState('生成成功')">
+              <t-button theme="primary" variant="outline" @click="selectByState('已完成')">
                 {{ $t("workbench.cornerScape.selectGenerated") }}
               </t-button>
               <t-button theme="primary" variant="outline" @click="selectByState('生成失败')">{{ $t("workbench.cornerScape.selectFailed") }}</t-button>
@@ -181,7 +181,6 @@
 import axios from "@/utils/axios";
 import projectStore from "@/stores/project";
 import modelSelect from "@/components/modelSelect.vue";
-import pLimit from "p-limit";
 
 interface DataItem {
   id: number;
@@ -421,43 +420,29 @@ async function batchGeneration() {
 
   const items = dataList.value.filter((item) => selectedIds.value.includes(item.id));
   const concurrent = Math.max(1, concurrentCount.value || 1);
-  const limit = pLimit(concurrent);
-  const controller = createAbortController();
+
+  // 前端先将所有选中项标记为"生成中"
+  items.forEach((item) => setItemState(item.id, "生成中"));
 
   window.$message.success($t("workbench.cornerScape.msg.batchStarted", { count: items.length, concurrent }));
-  const tasks = items.map((item) =>
-    limit(async () => {
-      if (controller.signal.aborted) return;
-      setItemState(item.id, "生成中");
-      try {
-        await axios.post(
-          "/assetsGenerate/generateAssets",
-          {
-            type: item.type ?? "props",
-            projectId: project.value?.id,
-            name: item.name ?? $t("workbench.cornerScape.unnamed"),
-            base64: "",
-            prompt: item.prompt || item.describe,
-            model: selectValue.value,
-            id: item.id,
-            resolution: resolution.value,
-            concurrentCount: 1,
-          },
-          { signal: controller.signal },
-        );
-        setItemState(item.id, "生成成功");
-        await getFilteredData();
-      } catch (e: any) {
-        if (e.name === "CanceledError" || e.code === "ERR_CANCELED") return;
-        window.$message.error($t("workbench.cornerScape.msg.batchItemFailed", { name: item.name, error: e.message ?? "" }));
-        setItemState(item.id, "生成失败");
-      }
-    }),
-  );
 
-  await Promise.all(tasks);
-  if (!controller.signal.aborted) {
+  try {
+    await axios.post("/assetsGenerate/batchGenerateImageAssets", {
+      projectId: project.value?.id,
+      model: selectValue.value,
+      resolution: resolution.value,
+      concurrentCount: concurrent,
+      items: items.map((item) => ({
+        id: item.id,
+        type: item.type ?? "props",
+        name: item.name ?? $t("workbench.cornerScape.unnamed"),
+        prompt: item.prompt || item.describe,
+      })),
+    });
     window.$message.success($t("workbench.cornerScape.msg.batchComplete"));
+  } catch (e: any) {
+    if (e.name === "CanceledError" || e.code === "ERR_CANCELED") return;
+    window.$message.error(e.message ?? $t("workbench.cornerScape.msg.batchFailed"));
   }
 }
 //轮询
@@ -513,6 +498,7 @@ function startPolling() {
   pollingTimer = setInterval(async () => {
     if (notCompultedData.value.length === 0) {
       stopPolling();
+      getFilteredData();
       return;
     }
     await pollingPromptAssets();
@@ -531,6 +517,7 @@ function startImagePolling() {
   imagePollingTimer = setInterval(async () => {
     if (generatingData.value.length === 0) {
       stopImagePolling();
+      getFilteredData();
       return;
     }
     await pollingImageAssets();
@@ -549,6 +536,7 @@ watch(notCompultedData, (val) => {
     startPolling();
   } else {
     stopPolling();
+    getFilteredData();
   }
 });
 
@@ -557,6 +545,7 @@ watch(generatingData, (val) => {
     startImagePolling();
   } else {
     stopImagePolling();
+    getFilteredData();
   }
 });
 </script>
