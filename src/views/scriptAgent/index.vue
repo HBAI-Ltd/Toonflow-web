@@ -98,17 +98,6 @@
                       <pre v-if="item.content">{{ item.content }}</pre>
                       <span v-else class="emptyContent">{{ $t("workbench.scriptAgent.noContent") }}</span>
                     </div>
-                    <div v-if="item.relatedAssets?.length" class="scriptCardFooter ac">
-                      <span class="assetsLabel">
-                        <i-link size="12" />
-                        {{ $t("workbench.scriptAgent.relatedAssets") }}
-                      </span>
-                      <div class="assetsTags">
-                        <t-tag v-for="(asset, ai) in item.relatedAssets" size="small" :key="ai" variant="light" theme="warning">
-                          {{ asset.name }}
-                        </t-tag>
-                      </div>
-                    </div>
                   </div>
                 </div>
               </div>

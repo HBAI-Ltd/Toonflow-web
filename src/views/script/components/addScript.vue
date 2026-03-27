@@ -3,7 +3,7 @@
     <t-dialog
       v-model:visible="addScriptShow"
       width="60vw"
-      top="1vh"
+      top="5vh"
       :header="$t('workbench.script.add.title')"
       :closable="false"
       :maskClosable="false"

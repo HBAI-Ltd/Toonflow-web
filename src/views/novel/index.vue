@@ -121,6 +121,7 @@ interface OriginalText {
   chapterData: string;
   event: string;
   eventState?: number;
+  errorReason?: string;
 }
 const formData = ref<OriginalText>({ id: -1, index: 0, reel: "", chapter: "", chapterData: "", event: "" });
 
@@ -256,10 +257,11 @@ async function pollEventState() {
   try {
     const { data } = await axios.post("/novel/getNovelEventState", { ids });
     if (Array.isArray(data)) {
-      data.forEach((item: { id: number; eventState: number; event?: string }) => {
+      data.forEach((item: { id: number; eventState: number; event?: string; errorReason?: string }) => {
         const target = tableData.value.find((row) => row.id === item.id);
         if (target) {
           target.eventState = item.eventState;
+          if (target.eventState == -1) target.errorReason = item.errorReason;
           if (item.event !== undefined) target.event = item.event;
         }
       });

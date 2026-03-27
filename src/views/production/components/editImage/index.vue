@@ -59,6 +59,15 @@
       </Panel>
     </VueFlow>
   </t-dialog>
+  <Teleport to="body">
+    <storyboardImageCheck
+      v-model="storyboardVisible"
+      v-if="storyboardVisible"
+      :scriptId="episodesId!"
+      @confirm="onStoryboardConfirm"
+      @cancel="onStoryboardCancel"
+    />
+  </Teleport>
 </template>
 
 <script setup lang="ts">
@@ -68,6 +77,8 @@ import { Background } from "@vue-flow/background";
 import { Controls } from "@vue-flow/controls";
 import uploadNode from "./uploadNode.vue";
 import generatedNode from "./generatedNode.vue";
+import storyboardImageCheck from "@/components/storyboardImageCheck.vue";
+import type { Storyboard } from "../../utils/flowBuilder";
 
 import "@vue-flow/core/dist/style.css";
 import "@vue-flow/core/dist/theme-default.css";
@@ -81,6 +92,31 @@ import { useLayout } from "../../utils/dagre";
 import { v4 as uuid } from "uuid";
 
 const episodesId = inject<Ref<number>>("episodesId");
+
+// ---- storyboardImageCheck 统一管理 ----
+const storyboardVisible = ref(false);
+let storyboardResolve: ((rows: Storyboard[]) => void) | null = null;
+
+function openStoryboardCheck(): Promise<Storyboard[]> {
+  storyboardVisible.value = true;
+  return new Promise<Storyboard[]>((resolve) => {
+    storyboardResolve = resolve;
+  });
+}
+
+function onStoryboardConfirm(rows: Storyboard[]) {
+  storyboardVisible.value = false;
+  storyboardResolve?.(rows);
+  storyboardResolve = null;
+}
+
+function onStoryboardCancel() {
+  storyboardVisible.value = false;
+  storyboardResolve?.([]);
+  storyboardResolve = null;
+}
+
+provide("openStoryboardCheck", openStoryboardCheck);
 
 const { toObject, fromObject, fitView } = useVueFlow({ id: "editImage" });
 const { layout } = useLayout("editImage");

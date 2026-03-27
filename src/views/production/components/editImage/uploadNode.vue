@@ -43,16 +43,12 @@
       </div>
     </div>
   </div>
-  <Teleport to="body">
-    <storyboardImageCheck v-model="storyboardVisable" telp v-if="storyboardVisable" :scriptId="episodesId!" @confirm="updateImage" />
-  </Teleport>
 </template>
 
 <script setup lang="ts">
 import { Handle, Position, useVueFlow } from "@vue-flow/core";
-import { onBeforeUnmount, ref, watch, type Ref } from "vue";
+import { onBeforeUnmount, ref, watch } from "vue";
 import openAssetsSelector from "@/utils/assetsCheck";
-import storyboardImageCheck from "@/components/storyboardImageCheck.vue";
 import type { Storyboard } from "../../utils/flowBuilder";
 import type { DropdownOption } from "tdesign-vue-next/es/dropdown";
 const props = defineProps<{
@@ -61,10 +57,9 @@ const props = defineProps<{
     image?: string;
   };
 }>();
-const episodesId = inject<Ref<number>>("episodesId");
+const openStoryboardCheck = inject<() => Promise<Storyboard[]>>("openStoryboardCheck")!;
 
 const { updateNodeData, removeNodes } = useVueFlow({ id: "editImage" });
-const storyboardVisable = ref(false);
 const currentImageUrl = ref(props.data?.image || "");
 const currentObjectUrl = ref<string | null>(null);
 
@@ -110,10 +105,8 @@ async function uploadFn() {
     emit("upload");
   }
 }
-function getStoryboardImage() {
-  storyboardVisable.value = true;
-}
-function updateImage(rows: Storyboard[]) {
+async function getStoryboardImage() {
+  const rows = await openStoryboardCheck();
   if (rows.length > 0) {
     const filePath = rows[0].src!;
     currentImageUrl.value = filePath;

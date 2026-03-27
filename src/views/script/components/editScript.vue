@@ -1,6 +1,6 @@
 <template>
   <div class="details">
-    <t-dialog v-model:visible="detailsShow" width="60vw" top="1vh" @confirm="onConfirm">
+    <t-dialog v-model:visible="detailsShow" width="60vw" top="5vh" @confirm="onConfirm">
       <template #header>
         <t-typography-title level="h4" style="margin: 0">{{ $t('workbench.script.edit.title') }}</t-typography-title>
       </template>

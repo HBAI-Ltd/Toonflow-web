@@ -40,6 +40,16 @@
         "fetchModelFailed": "获取模型数据失败:"
       },
       "goSetting": "去设置中添加模型"
+    },
+    "storyboardImageCheck": {
+      "camera": "镜头",
+      "dialogTitle": "选择分镜图",
+      "preview": "预览",
+      "src": "预览图",
+      "title": "标题",
+      "duration": "时长",
+      "lines": "台词",
+      "createTime": "创建时间"
     }
   },
   "settings": {
@@ -761,7 +771,12 @@
           "updateFailed": "更新剧本失败，请稍后再试"
         }
       },
-      "deleteScript": "批量删除剧本"
+      "deleteScript": "批量删除剧本",
+      "extractAssets": "提取资产",
+      "msg": {
+        "extracting": "资产提取中",
+        "extractFailed": "资产提取失败"
+      }
     },
     "assets": {
       "addPrefix": "新增",
@@ -1243,15 +1258,6 @@
     "loginSuccess": "登录成功",
     "settingsSaved": "设置已保存"
   },
-  "components.storyboardImageCheck.camera": "镜头",
-  "components.storyboardImageCheck.dialogTitle": "选择分镜图",
-  "components.storyboardImageCheck.preview": "预览",
-  "components.storyboardImageCheck.src": "预览图",
-  "components.storyboardImageCheck.title": "标题",
-  "components.storyboardImageCheck.duration": "时长",
-  "components.storyboardImageCheck.lines": "台词",
-  "components.storyboardImageCheck.createTime": "创建时间",
-  "workbench.script.extractAssets": "提取资产",
   "common": {
     "cancel": "取消",
     "confirm": "确定",

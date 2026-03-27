@@ -44,11 +44,17 @@
               </div>
             </template>
             <span class="content">{{ item.content }}</span>
-            <div class="assetTags" v-if="item.relatedAssets?.length" @click.stop>
+
+            <t-loading v-if="item?.extractState == 0" :text="$t('workbench.script.msg.extracting')" size="small"></t-loading>
+            <t-tooltip :content="item.errorReason" v-if="item?.extractState == -1" theme="light">
+              <t-tag theme="danger" size="small">{{ $t("workbench.script.msg.extractFailed") }}</t-tag>
+            </t-tooltip>
+            <div class="assetTags" v-else-if="item.relatedAssets?.length" @click.stop>
               <t-tag v-for="asset in item.relatedAssets" :key="asset.id" variant="light-outline" size="small">
                 {{ asset.name }}
               </t-tag>
             </div>
+
             <div class="del">
               <i-delete theme="outline" size="18" @click.stop="handleDeleteScript(item.id)" style="cursor: pointer" />
             </div>
@@ -80,6 +86,8 @@ interface Script {
   name: string;
   content: string;
   createTime?: number;
+  extractState?: -1 | 0 | 1;
+  errorReason?: string;
   relatedAssets?: ScriptAsset[];
 }
 const scripts = ref<Script[]>([]);
@@ -163,6 +171,11 @@ function handleScriptClick(item: Script) {
 }
 // 删除剧本
 async function handleDeleteScript(scriptId: number) {
+  //判断是否有资产正在提取中
+  const extractingIds = new Set(notCompletedData.value.map((s) => s.id));
+  if (extractingIds.has(scriptId)) {
+    return window.$message.error($t("workbench.script.msg.extractingInProgress"));
+  }
   const dialog = DialogPlugin.confirm({
     header: $t("workbench.script.msg.deleteHeader"),
     body: $t("workbench.script.msg.deleteBody"),
@@ -188,7 +201,12 @@ async function handleDeleteScript(scriptId: number) {
 }
 //提取资产
 async function handleExtractAssets() {
-  if (!project.value) return window.$message.error("未找到项目");
+  if (!project.value) return window.$message.error($t("workbench.script.msg.projectNotFound"));
+  //判断是否有资产正在提取中
+  const extractingIds = new Set(notCompletedData.value.map((s) => s.id));
+  if (selectedIds.value.some((id) => extractingIds.has(id))) {
+    return window.$message.error($t("workbench.script.msg.extractingInProgress"));
+  }
   scriptLoad.value = true;
   try {
     await axios.post("/script/extractAssets", {
@@ -197,7 +215,7 @@ async function handleExtractAssets() {
     });
     searchScripts();
   } catch (e) {
-    window.$message.error((e as any)?.message || "提取资产失败");
+    window.$message.error((e as any)?.message || $t("workbench.script.msg.extractFailed"));
   } finally {
     scriptLoad.value = false;
   }
@@ -207,6 +225,11 @@ async function handleBatchDelete() {
   if (!selectedIds.value.length) {
     window.$message.warning($t("workbench.script.msg.selectDelScript"));
     return;
+  }
+  //判断是否有资产正在提取中
+  const extractingIds = new Set(notCompletedData.value.map((s) => s.id));
+  if (selectedIds.value.some((id) => extractingIds.has(id))) {
+    return window.$message.error($t("workbench.script.msg.extractingInProgress"));
   }
   const dialog = DialogPlugin.confirm({
     header: $t("workbench.script.msg.batchDeleteHeader"),
@@ -233,6 +256,53 @@ async function handleBatchDelete() {
     },
   });
 }
+
+let pollingTimer: ReturnType<typeof setInterval> | null = null;
+
+function startPolling() {
+  if (pollingTimer) return;
+  pollingTimer = setInterval(async () => {
+    if (notCompletedData.value.length === 0) {
+      stopPolling();
+      return;
+    }
+    await pollScriptAssets();
+  }, 3000);
+}
+
+function stopPolling() {
+  if (pollingTimer) {
+    clearInterval(pollingTimer);
+    pollingTimer = null;
+  }
+}
+const notCompletedData = computed(() => {
+  return scripts.value.filter((s) => s.extractState == 0);
+});
+// 轮询相关
+
+async function pollScriptAssets() {
+  if (notCompletedData.value.length === 0) return;
+  const ids = notCompletedData.value.map((item) => item.id);
+  try {
+    const { data } = await axios.post("/script/pollScriptAssets", { ids });
+    if (data.length) {
+      searchScripts();
+    }
+  } catch (e) {
+    console.error("轮询事件状态失败:", e);
+  }
+}
+watch(
+  () => notCompletedData.value,
+  (newVal) => {
+    if (newVal.length > 0) {
+      startPolling();
+    } else {
+      stopPolling();
+    }
+  },
+);
 </script>
 
 <style lang="scss" scoped>

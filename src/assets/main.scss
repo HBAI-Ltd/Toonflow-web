@@ -13,11 +13,15 @@ body,
 // 如果新增了 TDesign 弹出层组件，在此处补充对应 class 即可
 body.is-electron {
   --titlebar-height: 32px;
-
   // Drawer 抽屉
   .t-drawer__wrap {
     top: var(--titlebar-height) !important;
     height: calc(100vh - var(--titlebar-height)) !important;
+  }
+  .t-drawer__content-wrapper {
+    top: 30px;
+    bottom: 0px;
+    height: auto;
   }
 
   // Dialog 对话框

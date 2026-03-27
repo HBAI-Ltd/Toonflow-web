@@ -474,7 +474,6 @@ function isValidBase64(str?: string): boolean {
 function buildVendorUpdatePayload(vendor: VendorItem) {
   return {
     id: vendor.id,
-    tsCode: vendor.code,
     name: vendor.name,
     icon: vendor.icon,
     inputs: vendor.inputs,
@@ -569,7 +568,6 @@ function handleAddVendor() {
   vendorDialogVisible.value = true;
 }
 function handleConfirmVendor() {
-  console.log("%c Line:573 🍤 id.value", "background:#f5ce50", id.value);
   if (!id.value) {
     const firstConfirm = DialogPlugin.confirm({
       theme: "danger",
