@@ -149,7 +149,7 @@ interface VideoConfig {
     | "endFrameOptional" // 首尾帧（尾帧可选）
     | "startFrameOptional" // 首尾帧（首帧可选）
     | "text" // 文本生视频
-    | ("videoReference" | "imageReference" | "audioReference" | "textReference";)[]; // 混合参考
+    | ("videoReference" | "imageReference" | "audioReference" | "textReference")[]; // 混合参考
 }
 
 const videoRequest = async (videoConfig: VideoConfig, videoModel: VideoModel) => {
