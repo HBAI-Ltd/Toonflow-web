@@ -24,7 +24,7 @@
           <template #icon><i-export /></template>
           {{ $t("workbench.script.extractAssets") }}{{ selectedIds.length ? `(${selectedIds.length})` : "" }}
         </t-button>
-        <t-button theme="primary" @click="handleBatchDelete" :loading="scriptLoad" :disabled="selectedIds.length === 0">
+        <t-button theme="primary" @click="handleBatchDelete" :disabled="selectedIds.length === 0">
           <template #icon><i-delete /></template>
           {{ $t("workbench.script.deleteScript") }}{{ selectedIds.length ? `(${selectedIds.length})` : "" }}
         </t-button>
