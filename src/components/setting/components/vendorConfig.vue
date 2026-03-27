@@ -569,6 +569,7 @@ function handleAddVendor() {
   vendorDialogVisible.value = true;
 }
 function handleConfirmVendor() {
+  console.log("%c Line:573 🍤 id.value", "background:#f5ce50", id.value);
   if (!id.value) {
     const firstConfirm = DialogPlugin.confirm({
       theme: "danger",
@@ -621,14 +622,9 @@ function handleConfirmVendor() {
           cancelBtn: $t("settings.vendor.msg.goBackCheck"),
           onConfirm: async () => {
             axios
-              .post("/setting/vendorConfig/updateVendor", {
+              .post("/setting/vendorConfig/updateCode", {
                 id: id.value,
                 tsCode: vendorCode.value,
-                name: currentVendor.value?.name,
-                icon: currentVendor.value?.icon,
-                inputs: currentVendor.value?.inputs,
-                inputValues: currentVendor.value?.inputValues,
-                models: currentVendor.value?.models,
               })
               .then((res) => {
                 window.$message.success($t("settings.vendor.msg.updateSuccess"));
