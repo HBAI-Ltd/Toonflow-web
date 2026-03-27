@@ -461,7 +461,7 @@ async function pollingPromptAssets() {
   const ids = notCompultedData.value.map((item) => item.id);
   try {
     const { data } = await axios.post("/assets/pollingPromptAssets", { ids });
-    if (Array.isArray(data)) {
+    if (Array.isArray(data) && data.length) {
       data.forEach((item: { id: number; promptState: string; prompt: string }) => {
         const target = dataList.value.find((row) => row.id === item.id);
         if (target) {
@@ -480,7 +480,7 @@ async function pollingImageAssets() {
   const ids = generatingData.value.map((item) => item.id);
   try {
     const { data } = await axios.post("/assets/pollingImageAssets", { ids });
-    if (Array.isArray(data)) {
+    if (Array.isArray(data) && data.length) {
       data.forEach((item: { id: number; state: string; filePath: string }) => {
         const target = dataList.value.find((row) => row.id === item.id);
         if (target) {
