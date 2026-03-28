@@ -332,7 +332,7 @@
       "openDevtool": "Mở",
       "devtoolsDoc": "Địa chỉ tài liệu",
       "devtoolsDesc": "Sau khi bật lên sẽ tạo một thư mục .devtools trong thư mục cài đặt Toonflow. Hãy đảm bảo rằng Toonflow có quyền ghi (chạy với tư cách quản trị viên).",
-      "devtoolsDesc2": "Chạy npx @ai-sdk/devtools trong thư mục này để bật gỡ lỗi đo từ xa",
+      "devtoolsDesc2": "Chạy npx {'@'}ai-sdk/devtools trong thư mục này để bật gỡ lỗi đo từ xa",
       "openDevtoolFailed": "Không mở được công cụ dành cho nhà phát triển, vui lòng đảm bảo đã cài đặt Toonflow desktop",
       "notInElectron": "Đối với môi trường WEB, vui lòng mở bảng điều khiển trình duyệt theo cách thủ công"
     }

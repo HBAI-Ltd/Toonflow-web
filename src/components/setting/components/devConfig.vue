@@ -8,7 +8,7 @@
       <t-form-item :label="$t('settings.dev.aiDevtool')" name="showTitleBar">
         <t-switch v-model="isElectron" @change="getSwitchAiDevTool"/>
       </t-form-item>
-      <t-form-item v-if="isElectron" :label="$t('settings.dev.switchAiDevTool')" name="showTitleBar">
+      <t-form-item v-show="isElectron" :label="$t('settings.dev.switchAiDevTool')" name="showTitleBar">
         <t-switch :customValue="['1', '0']" v-model="switchAiDevTool" @change="updateSwitchAiDevTool" />
         <template #tips>
           <p>{{ $t('settings.dev.devtoolsDoc') }}：https://ai-sdk.dev/docs/ai-sdk-core/devtools</p>

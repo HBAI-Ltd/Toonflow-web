@@ -341,7 +341,7 @@
       "openDevtool": "開ける",
       "devtoolsDoc": "書類のアドレス",
       "devtoolsDesc": "オンにすると、Toonflow のインストール ディレクトリに .devtools フォルダーが作成されます。 Toonflow に書き込み権限があることを確認してください (管理者として実行)。",
-      "devtoolsDesc2": "このディレクトリで npx @ai-sdk/devtools を実行して、テレメトリのデバッグを有効にします",
+      "devtoolsDesc2": "このディレクトリで npx {'@'}ai-sdk/devtools を実行して、テレメトリのデバッグを有効にします",
       "openDevtoolFailed": "開発者ツールを開けませんでした。Toonflow デスクトップがインストールされていることを確認してください",
       "notInElectron": "WEB環境の場合はブラウザコンソールを手動で開いてください"
     }

@@ -54,9 +54,7 @@
       </div>
       <div class="viewBox">
         <router-view v-slot="{ Component }">
-          <keepAlive>
-            <component :is="Component" :key="$route.fullPath" />
-          </keepAlive>
+          <component :is="Component" :key="$route.fullPath" />
         </router-view>
       </div>
     </div>
@@ -106,7 +104,6 @@ function handleClick(menu: any) {
   router.push(menu.path);
   activeMenu.value = menu.path;
 }
-
 </script>
 
 <style lang="scss" scoped>

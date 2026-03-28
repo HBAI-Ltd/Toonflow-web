@@ -59,7 +59,7 @@
               <div class="forceGenerateCard">
                 <div class="forceGenerateDesc">{{ $t("workbench.scriptAgent.forceGenerate.desc") }}</div>
                 <div class="forceGenerateActions">
-                  <t-button @click="handleForceConfirm">{{ $t("workbench.scriptAgent.forceGenerate.confirm") }}</t-button>
+                  <t-button @click="forceGenerateVisible = false">{{ $t("workbench.scriptAgent.forceGenerate.confirm") }}</t-button>
                 </div>
               </div>
             </div>
@@ -68,12 +68,12 @@
       </Pane>
       <Pane :size="70" :min-size="30" class="data">
         <div class="tabsWrapper">
-          <t-tabs v-model="currentTable" @change="changeTab">
+          <t-tabs v-model="currentTable">
             <template #action>
-              <div class="ac" v-if="currentTable == 1 && canEditPlan.storySkeleton">
+              <div class="ac" v-if="currentTable == 1">
                 <t-button @click="editMdPreview">{{ $t("workbench.scriptAgent.edit") }}</t-button>
               </div>
-              <div class="ac" v-else-if="currentTable == 2 && canEditPlan.adaptationStrategy">
+              <div class="ac" v-else-if="currentTable == 2">
                 <t-button @click="editMdPreview">{{ $t("workbench.scriptAgent.edit") }}</t-button>
               </div>
             </template>
@@ -103,10 +103,11 @@
                         <span class="scriptTitle">{{ item.name }}</span>
                       </div>
                       <div class="scriptCardActions">
-                        <t-button size="small" @click="editScript(index)">
+                        12313123
+                        <!-- <t-button size="small" @click="editScript(index)">
                           <template #icon><i-edit size="14" /></template>
                           {{ $t("workbench.scriptAgent.edit") }}
-                        </t-button>
+                        </t-button> -->
                       </div>
                     </div>
                     <div class="scriptCardBody">
@@ -121,10 +122,10 @@
         </div>
       </Pane>
     </Splitpanes>
-    <editMdPreivew v-model="dialogVisible" @save="onConfirm" :content="editContent" />
+    <!-- <editMdPreivew v-model="dialogVisible" @save="onConfirm" :content="editContent" /> -->
 
     <!-- 剧本编辑对话框 -->
-    <t-dialog
+    <!-- <t-dialog
       v-model:visible="scriptEditVisible"
       :header="$t('workbench.scriptAgent.editScript')"
       width="680px"
@@ -163,80 +164,22 @@
           </div>
         </div>
       </div>
-    </t-dialog>
+    </t-dialog> -->
   </div>
 </template>
 
 <script setup lang="ts">
-import _ from "lodash";
-import axios from "@/utils/axios";
-import projectStore from "@/stores/project";
 import { MdPreview } from "md-editor-v3";
-import type { ChatMessagesData } from "@tdesign-vue-next/chat";
-import settingStore from "@/stores/setting";
 import { Splitpanes, Pane } from "splitpanes";
 import "splitpanes/dist/splitpanes.css";
-import editMdPreivew from "@/components/editMdPreivew.vue";
-import openAssetsSelector from "@/utils/assetsCheck";
-import type { TabValue } from "tdesign-vue-next/es/tabs/type";
-import { useChat } from "@/utils/useChat";
-const { baseUrl } = storeToRefs(settingStore());
+import axios from "@/utils/axios";
+import type { ChatMessagesData } from "@tdesign-vue-next/chat";
+import projectStore from "@/stores/project";
 const { project } = storeToRefs(projectStore());
-
-const inputValue = ref("");
-const loadingHistory = ref(false);
-const status = ref<"idle" | "pending" | "streaming">("idle");
-
-const dialogVisible = ref(false);
-const editContent = ref("");
-const memoryTypeLabel: Record<string, string> = {
-  message: $t("workbench.scriptAgent.memoryType.message"),
-  summary: $t("workbench.scriptAgent.memoryType.summary"),
-  all: $t("workbench.scriptAgent.memoryType.all"),
-};
+import scriptAgentStore from "@/stores/scriptAgent";
+const { connected, messages, status, planData } = storeToRefs(scriptAgentStore());
 const currentTable = ref(1);
-interface Asset {
-  id: number;
-  name: string;
-  describe: string;
-  prompt: string;
-  type: "role" | "tool" | "scene" | "clip";
-}
-interface Script {
-  id: number;
-  name: string;
-  content: string;
-  relatedAssets: Asset[];
-}
-interface PlanData {
-  storySkeleton: string;
-  adaptationStrategy: string;
-  script: Script[];
-}
-
-const planData = ref<PlanData>({
-  storySkeleton: "",
-  adaptationStrategy: "",
-  script: [],
-});
-
-const canEditPlan = ref({
-  storySkeleton: true,
-  adaptationStrategy: true,
-});
-
-async function getPlanData() {
-  const { data } = await axios.post("/scriptAgent/getPlanData", { projectId: project.value?.id, agentType: "scriptAgent" });
-  planData.value.storySkeleton = data.storySkeleton;
-  planData.value.adaptationStrategy = data.adaptationStrategy;
-}
-async function setPlanData() {
-  await axios.post("/scriptAgent/setPlanData", { projectId: project.value?.id, agentType: "scriptAgent", data: planData.value });
-}
-onMounted(() => {
-  getPlanData();
-  getNovel();
-});
+const inputValue = ref("删除aaa剧本");
 
 const defMsg: ChatMessagesData[] = [
   {
@@ -253,90 +196,39 @@ const defMsg: ChatMessagesData[] = [
   },
 ];
 
-const { connected, messages, chat, stopGenerate, socket } = useChat({
-  url: `${baseUrl.value}/socket/scriptAgent`,
-  auth: {
-    isolationKey: `${project.value?.id}:scriptAgent`,
-    projectId: project.value?.id,
-  },
-  xmlTags: [
-    { tag: "storySkeleton", keepInMessage: false },
-    { tag: "adaptationStrategy", keepInMessage: false },
-  ],
-  onXmlTag: ({ tag, value, status }) => {
-    if (status === "streaming") {
-      if (tag === "storySkeleton") {
-        planData.value.storySkeleton = value;
-        canEditPlan.value.storySkeleton = false;
-      } else if (tag === "adaptationStrategy") {
-        planData.value.adaptationStrategy = value;
-        canEditPlan.value.adaptationStrategy = false;
-      }
-    }
-    if (status === "complete") {
-      if (tag === "storySkeleton") {
-        planData.value.storySkeleton = value;
-        canEditPlan.value.storySkeleton = true;
-      } else if (tag === "adaptationStrategy") {
-        planData.value.adaptationStrategy = value;
-        canEditPlan.value.adaptationStrategy = true;
-      }
-      setPlanData();
-    }
-  },
-  autoConnect: true,
-});
-
 onMounted(() => {
-  messages.value = [...defMsg, ...messages.value];
-
-  socket.value?.on("getPlanData", (_, callback) => {
-    callback(planData.value);
-  });
-
-  socket.value?.on("setPlanData", ({ key, value }: any) => {
-    getScriptApi();
-  });
-  getHistory();
+  if (messages.value.length <= 0) messages.value = [...defMsg, ...messages.value];
+  getPlanData();
+  getNovel();
 });
 
-onUnmounted(() => {});
-
-// ============== Actions ==============
-
-const currentMsgId = ref("");
-
-// 强制生成蒙层
-const forceGenerateVisible = ref(false);
-const novelData = ref([]);
-function getNovel() {
-  axios.post("/novel/getNovelData", { projectId: project.value?.id }).then((res) => {
-    novelData.value = res.data;
-    const hasUnfinished = (novelData.value as any[]).some((item: any) => item.eventState === 0);
-    if (hasUnfinished && !forceGenerateVisible.value) {
-      forceGenerateVisible.value = true;
-    }
-  });
+async function getPlanData() {
+  const { data } = await axios.post("/scriptAgent/getPlanData", { projectId: project.value?.id, agentType: "scriptAgent" });
+  planData.value.storySkeleton = data.storySkeleton;
+  planData.value.adaptationStrategy = data.adaptationStrategy;
+  planData.value.script = data.script || [];
 }
 
-function handleSend(text: string) {
-  chat(text);
-  inputValue.value = "";
-}
-function handleForceConfirm() {
-  forceGenerateVisible.value = false;
-}
-
-function handleStop() {
-  if (currentMsgId.value) {
-    stopGenerate(currentMsgId.value);
-  }
-}
-
+//快捷发送
 const handleActions = {
-  suggestion: (data?: any) => handleSend(data?.content?.prompt),
+  suggestion: (data?: any) => {
+    scriptAgentStore().chat(data?.content?.prompt);
+  },
 };
 
+function handleSend(text: string) {
+  scriptAgentStore().chat(text);
+  inputValue.value = "";
+}
+function handleStop() {
+  scriptAgentStore().stopGenerate();
+}
+
+const memoryTypeLabel: Record<string, string> = {
+  message: $t("workbench.scriptAgent.memoryType.message"),
+  summary: $t("workbench.scriptAgent.memoryType.summary"),
+  all: $t("workbench.scriptAgent.memoryType.all"),
+};
 function handleClearMemory(type: "message" | "summary" | "all") {
   const dialog = DialogPlugin.confirm({
     header: $t("workbench.scriptAgent.msg.clearConfirm"),
@@ -353,6 +245,7 @@ function handleClearMemory(type: "message" | "summary" | "all") {
   });
 }
 
+const loadingHistory = ref(false);
 async function getHistory() {
   loadingHistory.value = true;
   const { data } = await axios.post(`/agents/getMemory`, {
@@ -363,98 +256,27 @@ async function getHistory() {
   loadingHistory.value = false;
 }
 
-// ============== 剧本编辑 ==============
-const scriptEditVisible = ref(false);
-const scriptEditIndex = ref(-1);
-const newAssetInput = ref("");
-const scriptEditData = ref<Script>({ id: -1, name: "", content: "", relatedAssets: [] });
+// 强制生成蒙层
+const forceGenerateVisible = ref(false);
+const novelData = ref([]);
 
-function editScript(index: number) {
-  const item = planData.value.script[index];
-  scriptEditIndex.value = index;
-  scriptEditData.value = {
-    id: item.id,
-    name: item.name,
-    content: item.content,
-    relatedAssets: [...(item.relatedAssets ?? [])],
-  };
-  newAssetInput.value = "";
-  scriptEditVisible.value = true;
+function getNovel() {
+  axios.post("/novel/getNovelData", { projectId: project.value?.id }).then(({ data }: any) => {
+    novelData.value = data;
+    const hasUnfinished = (novelData.value as any[]).some((item: any) => item.eventState === 0);
+    if (hasUnfinished && !forceGenerateVisible.value) {
+      forceGenerateVisible.value = true;
+    }
+  });
 }
 
-async function saveScript() {
-  if (scriptEditIndex.value < 0) return;
-
-  try {
-    await axios.post("/script/updateScript", {
-      id: scriptEditData.value.id,
-      name: scriptEditData.value.name,
-      content: scriptEditData.value.content,
-      assets: scriptEditData.value.relatedAssets.map((a) => a.id),
-    });
-    window.$message.success($t("workbench.scriptAgent.msg.scriptUpdated"));
-    planData.value.script[scriptEditIndex.value] = {
-      ...planData.value.script[scriptEditIndex.value],
-      ...scriptEditData.value,
-    };
-    scriptEditVisible.value = false;
-  } catch (error) {
-    console.error("更新剧本失败:", error);
-    window.$message.error($t("workbench.scriptAgent.msg.scriptUpdateFailed"));
-  } finally {
-  }
-}
-
-function removeAsset(id: number) {
-  scriptEditData.value.relatedAssets = scriptEditData.value.relatedAssets.filter((a) => a.id !== id);
-}
-
+const dialogVisible = ref(false);
+const editContent = ref("");
 //编辑markdown
 function editMdPreview() {
   if (currentTable.value == 1) editContent.value = planData.value.storySkeleton;
   else if (currentTable.value == 2) editContent.value = planData.value.adaptationStrategy;
   dialogVisible.value = true;
-}
-function onConfirm(value: string) {
-  editContent.value = value;
-  switch (currentTable.value) {
-    case 1:
-      planData.value.storySkeleton = value;
-      return;
-    case 2:
-      planData.value.adaptationStrategy = value;
-      return;
-  }
-  dialogVisible.value = false;
-}
-
-async function handleSelectAssets() {
-  const assets = await openAssetsSelector({ title: $t("workbench.scriptAgent.selectAssetsTitle"), types: ["role", "tool", "scene"] });
-  if (assets.length) {
-    const existing = new Set(scriptEditData.value.relatedAssets.map((a) => a.id));
-    for (const a of assets) {
-      if (!existing.has(a.id)) {
-        scriptEditData.value.relatedAssets.push({ id: a.id, name: a.name, describe: a.describe, prompt: a.prompt, type: a.type });
-      }
-    }
-  }
-}
-
-async function getScriptApi() {
-  try {
-    const res = await axios.post("/script/getScrptApi", {
-      projectId: project.value?.id,
-    });
-    planData.value.script = res.data;
-  } catch (error) {
-    console.error("搜索剧本失败:", error);
-    window.$message.error($t("workbench.scriptAgent.msg.searchScriptFailed"));
-  }
-}
-function changeTab(value: TabValue) {
-  if (value == 3) {
-    getScriptApi();
-  }
 }
 </script>
 

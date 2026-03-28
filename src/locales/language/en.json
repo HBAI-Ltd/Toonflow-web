@@ -415,7 +415,7 @@
       "openDevtool": "Open",
       "devtoolsDoc": "Document address",
       "devtoolsDesc": "After being turned on, a .devtools folder will be created in the Toonflow installation directory. Please ensure that Toonflow has write permissions (run as administrator).",
-      "devtoolsDesc2": "Run npx @ai-sdk/devtools in this directory to enable telemetry debugging",
+      "devtoolsDesc2": "Run npx {'@'}ai-sdk/devtools in this directory to enable telemetry debugging",
       "openDevtoolFailed": "Failed to open developer tools, please make sure Toonflow desktop is installed",
       "notInElectron": "For WEB environment, please open the browser console manually"
     }

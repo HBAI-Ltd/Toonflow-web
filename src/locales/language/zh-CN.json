@@ -428,7 +428,7 @@
       "openDevtool": "打开",
       "devtoolsDoc": "文档地址",
       "devtoolsDesc": "开启后会在Toonflow安装目录创建.devtools文件夹，请确保Toonflow有写入权限（管理员身份运行）。",
-      "devtoolsDesc2": "在该目录运行 npx @ai-sdk/devtools 开启遥测调试",
+      "devtoolsDesc2": "在该目录运行 npx {'@'}ai-sdk/devtools 开启遥测调试",
       "openDevtoolFailed": "打开开发者工具失败，请确保已安装Toonflow桌面端",
       "notInElectron": "WEB环境请手动打开浏览器控制台"
     }

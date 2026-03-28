@@ -1,21 +1,23 @@
 <template>
   <div class="scriptAgent">
     <Splitpanes class="default-theme data f">
-      <Pane :size="25" :min-size="15" class="operate">
+      <Pane :size="30" :min-size="15" class="operate">
         <div class="box pr">
           <t-chat-list :clear-history="false">
             <t-chat-message
               v-for="message in messages"
               :key="message.id"
               :message="message"
+              :name="(message as any).name"
               :placement="message.role === 'user' ? 'right' : 'left'"
-              :variant="message.role === 'user' ? 'base' : 'text'"
+              :variant="message.role === 'user' ? 'base' : 'outline'"
               :handleActions="message.role === 'user' ? {} : handleActions"
               :status="message.status"
               allowContentSegmentCustom>
-              <!-- <template #actionbar>
-            <t-chat-actionbar :action-bar="['replay', 'copy']" />
-          </template> -->
+              <!-- <template #actionbar> -->
+              <!-- <t-chat-actionbar :action-bar="['replay', 'copy']" /> -->
+              <!-- <t-chat-actionbar :action-bar="['replay', 'copy']" /> -->
+              <!-- </template> -->
             </t-chat-message>
           </t-chat-list>
           <t-chat-sender
@@ -52,13 +54,26 @@
             </template>
           </t-chat-sender>
           <i-dot class="dot" theme="outline" :fill="connected ? 'green' : 'red'" />
+          <transition name="fade">
+            <div v-if="forceGenerateVisible" class="forceGenerateMask">
+              <div class="forceGenerateCard">
+                <div class="forceGenerateDesc">{{ $t("workbench.scriptAgent.forceGenerate.desc") }}</div>
+                <div class="forceGenerateActions">
+                  <t-button @click="handleForceConfirm">{{ $t("workbench.scriptAgent.forceGenerate.confirm") }}</t-button>
+                </div>
+              </div>
+            </div>
+          </transition>
         </div>
       </Pane>
-      <Pane :size="75" :min-size="30" class="data">
+      <Pane :size="70" :min-size="30" class="data">
         <div class="tabsWrapper">
           <t-tabs v-model="currentTable" @change="changeTab">
             <template #action>
-              <div class="ac" v-if="currentTable != 3">
+              <div class="ac" v-if="currentTable == 1 && canEditPlan.storySkeleton">
+                <t-button @click="editMdPreview">{{ $t("workbench.scriptAgent.edit") }}</t-button>
+              </div>
+              <div class="ac" v-else-if="currentTable == 2 && canEditPlan.adaptationStrategy">
                 <t-button @click="editMdPreview">{{ $t("workbench.scriptAgent.edit") }}</t-button>
               </div>
             </template>
@@ -97,17 +112,6 @@
                     <div class="scriptCardBody">
                       <pre v-if="item.content">{{ item.content }}</pre>
                       <span v-else class="emptyContent">{{ $t("workbench.scriptAgent.noContent") }}</span>
-                    </div>
-                    <div v-if="item.relatedAssets?.length" class="scriptCardFooter ac">
-                      <span class="assetsLabel">
-                        <i-link size="12" />
-                        {{ $t("workbench.scriptAgent.relatedAssets") }}
-                      </span>
-                      <div class="assetsTags">
-                        <t-tag v-for="(asset, ai) in item.relatedAssets" size="small" :key="ai" variant="light" theme="warning">
-                          {{ asset.name }}
-                        </t-tag>
-                      </div>
                     </div>
                   </div>
                 </div>
@@ -170,17 +174,18 @@ import projectStore from "@/stores/project";
 import { MdPreview } from "md-editor-v3";
 import type { ChatMessagesData } from "@tdesign-vue-next/chat";
 import settingStore from "@/stores/setting";
-import { useChat } from "@/utils/useChat";
 import { Splitpanes, Pane } from "splitpanes";
 import "splitpanes/dist/splitpanes.css";
 import editMdPreivew from "@/components/editMdPreivew.vue";
 import openAssetsSelector from "@/utils/assetsCheck";
 import type { TabValue } from "tdesign-vue-next/es/tabs/type";
+import { useChat } from "@/utils/useChat";
 const { baseUrl } = storeToRefs(settingStore());
 const { project } = storeToRefs(projectStore());
 
 const inputValue = ref("");
 const loadingHistory = ref(false);
+const status = ref<"idle" | "pending" | "streaming">("idle");
 
 const dialogVisible = ref(false);
 const editContent = ref("");
@@ -215,14 +220,10 @@ const planData = ref<PlanData>({
   script: [],
 });
 
-watch(
-  () => [planData.value.storySkeleton, planData.value.adaptationStrategy],
-  () => {
-    console.log("%c Line:221 🍰", "background:#4fff4B");
-    setPlanData();
-  },
-  { immediate: false },
-);
+const canEditPlan = ref({
+  storySkeleton: true,
+  adaptationStrategy: true,
+});
 
 async function getPlanData() {
   const { data } = await axios.post("/scriptAgent/getPlanData", { projectId: project.value?.id, agentType: "scriptAgent" });
@@ -234,6 +235,7 @@ async function setPlanData() {
 }
 onMounted(() => {
   getPlanData();
+  getNovel();
 });
 
 const defMsg: ChatMessagesData[] = [
@@ -249,72 +251,86 @@ const defMsg: ChatMessagesData[] = [
       },
     ],
   },
-  {
-    id: "system-1",
-    role: "assistant",
-    content: [
-      {
-        type: "text",
-        status: "complete",
-        data: "123123123",
-      },
-      {
-        type: "thinking",
-        status: "complete",
-        data: {
-          title: "已完成思考（耗时3秒）",
-          text: "好的，我现在需要回答用户关于对比近3年当代偶像爱情剧并总结创作经验的问题\n查询网络信息中...\n根据网络搜索结果，成功案例包括《春色寄情人》《要久久爱》《你也有今天》等，但缺乏具体播放数据，需要结合行业报告总结共同特征。2022-2024年偶像爱情剧的创作经验主要集中在题材创新、现实元素融入、快节奏叙事等方面。结合行业报告和成功案例，总结出以下创作经验。",
-        },
-      },
-      
-    ],
-  },
 ];
 
-// ============== Socket ==============
-
-const { connected, messages, isGenerating, socket, chat: sendChat, stopGenerate } = useChat({
+const { connected, messages, chat, stopGenerate, socket } = useChat({
   url: `${baseUrl.value}/socket/scriptAgent`,
   auth: {
     isolationKey: `${project.value?.id}:scriptAgent`,
     projectId: project.value?.id,
   },
-});
-
-// 初始化欢迎消息
-messages.value = [...defMsg];
-
-const status = computed(() => {
-  if (isGenerating.value) {
-    const lastMsg = messages.value[messages.value.length - 1];
-    return lastMsg?.status === "pending" ? "pending" : "streaming";
-  }
-  return "idle";
+  xmlTags: [
+    { tag: "storySkeleton", keepInMessage: false },
+    { tag: "adaptationStrategy", keepInMessage: false },
+  ],
+  onXmlTag: ({ tag, value, status }) => {
+    if (status === "streaming") {
+      if (tag === "storySkeleton") {
+        planData.value.storySkeleton = value;
+        canEditPlan.value.storySkeleton = false;
+      } else if (tag === "adaptationStrategy") {
+        planData.value.adaptationStrategy = value;
+        canEditPlan.value.adaptationStrategy = false;
+      }
+    }
+    if (status === "complete") {
+      if (tag === "storySkeleton") {
+        planData.value.storySkeleton = value;
+        canEditPlan.value.storySkeleton = true;
+      } else if (tag === "adaptationStrategy") {
+        planData.value.adaptationStrategy = value;
+        canEditPlan.value.adaptationStrategy = true;
+      }
+      setPlanData();
+    }
+  },
+  autoConnect: true,
 });
 
 onMounted(() => {
+  messages.value = [...defMsg, ...messages.value];
+
   socket.value?.on("getPlanData", (_, callback) => {
     callback(planData.value);
   });
 
   socket.value?.on("setPlanData", ({ key, value }: any) => {
-    if (key == "script") {
-      getScriptApi();
-    } else _.set(planData.value, key, value);
+    getScriptApi();
   });
-
   getHistory();
 });
 
+onUnmounted(() => {});
+
 // ============== Actions ==============
 
+const currentMsgId = ref("");
+
+// 强制生成蒙层
+const forceGenerateVisible = ref(false);
+const novelData = ref([]);
+function getNovel() {
+  axios.post("/novel/getNovelData", { projectId: project.value?.id }).then((res) => {
+    novelData.value = res.data;
+    const hasUnfinished = (novelData.value as any[]).some((item: any) => item.eventState === 0);
+    if (hasUnfinished && !forceGenerateVisible.value) {
+      forceGenerateVisible.value = true;
+    }
+  });
+}
+
 function handleSend(text: string) {
-  sendChat(text);
+  chat(text);
   inputValue.value = "";
+}
+function handleForceConfirm() {
+  forceGenerateVisible.value = false;
 }
 
 function handleStop() {
-  stopGenerate();
+  if (currentMsgId.value) {
+    stopGenerate(currentMsgId.value);
+  }
 }
 
 const handleActions = {
@@ -344,7 +360,6 @@ async function getHistory() {
     agentType: "scriptAgent",
   });
   messages.value = [...defMsg, ...data];
-  sortMessages();
   loadingHistory.value = false;
 }
 
@@ -430,8 +445,6 @@ async function getScriptApi() {
     const res = await axios.post("/script/getScrptApi", {
       projectId: project.value?.id,
     });
-    console.log("%c Line:424 🍻 res.data", "background:#33a5ff", res.data);
-
     planData.value.script = res.data;
   } catch (error) {
     console.error("搜索剧本失败:", error);
@@ -566,16 +579,14 @@ function changeTab(value: TabValue) {
     .scriptIndex {
       font-size: 12px;
       font-weight: 600;
-      color: var(--td-brand-color);
       flex-shrink: 0;
-      background: var(--td-brand-color-light);
+      background: #e6e3e3;
       padding: 1px 6px;
       border-radius: 4px;
     }
     .scriptTitle {
       font-size: 14px;
       font-weight: 600;
-      color: var(--td-text-color-primary);
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -584,7 +595,6 @@ function changeTab(value: TabValue) {
   .scriptCardBody {
     font-size: 13px;
     line-height: 1.7;
-    color: var(--td-text-color-primary);
     padding: 10px 12px;
     flex: 1;
     max-height: 300px;
@@ -597,7 +607,6 @@ function changeTab(value: TabValue) {
     }
     .emptyContent {
       display: block;
-      color: var(--td-text-color-placeholder);
       font-size: 13px;
     }
     :deep(.md-editor-preview-wrapper) {
@@ -607,14 +616,13 @@ function changeTab(value: TabValue) {
   .scriptCardFooter {
     gap: 8px;
     padding: 8px 12px;
-    border-top: 1px solid var(--td-border-level-2-color);
+    border-top: 1px solid #e6e3e3;
     background-color: #fafafa;
     .assetsLabel {
       display: flex;
       align-items: center;
       gap: 3px;
       font-size: 12px;
-      color: var(--td-text-color-secondary);
       white-space: nowrap;
       margin-top: 2px;
       flex-shrink: 0;
@@ -639,7 +647,6 @@ function changeTab(value: TabValue) {
     label {
       font-size: 13px;
       font-weight: 500;
-      color: var(--td-text-color-secondary);
     }
     .assets-list {
       display: flex;
@@ -653,7 +660,6 @@ function changeTab(value: TabValue) {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    border: 1px solid var(--td-border-level-2-color);
     border-radius: 6px;
     padding: 8px 12px;
     background: #fafafa;
@@ -671,6 +677,37 @@ function changeTab(value: TabValue) {
   }
 }
 
+.forceGenerateMask {
+  position: absolute;
+  inset: 0;
+  background: rgba(170, 170, 170, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  border-radius: 10px;
+  .forceGenerateCard {
+    background: #fdfbfb;
+    border-radius: 12px;
+    padding: 28px 32px 24px;
+    max-width: 300px;
+    width: 90%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    .forceGenerateDesc {
+      font-size: 12px;
+    }
+    .forceGenerateActions {
+      display: flex;
+      gap: 12px;
+      margin-top: 8px;
+      width: 100%;
+      justify-content: center;
+    }
+  }
+}
 .settingMenu {
   padding: 4px 0;
   .settingMenuItem {
@@ -681,12 +718,6 @@ function changeTab(value: TabValue) {
     font-size: 13px;
     cursor: pointer;
     white-space: nowrap;
-    &:hover {
-      background-color: #f3f3f3;
-    }
-    &.danger {
-      color: #e34d59;
-    }
   }
 }
 :deep(.t-tabs__operations--right) {

@@ -34,12 +34,20 @@ export interface ContentUpdateEvent {
   status?: ChatMessageStatus;
 }
 
+export interface XmlChildItem {
+  tag: string;
+  attrs: Record<string, string>;
+  value: string;
+}
+
 export interface XmlTagEvent {
   messageId: string;
   contentId?: string;
   type: "text" | "markdown";
   tag: string;
   value: string;
+  attrs: Record<string, string>;
+  children: XmlChildItem[];
   status: ChatMessageStatus;
 }
 
@@ -82,6 +90,7 @@ export function useChat(options: UseChatOptions) {
   const connecting = ref(false);
   const messages = ref<ChatMessagesData[]>([]);
   const currentMessageId = ref<string | null>(null);
+  const status = ref<"idle" | "pending" | "streaming">("idle");
   const xmlData = ref<Record<string, string>>({});
   const xmlDataByMessage = ref<Record<string, Record<string, string>>>({});
   const normalizedXmlTagOptions = Array.from(
@@ -138,20 +147,66 @@ export function useChat(options: UseChatOptions) {
 
   const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
+  const parseXmlAttributes = (tagStr: string): Record<string, string> => {
+    const attrs: Record<string, string> = {};
+    const attrRegex = /([\w-]+)\s*=\s*"([^"]*)"/g;
+    let match: RegExpExecArray | null;
+    while ((match = attrRegex.exec(tagStr)) !== null) {
+      attrs[match[1]] = match[2];
+    }
+    return attrs;
+  };
+
+  const parseXmlChildren = (content: string): XmlChildItem[] => {
+    const children: XmlChildItem[] = [];
+    // 匹配已闭合的子元素
+    const childRegex = /<(\w+)((?:\s+[\w-]+\s*=\s*"[^"]*")*)\s*>([\s\S]*?)<\/\1>/g;
+    let match: RegExpExecArray | null;
+    let lastIndex = 0;
+    while ((match = childRegex.exec(content)) !== null) {
+      children.push({
+        tag: match[1],
+        attrs: parseXmlAttributes(match[2]),
+        value: match[3],
+      });
+      lastIndex = childRegex.lastIndex;
+    }
+    // 匹配尾部未闭合的子元素（流式场景）
+    const remaining = content.slice(lastIndex);
+    const unclosedMatch = remaining.match(/<(\w+)((?:\s+[\w-]+\s*=\s*"[^"]*")*)\s*>([\s\S]*)$/);
+    if (unclosedMatch) {
+      children.push({
+        tag: unclosedMatch[1],
+        attrs: parseXmlAttributes(unclosedMatch[2]),
+        value: unclosedMatch[3],
+      });
+    }
+    return children;
+  };
+
   const parseXmlTag = (text: string, tag: string) => {
-    const openTag = `<${tag}>`;
+    const escapedTag = escapeRegExp(tag);
+    // Match opening tag with optional attributes: <tag> or <tag attr="val">
+    const openRegex = new RegExp(`<${escapedTag}(\\s[^>]*)?>`, "g");
+    let lastMatch: RegExpExecArray | null = null;
+    let m: RegExpExecArray | null;
+    while ((m = openRegex.exec(text)) !== null) {
+      lastMatch = m;
+    }
+    if (!lastMatch) return null;
+
+    const attrs = parseXmlAttributes(lastMatch[1] ?? "");
+    const contentStart = lastMatch.index + lastMatch[0].length;
     const closeTag = `</${tag}>`;
-    const openIndex = text.lastIndexOf(openTag);
-
-    if (openIndex === -1) return null;
-
-    const contentStart = openIndex + openTag.length;
     const closeIndex = text.indexOf(closeTag, contentStart);
     const isComplete = closeIndex !== -1;
     const value = text.slice(contentStart, isComplete ? closeIndex : text.length).trim();
+    const children = parseXmlChildren(value);
 
     return {
       value,
+      attrs,
+      children,
       isComplete,
     };
   };
@@ -161,8 +216,9 @@ export function useChat(options: UseChatOptions) {
 
     for (const tag of hiddenXmlTags) {
       const escapedTag = escapeRegExp(tag);
-      sanitized = sanitized.replace(new RegExp(`<${escapedTag}>[\\s\\S]*?<\\/${escapedTag}>`, "g"), "");
-      sanitized = sanitized.replace(new RegExp(`<${escapedTag}>[\\s\\S]*$`, "g"), "");
+      // Match tags with or without attributes
+      sanitized = sanitized.replace(new RegExp(`<${escapedTag}(?:\\s[^>]*)?>[\\s\\S]*?<\\/${escapedTag}>`, "g"), "");
+      sanitized = sanitized.replace(new RegExp(`<${escapedTag}(?:\\s[^>]*)?>[\\s\\S]*$`, "g"), "");
     }
 
     return sanitized;
@@ -215,6 +271,8 @@ export function useChat(options: UseChatOptions) {
         type: content.type,
         tag,
         value,
+        attrs: parsed.attrs,
+        children: parsed.children,
         status: eventStatus,
       });
     }
@@ -271,7 +329,7 @@ export function useChat(options: UseChatOptions) {
 
   // 处理内容更新的核心逻辑
   const handleContentUpdate = (event: ContentUpdateEvent) => {
-    const { messageId, contentId, type, data, strategy, status } = event;
+    const { messageId, contentId, type, data, strategy, status: eventStatus } = event;
 
     const msg = findMessage(messageId) as AIMessage;
     if (!msg || msg.role !== "assistant") return;
@@ -280,14 +338,17 @@ export function useChat(options: UseChatOptions) {
     if (!content) return;
 
     // 更新内容状态
-    if (status) {
-      content.status = status;
+    if (eventStatus) {
+      content.status = eventStatus;
     }
 
     // 关键修复：当内容块开始流式输出时，同步更新消息状态
-    if (status === "streaming" || (strategy === "append" && data)) {
+    if (eventStatus === "streaming" || (strategy === "append" && data)) {
       if (msg.status === "pending") {
         msg.status = "streaming";
+      }
+      if (currentMessageId.value === messageId) {
+        status.value = "streaming";
       }
     }
 
@@ -320,7 +381,7 @@ export function useChat(options: UseChatOptions) {
     }
 
     // 流式状态（如果没有显式指定状态且是追加模式）
-    if (!status && strategy === "append") {
+    if (!eventStatus && strategy === "append") {
       content.status = "streaming";
     }
 
@@ -361,6 +422,7 @@ export function useChat(options: UseChatOptions) {
 
       if (data.role === "assistant") {
         currentMessageId.value = data.id;
+        status.value = data.status === "streaming" ? "streaming" : "pending";
       }
     });
 
@@ -381,9 +443,14 @@ export function useChat(options: UseChatOptions) {
         syncMessageXmlData(data.id, msg, data.status);
       }
 
+      if (data.status === "streaming") {
+        status.value = "streaming";
+      }
+
       if (data.status === "complete" || data.status === "error" || data.status === "stop") {
         if (currentMessageId.value === data.id) {
           currentMessageId.value = null;
+          status.value = "idle";
         }
       }
     });
@@ -560,6 +627,7 @@ export function useChat(options: UseChatOptions) {
   const clearMessages = () => {
     messages.value = [];
     currentMessageId.value = null;
+    status.value = "idle";
     xmlData.value = {};
     xmlDataByMessage.value = {};
     emittedXmlState.clear();
@@ -616,6 +684,7 @@ export function useChat(options: UseChatOptions) {
     socket,
     connected,
     connecting,
+    status,
     messages,
     currentMessageId,
     xmlData,
