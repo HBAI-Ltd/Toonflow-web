@@ -40,7 +40,7 @@
         </t-select>
         <i-loading-four class="spin" size="16" style="margin-left: 0.5rem" v-show="loading"></i-loading-four>
         <t-tooltip placement="bottom" theme="primary" content="$t('workbench.production.autoLayoutLR')">
-          <t-button @click="layoutGraph()" variant="outline">
+          <t-button @click="layoutGraph('LR')" variant="outline">
             <template #icon>
               <i-tree-diagram size="16" />
             </template>
@@ -56,10 +56,10 @@
         <i-menu-unfold-one theme="outline" size="24" fill="#000000" />
       </div>
       <transition name="slide" v-show="openShowVisible" v-if="episodesId">
-        <rightChatBox :title="title" v-model="flowData" @close="openShowVisible = false" />
+        <rightChatBox v-model="flowData" :title="rightChatTitle" @close="openShowVisible = false" :episodesId="episodesId" />
       </transition>
     </div>
-    <!-- <t-guide v-model="current" :steps="steps" @finish="finishGuide" /> -->
+    <t-guide v-model="current" :steps="steps" @finish="finishGuide" />
   </VueFlow>
 </template>
 
@@ -79,8 +79,10 @@ import storyboardTable from "./node/storyboardTable.vue";
 import storyboard from "./node/storyboard.vue";
 import workbench from "./node/workbench.vue";
 import poster from "./node/poster.vue";
+//悬浮窗组件
 import rightChatBox from "./components/rightChatBox/index.vue";
 import { useLayout } from "./utils/dagre";
+
 import { useFlowBuilder, type FlowData } from "./utils/flowBuilder";
 import axios from "@/utils/axios";
 import projectStore from "@/stores/project";
@@ -90,13 +92,45 @@ const openShowVisible = ref(true);
 const { toObject, fromObject, fitView, findNode } = useVueFlow();
 const { layout } = useLayout();
 
-import productionAgentStore from "@/stores/productionAgent";
-const { episodesId, flowData } = storeToRefs(productionAgentStore());
+const episodesId = ref();
 provide("episodesId", episodesId);
 
-const loading = ref(false);
+const layoutDirection = ref<"LR" | "TB">("LR");
+provide("layoutDirection", layoutDirection);
+const rightChatTitle = computed(() => {
+  const episode = episodesOptions.value.find((option) => option.value === episodesId.value);
+  return episode ? episode.label : "";
+});
 
-// 节点位置
+const episodesOptions = ref<{ label: string; value: number }[]>([]);
+
+// ==================== AI 操作数据区 ====================
+// AI 只需修改此对象即可控制整个故事线流程
+const flowData = ref<FlowData>({
+  // 剧本
+  script: "",
+  scriptPlan: "",
+  // 资产
+  assets: [],
+  // 分镜表（合并为一个 node）
+  storyboardTable: ``,
+  // 分镜（合并为一个 node）
+  storyboard: [],
+  // 工作台（单个 node）
+  workbench: {
+    name: "",
+    duration: "",
+    resolution: "",
+    fps: "",
+  },
+  // 封面（单个 node）
+  // poster: {
+  //   items: [],
+  // },
+});
+// ==================== AI 操作数据区结束 ====================
+
+// 节点位置（独立于 AI 数据，由用户拖拽控制）
 const nodePositions = ref<Record<string, { x: number; y: number }>>({
   script: { x: 0, y: 0 },
   scriptPlan: { x: 900, y: 0 },
@@ -106,20 +140,31 @@ const nodePositions = ref<Record<string, { x: number; y: number }>>({
   workbench: { x: 3600, y: 0 },
   // poster: { x: 4500, y: 0 },
 });
+
+// 自动构建 nodes 和 edges
 const { nodes, edges } = useFlowBuilder(flowData, nodePositions);
+const current = useLocalStorage("productionGuideCurrent", 0);
+const steps = [
+  {
+    element: ".episodesSelect",
+    title: $t("workbench.production.guideSwitchEpisode"),
+    body: $t("workbench.production.guideSwitchEpisodeBody"),
+    placement: "bottom",
+  },
+] as any;
+function finishGuide() {
+  current.value = -1;
+}
 
-onMounted(() => {
-  getScriptData();
-});
+const loading = ref(false);
 
-const episodesOptions = ref<{ label: string; value: number }[]>([]);
-
-async function getScriptData() {
+async function getData() {
   //获取剧本
   const { data: scriptRes } = await axios.post("/script/getScrptApi", {
     projectId: project.value?.id,
     name: "",
   });
+
   episodesOptions.value = scriptRes.map((ep: any) => ({
     label: ep.name,
     value: ep.id,
@@ -128,11 +173,47 @@ async function getScriptData() {
     episodesId.value = episodesOptions.value[0].value;
   }
 }
+watch(
+  () => episodesId.value,
+  async (newVal) => {
+    const { data } = await axios.post("/production/getFlowData", {
+      projectId: project.value?.id,
+      episodesId: episodesId.value,
+    });
+    flowData.value = data;
+  },
+);
+async function saveFlowData() {
+  await axios.post("/production/saveFlowData", {
+    projectId: project.value?.id,
+    episodesId: episodesId.value,
+    data: flowData.value,
+  });
+}
 
-async function layoutGraph(direction: "LR" | "TB" = "LR") {
-  const spacing = 200;
+watch(
+  flowData,
+  (newVal) => {
+    loading.value = true;
+    saveFlowData().finally(() => {
+      loading.value = false;
+    });
+  },
+  { deep: true },
+);
+
+onMounted(() => {
+  loading.value = true;
+  getData().finally(() => {
+    loading.value = false;
+  });
+});
+const spacing = ref(200);
+
+async function layoutGraph(direction: "LR" | "TB") {
   const oldData = toObject();
-  oldData.nodes = layout(oldData.nodes, oldData.edges, direction, spacing);
+  oldData.nodes = layout(oldData.nodes, oldData.edges, direction, spacing.value);
+
   // LR 布局时，强制调整各节点位置
   if (direction === "LR") {
     const scriptNode = oldData.nodes.find((n) => n.id === "script");
@@ -143,7 +224,7 @@ async function layoutGraph(direction: "LR" | "TB" = "LR") {
     // assets 放在 script 正下方，左对齐，顶部紧接 script 底部
     if (scriptNode && assetsNode) {
       assetsNode.position.x = scriptNode.position.x;
-      assetsNode.position.y = scriptNode.position.y + scriptHeight + spacing;
+      assetsNode.position.y = scriptNode.position.y + scriptHeight + spacing.value;
     }
 
     // 主链节点（scriptPlan 及之后）全部与 script 顶部对齐
@@ -157,30 +238,12 @@ async function layoutGraph(direction: "LR" | "TB" = "LR") {
       }
     }
   }
+
   await fromObject(oldData);
+  layoutDirection.value = direction;
   await nextTick();
   fitView({ duration: 300 });
 }
-
-const title = computed(() => {
-  const episode = episodesOptions.value.find((option) => option.value === episodesId.value);
-  return episode ? episode.label : "";
-});
-
-watch(
-  () => episodesId.value,
-  async (newVal) => {
-    const { data } = await axios.post("/production/getFlowData", {
-      projectId: project.value?.id,
-      episodesId: episodesId.value,
-    });
-    flowData.value = data;
-    await nextTick();
-    await nextTick();
-    await nextTick();
-    layoutGraph();
-  },
-);
 </script>
 <style lang="scss" scoped>
 .flowMain {

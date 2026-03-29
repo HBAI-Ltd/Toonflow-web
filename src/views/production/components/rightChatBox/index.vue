@@ -16,6 +16,7 @@
           v-for="message in messages"
           :key="message.id"
           :message="message"
+          :name="(message as any).name"
           :placement="message.role === 'user' ? 'right' : 'left'"
           :variant="message.role === 'user' ? 'base' : 'outline'"
           :handleActions="message.role === 'user' ? {} : handleActions"
@@ -73,25 +74,17 @@
 import _ from "lodash";
 import axios from "@/utils/axios";
 import type { ChatMessagesData } from "@tdesign-vue-next/chat";
-import { DialogPlugin } from "tdesign-vue-next";
-import { useMousePressed, useMouse } from "@vueuse/core";
+import productionAgentStore from "@/stores/productionAgent";
 import projectStore from "@/stores/project";
-import settingStore from "@/stores/setting";
-import { useChat } from "@/utils/useChat";
-import type { FlowData } from "../../utils/flowBuilder";
-import ModelSelect from "@/components/modelSelect.vue";
-
-const { baseUrl } = storeToRefs(settingStore());
 const { project } = storeToRefs(projectStore());
-const props = defineProps({
-  title: { type: String, default: "" },
-  episodesId: { type: Number, required: true },
-});
+const { connected, messages, status, episodesId } = storeToRefs(productionAgentStore());
+
+const props = defineProps({ title: String });
+
 const emit = defineEmits(["close"]);
-// const inputValue = ref("请输出500字小作文，去洗车店洗车走路更快还是开车更快");
-const inputValue = ref();
+
+const inputValue = ref("");
 const loadingHistory = ref(false);
-const status = ref<"idle" | "pending" | "streaming">("idle");
 
 const defMsg: ChatMessagesData[] = [
   {
@@ -110,129 +103,30 @@ const defMsg: ChatMessagesData[] = [
     ],
   },
 ];
-
-const imageModelData = ref({
-  modelId: "",
-  ratio: "",
-  quality: "",
-});
-// ============== Socket ==============
-
-const { connected, messages, chat, stopGenerate, socket } = useChat({
-  url: `${baseUrl.value}/socket/scriptAgent`,
-  auth: {
-    isolationKey: `${project.value?.id}:productionAgent:${props.episodesId}`,
-    projectId: project.value?.id,
-    scriptId: props.episodesId,
-  },
-  xmlTags: [
-    { tag: "storySkeleton", keepInMessage: false },
-    { tag: "adaptationStrategy", keepInMessage: false },
-  ],
-  onXmlTag: ({ tag, value, status }) => {},
-  autoConnect: true,
-});
-
-const flowData = defineModel<FlowData>({
-  required: true,
-});
-
 onMounted(() => {
-  messages.value = [...defMsg, ...messages.value];
-
-  socket.value?.on("getFlowData", (_, callback) => {
-    callback(flowData.value);
-  });
-
-  socket.value?.on("setFlowData", ({ key, value }) => {
-    if (key == "setAssetsImage") {
-      const { id, src, state } = value as any;
-      // 先在父资产中查找
-      // 再在子资产（derive）中查找
-      for (let ai = 0; ai < flowData.value.assets.length; ai++) {
-        const asset = flowData.value.assets[ai];
-        const deriveIndex = asset.derive?.findIndex((d) => d.id == id);
-        if (deriveIndex !== undefined && deriveIndex !== -1) {
-          const newDerive = [...asset.derive];
-          newDerive[deriveIndex] = { ...newDerive[deriveIndex], src, state };
-          flowData.value.assets[ai] = { ...asset, derive: newDerive };
-          break;
-        }
-      }
-
-      return;
-    }
-    if (key == "addAssets") {
-      const deriveMap: any = {};
-      value.forEach((i: any) => {
-        if (!deriveMap[i.assetsId]) deriveMap[i.assetsId] = [i];
-        else deriveMap[i.assetsId].push(i);
-      });
-
-      flowData.value.assets.forEach((i) => {
-        if (deriveMap[i.id]) {
-          i.derive = [...i.derive, ...deriveMap[i.id]];
-        }
-      });
-
-      return;
-    }
-    if (key == "setStoryboardImage") {
-      const { id, src, state } = value as any;
-      // 先在父资产中查找
-      const parentIndex = flowData.value.storyboard.findIndex((i) => i.id == id);
-
-      if (parentIndex !== -1) {
-        flowData.value.storyboard[parentIndex] = {
-          ...flowData.value.storyboard[parentIndex],
-          src,
-          state,
-          referenceIds: value?.referenceIds ? value.referenceIds : [],
-        };
-      }
-      return;
-    }
-    _.set(flowData.value, key, value);
-  });
-
-  getHistory();
+  if (messages.value.length <= 0) messages.value = [...defMsg, ...messages.value];
 });
-
-function sortMessages() {
-  messages.value = messages.value.sort((a, b) => {
-    const aPending = a.status === "pending" ? 1 : 0;
-    const bPending = b.status === "pending" ? 1 : 0;
-    return aPending - bPending;
-  });
-}
-
-// ============== Actions ==============
-
-const currentMsgId = ref("");
 
 function handleSend(text: string) {
-  chat(text);
+  productionAgentStore().chat(text);
   inputValue.value = "";
 }
-
 function handleStop() {
-  if (currentMsgId.value) {
-    stopGenerate(currentMsgId.value);
-  }
+  productionAgentStore().stopGenerate();
 }
 
+//快捷发送
 const handleActions = {
-  suggestion: (data?: any) => handleSend(data?.content?.prompt),
+  suggestion: (data?: any) => {
+    productionAgentStore().chat(data?.content?.prompt);
+  },
 };
-
-// ============== Memory ==============
 
 const memoryTypeLabel: Record<string, string> = {
   message: $t("workbench.production.chatBox.messageMemory"),
   summary: $t("workbench.production.chatBox.summaryMemory"),
   all: $t("workbench.production.chatBox.allMemory"),
 };
-
 function handleClearMemory(type: "message" | "summary" | "all") {
   const dialog = DialogPlugin.confirm({
     header: $t("workbench.production.chatBox.confirmClear"),
@@ -241,7 +135,7 @@ function handleClearMemory(type: "message" | "summary" | "all") {
     cancelBtn: $t("workbench.production.cancel"),
     theme: "warning",
     onConfirm: async () => {
-      await axios.post(`/agents/clearMemory`, { projectId: project.value?.id, agentType: "productionAgent", episodesId: props.episodesId, type });
+      await axios.post(`/agents/clearMemory`, { projectId: project.value?.id, agentType: "productionAgent", episodesId: episodesId.value, type });
       window.$message.success($t("workbench.production.chatBox.memoryCleared", { type: memoryTypeLabel[type] }));
       dialog.destroy();
       getHistory();
@@ -253,52 +147,14 @@ async function getHistory() {
   loadingHistory.value = true;
   const { data } = await axios.post(`/agents/getMemory`, {
     projectId: project.value?.id,
-    episodesId: props.episodesId,
+    episodesId: episodesId.value,
     agentType: "productionAgent",
   });
   messages.value = [...defMsg, ...data];
-  sortMessages();
   loadingHistory.value = false;
 }
 
-// ============== Resize ==============
-
-const resizeHandleRef = ref<HTMLElement | null>(null);
 const boxWidth = ref(400);
-const MIN_WIDTH = 400;
-const { pressed } = useMousePressed({ target: resizeHandleRef });
-const { x } = useMouse();
-const dragStartX = ref(0);
-const dragStartWidth = ref(400);
-
-watch(pressed, (isPressed) => {
-  if (isPressed) {
-    dragStartX.value = x.value;
-    dragStartWidth.value = boxWidth.value;
-  }
-});
-
-watchEffect(() => {
-  if (pressed.value) {
-    boxWidth.value = Math.max(MIN_WIDTH, dragStartWidth.value + (dragStartX.value - x.value));
-  }
-});
-watch(
-  () => imageModelData.value,
-  (newVal) => {
-    socket.value?.send("setModelData", { ...imageModelData.value });
-  },
-  {
-    deep: true,
-  },
-);
-watch(
-  () => props.episodesId,
-  (newVal) => {
-    socket.value?.send("setKeyScript", { key: `${project.value?.id}:productionAgent:${props.episodesId}`, scriptId: props.episodesId });
-    getHistory();
-  },
-);
 </script>
 
 <style lang="scss" scoped>

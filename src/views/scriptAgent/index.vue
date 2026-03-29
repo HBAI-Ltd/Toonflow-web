@@ -162,7 +162,7 @@ const { project } = storeToRefs(projectStore());
 import scriptAgentStore from "@/stores/scriptAgent";
 const { connected, messages, status, planData } = storeToRefs(scriptAgentStore());
 const currentTable = ref(1);
-const inputValue = ref("删除aaa剧本");
+const inputValue = ref("");
 
 const defMsg: ChatMessagesData[] = [
   {

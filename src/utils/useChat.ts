@@ -1,6 +1,7 @@
 // useChat.ts
 import { ref, shallowRef, onMounted, onUnmounted, computed } from "vue";
 import { io, Socket } from "socket.io-client";
+import sax from "sax";
 import type { ChatMessagesData, AIMessage, UserMessage, AIMessageContent, ChatMessageStatus } from "@tdesign-vue-next/chat";
 
 // Socket 事件类型定义
@@ -150,38 +151,93 @@ export function useChat(options: UseChatOptions) {
 
   const parseXmlAttributes = (tagStr: string): Record<string, string> => {
     const attrs: Record<string, string> = {};
-    const attrRegex = /([\w-]+)\s*=\s*"([^"]*)"/g;
+    const attrRegex = /([\w-]+)\s*=\s*(?:"([^"]*)"|'([^']*)')/g;
     let match: RegExpExecArray | null;
     while ((match = attrRegex.exec(tagStr)) !== null) {
-      attrs[match[1]] = match[2];
+      attrs[match[1]] = match[2] ?? match[3];
     }
     return attrs;
   };
 
   const parseXmlChildren = (content: string): XmlChildItem[] => {
     const children: XmlChildItem[] = [];
-    // 匹配已闭合的子元素
-    const childRegex = /<(\w+)((?:\s+[\w-]+\s*=\s*"[^"]*")*)\s*>([\s\S]*?)<\/\1>/g;
-    let match: RegExpExecArray | null;
-    let lastIndex = 0;
-    while ((match = childRegex.exec(content)) !== null) {
-      children.push({
-        tag: match[1],
-        attrs: parseXmlAttributes(match[2]),
-        value: match[3],
-      });
-      lastIndex = childRegex.lastIndex;
+    // 用 sax 解析子元素（仅取第一层）
+    const wrappedXml = `<root>${content}</root>`;
+    const parser = sax.parser(true, { trim: false });
+    let depth = 0;
+    let currentChild: { tag: string; attrs: Record<string, string>; text: string } | null = null;
+    let innerDepth = 0;
+    let innerXml = "";
+
+    let pendingOpenTag = false;
+
+    parser.onopentag = (node) => {
+      if (pendingOpenTag && currentChild) {
+        innerXml += ">";
+        pendingOpenTag = false;
+      }
+      depth++;
+      if (depth === 2) {
+        currentChild = { tag: node.name, attrs: node.attributes as Record<string, string>, text: "" };
+        innerDepth = 0;
+        innerXml = "";
+      } else if (depth > 2 && currentChild) {
+        innerDepth++;
+        const attrStr = Object.entries(node.attributes).map(([k, v]) => `${k}="${v}"`).join(" ");
+        innerXml += `<${node.name}${attrStr ? " " + attrStr : ""}`;
+        pendingOpenTag = true;
+      }
+    };
+
+    parser.onclosetag = (tagName) => {
+      if (depth === 2 && currentChild) {
+        currentChild.text = innerXml || currentChild.text;
+        children.push({ tag: currentChild.tag, attrs: currentChild.attrs, value: currentChild.text });
+        currentChild = null;
+      } else if (depth > 2 && currentChild) {
+        innerDepth--;
+        if (pendingOpenTag) {
+          innerXml += " />";
+          pendingOpenTag = false;
+        } else {
+          innerXml += `</${tagName}>`;
+        }
+      }
+      depth--;
+    };
+
+    parser.ontext = (text) => {
+      if (pendingOpenTag && currentChild) {
+        innerXml += ">";
+        pendingOpenTag = false;
+      }
+      if (depth === 2 && currentChild) {
+        currentChild.text += text;
+      } else if (depth > 2 && currentChild) {
+        innerXml += text;
+      }
+    };
+
+    // 流式场景下 XML 可能不完整，sax 报错时继续解析
+    parser.onerror = () => {
+      parser.error = null as any;
+      parser.resume();
+    };
+
+    try {
+      parser.write(wrappedXml).close();
+    } catch {
+      // 忽略解析错误，已解析到的 children 保留
     }
-    // 匹配尾部未闭合的子元素（流式场景）
-    const remaining = content.slice(lastIndex);
-    const unclosedMatch = remaining.match(/<(\w+)((?:\s+[\w-]+\s*=\s*"[^"]*")*)\s*>([\s\S]*)$/);
-    if (unclosedMatch) {
-      children.push({
-        tag: unclosedMatch[1],
-        attrs: parseXmlAttributes(unclosedMatch[2]),
-        value: unclosedMatch[3],
-      });
+
+    // 流式场景：如果有未闭合的子元素，也加入结果
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    if ((currentChild as typeof currentChild) != null) {
+      const c = currentChild!;
+      c.text = innerXml || c.text;
+      children.push({ tag: c.tag, attrs: c.attrs, value: c.text });
     }
+
     return children;
   };
 

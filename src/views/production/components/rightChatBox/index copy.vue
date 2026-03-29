@@ -62,18 +62,6 @@
                 </div>
               </template>
             </t-popup>
-            <div class="ac modelSelCls">
-              <modelSelect class="paramSelect" v-model="imageModelData.modelId" type="image" size="small" />
-              <t-select
-                v-model="imageModelData.quality"
-                class="paramSelect ml-5"
-                size="small"
-                :placeholder="$t('workbench.production.editImage.quality')">
-                <t-option value="1K" label="1K" />
-                <t-option value="2K" label="2K" />
-                <t-option value="4K" label="4K" />
-              </t-select>
-            </div>
           </div>
         </template>
       </t-chat-sender>
@@ -89,7 +77,7 @@ import { DialogPlugin } from "tdesign-vue-next";
 import { useMousePressed, useMouse } from "@vueuse/core";
 import projectStore from "@/stores/project";
 import settingStore from "@/stores/setting";
-import { useSocket } from "@/utils/useSocket";
+import { useChat } from "@/utils/useChat";
 import type { FlowData } from "../../utils/flowBuilder";
 import ModelSelect from "@/components/modelSelect.vue";
 
@@ -101,28 +89,28 @@ const props = defineProps({
 });
 const emit = defineEmits(["close"]);
 // const inputValue = ref("请输出500字小作文，去洗车店洗车走路更快还是开车更快");
-const inputValue = ref($t("workbench.production.chatBox.generateDerivedAssets"));
+const inputValue = ref();
 const loadingHistory = ref(false);
 const status = ref<"idle" | "pending" | "streaming">("idle");
-const currentMessageId = ref<string | null>(null);
 
-const welcomeMsg: ChatMessagesData = {
-  id: "welcome",
-  role: "assistant",
-  content: [
-    { type: "text", status: "complete", data: $t("workbench.production.chatBox.welcomeMessage") },
-    {
-      type: "suggestion",
-      status: "complete",
-      data: [
-        { title: $t("workbench.production.chatBox.adjustModel"), prompt: $t("workbench.production.chatBox.adjustModel") },
-        { title: $t("workbench.production.chatBox.startMakingVideo"), prompt: $t("workbench.production.chatBox.startMakingVideoPrompt") },
-      ],
-    },
-  ],
-};
+const defMsg: ChatMessagesData[] = [
+  {
+    id: "welcome",
+    role: "assistant",
+    content: [
+      { type: "text", status: "complete", data: $t("workbench.production.chatBox.welcomeMessage") },
+      {
+        type: "suggestion",
+        status: "complete",
+        data: [
+          { title: $t("workbench.production.chatBox.adjustModel"), prompt: $t("workbench.production.chatBox.adjustModel") },
+          { title: $t("workbench.production.chatBox.startMakingVideo"), prompt: $t("workbench.production.chatBox.startMakingVideoPrompt") },
+        ],
+      },
+    ],
+  },
+];
 
-const messages = ref<ChatMessagesData[]>([welcomeMsg]);
 const imageModelData = ref({
   modelId: "",
   ratio: "",
@@ -130,10 +118,19 @@ const imageModelData = ref({
 });
 // ============== Socket ==============
 
-const { connected, socket } = useSocket(`${baseUrl.value}/socket/productionAgent`, {
-  isolationKey: `${project.value?.id}:productionAgent:${props.episodesId}`,
-  projectId: project.value?.id,
-  scriptId: props.episodesId,
+const { connected, messages, chat, stopGenerate, socket } = useChat({
+  url: `${baseUrl.value}/socket/scriptAgent`,
+  auth: {
+    isolationKey: `${project.value?.id}:productionAgent:${props.episodesId}`,
+    projectId: project.value?.id,
+    scriptId: props.episodesId,
+  },
+  xmlTags: [
+    { tag: "storySkeleton", keepInMessage: false },
+    { tag: "adaptationStrategy", keepInMessage: false },
+  ],
+  onXmlTag: ({ tag, value, status }) => {},
+  autoConnect: true,
 });
 
 const flowData = defineModel<FlowData>({
@@ -141,39 +138,13 @@ const flowData = defineModel<FlowData>({
 });
 
 onMounted(() => {
-  socket.connect();
-  socket.on("textMessage", (data) => {
-    if (data.type === "start") {
-      currentMessageId.value = data.messageId;
-      status.value = "pending";
-      messages.value.push({ id: data.messageId, role: data.role, status: "pending", content: [{ type: "text", data: "" }] });
-    } else {
-      const msg = messages.value.find((m) => m.id === data.messageId);
-      if (!msg) return;
-      if (data.type === "content") {
-        status.value = "streaming";
-        msg.status = "streaming";
-        msg.content![0].data += data.delta!;
-      } else if (data.type === "end") {
-        status.value = "idle";
-        currentMessageId.value = null;
-        msg.status = "complete";
-        msg.content![0].status = "complete";
-      }
-    }
-    sortMessages();
-  });
+  messages.value = [...defMsg, ...messages.value];
 
-  socket.on("systemMessage", (data) => {
-    messages.value.push({ id: data.messageId, role: "system", status: "complete", content: [{ type: "text", data: data.content }] });
-    sortMessages();
-  });
-
-  socket.on("getFlowData", (_, callback) => {
+  socket.value?.on("getFlowData", (_, callback) => {
     callback(flowData.value);
   });
 
-  socket.on("setFlowData", ({ key, value }) => {
+  socket.value?.on("setFlowData", ({ key, value }) => {
     if (key == "setAssetsImage") {
       const { id, src, state } = value as any;
       // 先在父资产中查找
@@ -226,9 +197,6 @@ onMounted(() => {
 
   getHistory();
 });
-onUnmounted(() => {
-  socket.disconnect();
-});
 
 function sortMessages() {
   messages.value = messages.value.sort((a, b) => {
@@ -240,22 +208,17 @@ function sortMessages() {
 
 // ============== Actions ==============
 
+const currentMsgId = ref("");
+
 function handleSend(text: string) {
-  messages.value.push({ id: `user-${Date.now()}`, role: "user", content: [{ type: "text", data: text }] });
-  socket.send("message", text);
+  chat(text);
   inputValue.value = "";
 }
 
 function handleStop() {
-  if (!currentMessageId.value) return;
-  socket.send("stop", currentMessageId.value);
-  const msg = messages.value.find((m) => m.id === currentMessageId.value);
-  if (msg) {
-    msg.status = "complete";
-    msg.content![0].status = "complete";
+  if (currentMsgId.value) {
+    stopGenerate(currentMsgId.value);
   }
-  status.value = "idle";
-  currentMessageId.value = null;
 }
 
 const handleActions = {
@@ -293,7 +256,7 @@ async function getHistory() {
     episodesId: props.episodesId,
     agentType: "productionAgent",
   });
-  messages.value = [welcomeMsg, ...data];
+  messages.value = [...defMsg, ...data];
   sortMessages();
   loadingHistory.value = false;
 }
@@ -323,7 +286,7 @@ watchEffect(() => {
 watch(
   () => imageModelData.value,
   (newVal) => {
-    socket.send("setModelData", { ...imageModelData.value });
+    socket.value?.send("setModelData", { ...imageModelData.value });
   },
   {
     deep: true,
@@ -332,7 +295,7 @@ watch(
 watch(
   () => props.episodesId,
   (newVal) => {
-    socket.send("setKeyScript", { key: `${project.value?.id}:productionAgent:${props.episodesId}`, scriptId: props.episodesId });
+    socket.value?.send("setKeyScript", { key: `${project.value?.id}:productionAgent:${props.episodesId}`, scriptId: props.episodesId });
     getHistory();
   },
 );

@@ -37,19 +37,16 @@ export default defineStore(
         } else if (tag === "adaptationStrategy") {
           planData.value.adaptationStrategy = value;
         } else if (tag === "script") {
-          const newItems = children.map((child) => ({
-            name: child.attrs.name ?? "",
-            content: child.value,
-          }));
-          // 流式累加：按 name 更新已有项，新增不存在的项
-          for (const item of newItems) {
-            const existing = planData.value.script.find((s) => s.name === item.name);
-            if (existing) {
-              existing.content = item.content;
-            } else {
-              planData.value.script.push(item);
-            }
-          }
+          // 流式场景：用 children 完整重建，保留已有项的 id
+          const newItems = children.map((child) => {
+            const existing = planData.value.script.find((s) => s.name === (child.attrs.name ?? ""));
+            return {
+              id: existing?.id,
+              name: child.attrs.name ?? "",
+              content: child.value,
+            };
+          });
+          planData.value.script = newItems;
         }
         if (status === "complete") {
           setPlanData();

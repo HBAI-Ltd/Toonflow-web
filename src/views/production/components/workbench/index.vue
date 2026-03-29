@@ -66,15 +66,12 @@
 </template>
 
 <script setup lang="ts">
-import { useI18n } from "vue-i18n";
 import axios from "@/utils/axios";
 import preview from "./preview.vue";
 import generate from "./generate.vue";
 import editVideo from "./editVideo/index.vue";
 import { generateId, useTracksStore, type MediaClip, type SubtitleClip, type Clip } from "vue-clip-track";
 import type { MediaItem, AudioItem } from "./editVideo/utils/mediaData";
-
-const { t: $t } = useI18n();
 
 const visible = defineModel("visible", {
   type: Boolean,
