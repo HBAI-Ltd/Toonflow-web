@@ -146,15 +146,7 @@
           <t-empty v-else type="maintenance" :title="$t('workbench.cornerScape.noImage')" />
         </div>
         <t-form v-if="currentItem" labelAlign="top">
-          <t-form-item>
-            <template #label>
-              <div class="historyLabel jb ac">
-                <span>{{ $t("workbench.cornerScape.history") }}</span>
-                <t-button size="small" theme="primary" :disabled="!selectedHistoryId" @click="confirmReplace">
-                  {{ $t("workbench.cornerScape.confirmReplace") }}
-                </t-button>
-              </div>
-            </template>
+          <t-form-item :label="$t('workbench.cornerScape.history')">
             <div class="historyImageList f">
               <div
                 v-for="item in currentItem.historyImages"
@@ -330,11 +322,8 @@ const drawerVisible = ref(false);
 const currentItem = ref<DataItem | null>(null);
 const selectedHistoryId = ref<number | null>(null);
 
-function toggleHistorySelect(id: number) {
+async function toggleHistorySelect(id: number) {
   selectedHistoryId.value = selectedHistoryId.value === id ? null : id;
-}
-
-async function confirmReplace() {
   if (!currentItem.value) return;
   const selectedImage = currentItem.value.historyImages.find((img) => img.id === selectedHistoryId.value);
   try {
@@ -357,6 +346,7 @@ async function confirmReplace() {
     return;
   }
 }
+
 const editForm = reactive({
   assetsId: 0,
   model: "",
@@ -815,10 +805,6 @@ watch(generatingData, (val) => {
     opacity: 1;
     pointer-events: auto;
   }
-}
-
-.historyLabel {
-  width: 100%;
 }
 
 .historyImageList {
