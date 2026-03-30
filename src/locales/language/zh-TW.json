@@ -173,7 +173,8 @@
         "vendorDeleted": "供應商已刪除",
         "deleteFailed": "刪除失敗"
       },
-      "associationSkills": "關聯skills"
+      "associationSkills": "關聯skills",
+      "think": "深度思考"
     },
     "agent": {
       "bannerDesc": "使用 Toonflow 官方中繼網站，支援一鍵帶入設定，開箱即用，無需手動設定。",

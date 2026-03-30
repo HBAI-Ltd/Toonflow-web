@@ -165,7 +165,8 @@
         "vendorDeleted": "Provider deleted",
         "deleteFailed": "Deletion failed"
       },
-      "associationSkills": "Associated skills"
+      "associationSkills": "Associated skills",
+      "think": "deep thinking"
     },
     "agent": {
       "bannerDesc": "Use the official Toonflow relay site for one-click configuration. Ready out-of-the-box, no manual setup needed.",

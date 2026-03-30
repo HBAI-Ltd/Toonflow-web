@@ -164,7 +164,8 @@
         "vendorDeleted": "Nhà cung cấp đã bị xóa",
         "deleteFailed": "Xóa thất bại"
       },
-      "associationSkills": "Kỹ năng liên quan"
+      "associationSkills": "Kỹ năng liên quan",
+      "think": "suy nghĩ sâu sắc"
     },
     "agent": {
       "bannerDesc": "Sử dụng máy chủ trung gian chính thức của Toonflow, hỗ trợ điền cấu hình bằng 1 cú nhấp chuột, sẵn sàng sử dụng ngay mà không cần thiết lập thủ công.",

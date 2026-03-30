@@ -139,14 +139,8 @@
           </t-form-item>
 
           <template v-if="modelFormData.type === 'text'">
-            <t-form-item name="multimodal" :label="$t('settings.vendor.multimodal')">
+            <t-form-item name="multimodal" :label="$t('settings.vendor.think')">
               <t-radio-group v-model="modelFormData.multimodal">
-                <t-radio :value="true">{{ $t("settings.vendor.supported") }}</t-radio>
-                <t-radio :value="false">{{ $t("settings.vendor.notSupported") }}</t-radio>
-              </t-radio-group>
-            </t-form-item>
-            <t-form-item name="tool" :label="$t('settings.vendor.toolCall')">
-              <t-radio-group v-model="modelFormData.tool">
                 <t-radio :value="true">{{ $t("settings.vendor.supported") }}</t-radio>
                 <t-radio :value="false">{{ $t("settings.vendor.notSupported") }}</t-radio>
               </t-radio-group>

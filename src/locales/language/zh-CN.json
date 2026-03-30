@@ -176,7 +176,8 @@
         "vendorDeleted": "供应商已删除",
         "deleteFailed": "删除失败"
       },
-      "associationSkills": "关联skills"
+      "associationSkills": "关联skills",
+      "think": "深度思考"
     },
     "agent": {
       "bannerDesc": "使用 Toonflow 官方中转站点，支持一键填入配置，开箱即用，无需手动配置。",

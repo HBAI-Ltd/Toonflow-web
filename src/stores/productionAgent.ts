@@ -59,14 +59,14 @@ export default defineStore(
             if (item) {
               if (!item) return callback({ success: false, message: "衍生资产不存在" });
               item.name = data.name;
-              item.type = data.type;
+              item.type = assets.type;
               callback({ success: true, message: "更新成功" });
             } else {
               deriveAssetList.push({
                 assetsId: data.assetsId,
                 id: data.id,
                 name: data.name,
-                type: data.type,
+                type: assets.type,
                 desc: data.describe,
                 prompt: "",
                 state: "未生成",
