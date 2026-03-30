@@ -164,7 +164,8 @@
         "deleteVendorBody": "削除すると、このプロバイダーのすべてのモデルも一緒に削除されます。続行しますか？",
         "vendorDeleted": "プロバイダーを削除しました",
         "deleteFailed": "削除に失敗しました"
-      }
+      },
+      "associationSkills": "関連スキル"
     },
     "agent": {
       "bannerDesc": "Toonflow公式中継サイトを使用すると、設定をワンクリックで入力でき、手動設定なしですぐに使用できます。",
@@ -967,7 +968,7 @@
       "generate": {
         "noVideo": "動画なし",
         "videoPrompt": "動画プロンプト",
-        "promptPlaceholder": "生成したい動画の内容を記述するプロンプトを入力...",
+        "promptPlaceholder": "生成するビデオ コンテンツを説明するプロンプト ワードを入力してください...",
         "refImage": "参照画像",
         "image": "画像",
         "refVideo": "参照動画",
@@ -1022,7 +1023,10 @@
         "batchSubmitted": "一括生成リクエストを送信しました。処理中です...",
         "configNotFound": "設定が見つかりません",
         "pollingFailed": "ビデオ ステータスのクエリに失敗しました。手動で更新してください",
-        "batchGeneratePrompt": "プロンプト単語をバッチで生成する"
+        "batchGeneratePrompt": "プロンプト単語をバッチで生成する",
+        "batchPromptEmpty": "ストーリーボード {name} はビデオ プロンプトで使用できます。最初にプロンプ​​トを作成または入力してください",
+        "modelEmpty": "最初にビデオ生成モデルを選択してください",
+        "generatingPrompt": "プロンプトワードのインテリジェントな生成"
       },
       "editVideo": {
         "reset": "リセット",

@@ -175,7 +175,8 @@
         "deleteVendorBody": "删除后该供应商下所有模型将一并删除，是否继续？",
         "vendorDeleted": "供应商已删除",
         "deleteFailed": "删除失败"
-      }
+      },
+      "associationSkills": "关联skills"
     },
     "agent": {
       "bannerDesc": "使用 Toonflow 官方中转站点，支持一键填入配置，开箱即用，无需手动配置。",
@@ -1064,6 +1065,7 @@
         "confirmSelection": "确认选中",
         "noHistory": "暂无历史记录",
         "generating": "生成中",
+        "generatingPrompt": "智能生成提示词中",
         "generateFailed": "生成失败",
         "selectAll": "全选",
         "videoTrack": "视频轨道",
@@ -1106,7 +1108,11 @@
         "stateSuccess": "生成成功",
         "statePending": "待生产",
         "pollingFailed": "视频状态查询失败，请手动刷新",
-        "batchGeneratePrompt": "批量生成提示词"
+        "batchGeneratePrompt": "批量生成提示词",
+        "promptEmpty": "请先输入视频提示词",
+        "modelEmpty": "请先选择视频生成模型",
+        "batchPromptEmpty": "分镜 {names} 的视频提示词为空，请先生成或填写提示词",
+        "batchModelEmpty": "分镜 {names} 未配置视频生成模型，请先选择模型"
       },
       "editVideo": {
         "reset": "重置",

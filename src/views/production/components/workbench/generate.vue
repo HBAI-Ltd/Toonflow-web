@@ -26,17 +26,34 @@
               {{ $t("workbench.production.generate.videoPrompt") }}
             </div>
             <div>
-              <t-button theme="primary" size="small" class="generateBtn" @click="generateVideoPrompt">
+              <t-button
+                theme="primary"
+                size="small"
+                class="generateBtn"
+                :loading="!!currentShot && promptGeneratingIds.has(currentShot.id)"
+                :disabled="!!currentShot && promptGeneratingIds.has(currentShot.id)"
+                @click="generateVideoPrompt">
                 <template #icon><i-arrow-up size="16" /></template>
-                {{ $t("workbench.production.generate.generate") }}
+                {{
+                  !!currentShot && promptGeneratingIds.has(currentShot.id)
+                    ? $t("workbench.production.generate.generatingPrompt")
+                    : $t("workbench.production.generate.generate")
+                }}
               </t-button>
             </div>
           </div>
 
-          <t-textarea
-            v-model="promptText"
-            :placeholder="$t('workbench.production.generate.promptPlaceholder')"
-            :autosize="{ minRows: 4, maxRows: 12 }" />
+          <div class="promptTextareaWrapper">
+            <t-textarea
+              v-model="promptText"
+              :placeholder="$t('workbench.production.generate.promptPlaceholder')"
+              :autosize="{ minRows: 4, maxRows: 12 }"
+              :disabled="!!currentShot && promptGeneratingIds.has(currentShot.id)" />
+            <div v-if="!!currentShot && promptGeneratingIds.has(currentShot.id)" class="promptLoadingOverlay">
+              <t-loading size="24" theme="dots" />
+              <span>{{ $t("workbench.production.generate.generatingPrompt") }}</span>
+            </div>
+          </div>
           <div class="frameSection" v-if="currentModeKey !== 'text' && mode.length > 0 && (!isMixedRefMode || mixedRefTypes.length > 0)">
             <template v-if="currentMode === 'singleImage'">
               <div class="frameItem">
@@ -313,10 +330,19 @@
           <span class="trackTitle">{{ $t("workbench.production.generate.videoTrack") }}</span>
         </div>
         <div class="headerRight">
-          <t-button theme="primary" size="small" :disabled="checkedIds.size === 0" @click="handleBatchGenerate">
+          <t-button theme="primary" size="small" :disabled="checkedIds.size === 0" @click="batchGenerateVideoPrompt">
             <template #icon><i-magic size="16" /></template>
             {{ $t("workbench.production.generate.batchGeneratePrompt") }}
           </t-button>
+          <t-tag>{{ project?.videoModel }}</t-tag>
+          <t-select
+            v-model="batchResolution"
+            size="small"
+            style="width: 200px"
+            :placeholder="$t('workbench.production.generate.resolution')"
+            :disabled="resolutionOptions.length === 0">
+            <t-option v-for="res in resolutionOptions" :key="res" :label="res" :value="res" />
+          </t-select>
           <t-button theme="primary" size="small" :disabled="checkedIds.size === 0" @click="handleBatchGenerate">
             <template #icon><i-magic size="16" /></template>
             {{ $t("workbench.production.generate.batchGenerate") }}
@@ -378,6 +404,10 @@
               <div class="shotStateTag" :class="getVideoRecord(item) ? 'shotStateTagSuccess' : 'shotStateTagPending'">
                 {{ getVideoRecord(item) ? $t("workbench.production.generate.stateSuccess") : $t("workbench.production.generate.statePending") }}
               </div>
+              <div v-if="promptGeneratingIds.has(item.id)" class="shotPromptGeneratingOverlay">
+                <t-loading size="18" theme="dots" />
+                <span>{{ $t("workbench.production.generate.generatingPrompt") }}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -397,6 +427,15 @@ import openAssetsSelector from "@/utils/assetsCheck";
 import storyboardImageCheck from "@/components/storyboardImageCheck.vue";
 import { createVideoPolling, type PollingVideoRecord } from "@/utils/videoPolling";
 const episodesId = inject<Ref<number>>("episodesId");
+
+/**
+ * 模块级别的提示词生成中 ID 集合，在组件卸载/重新挂载之间保持状态。
+ * key 为 storyboardId，value 为 AbortController（用于取消请求）。
+ * 当 API 返回（成功或失败）后自动移除对应 ID。
+ */
+const _promptGeneratingMap = reactive(new Map<number | string, AbortController>());
+/** 响应式的提示词生成中 storyboard ID 集合（供模板使用） */
+const promptGeneratingIds = computed(() => new Set(_promptGeneratingMap.keys()));
 
 /** 视频最后一帧缓存：key 为视频 filePath，value 为 canvas 截帧的 dataURL */
 const videoFrameCache = reactive(new Map<string, string>());
@@ -683,6 +722,8 @@ function getProductionData() {
             videoUrl: previewVideo?.filePath ?? selectedData.value?.videoUrl ?? "",
             imageUrl: refreshed.config?.data?.[0]?.url || refreshed.filePath || "",
           };
+          // 同步刷新提示词输入框
+          promptText.value = refreshed.config?.videoPrompt || refreshed.videoPrompt || "";
         }
       } else if (list.length > 0) {
         // 初次加载：默认选中第一个分镜
@@ -754,8 +795,25 @@ function selectShot(id: number | string) {
       handleModelChange(echoModel, data);
     });
   } else {
-    // 没有任何模型信息，清空选项等待用户选模型
-    resetModelOptions();
+    // 没有配置模型信息，使用项目默认模型
+    const defaultModel = project.value?.videoModel;
+    if (defaultModel) {
+      modelDd.value = defaultModel;
+      // 设置待回显值：模式/音频/分辨率由模型详情返回后取第一个（传空让 handleModelChange 走默认逻辑），时长用分镜返回的时长
+      pendingEcho.value = {
+        resolution: "",
+        duration: Number(item.seconds ?? item.duration ?? 0),
+        audio: 0,
+        mode: "",
+      };
+      // 拉取默认模型详情，初始化选项列表
+      axios.post("/modelSelect/getModelDetail", { modelId: defaultModel }).then(({ data }) => {
+        handleModelChange(defaultModel, data);
+      });
+    } else {
+      // 项目也没有默认模型，清空选项等待用户选模型
+      resetModelOptions();
+    }
   }
   // 提示词：有 config.videoPrompt 用配置的，否则用分镜本身的 videoPrompt
   promptText.value = item.config?.videoPrompt || item.videoPrompt || "";
@@ -819,6 +877,9 @@ const currentModeKey = ref<string>("");
 // 待回显的 config 值（在模型详情返回后消费）
 const pendingEcho = ref<{ resolution: string; duration: number; audio: number | boolean; mode: string } | null>(null);
 
+// 批量生成视频分辨率
+const batchResolution = ref<string>("");
+
 // 切换音频
 function toggleAudio() {
   selectedAudio.value = !selectedAudio.value;
@@ -881,6 +942,9 @@ function handleModelChange(value: string, data: VideoModel) {
     const modeExists = newModes.some((m) => m.value === currentModeKey.value);
     currentModeKey.value = modeExists ? currentModeKey.value : (newModes[0]?.value ?? "");
   }
+
+  // 同步批量生成分辨率：保留已选值（若仍在新选项中），否则取第一个
+  batchResolution.value = newResolutions.includes(batchResolution.value) ? batchResolution.value : (newResolutions[0] ?? "");
 }
 // ---- 提示词 ----
 const promptText = ref<string>("");
@@ -1250,6 +1314,14 @@ function handleDeleteHistoryVideo(videoId: number | string) {
 async function handleGenerate() {
   const shot = currentShot.value;
   if (!shot) return;
+  if (!modelDd.value) {
+    window.$message.warning($t("workbench.production.generate.modelEmpty"));
+    return;
+  }
+  if (!promptText.value?.trim()) {
+    window.$message.warning($t("workbench.production.generate.promptEmpty"));
+    return;
+  }
   const payload = {
     projectId: project.value?.id,
     scriptId: shot.scriptId,
@@ -1287,19 +1359,26 @@ function handleConfirmSelection() {
 async function handleBatchGenerate() {
   // 批量生成逻辑：从每个分镜的 config.data 读取，只传 id 和 type
   const checkedShots = shotList.value.filter((item) => checkedIds.value.has(item.id));
+  // 检查勾选的分镜是否有空的 videoPrompt
+  const emptyPromptShots = checkedShots.filter((shot) => !(shot.config?.prompt || shot.videoPrompt)?.trim());
+  if (emptyPromptShots.length > 0) {
+    const names = emptyPromptShots.map((s) => `#${shotList.value.findIndex((x) => x.id === s.id) + 1}`).join("、");
+    window.$message.warning($t("workbench.production.generate.batchPromptEmpty", { names }));
+    return;
+  }
   window.$message.success($t("workbench.production.generate.batchSubmitted"));
   for (const shot of checkedShots) {
     const list = {
       scriptId: shot.scriptId,
       projectId: project.value?.id,
       storyboardId: shot.id,
-      prompt: shot.config?.prompt || shot.prompt || "",
-      model: shot.config?.model || shot.model || "",
-      mode: shot.config?.mode || shot.mode || "",
-      resolution: shot.config?.resolution || shot.resolution || "",
+      prompt: shot.config?.prompt || shot.videoPrompt || "",
+      model: shot.config?.model || shot.model || modelDd.value || "",
+      mode: shot.config?.mode || shot.mode || currentModeKey.value || "",
+      resolution: batchResolution.value || shot.config?.resolution || shot.resolution || "",
       duration: shot.config?.duration ?? Number(shot.duration) ?? 0,
       audio: shot.config?.audio == 0 ? false : true,
-      data: buildDataPayload(shot, shot.config?.mode || shot.mode || ""),
+      data: buildDataPayload(shot, shot.config?.mode || shot.mode || currentModeKey.value || ""),
     };
     const { data } = await axios.post("/production/workbench/generateVideo", list);
     const newVideoIds: Array<number | string> = Array.isArray(data) ? data : [data];
@@ -1327,12 +1406,132 @@ function handleBatchDownload() {
     .filter((v): v is NonNullable<typeof v> => !!v);
   emit("close", videos);
 }
+/**
+ * 将 storyboardId 标记为提示词生成中，并返回用于该请求的 AbortController。
+ * 组件卸载后请求不会被自动取消，以便页面重新进入时仍能接收到响应。
+ */
+function markPromptGenerating(ids: Array<number | string>): AbortController {
+  const controller = new AbortController();
+  ids.forEach((id) => _promptGeneratingMap.set(id, controller));
+  return controller;
+}
+
+/** 清除提示词生成中的标记 */
+function clearPromptGenerating(ids: Array<number | string>) {
+  ids.forEach((id) => _promptGeneratingMap.delete(id));
+}
+
 //生成视频提示词
 function generateVideoPrompt() {
   //获取到选中的分镜图片id
   const shot = currentShot.value;
   if (!shot) return;
+  // 如果已经在生成中则忽略重复点击
+  if (_promptGeneratingMap.has(shot.id)) return;
+  const storyboardIds = [shot.id];
+  const controller = markPromptGenerating(storyboardIds);
+  const payload = {
+    projectId: project.value?.id,
+    storyboardIds,
+  };
+  axios
+    .post("/production/workbench/generateVideoPrompt", payload, { signal: controller.signal })
+    .then(({ data }) => {
+      // 用返回的 videoPrompt 直接更新当前输入框和分镜数据
+      // API 返回结构: { data: [{ storyboardId, videoPrompt }] }
+      const results: Array<{ storyboardId: number | string; videoPrompt: string }> = data?.data || [];
+      results.forEach((r) => {
+        const target = shotList.value.find((s) => s.id === r.storyboardId);
+        if (target) {
+          target.videoPrompt = r.videoPrompt;
+          if (target.config) target.config.videoPrompt = r.videoPrompt;
+        }
+        // 如果是当前选中的分镜，直接更新输入框
+        if (currentShot.value && currentShot.value.id === r.storyboardId) {
+          promptText.value = r.videoPrompt;
+        }
+      });
+      getProductionData();
+    })
+    .catch(() => {
+      // 生成失败也停止 loading
+    })
+    .finally(() => {
+      clearPromptGenerating(storyboardIds);
+    });
 }
+
+//批量生成提示词（逐个发送请求，前端同时显示loading，后端返回一个就停止对应的转圈）
+function batchGenerateVideoPrompt() {
+  //拿到勾选的分镜信息
+  const checkedShots = shotList.value.filter((item) => checkedIds.value.has(item.id));
+  if (checkedShots.length === 0) return;
+  const storyboardIds = checkedShots.map((s) => s.id);
+  // 过滤掉已经在生成中的
+  const newIds = storyboardIds.filter((id) => !_promptGeneratingMap.has(id));
+  if (newIds.length === 0) return;
+
+  // 先将所有id标记为生成中（前端一起显示loading）
+  newIds.forEach((id) => {
+    const controller = new AbortController();
+    _promptGeneratingMap.set(id, controller);
+  });
+  // 逐个向后端发送请求，每个请求只包含单个storyboardId
+  newIds.forEach((id) => {
+    const controller = _promptGeneratingMap.get(id);
+    const payload = {
+      projectId: project.value?.id,
+      storyboardId: id,
+    };
+    axios
+      .post("/production/workbench/generateVideoPrompt", payload, { signal: controller?.signal })
+      .then(({ data }) => {
+        // 后端返回结构: { data: { data: { storyboardId, videoPrompt } } }
+        const r = data?.data?.data || data?.data;
+        if (r && r.storyboardId != null && r.videoPrompt != null) {
+          const target = shotList.value.find((s) => s.id === r.storyboardId);
+          if (target) {
+            target.videoPrompt = r.videoPrompt;
+            if (target.config) target.config.videoPrompt = r.videoPrompt;
+          }
+          // 如果是当前选中的分镜，直接更新输入框
+          if (currentShot.value && currentShot.value.id === r.storyboardId) {
+            promptText.value = r.videoPrompt;
+          }
+        }
+        getProductionData();
+      })
+      .catch(() => {
+        // 单个生成失败
+      })
+      .finally(() => {
+        // 无论成功失败，只清除当前这个id的loading状态
+        clearPromptGenerating([id]);
+      });
+  });
+}
+//监听项目默认模型
+watch(
+  () => project.value?.videoModel,
+  (newVal) => {
+    if (currentShot.value && !currentShot.value.config?.model) {
+      modelDd.value = newVal || "";
+      // 使用默认模型时自动获取模型详情并初始化选项
+      if (newVal) {
+        pendingEcho.value = {
+          resolution: "",
+          duration: Number(currentShot.value.seconds ?? currentShot.value.duration ?? 0),
+          audio: 0,
+          mode: "",
+        };
+        axios.post("/modelSelect/getModelDetail", { modelId: newVal }).then(({ data }) => {
+          handleModelChange(newVal, data);
+        });
+      }
+    }
+  },
+  { immediate: true },
+);
 </script>
 
 <style lang="scss" scoped>
@@ -1404,6 +1603,29 @@ function generateVideoPrompt() {
 
       .promptSection {
         padding: 4px 0 8px;
+
+        .promptTextareaWrapper {
+          position: relative;
+
+          .promptLoadingOverlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.75);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 8px;
+            border-radius: 6px;
+            z-index: 2;
+            pointer-events: none;
+
+            span {
+              font-size: 12px;
+              color: #666;
+            }
+          }
+        }
 
         .sectionTitle {
           display: flex;
@@ -1834,6 +2056,23 @@ function generateVideoPrompt() {
               &.shotStateTagPending {
                 background: rgba(0, 0, 0, 0.45);
                 color: #ddd;
+              }
+            }
+
+            .shotPromptGeneratingOverlay {
+              position: absolute;
+              inset: 0;
+              background: rgba(0, 0, 0, 0.55);
+              @extend %flexCenter;
+              flex-direction: column;
+              gap: 4px;
+              z-index: 3;
+              border-radius: inherit;
+
+              span {
+                font-size: 11px;
+                color: #fff;
+                white-space: nowrap;
               }
             }
 
