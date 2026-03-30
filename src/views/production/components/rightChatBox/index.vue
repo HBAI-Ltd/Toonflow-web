@@ -44,10 +44,6 @@
               </t-button>
               <template #content>
                 <div class="settingMenu">
-                  <div class="settingMenuItem" @click="handleSend($t('workbench.production.chatBox.adjustModel'))">
-                    <i-setting-config size="14" />
-                    <span>{{ $t("workbench.production.chatBox.adjustModel") }}</span>
-                  </div>
                   <div class="settingMenuItem" @click="handleClearMemory('message')">
                     <i-delete size="14" />
                     <span>{{ $t("workbench.production.chatBox.clearMessageMemory") }}</span>
@@ -97,7 +93,6 @@ const defMsg: ChatMessagesData[] = [
         type: "suggestion",
         status: "complete",
         data: [
-          { title: $t("workbench.production.chatBox.adjustModel"), prompt: $t("workbench.production.chatBox.adjustModel") },
           { title: $t("workbench.production.chatBox.startMakingVideo"), prompt: $t("workbench.production.chatBox.startMakingVideoPrompt") },
         ],
       },
