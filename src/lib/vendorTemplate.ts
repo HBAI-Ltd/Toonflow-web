@@ -14,6 +14,7 @@ interface ImageModel {
   modelName: string;
   type: "image";
   mode: ("text" | "singleImage" | "multiReference")[];
+  associationSkills?: string; // 关联技能，多个技能用逗号分隔
 }
 // 视频模型
 interface VideoModel {
@@ -22,14 +23,13 @@ interface VideoModel {
   type: "video";
   mode: (
     | "singleImage" // 单图
-    | "multiImage" // 多图模式
-    | "gridImage" // 网格单图（传入一张图片，但该图片是网格图）
     | "startEndRequired" // 首尾帧（两张都得有）
     | "endFrameOptional" // 首尾帧（尾帧可选）
     | "startFrameOptional" // 首尾帧（首帧可选）
     | "text" // 文本生视频
     | ("videoReference" | "imageReference" | "audioReference" | "textReference")[] // 混合参考
   )[];
+  associationSkills?: string; // 关联技能，多个技能用逗号分隔
   audio: "optional" | false | true; // 音频配置
   durationResolutionMap: { duration: number[]; resolution: string[] }[];
 }
@@ -60,6 +60,34 @@ interface VendorConfig {
   inputValues: Record<string, string>;
   models: (TextModel | ImageModel | VideoModel)[];
 }
+// ==================== 全局工具函数 ====================
+//Axios实例
+//压缩图片大小(1MB = 1 * 1024 * 1024)
+declare const zipImage: (completeBase64: string, size: number) => Promise<string>;
+//压缩图片分辨率
+declare const zipImageResolution: (completeBase64: string, width: number, height: number) => Promise<string>;
+//多图拼接乘单图 maxSize  最大输出大小，默认为 10mb
+declare const mergeImages: (completeBase64: string[], maxSize?: string) => Promise<string>;
+//Url转Base64
+declare const urlToBase64: (url: string) => Promise<string>;
+//轮询函数
+declare const pollTask: (
+  fn: () => Promise<{ completed: boolean; data?: string; error?: string }>,
+  interval?: number,
+  timeout?: number,
+) => Promise<{ completed: boolean; data?: string; error?: string }>;
+declare const axios: any;
+declare const createOpenAI: any;
+declare const createDeepSeek: any;
+declare const createZhipu: any;
+declare const createQwen: any;
+declare const createAnthropic: any;
+declare const createOpenAICompatible: any;
+declare const createXai: any;
+declare const createMinimax: any;
+declare const createGoogleGenerativeAI: any;
+declare const logger: (logstring: string) => void;
+declare const jsonwebtoken: any;
 
 // ==================== 供应商数据 ====================
 const vendor: VendorConfig = {
@@ -76,37 +104,6 @@ const vendor: VendorConfig = {
   models: [],
 };
 exports.vendor = vendor;
-
-// ==================== 全局工具函数 ====================
-//Axios实例
-declare const axios: any;
-
-declare const logger: (message: any) => void;
-//压缩图片大小(1MB = 1 * 1024 * 1024)
-declare const zipImage: (completeBase64: string, size: number) => Promise<string>;
-//压缩图片分辨率
-declare const zipImageResolution: (completeBase64: string, width: number, height: number) => Promise<string>;
-//多图拼接乘单图 maxSize  最大输出大小，默认为 10mb
-declare const mergeImages: (completeBase64: string[], maxSize?: string) => Promise<string>;
-//Url转Base64
-declare const urlToBase64: (url: string) => Promise<string>;
-//轮询函数
-declare const pollTask: (
-  fn: () => Promise<{ completed: boolean; data?: string; error?: string }>,
-  interval?: number,
-  timeout?: number,
-) => Promise<{ completed: boolean; data?: string; error?: string }>;
-
-//供应商文档：https://ai-sdk.dev/providers/ai-sdk-providers
-declare const createOpenAI: any;
-declare const createDeepSeek: any;
-declare const createZhipu: any;
-declare const createQwen: any;
-declare const createAnthropic: any;
-declare const createOpenAICompatible: any;
-declare const createXai: any;
-declare const createGoogleGenerativeAI: any;
-declare const exports: any;
 
 // ==================== 适配器函数 ====================
 

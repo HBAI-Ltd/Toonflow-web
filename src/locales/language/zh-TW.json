@@ -172,7 +172,9 @@
         "deleteVendorBody": "刪除後該供應商下所有模型將一併刪除，是否繼續？",
         "vendorDeleted": "供應商已刪除",
         "deleteFailed": "刪除失敗"
-      }
+      },
+      "associationSkills": "關聯skills",
+      "think": "深度思考"
     },
     "agent": {
       "bannerDesc": "使用 Toonflow 官方中繼網站，支援一鍵帶入設定，開箱即用，無需手動設定。",
@@ -604,7 +606,8 @@
         "memoryCleared": "{type}已清除",
         "scriptUpdated": "劇本更新成功",
         "scriptUpdateFailed": "更新劇本失敗，請稍後再試",
-        "searchScriptFailed": "搜尋劇本失敗"
+        "searchScriptFailed": "搜尋劇本失敗",
+        "updated": "保存成功"
       }
     },
     "cornerScape": {
@@ -730,7 +733,8 @@
           "updateFailed": "更新劇本失敗，請稍後再試"
         }
       },
-      "deleteScript": "大量刪除劇本"
+      "deleteScript": "大量刪除劇本",
+      "extractAssets": ""
     },
     "assets": {
       "addPrefix": "新增",
@@ -1028,7 +1032,10 @@
         "batchSubmitted": "已送出批次生成請求，正在處理中...",
         "configNotFound": "設定不存在",
         "pollingFailed": "視訊狀態查詢失敗，請手動刷新",
-        "batchGeneratePrompt": "大量生成提示詞"
+        "batchGeneratePrompt": "大量生成提示詞",
+        "batchPromptEmpty": "分鏡 {name} 有空視訊提示。 \n請先生成或填寫提示",
+        "modelEmpty": "請先選擇影片生成模型",
+        "generatingPrompt": "智慧生成提示詞中"
       },
       "editVideo": {
         "reset": "重設",

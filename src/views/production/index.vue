@@ -107,10 +107,10 @@ const loading = ref(false);
 const nodePositions = ref<Record<string, { x: number; y: number }>>({
   script: { x: 0, y: 0 },
   scriptPlan: { x: 900, y: 0 },
-  assets: { x: 0, y: 1500 },
+  assets: { x: 0, y: 4000 },
   storyboardTable: { x: 1800, y: 0 },
-  storyboard: { x: 2700, y: 0 },
-  workbench: { x: 3600, y: 0 },
+  storyboard: { x: 2900, y: 0 },
+  workbench: { x: 5000, y: 0 },
   // poster: { x: 4500, y: 0 },
 });
 const { nodes, edges } = useFlowBuilder(flowData, nodePositions);

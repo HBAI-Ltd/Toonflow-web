@@ -164,7 +164,9 @@
         "deleteVendorBody": "Deleting this provider will also delete all its associated models. Do you want to continue?",
         "vendorDeleted": "Provider deleted",
         "deleteFailed": "Deletion failed"
-      }
+      },
+      "associationSkills": "Associated skills",
+      "think": "deep thinking"
     },
     "agent": {
       "bannerDesc": "Use the official Toonflow relay site for one-click configuration. Ready out-of-the-box, no manual setup needed.",
@@ -678,7 +680,8 @@
         "memoryCleared": "{type} cleared",
         "scriptUpdated": "Script updated successfully",
         "scriptUpdateFailed": "Failed to update script, please try again later",
-        "searchScriptFailed": "Failed to search scripts"
+        "searchScriptFailed": "Failed to search scripts",
+        "updated": "Saved successfully"
       }
     },
     "cornerScape": {
@@ -804,7 +807,8 @@
           "updateFailed": "Failed to update script, please try again later"
         }
       },
-      "deleteScript": "Delete scripts in batches"
+      "deleteScript": "Delete scripts in batches",
+      "extractAssets": ""
     },
     "assets": {
       "addPrefix": "Add",
@@ -1047,7 +1051,7 @@
       "generate": {
         "noVideo": "No Video",
         "videoPrompt": "Video Prompt",
-        "promptPlaceholder": "Enter a prompt describing the video content you want to generate...",
+        "promptPlaceholder": "Enter prompt words to describe the video content you want to generate...",
         "refImage": "Reference Image",
         "image": "Image",
         "refVideo": "Reference Video",
@@ -1062,6 +1066,7 @@
         "confirmSelection": "Confirm Selection",
         "noHistory": "No history available",
         "generating": "Generating",
+        "generatingPrompt": "Intelligent generation of prompt words",
         "generateFailed": "Generation failed",
         "selectAll": "Select All",
         "videoTrack": "Video Track",
@@ -1102,7 +1107,11 @@
         "batchSubmitted": "Batch generation request submitted. Processing...",
         "configNotFound": "Configuration not found",
         "pollingFailed": "Video status query failed, please refresh manually",
-        "batchGeneratePrompt": "Generate prompt words in batches"
+        "batchGeneratePrompt": "Generate prompt words in batches",
+        "promptEmpty": "Please enter a video prompt first",
+        "modelEmpty": "Please select a video generation model first",
+        "batchPromptEmpty": "Storyboard {name} is available for video prompts. \nPlease create or fill in the prompt first",
+        "batchModelEmpty": "Storyboard {names} has no model configured. Please select a model first"
       },
       "editVideo": {
         "reset": "Reset",

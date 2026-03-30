@@ -163,7 +163,9 @@
         "deleteVendorBody": "Sau khi xóa, tất cả các mô hình thuộc nhà cung cấp này cũng sẽ bị xóa, bạn có muốn tiếp tục?",
         "vendorDeleted": "Nhà cung cấp đã bị xóa",
         "deleteFailed": "Xóa thất bại"
-      }
+      },
+      "associationSkills": "Kỹ năng liên quan",
+      "think": "suy nghĩ sâu sắc"
     },
     "agent": {
       "bannerDesc": "Sử dụng máy chủ trung gian chính thức của Toonflow, hỗ trợ điền cấu hình bằng 1 cú nhấp chuột, sẵn sàng sử dụng ngay mà không cần thiết lập thủ công.",
@@ -589,7 +591,8 @@
         "memoryCleared": "Đã xóa {type}",
         "scriptUpdated": "Cập nhật kịch bản thành công",
         "scriptUpdateFailed": "Cập nhật kịch bản thất bại, vui lòng thử lại sau",
-        "searchScriptFailed": "Tìm kiếm kịch bản thất bại"
+        "searchScriptFailed": "Tìm kiếm kịch bản thất bại",
+        "updated": "Đã lưu thành công"
       }
     },
     "cornerScape": {
@@ -715,7 +718,8 @@
           "updateFailed": "Cập nhật kịch bản thất bại, vui lòng thử lại sau"
         }
       },
-      "deleteScript": "Xóa tập lệnh theo đợt"
+      "deleteScript": "Xóa tập lệnh theo đợt",
+      "extractAssets": ""
     },
     "assets": {
       "addPrefix": "Thêm mới",
@@ -958,7 +962,7 @@
       "generate": {
         "noVideo": "Chưa có video",
         "videoPrompt": "Lời nhắc video",
-        "promptPlaceholder": "Nhập lời nhắc, mô tả nội dung video bạn muốn tạo...",
+        "promptPlaceholder": "Nhập từ gợi ý để mô tả nội dung video bạn muốn tạo...",
         "refImage": "Ảnh tham khảo",
         "image": "Hình ảnh",
         "refVideo": "Video tham khảo",
@@ -1013,7 +1017,10 @@
         "batchSubmitted": "Đã gửi yêu cầu tạo hàng loạt, đang xử lý...",
         "configNotFound": "Cấu hình không tồn tại",
         "pollingFailed": "Truy vấn trạng thái video không thành công, vui lòng làm mới theo cách thủ công",
-        "batchGeneratePrompt": "Tạo các từ nhắc nhở theo đợt"
+        "batchGeneratePrompt": "Tạo các từ nhắc nhở theo đợt",
+        "batchPromptEmpty": "Có sẵn bảng phân cảnh {name} cho lời nhắc bằng video. Vui lòng tạo hoặc điền vào lời nhắc trước",
+        "modelEmpty": "Trước tiên hãy chọn mô hình tạo video",
+        "generatingPrompt": "Tạo lời nhắc thông minh"
       },
       "editVideo": {
         "reset": "Đặt lại",

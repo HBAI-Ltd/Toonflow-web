@@ -123,13 +123,14 @@
         </div>
       </Pane>
     </Splitpanes>
-    <!-- <editMdPreivew v-model="dialogVisible" @save="onConfirm" :content="editContent" /> -->
+    <editMdPreivew v-model="dialogVisible" @save="onConfirm" :content="editContent" />
 
     <!-- 剧本编辑对话框 -->
     <t-dialog
       v-model:visible="scriptEditVisible"
       :header="$t('workbench.scriptAgent.editScript')"
-      width="680px"
+      width="80%"
+      top="10vh"
       placement="center"
       :confirm-btn="{ content: $t('workbench.scriptAgent.save'), theme: 'primary' }"
       @confirm="saveScript"
@@ -141,10 +142,14 @@
         </div>
         <div class="scriptEditField">
           <label>{{ $t("workbench.scriptAgent.content") }}</label>
-          <t-textarea
+          <MdEditor
             v-model="scriptEditData.content"
-            :placeholder="$t('workbench.scriptAgent.contentPlaceholder')"
-            :autosize="{ minRows: 8, maxRows: 16 }" />
+            :theme="'light'"
+            :toolbars="toolbars"
+            :footers="[]"
+            style="height: 50vh"
+            @onUploadImg="() => {}"
+            @drop.prevent />
         </div>
       </div>
     </t-dialog>
@@ -152,6 +157,8 @@
 </template>
 
 <script setup lang="ts">
+import { MdEditor } from "md-editor-v3";
+import type { ToolbarNames } from "md-editor-v3";
 import { MdPreview } from "md-editor-v3";
 import { Splitpanes, Pane } from "splitpanes";
 import "splitpanes/dist/splitpanes.css";
@@ -159,11 +166,34 @@ import axios from "@/utils/axios";
 import type { ChatMessagesData } from "@tdesign-vue-next/chat";
 import projectStore from "@/stores/project";
 const { project } = storeToRefs(projectStore());
+import editMdPreivew from "@/components/editMdPreivew.vue";
 import scriptAgentStore from "@/stores/scriptAgent";
 const { connected, messages, status, planData } = storeToRefs(scriptAgentStore());
 const currentTable = ref(1);
 const inputValue = ref("");
-
+const toolbars: ToolbarNames[] = [
+  "bold",
+  "underline",
+  "italic",
+  "strikeThrough",
+  "-",
+  "title",
+  "sub",
+  "sup",
+  "quote",
+  "unorderedList",
+  "orderedList",
+  "task",
+  "-",
+  "codeRow",
+  "code",
+  "table",
+  "-",
+  "revoke",
+  "next",
+  "=",
+  "preview",
+];
 const defMsg: ChatMessagesData[] = [
   {
     id: "welcome",
@@ -184,12 +214,13 @@ onMounted(() => {
   getPlanData();
   getNovel();
 });
-
+const agentWorkDataId = ref<number>();
 async function getPlanData() {
   const { data } = await axios.post("/scriptAgent/getPlanData", { projectId: project.value?.id, agentType: "scriptAgent" });
-  planData.value.storySkeleton = data.storySkeleton;
-  planData.value.adaptationStrategy = data.adaptationStrategy;
-  planData.value.script = data.script || [];
+  planData.value.storySkeleton = data.data.storySkeleton;
+  planData.value.adaptationStrategy = data.data.adaptationStrategy;
+  planData.value.script = data.data.script || [];
+  agentWorkDataId.value = data.id;
 }
 
 //快捷发送
@@ -308,6 +339,21 @@ async function delScript(index: number) {
       dialog.destroy();
     },
   });
+}
+function onConfirm(value: string) {
+  axios
+    .post("/scriptAgent/updateData", {
+      id: agentWorkDataId.value,
+      data: {
+        storySkeleton: currentTable.value == 1 ? value : planData.value.storySkeleton,
+        adaptationStrategy: currentTable.value == 2 ? value : planData.value.adaptationStrategy,
+        script: planData.value.script,
+      },
+    })
+    .then(() => {
+      window.$message.success($t("workbench.scriptAgent.msg.updated"));
+      getPlanData();
+    });
 }
 </script>
 

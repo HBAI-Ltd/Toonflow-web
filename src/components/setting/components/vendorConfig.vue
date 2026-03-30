@@ -39,7 +39,7 @@
               <span class="requiredText">{{ $t("settings.vendor.required") }}</span>
             </span>
           </template>
-          <t-input v-model="currentVendor.inputValues[input.key]" :type="input.type" clearable>
+          <t-input v-model="currentVendor.inputValues[input.key]" :type="input.type" clearable @blur="onBlurFn">
             <template #prefix-icon>
               <t-icon :name="getInputIcon(input.type)" />
             </template>
@@ -53,7 +53,7 @@
           <t-collapse>
             <t-collapse-panel value="optional-inputs" :header="$t('settings.vendor.optionalSection')">
               <t-form-item v-for="input in optionalInputs" :key="input.key" :name="input.key" :label="input.label">
-                <t-input v-model="currentVendor.inputValues[input.key]" :type="input.type" clearable>
+                <t-input v-model="currentVendor.inputValues[input.key]" :type="input.type" clearable @blur="onBlurFn">
                   <template #prefix-icon>
                     <t-icon :name="getInputIcon(input.type)" />
                   </template>
@@ -134,16 +134,13 @@
               <t-option v-for="item in modelTypeOptions" :key="item.value" :value="item.value">{{ $t(item.label) }}</t-option>
             </t-select>
           </t-form-item>
+          <t-form-item name="associationSkills" :label="$t('settings.vendor.associationSkills')" v-if="modelFormData.type !== 'text'">
+            <t-tag>{{ modelFormData.associationSkills }}</t-tag>
+          </t-form-item>
 
           <template v-if="modelFormData.type === 'text'">
-            <t-form-item name="multimodal" :label="$t('settings.vendor.multimodal')">
+            <t-form-item name="multimodal" :label="$t('settings.vendor.think')">
               <t-radio-group v-model="modelFormData.multimodal">
-                <t-radio :value="true">{{ $t("settings.vendor.supported") }}</t-radio>
-                <t-radio :value="false">{{ $t("settings.vendor.notSupported") }}</t-radio>
-              </t-radio-group>
-            </t-form-item>
-            <t-form-item name="tool" :label="$t('settings.vendor.toolCall')">
-              <t-radio-group v-model="modelFormData.tool">
                 <t-radio :value="true">{{ $t("settings.vendor.supported") }}</t-radio>
                 <t-radio :value="false">{{ $t("settings.vendor.notSupported") }}</t-radio>
               </t-radio-group>
@@ -280,22 +277,25 @@ interface TextModel {
   type: "text";
   multimodal: boolean;
   tool: boolean;
+  associationSkills: string;
 }
 
 interface ImageModel {
   name: string;
   modelName: string;
   type: "image";
-  mode: ("text" | "singleImage" | "multiReference")[];
+  mode: ("text" | "singleImage")[];
+  associationSkills: string;
 }
 
 interface VideoModel {
   name: string;
   modelName: string;
   type: "video";
-  mode: ("singleImage" | "multiImage" | "gridImage" | "startEndRequired" | "endFrameOptional" | "startFrameOptional" | "text")[];
+  mode: ("singleImage" | "multiImage" | "startEndRequired" | "endFrameOptional" | "startFrameOptional" | "text")[];
   audio: "optional" | false | true;
   durationResolutionMap: { duration: number[]; resolution: string[] }[];
+  associationSkills: string;
 }
 
 type VendorModel = TextModel | ImageModel | VideoModel;
@@ -335,8 +335,8 @@ const TYPE_LABEL_MAP: Record<string, string> = {
 const MODE_LABEL_MAP: Record<string, string> = {
   singleImage: "settings.vendor.singleImage",
   multiImage: "settings.vendor.multiImage",
-  multiReference: "settings.vendor.multiReference",
-  gridImage: "settings.vendor.gridImage",
+  // multiReference: "settings.vendor.multiReference",
+  // gridImage: "settings.vendor.gridImage",
   startEndRequired: "settings.vendor.startEndRequired",
   endFrameOptional: "settings.vendor.endFrameOptional",
   startFrameOptional: "settings.vendor.startFrameOptional",
@@ -373,13 +373,13 @@ const modelTypeOptions = [
 const imageModeOptions = [
   { label: "settings.vendor.textToImage", value: "text" },
   { label: "settings.vendor.singleImage", value: "singleImage" },
-  { label: "settings.vendor.multiReference", value: "multiReference" },
+  // { label: "settings.vendor.multiReference", value: "multiReference" },
 ];
 
 const videoModeOptions = [
   { label: "settings.vendor.singleImage", value: "singleImage" },
   { label: "settings.vendor.multiImage", value: "multiImage" },
-  { label: "settings.vendor.gridImage", value: "gridImage" },
+  // { label: "settings.vendor.gridImage", value: "gridImage" },
   { label: "settings.vendor.startEndRequired", value: "startEndRequired" },
   { label: "settings.vendor.endFrameOptional", value: "endFrameOptional" },
   { label: "settings.vendor.startFrameOptional", value: "startFrameOptional" },
@@ -674,6 +674,7 @@ const modelFormData = ref({
   mixedMode: [] as string[], // otherOptions 选中项，单独存放，构建时作为数组元素加入 mode
   audio: "optional" as "optional" | false | true,
   durationResolutionMap: [{ duration: [] as string[], resolution: [] as string[] }] as DrmRow[],
+  associationSkills: "",
 });
 
 function resetModelForm(type: "text" | "image" | "video" = "text") {
@@ -687,6 +688,7 @@ function resetModelForm(type: "text" | "image" | "video" = "text") {
     mixedMode: [],
     audio: "optional",
     durationResolutionMap: [{ duration: [], resolution: [] }],
+    associationSkills: "",
   };
 }
 
@@ -731,6 +733,7 @@ function buildModelFromForm(): VendorModel | null {
       type: "text",
       multimodal: modelFormData.value.multimodal,
       tool: modelFormData.value.tool,
+      associationSkills: modelFormData.value.associationSkills,
     };
   }
 
@@ -745,6 +748,7 @@ function buildModelFromForm(): VendorModel | null {
       modelName,
       type: "image",
       mode,
+      associationSkills: modelFormData.value.associationSkills,
     };
   }
 
@@ -781,6 +785,7 @@ function buildModelFromForm(): VendorModel | null {
     mode,
     audio: modelFormData.value.audio,
     durationResolutionMap,
+    associationSkills: modelFormData.value.associationSkills,
   };
 }
 
@@ -838,6 +843,7 @@ function handleEditModel(model: VendorModel) {
       mixedMode: [],
       audio: "optional",
       durationResolutionMap: [{ duration: [], resolution: [] }],
+      associationSkills: model.associationSkills || "",
     };
   }
 
@@ -852,6 +858,7 @@ function handleEditModel(model: VendorModel) {
       mixedMode: [],
       audio: "optional",
       durationResolutionMap: [{ duration: [], resolution: [] }],
+      associationSkills: model.associationSkills || "",
     };
   }
 
@@ -883,6 +890,7 @@ function handleEditModel(model: VendorModel) {
       mixedMode,
       audio: model.audio,
       durationResolutionMap: rows,
+      associationSkills: model.associationSkills || "",
     };
   }
 
@@ -970,6 +978,22 @@ function handleDeleteVendor() {
         });
     },
   });
+}
+function onBlurFn() {
+  axios
+    .post("/setting/vendorConfig/updateVendor", {
+      id: currentVendor.value?.id,
+      inputs: currentVendor.value?.inputs,
+      inputValues: currentVendor.value?.inputValues,
+      models: currentVendor.value?.models ?? currentVendor.value?.model ?? [],
+    })
+    .then(() => {
+      window.$message.success($t("settings.vendor.msg.vendorConfigUpdated"));
+      getVendorList();
+    })
+    .catch((err) => {
+      window.$message.error(`${$t("settings.vendor.msg.updateFailed")}${err.message}`);
+    });
 }
 </script>
 
