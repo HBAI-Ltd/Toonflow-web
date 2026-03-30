@@ -1,6 +1,6 @@
 <template>
   <div class="rightChatBox" :style="{ width: boxWidth + 'px' }">
-    <div ref="resizeHandleRef" class="resize-handle"></div>
+    <div ref="resizeHandleRef" class="resizeHandle"></div>
     <div class="header f ac jb">
       <span class="text">
         <i-dot theme="outline" :fill="connected ? 'green' : 'red'" />
@@ -71,6 +71,7 @@
 </template>
 
 <script setup lang="ts">
+import { useMousePressed, useMouse } from "@vueuse/core";
 import _ from "lodash";
 import axios from "@/utils/axios";
 import type { ChatMessagesData } from "@tdesign-vue-next/chat";
@@ -154,7 +155,25 @@ async function getHistory() {
   loadingHistory.value = false;
 }
 
+const resizeHandleRef = ref<HTMLElement | null>(null);
 const boxWidth = ref(400);
+const MIN_WIDTH = 400;
+const { pressed } = useMousePressed({ target: resizeHandleRef });
+const { x } = useMouse();
+const dragStartX = ref(0);
+const dragStartWidth = ref(400);
+watch(pressed, (isPressed) => {
+  if (isPressed) {
+    dragStartX.value = x.value;
+    dragStartWidth.value = boxWidth.value;
+  }
+});
+watchEffect(() => {
+  if (pressed.value) {
+    const maxWidth = window.innerWidth * 0.8;
+    boxWidth.value = Math.min(maxWidth, Math.max(MIN_WIDTH, dragStartWidth.value + (dragStartX.value - x.value)));
+  }
+});
 </script>
 
 <style lang="scss" scoped>
@@ -174,7 +193,8 @@ const boxWidth = ref(400);
   background-color: #fff;
   overflow-y: auto;
 
-  .resize-handle {
+  .resizeHandle {
+    user-select: none;
     position: absolute;
     left: 0;
     top: 0;
