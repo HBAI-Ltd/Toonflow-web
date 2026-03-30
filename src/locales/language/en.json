@@ -481,7 +481,8 @@
         "videoModelData": "Select video model",
         "prompt": {
           "placeholder": "Enter prompt word",
-          "saveSuccess": "Update successful"
+          "saveSuccess": "Update successful",
+          "title": "prompt word"
         },
         "basedOnScript": "based on script"
       },

@@ -12,7 +12,7 @@
       </t-card>
     </div>
     <div class="show">
-      <t-dialog v-model:visible="visible" header="$t('promptManage.prompt')" width="70%" :close-on-overlay-click="false" @confirm="onConfirm" top="9vh">
+      <t-dialog v-model:visible="visible" :header="$t('workbench.project.dialog.prompt.title')" width="70%" :close-on-overlay-click="false" @confirm="onConfirm" top="9vh">
         <MdEditor
           v-model="promptData.data"
           :theme="'light'"

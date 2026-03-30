@@ -408,7 +408,8 @@
         "videoModelData": "เลือกรุ่นวิดีโอ",
         "prompt": {
           "placeholder": "ป้อนคำที่พร้อมท์",
-          "saveSuccess": "อัปเดตสำเร็จ"
+          "saveSuccess": "อัปเดตสำเร็จ",
+          "title": "คำพูดที่รวดเร็ว"
         },
         "basedOnScript": "ขึ้นอยู่กับสคริปต์"
       },

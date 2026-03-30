@@ -407,7 +407,8 @@
         "videoModelData": "ビデオモデルを選択してください",
         "prompt": {
           "placeholder": "プロンプトの単語を入力してください",
-          "saveSuccess": "更新に成功しました"
+          "saveSuccess": "更新に成功しました",
+          "title": "即効性のある言葉"
         },
         "basedOnScript": "脚本に基づいて"
       },

@@ -398,7 +398,8 @@
         "videoModelData": "Chọn mô hình video",
         "prompt": {
           "placeholder": "Nhập từ gợi ý",
-          "saveSuccess": "Cập nhật thành công"
+          "saveSuccess": "Cập nhật thành công",
+          "title": "lời nhắc"
         },
         "basedOnScript": "dựa trên kịch bản"
       },

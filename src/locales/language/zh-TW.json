@@ -413,7 +413,8 @@
         "videoModelData": "選擇視訊模型",
         "prompt": {
           "placeholder": "輸入提示詞",
-          "saveSuccess": "更新成功"
+          "saveSuccess": "更新成功",
+          "title": "提示詞"
         }
       },
       "msg": {

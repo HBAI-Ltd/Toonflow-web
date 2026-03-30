@@ -494,7 +494,8 @@
         "videoModelData": "选择视频模型",
         "prompt": {
           "placeholder": "输入提示词",
-          "saveSuccess": "更新成功"
+          "saveSuccess": "更新成功",
+          "title": "提示词"
         },
         "basedOnScript": "基于剧本"
       },
