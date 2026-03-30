@@ -39,7 +39,7 @@
               <span class="requiredText">{{ $t("settings.vendor.required") }}</span>
             </span>
           </template>
-          <t-input v-model="currentVendor.inputValues[input.key]" :type="input.type" clearable>
+          <t-input v-model="currentVendor.inputValues[input.key]" :type="input.type" clearable @blur="onBlurFn">
             <template #prefix-icon>
               <t-icon :name="getInputIcon(input.type)" />
             </template>
@@ -53,7 +53,7 @@
           <t-collapse>
             <t-collapse-panel value="optional-inputs" :header="$t('settings.vendor.optionalSection')">
               <t-form-item v-for="input in optionalInputs" :key="input.key" :name="input.key" :label="input.label">
-                <t-input v-model="currentVendor.inputValues[input.key]" :type="input.type" clearable>
+                <t-input v-model="currentVendor.inputValues[input.key]" :type="input.type" clearable @blur="onBlurFn">
                   <template #prefix-icon>
                     <t-icon :name="getInputIcon(input.type)" />
                   </template>
@@ -984,6 +984,22 @@ function handleDeleteVendor() {
         });
     },
   });
+}
+function onBlurFn() {
+  axios
+    .post("/setting/vendorConfig/updateVendor", {
+      id: currentVendor.value?.id,
+      inputs: currentVendor.value?.inputs,
+      inputValues: currentVendor.value?.inputValues,
+      models: currentVendor.value?.models ?? currentVendor.value?.model ?? [],
+    })
+    .then(() => {
+      window.$message.success($t("settings.vendor.msg.vendorConfigUpdated"));
+      getVendorList();
+    })
+    .catch((err) => {
+      window.$message.error(`${$t("settings.vendor.msg.updateFailed")}${err.message}`);
+    });
 }
 </script>
 
