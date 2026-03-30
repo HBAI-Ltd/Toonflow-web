@@ -48,20 +48,6 @@
         <t-loading size="large" :text="$t('workbench.production.wb.importingLoading')" />
       </div>
     </div>
-    <t-dialog theme="info" :header="$t('workbench.production.wb.hint')" :body="$t('workbench.production.wb.extractLines')" v-model:visible="visible1">
-      <template #footer>
-        <div class="f ac" style="display: flex; justify-content: flex-end">
-          <t-button variant="outline" @click="visible1 = false">{{ $t("workbench.production.cancel") }}</t-button>
-          <t-button variant="outline" @click="noFn">{{ $t("workbench.production.wb.no") }}</t-button>
-          <t-button @click="onConfirm">{{ $t("workbench.production.wb.confirm") }}</t-button>
-        </div>
-      </template>
-      <template #default>
-        <div class="f f-column" style="gap: 12px">
-          <span>{{ $t("workbench.production.wb.extractLinesQuestion") }}</span>
-        </div>
-      </template>
-    </t-dialog>
   </t-dialog>
 </template>
 
@@ -170,38 +156,9 @@ function editFootage() {
   });
 }
 
-async function onConfirm() {
-  visible1.value = false;
-  extractLines.value = true;
-  importLoading.value = true;
-  try {
-    const value = batchDownloadValue.value;
-    const list = batchDownloadValue.value.map((item: any) => ({
-      videoId: item.videoId,
-      prompt: item.prompt,
-    }));
-    const { data } = await axios.post("/production/workbench/getChatLines", { list });
-    appendClipsToStore(value, data);
-    activeMenu.value = "editVideo";
-  } finally {
-    importLoading.value = false;
-  }
-}
-
-function noFn() {
-  visible1.value = false;
-  importLoading.value = true;
-  try {
-    const value = batchDownloadValue.value;
-    appendClipsToStore(value, null);
-    activeMenu.value = "editVideo";
-  } finally {
-    importLoading.value = false;
-  }
-}
-
 /** 追加视频片段（以及可选的字幕）到 tracksStore 对应轨道末尾 */
-function appendClipsToStore(videoList: any[], subtitleData: any[] | null) {
+function appendClipsToStore(videoList: any[]) {
+  if (!videoList || videoList.length === 0) return;
   let videoTrack = tracksStore.tracks.find((t) => t.type === "video" && t.isMain);
   if (!videoTrack) {
     videoTrack = {
@@ -217,22 +174,6 @@ function appendClipsToStore(videoList: any[], subtitleData: any[] | null) {
     tracksStore.addTrack(videoTrack);
     videoTrack = tracksStore.tracks.find((t) => t.type === "video" && t.isMain)!;
   }
-
-  let subtitleTrack = tracksStore.tracks.find((t) => t.type === "subtitle");
-  if (!subtitleTrack) {
-    subtitleTrack = {
-      id: generateId("track-"),
-      type: "subtitle",
-      name: $t("workbench.production.wb.subtitle1"),
-      visible: true,
-      locked: false,
-      clips: [],
-      order: 3,
-    };
-    tracksStore.addTrack(subtitleTrack);
-    subtitleTrack = tracksStore.tracks.find((t) => t.type === "subtitle")!;
-  }
-
   // 计算视频轨道末尾时间
   const existingVideoClips = videoTrack!.clips.filter((c) => c.type !== "transition");
   let currentTime = existingVideoClips.reduce((max, c) => Math.max(max, c.endTime), 0);
@@ -257,41 +198,13 @@ function appendClipsToStore(videoList: any[], subtitleData: any[] | null) {
     tracksStore.addClip(videoTrack!.id, clip as Clip);
     currentTime += duration;
   });
-
-  // 追加字幕片段，时间与视频对齐（即使没有字幕数据也传空字幕）
-  if (subtitleTrack) {
-    const existingSubtitleClips = subtitleTrack.clips;
-    let subtitleStart = existingSubtitleClips.reduce((max, c) => Math.max(max, c.endTime), 0);
-    // 字幕起点对齐视频追加的起点
-    const videoAppendStart = existingVideoClips.reduce((max, c) => Math.max(max, c.endTime), 0);
-    subtitleStart = Math.max(subtitleStart, videoAppendStart);
-
-    videoList.forEach((item: any, index: number) => {
-      const duration = item.duration || 5;
-      const text = subtitleData?.[index]?.prompt || subtitleData?.[index]?.text || "";
-      const clip: SubtitleClip = {
-        id: generateId("clip-"),
-        trackId: subtitleTrack!.id,
-        type: "subtitle",
-        startTime: subtitleStart,
-        endTime: subtitleStart + duration,
-        selected: false,
-        text,
-        fontFamily: "Arial",
-        fontSize: 24,
-        color: "#ffffff",
-        textAlign: "center",
-      };
-      tracksStore.addClip(subtitleTrack!.id, clip as Clip);
-      subtitleStart += duration;
-    });
-  }
+  activeMenu.value = "editVideo";
 }
 
 //导入到剪辑台
 function handleBatchDownload(value: any) {
   batchDownloadValue.value = value;
-  visible1.value = true;
+  appendClipsToStore(value);
 }
 </script>
 

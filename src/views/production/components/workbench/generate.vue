@@ -26,9 +26,19 @@
               {{ $t("workbench.production.generate.videoPrompt") }}
             </div>
             <div>
-              <t-button theme="primary" size="small" class="generateBtn" :loading="!!currentShot && promptGeneratingIds.has(currentShot.id)" :disabled="!!currentShot && promptGeneratingIds.has(currentShot.id)" @click="generateVideoPrompt">
+              <t-button
+                theme="primary"
+                size="small"
+                class="generateBtn"
+                :loading="!!currentShot && promptGeneratingIds.has(currentShot.id)"
+                :disabled="!!currentShot && promptGeneratingIds.has(currentShot.id)"
+                @click="generateVideoPrompt">
                 <template #icon><i-arrow-up size="16" /></template>
-                {{ !!currentShot && promptGeneratingIds.has(currentShot.id) ? $t("workbench.production.generate.generatingPrompt") : $t("workbench.production.generate.generate") }}
+                {{
+                  !!currentShot && promptGeneratingIds.has(currentShot.id)
+                    ? $t("workbench.production.generate.generatingPrompt")
+                    : $t("workbench.production.generate.generate")
+                }}
               </t-button>
             </div>
           </div>
@@ -1450,7 +1460,7 @@ function generateVideoPrompt() {
     });
 }
 
-//批量生成提示词
+//批量生成提示词（逐个发送请求，前端同时显示loading，后端返回一个就停止对应的转圈）
 function batchGenerateVideoPrompt() {
   //拿到勾选的分镜信息
   const checkedShots = shotList.value.filter((item) => checkedIds.value.has(item.id));
@@ -1459,35 +1469,45 @@ function batchGenerateVideoPrompt() {
   // 过滤掉已经在生成中的
   const newIds = storyboardIds.filter((id) => !_promptGeneratingMap.has(id));
   if (newIds.length === 0) return;
-  const controller = markPromptGenerating(newIds);
-  const payload = {
-    projectId: project.value?.id,
-    storyboardIds: newIds,
-  };
-  axios
-    .post("/production/workbench/generateVideoPrompt", payload, { signal: controller.signal })
-    .then(({ data }) => {
-      // 用返回的 videoPrompt 直接更新分镜数据和当前输入框
-      // API 返回结构: { data: [{ storyboardId, videoPrompt }] }
-      const results: Array<{ storyboardId: number | string; videoPrompt: string }> = data?.data || [];
-      results.forEach((r) => {
-        const target = shotList.value.find((s) => s.id === r.storyboardId);
-        if (target) {
-          target.videoPrompt = r.videoPrompt;
-          if (target.config) target.config.videoPrompt = r.videoPrompt;
+
+  // 先将所有id标记为生成中（前端一起显示loading）
+  newIds.forEach((id) => {
+    const controller = new AbortController();
+    _promptGeneratingMap.set(id, controller);
+  });
+  // 逐个向后端发送请求，每个请求只包含单个storyboardId
+  newIds.forEach((id) => {
+    const controller = _promptGeneratingMap.get(id);
+    const payload = {
+      projectId: project.value?.id,
+      storyboardId: id,
+    };
+    axios
+      .post("/production/workbench/generateVideoPrompt", payload, { signal: controller?.signal })
+      .then(({ data }) => {
+        // 后端返回结构: { data: { data: { storyboardId, videoPrompt } } }
+        const r = data?.data?.data || data?.data;
+        if (r && r.storyboardId != null && r.videoPrompt != null) {
+          const target = shotList.value.find((s) => s.id === r.storyboardId);
+          if (target) {
+            target.videoPrompt = r.videoPrompt;
+            if (target.config) target.config.videoPrompt = r.videoPrompt;
+          }
+          // 如果是当前选中的分镜，直接更新输入框
+          if (currentShot.value && currentShot.value.id === r.storyboardId) {
+            promptText.value = r.videoPrompt;
+          }
         }
-        // 如果是当前选中的分镜，直接更新输入框
-        if (currentShot.value && currentShot.value.id === r.storyboardId) {
-          promptText.value = r.videoPrompt;
-        }
+        getProductionData();
+      })
+      .catch(() => {
+        // 单个生成失败
+      })
+      .finally(() => {
+        // 无论成功失败，只清除当前这个id的loading状态
+        clearPromptGenerating([id]);
       });
-      getProductionData();
-    })
-    .catch(() => {
-    })
-    .finally(() => {
-      clearPromptGenerating(newIds);
-    });
+  });
 }
 //监听项目默认模型
 watch(
