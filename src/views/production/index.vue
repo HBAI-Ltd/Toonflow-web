@@ -110,7 +110,7 @@ const nodePositions = ref<Record<string, { x: number; y: number }>>({
   assets: { x: 0, y: 4000 },
   storyboardTable: { x: 1800, y: 0 },
   storyboard: { x: 2900, y: 0 },
-  workbench: { x: 4800, y: 0 },
+  workbench: { x: 5000, y: 0 },
   // poster: { x: 4500, y: 0 },
 });
 const { nodes, edges } = useFlowBuilder(flowData, nodePositions);

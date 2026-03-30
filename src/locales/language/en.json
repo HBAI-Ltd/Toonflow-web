@@ -805,7 +805,8 @@
           "updateFailed": "Failed to update script, please try again later"
         }
       },
-      "deleteScript": "Delete scripts in batches"
+      "deleteScript": "Delete scripts in batches",
+      "extractAssets": ""
     },
     "assets": {
       "addPrefix": "Add",

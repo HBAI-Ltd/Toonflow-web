@@ -716,7 +716,8 @@
           "updateFailed": "Cập nhật kịch bản thất bại, vui lòng thử lại sau"
         }
       },
-      "deleteScript": "Xóa tập lệnh theo đợt"
+      "deleteScript": "Xóa tập lệnh theo đợt",
+      "extractAssets": ""
     },
     "assets": {
       "addPrefix": "Thêm mới",

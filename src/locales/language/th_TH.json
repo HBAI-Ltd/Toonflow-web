@@ -726,7 +726,8 @@
           "updateFailed": "อัปเดตบทภาพยนตร์ล้มเหลว โปรดลองอีกครั้งในภายหลัง"
         }
       },
-      "deleteScript": "ลบสคริปต์เป็นชุด"
+      "deleteScript": "ลบสคริปต์เป็นชุด",
+      "extractAssets": ""
     },
     "assets": {
       "addPrefix": "เพิ่ม",

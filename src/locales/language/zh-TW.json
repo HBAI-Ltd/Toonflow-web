@@ -731,7 +731,8 @@
           "updateFailed": "更新劇本失敗，請稍後再試"
         }
       },
-      "deleteScript": "大量刪除劇本"
+      "deleteScript": "大量刪除劇本",
+      "extractAssets": ""
     },
     "assets": {
       "addPrefix": "新增",

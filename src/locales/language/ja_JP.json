@@ -725,7 +725,8 @@
           "updateFailed": "シナリオの更新に失敗しました。後で再試行してください"
         }
       },
-      "deleteScript": "スクリプトを一括で削除する"
+      "deleteScript": "スクリプトを一括で削除する",
+      "extractAssets": ""
     },
     "assets": {
       "addPrefix": "追加",
