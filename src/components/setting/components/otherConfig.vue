@@ -14,6 +14,7 @@
           :suffix="$t('settings.other.seconds')"
           :min="10"
           v-model="axiosTimeOutInSeconds"
+          :allowInputOverLimit="false"
           :placeholder="$t('settings.other.inputSeconds')" />
       </t-form-item>
       <t-form-item :label="$t('settings.other.assetConcurrency')" name="assetsBatchGenereateSize">
@@ -22,6 +23,7 @@
           :suffix="$t('settings.other.count')"
           :min="1"
           v-model="otherSetting.assetsBatchGenereateSize"
+          :allowInputOverLimit="false"
           :placeholder="$t('settings.other.inputCount')" />
       </t-form-item>
     </t-form>

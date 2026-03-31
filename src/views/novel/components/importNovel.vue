@@ -17,32 +17,32 @@
               <div class="dragIcon">
                 <i-upload-one theme="outline" size="32" fill="var(--td-brand-color)" />
               </div>
-              <p class="uploadText">{{ $t('workbench.novel.import.dragUpload') }}</p>
-              <p class="uploadHint">{{ $t('workbench.novel.import.uploadHint') }}</p>
+              <p class="uploadText">{{ $t("workbench.novel.import.dragUpload") }}</p>
+              <p class="uploadHint">{{ $t("workbench.novel.import.uploadHint") }}</p>
             </div>
-            <t-divider>{{ $t('workbench.novel.import.or') }}</t-divider>
+            <t-divider>{{ $t("workbench.novel.import.or") }}</t-divider>
             <div class="formItem">
-              <div class="label">{{ $t('workbench.novel.import.pasteLabel') }}</div>
+              <div class="label">{{ $t("workbench.novel.import.pasteLabel") }}</div>
               <div class="uploadWrap">
                 <t-textarea v-model="content" :placeholder="$t('workbench.novel.import.pastePlaceholder')" :autosize="{ minRows: 12, maxRows: 12 }" />
               </div>
               <div class="footerInfo f ac jb" style="margin-top: 8px">
                 <div>
-                  <span class="charCount">{{ content.length }} {{ $t('workbench.novel.import.chars') }}</span>
-                  <span v-if="content.length > 0 && content.length < 100" class="tips warn">{{ $t('workbench.novel.import.tooShort') }}</span>
+                  <span class="charCount">{{ content.length }} {{ $t("workbench.novel.import.chars") }}</span>
+                  <span v-if="content.length > 0 && content.length < 100" class="tips warn">{{ $t("workbench.novel.import.tooShort") }}</span>
                 </div>
-                <span>{{ $t('workbench.novel.import.parsedChapters', { count: tableData.length }) }}</span>
+                <span>{{ $t("workbench.novel.import.parsedChapters", { count: tableData.length }) }}</span>
               </div>
             </div>
 
             <div style="margin-top: 16px; text-align: right">
               <t-button theme="primary" style="margin-left: 10px" :disabled="!content || !tableData.length" @click="activeKey = 'To2'">
-                {{ $t('workbench.novel.import.nextStep') }}
+                {{ $t("workbench.novel.import.nextStep") }}
               </t-button>
             </div>
           </t-tab-panel>
           <t-tab-panel value="To2" :label="$t('workbench.novel.import.step2')" style="height: 680px; overflow-y: auto">
-            <div>
+            <div class="fc to2Box">
               <t-table
                 ref="tableRef"
                 row-key="index"
@@ -50,6 +50,7 @@
                 :columns="columns"
                 :selected-row-keys="selectedRowKeys"
                 hover
+                style="flex: 1; overflow-y: auto"
                 @select-change="onSelectChange">
                 <template #chapterData="{ row }">
                   <t-tooltip :content="row.chapterData" placement="top">
@@ -57,27 +58,12 @@
                   </t-tooltip>
                 </template>
               </t-table>
-            </div>
-            <div class="selectedInfo">{{ $t('workbench.novel.import.selectedInfo', { count: selectedTextLength }) }}</div>
-            <div style="margin-top: 16px; text-align: right">
-              <t-button variant="outline" @click="activeKey = 'To1'">{{ $t('workbench.novel.import.prevStep') }}</t-button>
-              <t-button variant="outline" style="margin-left: 10px" @click="activeKey = 'To3'">{{ $t('workbench.novel.import.nextStep') }}</t-button>
-              <!-- <t-button theme="primary" style="margin-left: 10px" :disabled="selectedTextLength > 200000" :loading="nextLoading" @click="keep">
-                保存
-              </t-button> -->
-            </div>
-          </t-tab-panel>
-          <t-tab-panel value="To3" :label="$t('workbench.novel.import.step3')" style="height: 680px; overflow-y: auto">
-            <div>
-              <div style="margin-top: 20px">
-                <t-empty :title="$t('workbench.novel.import.eventAnalysis')">
-                  <template #action>
-                    <t-button @click="keep">{{ $t('workbench.novel.import.saveAndAnalyze') }}</t-button>
-                  </template>
-                </t-empty>
-              </div>
+              <div class="selectedInfo">{{ $t("workbench.novel.import.selectedInfo", { count: selectedTextLength }) }}</div>
               <div style="margin-top: 16px; text-align: right">
-                <t-button variant="outline" @click="activeKey = 'To2'">{{ $t('workbench.novel.import.prevStep') }}</t-button>
+                <t-button variant="outline" @click="activeKey = 'To1'">{{ $t("workbench.novel.import.prevStep") }}</t-button>
+                <t-button theme="primary" style="margin-left: 10px" :disabled="selectedTextLength > 200000" :loading="nextLoading" @click="keep">
+                  保存
+                </t-button>
               </div>
             </div>
           </t-tab-panel>
@@ -114,17 +100,17 @@ const nextLoading = ref(false);
 
 const columns: PrimaryTableCol<TableRowData>[] = [
   { colKey: "row-select", type: "multiple", width: 60 },
-  { colKey: "index", title: $t('workbench.novel.import.col.chapter'), width: 100 },
-  { colKey: "reel", title: $t('workbench.novel.import.col.reel'), width: 100 },
-  { colKey: "chapter", title: $t('workbench.novel.import.col.chapterName'), width: 200, ellipsis: true },
-  { colKey: "chapterData", title: $t('workbench.novel.import.col.chapterData'), ellipsis: true },
+  { colKey: "index", title: $t("workbench.novel.import.col.chapter"), width: 100 },
+  { colKey: "reel", title: $t("workbench.novel.import.col.reel"), width: 100 },
+  { colKey: "chapter", title: $t("workbench.novel.import.col.chapterName"), width: 200, ellipsis: true },
+  { colKey: "chapterData", title: $t("workbench.novel.import.col.chapterData"), ellipsis: true },
 ];
 
 // 解析后的章节数据
 const tableData = computed<ChapterItem[]>(() => {
   if (!content.value) return [];
   try {
-    const ddd = parseNovel(content.value)
+    const ddd = parseNovel(content.value);
     return parseNovel(content.value).flatMap((reel) =>
       reel.chapters.map((chapter) => ({
         index: chapter.index,
@@ -178,21 +164,21 @@ function requestMethod() {
 async function handleBeforeUpload(file: UploadFile) {
   const rawFile = file.raw;
   if (!rawFile) {
-    window.$message.error($t('workbench.novel.import.msg.selectFile'));
+    window.$message.error($t("workbench.novel.import.msg.selectFile"));
     return false;
   }
   const allowTypes = ["text/plain", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"];
 
   if (rawFile.type === "application/msword") {
-    window.$message.warning($t('workbench.novel.import.msg.docNotSupported'));
+    window.$message.warning($t("workbench.novel.import.msg.docNotSupported"));
     return false;
   }
   if (!allowTypes.includes(rawFile.type)) {
-    window.$message.error($t('workbench.novel.import.msg.unsupportedType'));
+    window.$message.error($t("workbench.novel.import.msg.unsupportedType"));
     return false;
   }
   if (rawFile.size > 10 * 1024 * 1024) {
-    window.$message.error($t('workbench.novel.import.msg.fileTooLarge'));
+    window.$message.error($t("workbench.novel.import.msg.fileTooLarge"));
     return false;
   }
 
@@ -200,7 +186,7 @@ async function handleBeforeUpload(file: UploadFile) {
   try {
     content.value = await readFile(rawFile);
   } catch {
-    window.$message.error($t('workbench.novel.import.msg.parseFailed'));
+    window.$message.error($t("workbench.novel.import.msg.parseFailed"));
   } finally {
     LoadingPlugin(false);
   }
@@ -216,7 +202,7 @@ const emit = defineEmits(["select"]);
 async function keep() {
   nextLoading.value = true;
   if (!selectedRows.value.length) {
-    window.$message.warning($t('workbench.novel.import.msg.selectChapters'));
+    window.$message.warning($t("workbench.novel.import.msg.selectChapters"));
     nextLoading.value = false;
     return;
   }
@@ -224,7 +210,7 @@ async function keep() {
     await axios.post("/novel/addNovel", { projectId: project.value?.id, data: selectedRows.value });
     nextLoading.value = false;
     emit("select");
-    window.$message.success($t('workbench.novel.import.msg.saveSuccess'));
+    window.$message.success($t("workbench.novel.import.msg.saveSuccess"));
   } catch (e) {
     window.$message.error((e as Error).message);
     nextLoading.value = false;
@@ -272,6 +258,9 @@ watch(purgeNovelShow, (newVal) => {
         font-size: 12px;
         margin: 0;
       }
+    }
+    .to2Box {
+      height: 100%;
     }
     .formItem {
       .label {

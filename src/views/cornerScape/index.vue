@@ -38,7 +38,12 @@
               ]"></t-select>
           </t-form-item>
           <t-form-item :label="$t('workbench.cornerScape.concurrency')">
-            <t-input-number v-model="concurrentCount" autoWidth :placeholder="$t('workbench.cornerScape.concurrencyPh')"></t-input-number>
+            <t-input-number
+              v-model="concurrentCount"
+              :min="1"
+              :allowInputOverLimit="false"
+              autoWidth
+              :placeholder="$t('workbench.cornerScape.concurrencyPh')"></t-input-number>
           </t-form-item>
           <t-form-item>
             <t-button theme="primary" block @click="batchGenerationPrompt">{{ $t("workbench.cornerScape.batchGenerationPrompt") }}</t-button>
@@ -510,6 +515,7 @@ async function batchGenerationPrompt() {
 
   // 清除已选中的项
   selectedIds.value = [];
+  const concurrent = Math.max(1, concurrentCount.value || 1);
 
   try {
     await axios.post("/assetsGenerate/batchPolishAssetsPrompt", {
@@ -520,6 +526,7 @@ async function batchGenerationPrompt() {
         name: item.name,
         describe: item.describe ? item.describe : $t("workbench.cornerScape.noDescription"),
       })),
+      concurrentCount: concurrent,
     });
   } catch (e: any) {
     window.$message.error(e.message ?? $t("workbench.cornerScape.msg.promptGenFail"));
