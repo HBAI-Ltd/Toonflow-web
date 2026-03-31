@@ -150,30 +150,16 @@ const clipColumns: TableProps["columns"] = [
     cell: "preview",
   },
   {
-    colKey: "title",
-    title: $t("components.storyboardImageCheck.title"),
-    width: 200,
-    align: "left",
-    ellipsis: true,
-  },
-  {
-    colKey: "camera",
-    title: $t("components.storyboardImageCheck.camera"), //镜头
-    minWidth: 200,
+    colKey: "prompt",
+    title: $t("workbench.project.dialog.prompt.title"),
+    width: 100,
     align: "left",
     ellipsis: true,
   },
   {
     colKey: "duration",
-    title: $t("components.storyboardImageCheck.duration"), //镜头
-    minWidth: 200,
-    align: "left",
-    ellipsis: true,
-  },
-  {
-    colKey: "lines",
-    title: $t("components.storyboardImageCheck.lines"), //台词
-    minWidth: 200,
+    title: $t("components.storyboardImageCheck.duration"),
+    minWidth: 80,
     align: "left",
     ellipsis: true,
   },
@@ -237,7 +223,7 @@ function handlePageChange(pageInfo: { current: number; pageSize: number }) {
 
 // 确认选择
 function handleConfirm() {
-  const rows = tableData.value.filter((row) => selectedRowKeys.value.includes(row.id));
+  const rows = tableData.value.filter((row) => selectedRowKeys.value.includes(row.id!));
   emit("confirm", rows);
   dialogVisible.value = false;
 }

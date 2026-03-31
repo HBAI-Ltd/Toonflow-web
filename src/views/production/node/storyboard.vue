@@ -13,7 +13,7 @@
             <div
               class="addBetween addBetween--left"
               :class="{ expanded: hoveredIndex === index }"
-              @click.stop="editStoryboaryImage(item, [index > 0 ? storyboard[index - 1]?.src || '' : '', item.src || ''], null, index - 1)">
+              @click.stop="editStoryboaryImage(item, [index > 0 ? storyboard[index - 1]?.src || '' : '', item.src || ''], index - 1)">
               <t-button theme="primary" variant="outline" shape="circle">
                 <template #icon><i-plus /></template>
               </t-button>
@@ -29,7 +29,7 @@
                 <t-tag class="frameTypeTag" :style="{ backgroundColor: tagColors[index % tagColors.length] }">
                   S{{ String(index + 1).padStart(2, "0") }}
                 </t-tag>
-                <t-image v-if="item.src" :src="item.src" fit="contain" class="frameImg" @click="editStoryboaryImage(item, [item.src], item.id)">
+                <t-image v-if="item.src" :src="item.src" fit="contain" class="frameImg" @click="editStoryboaryImage(item, [item.src])">
                   <template #overlayContent>
                     <div class="imageToolsWrap show">
                       <t-tooltip theme="primary" :content="$t('workbench.production.node.storyboard.deleteNode')">
@@ -46,24 +46,18 @@
                     </div>
                   </template>
                 </t-image>
-                <div v-else class="generatingPlaceholder">
+                <div v-else class="generatingPlaceholder" @click="editStoryboaryImage(item, [])">
                   <t-loading v-if="item.state === '生成中'" size="small" />
                   <span v-else-if="item.state === '生成失败'" style="color: #ff4d4f">生成失败</span>
                   <t-empty v-else size="small" :title="$t('workbench.production.node.storyboard.notGenerated')" />
                 </div>
               </div>
-              <div class="frameInfo" :title="item.description">{{ item.title }}</div>
             </div>
             <div
               class="addBetween addBetween--right"
               :class="{ expanded: hoveredIndex === index }"
               @click.stop="
-                editStoryboaryImage(
-                  item,
-                  [item.src || '', index < (storyboard?.length ?? 0) - 1 ? storyboard[index + 1]?.src || '' : ''],
-                  null,
-                  index,
-                )
+                editStoryboaryImage(item, [item.src || '', index < (storyboard?.length ?? 0) - 1 ? storyboard[index + 1]?.src || '' : ''], index)
               ">
               <t-button theme="primary" variant="outline" shape="circle">
                 <template #icon><i-plus /></template>
@@ -99,27 +93,11 @@ import editImage from "../components/editImage/index.vue";
 import { LoadingPlugin } from "tdesign-vue-next";
 import { Handle, Position, type Edge } from "@vue-flow/core";
 import axios from "@/utils/axios";
-import type { AssetItem } from "../utils/flowBuilder";
+import type { AssetItem, Storyboard } from "../utils/flowBuilder";
 import projectStore from "@/stores/project";
 import productionAgentStore from "@/stores/productionAgent";
 const { project } = storeToRefs(projectStore());
 const { batchGenerateStoryboard } = productionAgentStore();
-
-interface Storyboard {
-  id: number;
-  title: string;
-  description: string;
-  camera: string;
-  duration: number;
-  prompt?: string;
-  frameMode: "firstFrame" | "endFrame" | "linesSoundEffects";
-  lines: string | null;
-  sound: string | null;
-  associateAssetsIds: number[];
-  referenceIds?: number[];
-  src: string | null;
-  state: "未生成" | "生成中" | "已完成" | "生成失败";
-}
 
 const props = defineProps<{
   id: string;
@@ -213,15 +191,15 @@ async function previewAll() {
 const generateLoading = ref(false);
 async function batchGenerateImage() {
   // LoadingPlugin(true);
-  generateLoading.value = true;
-  try {
-    await batchGenerateStoryboard();
-    window.$message.success($t("workbench.production.node.storyboard.batchGenerateSuccess"));
-  } catch (e) {
-    window.$message.error($t("workbench.production.node.storyboard.batchGenerateFailed"));
-  } finally {
-    generateLoading.value = false;
-  }
+  // generateLoading.value = true;
+  // try {
+  //   await batchGenerateStoryboard();
+  //   window.$message.success($t("workbench.production.node.storyboard.batchGenerateSuccess"));
+  // } catch (e) {
+  //   window.$message.error($t("workbench.production.node.storyboard.batchGenerateFailed"));
+  // } finally {
+  //   generateLoading.value = false;
+  // }
   // const allIds = (storyboard.value ?? []).filter((s) => s.src).map((s) => s.id!);
   // if (!allIds.length) {
   //   window.$message.warning($t("workbench.production.node.storyboard.noPreviewImages"));
@@ -232,12 +210,13 @@ async function batchGenerateImage() {
   //   scriptId: allIds,
   // });
 }
-function editStoryboaryImage(item: Storyboard, images: string[], id: number | null = null, insertAfterIndex: number | null = null) {
+function editStoryboaryImage(item: Storyboard, images: string[], insertAfterIndex: number | null = null) {
+  const id = item.id;
   currentRow.value = {
     id,
     insertAfterIndex,
     resultImages: [],
-    referanceImages: [],
+    // referanceImages: [],
   };
   if (id) {
     let imagesPush: string[] = [];
@@ -249,20 +228,20 @@ function editStoryboaryImage(item: Storyboard, images: string[], id: number | nu
           assetsImages.push(asset.src);
         }
         asset.derive?.forEach((d) => {
-          if (item.associateAssetsIds.includes(d.id) && d.src) {
+          if (item?.associateAssetsIds!.includes(d.id) && d.src) {
             assetsImages.push(d.src);
           }
         });
       }
       imagesPush = imagesPush.concat(assetsImages);
     }
-    if (item?.referenceIds && item.referenceIds.length > 0) {
-      const referenImages = storyboard.value
-        .filter((s) => item.referenceIds!.includes(s.id))
-        .map((s) => s.src)
-        .filter(Boolean) as string[];
-      imagesPush = imagesPush.concat(referenImages);
-    }
+    // if (item?.referenceIds && item.referenceIds.length > 0) {
+    //   const referenImages = storyboard.value
+    //     .filter((s) => item.referenceIds!.includes(s.id))
+    //     .map((s) => s.src)
+    //     .filter(Boolean) as string[];
+    //   imagesPush = imagesPush.concat(referenImages);
+    // }
     currentRow.value.referanceImages = imagesPush;
     currentRow.value.resultImages = [{ src: images.length ? images[0] : "", prompt: item.prompt ?? "" }];
   } else {
@@ -281,14 +260,8 @@ async function save({ imageUrl, insertId }: { imageUrl: string; insertId: number
     const newId = insertId;
     const newFrame: Storyboard = {
       id: newId,
-      title: "",
-      description: "",
-      camera: "",
       duration: 0,
       prompt: "",
-      frameMode: "firstFrame",
-      lines: null,
-      sound: null,
       associateAssetsIds: [],
       src: imageUrl,
       state: "已完成",
@@ -330,8 +303,6 @@ async function removeFn(id: number) {
 
 function editInfo(item: Storyboard) {
   const formData = reactive({
-    title: item.title ?? "",
-    description: item.description ?? "",
     prompt: item.prompt ?? "",
   });
 

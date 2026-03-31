@@ -169,7 +169,11 @@ function handleEpisodesChange(value: unknown) {
   if (!Number.isFinite(nextEpisodesId) || nextEpisodesId === episodesId.value) return;
 
   void (async () => {
+    console.log("%c Line:173 🌶", "background:#33a5ff");
     if (!(await confirmEpisodesSwitch())) return;
+
+    console.log("%c Line:174 🥛", "background:#ffdd4d");
+    await productionAgentStore().getFlowData();
     episodesId.value = nextEpisodesId;
   })();
 }

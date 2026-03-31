@@ -28,16 +28,16 @@ export default defineStore(
       xmlTags: [
         { tag: "storySkeleton", keepInMessage: false },
         { tag: "adaptationStrategy", keepInMessage: false },
-        { tag: "scriptItem", keepInMessage: false },
+        { tag: "script", keepInMessage: false },
       ],
       onXmlTag: (data) => {
         const { tag, value, children, status, attrs } = data;
-
         if (tag === "storySkeleton") {
           planData.value.storySkeleton = value;
         } else if (tag === "adaptationStrategy") {
           planData.value.adaptationStrategy = value;
         } else if (tag === "scriptItem") {
+          // 流式场景：合并 children 到现有数据，保留已有项的 id，不删除 children 中不存在的条目
           const name = attrs.name ?? "";
           const content = value;
           if (name) {

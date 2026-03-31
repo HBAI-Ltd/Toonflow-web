@@ -39,18 +39,12 @@ export interface AssetItem {
 
 export interface Storyboard {
   id?: number;
-  title?: string;
-  description?: string;
-  camera?: string;
   duration?: number;
-  frameMode?: "firstFrame" | "endFrame" | "linesSoundEffects";
   prompt: string;
-  lines?: string | null;
-  sound?: string | null;
+  trackId?: number;
   associateAssetsIds?: number[];
   src: string | null;
   state: "未生成" | "生成中" | "已完成" | "生成失败";
-  referenceIds?: number[];
 }
 
 interface VideoList {
