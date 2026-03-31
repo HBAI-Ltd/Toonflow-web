@@ -594,7 +594,8 @@
         "scriptUpdated": "Cập nhật kịch bản thành công",
         "scriptUpdateFailed": "Cập nhật kịch bản thất bại, vui lòng thử lại sau",
         "searchScriptFailed": "Tìm kiếm kịch bản thất bại",
-        "updated": "Đã lưu thành công"
+        "updated": "Đã lưu thành công",
+        "error": "Lưu không thành công"
       }
     },
     "cornerScape": {

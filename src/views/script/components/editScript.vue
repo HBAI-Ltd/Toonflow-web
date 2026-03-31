@@ -94,7 +94,6 @@ async function onConfirm() {
     });
     window.$message.success($t('workbench.script.edit.msg.updateSuccess'));
   } catch (error) {
-    console.error("更新剧本失败:", error);
     window.$message.error($t('workbench.script.edit.msg.updateFailed'));
   } finally {
     emit("searchScripts");

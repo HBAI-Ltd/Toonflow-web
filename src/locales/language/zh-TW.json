@@ -609,7 +609,8 @@
         "scriptUpdated": "劇本更新成功",
         "scriptUpdateFailed": "更新劇本失敗，請稍後再試",
         "searchScriptFailed": "搜尋劇本失敗",
-        "updated": "保存成功"
+        "updated": "保存成功",
+        "error": "保存失敗"
       }
     },
     "cornerScape": {

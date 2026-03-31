@@ -696,7 +696,8 @@
         "scriptUpdated": "剧本更新成功",
         "scriptUpdateFailed": "更新剧本失败，请稍后再试",
         "searchScriptFailed": "搜索剧本失败",
-        "updated": "保存成功"
+        "updated": "保存成功",
+        "error": "保存失败"
       }
     },
     "cornerScape": {

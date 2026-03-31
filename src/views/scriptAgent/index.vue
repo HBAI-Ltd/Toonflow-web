@@ -348,12 +348,14 @@ function onConfirm(value: string) {
       data: {
         storySkeleton: currentTable.value == 1 ? value : planData.value.storySkeleton,
         adaptationStrategy: currentTable.value == 2 ? value : planData.value.adaptationStrategy,
-        script: planData.value.script,
       },
     })
     .then(() => {
       window.$message.success($t("workbench.scriptAgent.msg.updated"));
       getPlanData();
+    })
+    .catch((err) => {
+      window.$message.success($t("workbench.scriptAgent.msg.error"));
     });
 }
 </script>

@@ -105,7 +105,11 @@
         <t-form label-align="top">
           <t-form-item>
             <div class="nameAndCoverRow">
-              <div class="nameField" v-if="!editingVisualManual">
+              <div class="nameField">
+                <label class="fieldLabel">{{ $t("workbench.project.dialog.visualManualName") }}</label>
+                <t-input v-model="visualManualForm.name" :placeholder="$t('workbench.project.dialog.visualManualNamePh')" @keydown.stop />
+              </div>
+              <div class="mdFileLocation">
                 <label class="fieldLabel">{{ $t("workbench.project.dialog.visualManualName") }}</label>
                 <t-input v-model="visualManualForm.name" :placeholder="$t('workbench.project.dialog.visualManualNamePh')" @keydown.stop />
               </div>
@@ -657,6 +661,9 @@ function deleteVisualManual(item: VisualManualItem) {
     display: flex;
     flex-direction: column;
     gap: 6px;
+  }
+  .mdFileLocation {
+    margin-top: 10px;
   }
 
   .coverField {
