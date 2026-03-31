@@ -441,7 +441,8 @@
         "enterVideoRatio": "Vui lòng chọn tỷ lệ video",
         "enterImageModel": "Vui lòng chọn mẫu hình ảnh",
         "enterVideoModel": "Vui lòng chọn một mẫu video",
-        "visualManualDeleted": "Xóa thành công"
+        "visualManualDeleted": "Xóa thành công",
+        "selectMode": "Vui lòng chọn chế độ"
       },
       "type": {
         "novel": "Dựa trên tiểu thuyết gốc",
@@ -909,7 +910,8 @@
         "layoutTB": "Bố cục tự động - Dọc",
         "uploadAssetImage": "Tải lên hình ảnh tài sản",
         "uploadStoryboardImage": "Tải lên hình ảnh storyboard",
-        "uploadImage": "Tải lên hình ảnh nội dung"
+        "uploadImage": "Tải lên hình ảnh nội dung",
+        "mode": "người mẫu"
       },
       "save": "Lựa chọn",
       "cancel": "Hủy",
@@ -1224,7 +1226,8 @@
     "sessionExpired": "Phiên đã hết hạn, vui lòng đăng nhập lại",
     "openSettings": "Mở cài đặt",
     "cancelled": "Đã hủy tạo",
-    "defaultReel": "Tập chính"
+    "defaultReel": "Tập chính",
+    "save": "cứu"
   },
   "components.storyboardImageCheck.camera": "Máy quay",
   "components.storyboardImageCheck.dialogTitle": "Chọn hình storyboard",
@@ -1237,5 +1240,56 @@
   "workbench.script.extractAssets": "Trích xuất tài sản",
   "promptManage": {
     "prompt": "lời nhắc"
+  },
+  "hello": {
+    "welcomeTitle": "Chào mừng đến với ToonFlow",
+    "welcomeDesc": "Nền tảng quy trình tạo truyện tranh do AI điều khiển, chúng ta hãy dành một phút để hoàn thành cấu hình ban đầu.",
+    "startConfig": "Bắt đầu cấu hình",
+    "skip": "Bỏ qua khởi động",
+    "configModel": "Thêm dịch vụ mẫu",
+    "configData": "Cấu hình tác nhân",
+    "startUse": "Bắt đầu",
+    "configModelTitle": "Thêm nhà cung cấp dịch vụ mô hình",
+    "configModelDesc": "Trước tiên, bạn cần thêm ít nhất một nhà cung cấp dịch vụ mô hình AI (như OpenAI, Claude, v.v.) vào cài đặt và điền API Key tương ứng.",
+    "configModelTip": "Nhấp vào nút bên dưới sẽ mở tab \"Dịch vụ mẫu\" của trang cài đặt. Sau khi thêm nhà cung cấp, quay lại đây để tiếp tục.",
+    "configModelBtn": "Đi tới cấu hình dịch vụ mô hình",
+    "configAgentTitle": "Chỉ định mô hình đại lý",
+    "configAgentDesc": "Tiếp theo, gán mô hình cho từng mô-đun chức năng trong cấu hình Tác nhân để hệ thống biết cần gọi mô hình nào để hoàn thành nhiệm vụ.",
+    "configAgentTip": "Nhấp vào nút bên dưới sẽ mở tab \"Cấu hình tác nhân\" của trang cài đặt. Quay lại đây sau khi gán mô hình cho từng chức năng.",
+    "configAgentBtn": "Đi tới cấu hình Đại lý",
+    "finishTitle": "🎉 Mọi thứ đã sẵn sàng!",
+    "finishDesc": "Cấu hình đã hoàn tất và bây giờ bạn có thể bắt đầu sử dụng tất cả các tính năng. Nếu bạn cần điều chỉnh nó, bạn có thể sửa đổi nó trong cài đặt bất cứ lúc nào.",
+    "qrcodeLabel": "Tham gia nhóm liên lạc WeChat để nhận thêm trợ giúp:",
+    "githubLabel": "Nếu bạn thấy nó hữu ích, vui lòng cho chúng tôi ⭐ Sao!",
+    "prevStep": "Bước trước",
+    "nextStep": "Bước tiếp theo",
+    "finish": "Bắt đầu"
+  },
+  "setting": {
+    "skillManagement": {
+      "search": "Tìm kiếm tên tập tin",
+      "empty": "Không có tập tin phù hợp",
+      "edit": "biên tập",
+      "selectOnTheLeft": "Vui lòng chọn một tập tin từ bên trái"
+    }
+  },
+  "storyboard": {
+    "assets": {
+      "notExist": "Tài sản không tồn tại",
+      "notDerivativeExist": "Tài sản phái sinh không tồn tại",
+      "derivativeUpdateSuccess": "Cập nhật thành công",
+      "derivativeState": "Không được tạo",
+      "derivativeAddSuccess": "Đã thêm thành công",
+      "derivativeDelSuccess": "Xóa thành công",
+      "notGenerated": "Không được tạo"
+    },
+    "addSuccess": "Cập nhật thành công",
+    "state": {
+      "unused": "Không được tạo"
+    },
+    "saveSuccess": "Đã thêm thành công"
+  },
+  "productionAgent": {
+    "generating": "Đang tạo"
   }
 }

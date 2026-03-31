@@ -456,7 +456,8 @@
         "enterVideoRatio": "請選擇影片比例",
         "enterImageModel": "請選擇圖片模型",
         "enterVideoModel": "請選擇視訊模型",
-        "visualManualDeleted": "刪除成功"
+        "visualManualDeleted": "刪除成功",
+        "selectMode": "請選擇模式"
       },
       "type": {
         "novel": "基於小說原文",
@@ -921,7 +922,8 @@
         "generateFirst": "請先生成圖片",
         "generatedResult": "生成結果",
         "waitingGenerate": "等待生成",
-        "uploadImage": "資產圖片上傳"
+        "uploadImage": "資產圖片上傳",
+        "mode": "模式"
       },
       "save": "選取",
       "cancel": "取消",
@@ -1234,5 +1236,59 @@
   },
   "promptManage": {
     "prompt": "提示詞"
+  },
+  "hello": {
+    "welcomeTitle": "歡迎使用 ToonFlow",
+    "welcomeDesc": "AI 驅動的漫畫創作工作流程平台，讓我們花一分鐘完成初始設定。",
+    "startConfig": "開始配置",
+    "skip": "跳過引導",
+    "configModel": "新增模型服務",
+    "configData": "配置 Agent",
+    "startUse": "開始使用",
+    "configModelTitle": "新增模型服務供應商",
+    "configModelDesc": "首先，你需要在設定中新增至少一個 AI 模型服務供應商（如 OpenAI、Claude 等），並填寫對應的 API Key。",
+    "configModelTip": "點擊下方按鈕將開啟設定頁面的「模型服務」選項卡，新增供應商後回到此處繼續。",
+    "configModelBtn": "前往配置模型服務",
+    "configAgentTitle": "分配 Agent 模型",
+    "configAgentDesc": "接下來，在 Agent 配置中為各個功能模組分配模型，這樣系統才知道要呼叫哪個模型來完成任務。",
+    "configAgentTip": "點擊下方按鈕將開啟設定頁面的「Agent 設定」標籤，為各功能指派模型後回到此處。",
+    "configAgentBtn": "前往配置 Agent",
+    "finishTitle": "🎉 一切就緒！",
+    "finishDesc": "配置完成，現在你可以開始使用所有功能了。\n如需調整，隨時可以在設定中修改。",
+    "qrcodeLabel": "加入微信交流群，獲得更多協助：",
+    "githubLabel": "如果覺得好用，請給我們一個 ⭐ Star 吧！",
+    "prevStep": "上一步",
+    "nextStep": "下一步",
+    "finish": "開始使用"
+  },
+  "setting": {
+    "skillManagement": {
+      "search": "搜尋檔案名稱",
+      "empty": "沒有匹配的文件",
+      "edit": "編輯",
+      "selectOnTheLeft": "請從左側選擇文件"
+    }
+  },
+  "common": {
+    "save": "儲存"
+  },
+  "storyboard": {
+    "assets": {
+      "notExist": "資產不存在",
+      "notDerivativeExist": "衍生資產不存在",
+      "derivativeUpdateSuccess": "更新成功",
+      "derivativeState": "未生成",
+      "derivativeAddSuccess": "添加成功",
+      "derivativeDelSuccess": "刪除成功",
+      "notGenerated": "未生成"
+    },
+    "addSuccess": "更新成功",
+    "state": {
+      "unused": "未生成"
+    },
+    "saveSuccess": "添加成功"
+  },
+  "productionAgent": {
+    "generating": "生成中"
   }
 }

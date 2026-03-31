@@ -5,10 +5,10 @@
       <template v-if="currentStep === 0">
         <div class="welcomePage">
           <img src="@/assets/logo.png" alt="ToonFlow Logo" class="welcomeLogo" />
-          <h1 class="welcomeTitle">欢迎使用 ToonFlow</h1>
-          <p class="welcomeDesc">AI 驱动的漫画创作工作流平台，让我们花一分钟完成初始配置。</p>
-          <t-button theme="primary" size="large" @click="currentStep = 1">开始配置</t-button>
-          <t-button variant="text" size="small" style="margin-top: 12px" @click="handleSkip">跳过引导</t-button>
+          <h1 class="welcomeTitle">{{ $t("hello.welcomeTitle") }}</h1>
+          <p class="welcomeDesc">{{ $t("hello.welcomeDesc") }}</p>
+          <t-button theme="primary" size="large" @click="currentStep = 1">{{ $t("hello.startConfig") }}</t-button>
+          <t-button variant="text" size="small" style="margin-top: 12px" @click="handleSkip">{{ $t("hello.skip") }}</t-button>
           <div class="langBtn">
             <t-dropdown :options="langOptions" trigger="click" @click="handleChangeLang" :maxColumnWidth="150">
               <t-button shape="circle" theme="default" size="large">
@@ -24,9 +24,9 @@
       <!-- 配置步骤 -->
       <template v-else>
         <t-steps :current="currentStep - 1" class="guideSteps">
-          <t-step-item title="添加模型服务" />
-          <t-step-item title="配置 Agent" />
-          <t-step-item title="开始使用" />
+          <t-step-item :title="$t('hello.configModel')" />
+          <t-step-item :title="$t('hello.configData')" />
+          <t-step-item :title="$t('hello.startUse')" />
         </t-steps>
 
         <div class="stepContent">
@@ -35,14 +35,14 @@
             <div class="stepIcon">
               <t-icon name="server" size="48px" />
             </div>
-            <h2 class="stepTitle">添加模型服务供应商</h2>
-            <p class="stepDesc">首先，你需要在设置中添加至少一个 AI 模型服务供应商（如 OpenAI、Claude 等），并填写对应的 API Key。</p>
+            <h2 class="stepTitle">{{ $t("hello.configModelTitle") }}</h2>
+            <p class="stepDesc">{{ $t("hello.configModelDesc") }}</p>
             <div class="stepTip">
-              <t-alert theme="info" message="点击下方按钮将打开设置页面的「模型服务」选项卡，添加供应商后回到此处继续。" />
+              <t-alert theme="info" :message="$t('hello.configModelTip')" />
             </div>
             <t-button theme="primary" size="large" @click="openVendorConfig">
               <template #icon><t-icon name="setting" /></template>
-              前往配置模型服务
+              {{ $t("hello.configModelBtn") }}
             </t-button>
           </div>
 
@@ -51,14 +51,14 @@
             <div class="stepIcon">
               <t-icon name="relativity" size="48px" />
             </div>
-            <h2 class="stepTitle">分配 Agent 模型</h2>
-            <p class="stepDesc">接下来，在 Agent 配置中为各个功能模块分配模型，这样系统才知道调用哪个模型来完成任务。</p>
+            <h2 class="stepTitle">{{ $t("hello.configAgentTitle") }}</h2>
+            <p class="stepDesc">{{ $t("hello.configAgentDesc") }}</p>
             <div class="stepTip">
-              <t-alert theme="info" message="点击下方按钮将打开设置页面的「Agent 配置」选项卡，为各功能分配模型后回到此处。" />
+              <t-alert theme="info" :message="$t('hello.configAgentTip')" />
             </div>
             <t-button theme="primary" size="large" @click="openAgentConfig">
               <template #icon><t-icon name="setting" /></template>
-              前往配置 Agent
+              {{ $t("hello.configAgentBtn") }}
             </t-button>
           </div>
 
@@ -67,14 +67,14 @@
             <div class="stepIcon">
               <t-icon name="check-circle" size="48px" color="var(--td-success-color)" />
             </div>
-            <h2 class="stepTitle">🎉 一切就绪！</h2>
-            <p class="stepDesc">配置完成，现在你可以开始使用所有功能了。如需调整，随时可以在设置中修改。</p>
+            <h2 class="stepTitle">{{ $t("hello.finishTitle") }}</h2>
+            <p class="stepDesc">{{ $t("hello.finishDesc") }}</p>
             <div class="qrcodeBox">
-              <p class="qrcodeLabel">加入微信交流群，获取更多帮助：</p>
+              <p class="qrcodeLabel">{{ $t("hello.qrcodeLabel") }}</p>
               <t-qrcode value="https://work.weixin.qq.com/u/vc36adcc89845edcbe?v=5.0.3.63936&bb=85b8d228e8" level="Q" type="svg" />
             </div>
             <div class="githubBox">
-              <p class="qrcodeLabel">如果觉得好用，请给我们一个 ⭐ Star 吧！</p>
+              <p class="qrcodeLabel">{{ $t("hello.githubLabel")}}</p>
               <t-button theme="danger" size="large" @click="jumpGithub">
                 <template #icon><t-icon name="logo-github" /></template>
                 Star on GitHub
@@ -82,14 +82,13 @@
             </div>
           </div>
         </div>
-
         <!-- 底部按钮 -->
         <div class="guideFooter">
-          <t-button v-if="currentStep > 1" variant="outline" @click="currentStep--">上一步</t-button>
+          <t-button v-if="currentStep > 1" variant="outline" @click="currentStep--">{{ $t("hello.prevStep") }}</t-button>
           <div class="footerRight">
-            <t-button v-if="currentStep < 3" variant="text" @click="handleSkip">跳过引导</t-button>
-            <t-button v-if="currentStep < 3" theme="primary" @click="currentStep++">下一步</t-button>
-            <t-button v-if="currentStep === 3" theme="primary" @click="handleFinish">开始使用</t-button>
+            <t-button v-if="currentStep < 3" variant="text" @click="handleSkip">{{ $t("hello.skip") }}</t-button>
+            <t-button v-if="currentStep < 3" theme="primary" @click="currentStep++">{{ $t("hello.nextStep") }}</t-button>
+            <t-button v-if="currentStep === 3" theme="primary" @click="handleFinish">{{ $t("hello.finish") }}</t-button>
           </div>
         </div>
       </template>

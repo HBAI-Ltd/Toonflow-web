@@ -450,7 +450,8 @@
         "enterVideoRatio": "ビデオ比率を選択してください",
         "enterImageModel": "画像モデルを選択してください",
         "enterVideoModel": "ビデオモデルを選択してください",
-        "visualManualDeleted": "正常に削除されました"
+        "visualManualDeleted": "正常に削除されました",
+        "selectMode": "モードを選択してください"
       },
       "type": {
         "novel": "原作小説に基づいて",
@@ -918,7 +919,8 @@
         "layoutTB": "自動レイアウト-上下",
         "uploadAssetImage": "アセット画像アップロード",
         "uploadStoryboardImage": "絵コンテ画像アップロード",
-        "uploadImage": "アセットイメージのアップロード"
+        "uploadImage": "アセットイメージのアップロード",
+        "mode": "モデル"
       },
       "save": "選択",
       "cancel": "キャンセル",
@@ -1233,7 +1235,8 @@
     "sessionExpired": "セッションが期限切れです。再度ログインしてください",
     "openSettings": "設定を開く",
     "cancelled": "生成がキャンセルされました",
-    "defaultReel": "本文巻"
+    "defaultReel": "本文巻",
+    "save": "保存"
   },
   "components.storyboardImageCheck.camera": "カメラ",
   "components.storyboardImageCheck.dialogTitle": "絵コンテ画像を選択",
@@ -1246,5 +1249,56 @@
   "workbench.script.extractAssets": "アセットを抽出",
   "promptManage": {
     "prompt": "即効性のある言葉"
+  },
+  "hello": {
+    "welcomeTitle": "トゥーンフローへようこそ",
+    "welcomeDesc": "AI 主導のコミック作成ワークフロー プラットフォーム。1 分ほどかけて初期構成を完了してみましょう。",
+    "startConfig": "設定を開始する",
+    "skip": "スキップブート",
+    "configModel": "モデルサービスの追加",
+    "configData": "エージェントの構成",
+    "startUse": "始めましょう",
+    "configModelTitle": "モデルサービスプロバイダーを追加",
+    "configModelDesc": "まず、設定に少なくとも 1 つの AI モデル サービス プロバイダー (OpenAI、Claude など) を追加し、対応する API キーを入力する必要があります。",
+    "configModelTip": "下のボタンをクリックすると、設定ページの「モデルサービス」タブが開きます。サプライヤーを追加したら、ここに戻って続行します。",
+    "configModelBtn": "モデルサービスの構成に移動します",
+    "configAgentTitle": "エージェントモデルの割り当て",
+    "configAgentDesc": "次に、エージェント構成内の各機能モジュールにモデルを割り当て、タスクを完了するためにどのモデルを呼び出すべきかをシステムが認識できるようにします。",
+    "configAgentTip": "下のボタンをクリックすると、設定ページの「エージェント構成」タブが開きます。各機能にモデルを割り当てた後、ここに戻ります。",
+    "configAgentBtn": "エージェントの構成に移動します",
+    "finishTitle": "🎉 準備は万端です！",
+    "finishDesc": "設定が完了したので、すべての機能を使用できるようになります。調整する必要がある場合は、いつでも設定で変更できます。",
+    "qrcodeLabel": "さらに詳しいサポートを得るには、WeChat コミュニケーション グループに参加してください。",
+    "githubLabel": "役に立ったと思ったら、⭐スターをお願いします！",
+    "prevStep": "前のステップ",
+    "nextStep": "次のステップ",
+    "finish": "始めましょう"
+  },
+  "setting": {
+    "skillManagement": {
+      "search": "ファイル名を検索する",
+      "empty": "一致するファイルがありません",
+      "edit": "編集",
+      "selectOnTheLeft": "左からファイルを選択してください"
+    }
+  },
+  "storyboard": {
+    "assets": {
+      "notExist": "アセットが存在しません",
+      "notDerivativeExist": "派生資産は存在しません",
+      "derivativeUpdateSuccess": "更新に成功しました",
+      "derivativeState": "生成されない",
+      "derivativeAddSuccess": "正常に追加されました",
+      "derivativeDelSuccess": "正常に削除されました",
+      "notGenerated": "生成されない"
+    },
+    "addSuccess": "更新に成功しました",
+    "state": {
+      "unused": "生成されない"
+    },
+    "saveSuccess": "正常に追加されました"
+  },
+  "productionAgent": {
+    "generating": "生成中"
   }
 }

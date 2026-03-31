@@ -69,7 +69,7 @@ export default defineStore(
                 prompt: child.attrs.prompt || "",
                 duration: Number(child.attrs.duration) || 0,
                 group: Number(child.attrs.group) || 0,
-                state: "未生成" as "未生成" | "生成中" | "已完成" | "生成失败",
+                state: $t("storyboard.assets.notGenerated") as "未生成" | "生成中" | "已完成" | "生成失败",
                 src: null,
                 associateAssetsIds: JSON.parse(child.attrs.associateAssetsIds) || [],
               };
@@ -101,14 +101,14 @@ export default defineStore(
           });
           s.on("addDeriveAsset", async (data, callback) => {
             const assets = flowData.value.assets.find((a) => a.id === data.assetsId);
-            if (!assets) return callback({ success: false, message: "资产不存在" });
+            if (!assets) return callback({ success: false, message: $t("storyboard.assets.notExist") });
             const deriveAssetList = assets.derive || [];
             const item = deriveAssetList.find((d) => d.id === data.id);
             if (item) {
-              if (!item) return callback({ success: false, message: "衍生资产不存在" });
+              if (!item) return callback({ success: false, message: $t("storyboard.assets.notDerivativeExist") });
               item.name = data.name;
               item.type = assets.type;
-              callback({ success: true, message: "更新成功" });
+              callback({ success: true, message: $t("storyboard.assets.derivativeUpdateSuccess") });
             } else {
               deriveAssetList.push({
                 assetsId: data.assetsId,
@@ -117,46 +117,44 @@ export default defineStore(
                 type: assets.type,
                 desc: data.describe,
                 prompt: "",
-                state: "未生成",
+                state: $t("storyboard.assets.derivativeState") as "未生成" | "生成中" | "已完成" | "生成失败",
                 src: "",
               });
-              callback({ success: true, message: "添加成功" });
+              callback({ success: true, message: $t("storyboard.assets.derivativeAddSuccess") });
             }
           });
           s.on("delDeriveAsset", async (data, callback) => {
             const assets = flowData.value.assets.find((a) => a.id === data.assetsId);
-            if (!assets) return callback({ success: false, message: "资产不存在" });
+            if (!assets) return callback({ success: false, message: $t("storyboard.assets.notExist") });
             const deriveAssetList = assets.derive || [];
             const index = deriveAssetList.findIndex((d) => d.id === data.id);
-            if (index === -1) return callback({ success: false, message: "衍生资产不存在" });
+            if (index === -1) return callback({ success: false, message: $t("storyboard.assets.notDerivativeExist") });
             deriveAssetList.splice(index, 1);
-            callback({ success: true, message: "删除成功" });
+            callback({ success: true, message: $t("storyboard.assets.derivativeDelSuccess") });
           });
           s.on("addStoryboard", async (data, callback) => {
             const storyboard = flowData.value.storyboard.find((a) => a.id === data.id);
             if (storyboard) {
               storyboard.title = data.title;
               storyboard.description = data.description;
-              callback({ success: true, message: "更新成功" });
+              callback({ success: true, message: $t("storyboard.addSuccess") });
             } else {
               flowData.value.storyboard.push({
                 id: data.id ?? undefined,
                 title: data.title,
                 description: data.description,
                 prompt: "",
-                state: "未生成",
+                state: $t("storyboard.state.unused") as "未生成" | "生成中" | "已完成" | "生成失败",
                 src: "",
               });
-              callback({ success: true, message: "添加成功" });
+              callback({ success: true, message: $t("storyboard.saveSuccess") });
             }
           });
           s.on("generateDeriveAsset", async (data, callback) => {
-            console.log("%c Line:106 🍢 data", "background:#f5ce50", data);
             const assetsData = await batchGenerateAssets(data.ids);
             callback({ success: true, message: assetsData });
           });
           s.on("generateStoryboard", async (data, callback) => {
-            console.log("%c Line:109 🌮 data", "background:#7f2b82", data);
             const storyData = await batchGenerateStoryboard(data.ids);
             callback({ success: true, message: storyData });
           });
@@ -179,7 +177,7 @@ export default defineStore(
     async function batchGenerateStoryboard(allIds: number[]) {
       flowData.value.storyboard.forEach((item) => {
         if (allIds.includes(item.id!)) {
-          item.state = "生成中";
+          item.state = $t("productionAgent.generating") as "未生成" | "生成中" | "已完成" | "生成失败";
         }
       });
       const { data } = await axios.post("/production/storyboard/batchGenerateImage", {
@@ -208,7 +206,7 @@ export default defineStore(
         if (asset.derive) {
           asset.derive.forEach((derive) => {
             if (allIds.includes(derive.id)) {
-              derive.state = "生成中";
+              derive.state = $t("productionAgent.generating") as "未生成" | "生成中" | "已完成" | "生成失败";
             }
           });
         }
@@ -234,16 +232,14 @@ export default defineStore(
           });
         }
         return data;
-      } catch (e) {
-        console.log("%c Line:152 🥝 e", "background:#b03734", e);
-      }
+      } catch (e) {}
     }
     const assetsNotStateImageIds = computed(() => {
       const ids: number[] = [];
       flowData.value.assets.forEach((asset) => {
         if (asset.derive) {
           asset.derive.forEach((derive) => {
-            if (derive.state == "生成中") {
+            if (derive.state == ($t("productionAgent.generating") as "未生成" | "生成中" | "已完成" | "生成失败")) {
               ids.push(derive.id);
             }
           });
@@ -393,7 +389,6 @@ export default defineStore(
       socket.value!.emit("updateContext", ctx);
     }
     async function addStoryboardInfo(items: Storyboard[]) {
-      
       console.log("%c Line:402 🍑", "background:#ffdd4d");
       const { data } = await axios.post("/production/storyboard/batchAddStoryboardInfo", {
         scriptId: episodesId.value,

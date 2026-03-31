@@ -36,7 +36,12 @@
               </div>
             </t-form-item>
             <t-form-item :label="$t('workbench.project.dialog.videoModelData')">
-              <modelSelect v-model="formState.videoModel" type="video" />
+              <div class="ac" style="gap: 5px">
+                <modelSelect v-model="formState.videoModel" type="video" @change="changeFn" :changeConfig="true" />
+                <t-select v-model="formState.mode" class="paramSelect ml-5" :placeholder="$t('workbench.production.editImage.mode')">
+                  <t-option v-for="value in mode" :key="value.value" :value="value.value" :label="value.label" />
+                </t-select>
+              </div>
             </t-form-item>
             <t-form-item :label="$t('workbench.project.dialog.videoRatio')">
               <t-select v-model="formState.videoRatio" :options="RATIO_OPTIONS" />
@@ -173,6 +178,8 @@ import modelSelect from "@/components/modelSelect.vue";
 import type { TabValue } from "tdesign-vue-next";
 import { DialogPlugin } from "tdesign-vue-next";
 
+const changeConfig = ref(false);
+
 const addProjectShow = defineModel<boolean>();
 const props = defineProps<{
   projectData?: ProjectData | null;
@@ -192,6 +199,7 @@ const emit = defineEmits<{
       videoModel: string;
       projectType: string;
       imageQuality: "1K" | "2K" | "4K" | "";
+      mode: string;
     },
   ): void;
 }>();
@@ -209,6 +217,7 @@ interface ProjectData {
   projectType: string;
   imageQuality: "1K" | "2K" | "4K" | "";
   visualManual?: string;
+  mode: string;
 }
 
 interface ProjectFormData {
@@ -221,6 +230,7 @@ interface ProjectFormData {
   imageModel: string;
   videoModel: string;
   imageQuality: "1K" | "2K" | "4K" | "";
+  mode: string;
 }
 interface VisualManualItem {
   name: string;
@@ -271,6 +281,7 @@ const DEFAULT_FORM: () => ProjectFormData & { id: number; era: string; createTim
   imageModel: "",
   videoModel: "",
   imageQuality: "",
+  mode: "",
 });
 
 // ===== 表单 =====
@@ -294,6 +305,7 @@ function handleOk() {
   if (!formState.value.videoRatio) return window.$message.warning($t("workbench.project.msg.enterVideoRatio"));
   if (!formState.value.intro) return window.$message.warning($t("workbench.project.msg.enterProjectIntro"));
   if (!formState.value.imageQuality) return window.$message.warning($t("workbench.project.msg.enterProjectQuality"));
+  if (!formState.value.mode) return window.$message.warning($t("workbench.project.msg.selectMode"));
   if (isEdit.value) {
     emit("edit", {
       id: formState.value.id as unknown as string,
@@ -306,6 +318,7 @@ function handleOk() {
       videoModel: formState.value.videoModel,
       projectType: formState.value.projectType || "novel",
       imageQuality: formState.value.imageQuality,
+      mode: formState.value.mode,
     });
   } else {
     emit("add", {
@@ -318,6 +331,7 @@ function handleOk() {
       imageModel: formState.value.imageModel,
       videoModel: formState.value.videoModel,
       imageQuality: formState.value.imageQuality,
+      mode: formState.value.mode,
     });
   }
   resetForm();
@@ -340,7 +354,7 @@ const promptToolbars: ToolbarNames[] = [
   "preview",
 ];
 
-watch(addProjectShow, (visible) => {
+watch(addProjectShow, async (visible) => {
   if (visible) {
     if (props.projectData) {
       formState.value = {
@@ -355,7 +369,24 @@ watch(addProjectShow, (visible) => {
         videoModel: props.projectData.videoModel || "",
         imageQuality: props.projectData.imageQuality || "",
         projectType: props.projectData.projectType || "novel",
+        mode: props.projectData.mode || "text",
       };
+      // 编辑模式下主动获取视频模型详情，填充 mode 列表以回显 label
+      if (props.projectData.videoModel) {
+        try {
+          const { data } = await axios.post("/modelSelect/getModelDetail", {
+            modelId: props.projectData.videoModel,
+          });
+          if (data?.mode) {
+            mode.value = data.mode.map((item: any) => ({
+              label: getModeLabel(item),
+              value: modeToKey(item),
+            }));
+          }
+        } catch (e) {
+          // 获取失败不影响其他功能
+        }
+      }
     } else {
       resetForm();
     }
@@ -507,6 +538,48 @@ function deleteVisualManual(item: VisualManualItem) {
         });
     },
   });
+}
+type VideoMixedRef = "videoReference" | "imageReference" | "audioReference" | "textReference";
+
+type VideoModelMode =
+  | "singleImage"
+  | "multiImage"
+  | "gridImage"
+  | "startEndRequired"
+  | "endFrameOptional"
+  | "startFrameOptional"
+  | "text"
+  | VideoMixedRef[];
+const mode = ref<{ label: string; value: string }[]>([]);
+const MODE_LABEL: Record<string, string> = {
+  singleImage: $t("workbench.production.generate.modeSingleImage"),
+  multiImage: $t("workbench.production.generate.modeMultiImage"),
+  gridImage: $t("workbench.production.generate.modeGridImage"),
+  startEndRequired: $t("workbench.production.generate.modeStartEnd"),
+  endFrameOptional: $t("workbench.production.generate.modeStartEnd"),
+  startFrameOptional: $t("workbench.production.generate.modeStartEnd"),
+  text: $t("workbench.production.generate.modeText"),
+  ["videoReference"]: $t("workbench.production.generate.modeVideoRef"),
+  ["imageReference"]: $t("workbench.production.generate.modeImageRef"),
+  ["audioReference"]: $t("workbench.production.generate.modeAudioRef"),
+  ["textReference"]: $t("workbench.production.generate.modeTextRef"),
+};
+// 模式转换为统一的 key 形式，方便后续处理
+function getModeLabel(mode?: VideoModelMode): string {
+  if (!mode) return "";
+  if (Array.isArray(mode)) return mode.map((r) => MODE_LABEL[r] ?? r).join("、");
+  return MODE_LABEL[mode] ?? mode;
+}
+//模式数组转换为字符串 key，方便在前端使用和比较
+function modeToKey(m: VideoModelMode): string {
+  return Array.isArray(m) ? JSON.stringify(m) : m;
+}
+//获取模式
+function changeFn(val: string, data: any) {
+  mode.value = data.mode.map((item: any) => ({
+    label: getModeLabel(item),
+    value: modeToKey(item),
+  }));
 }
 </script>
 

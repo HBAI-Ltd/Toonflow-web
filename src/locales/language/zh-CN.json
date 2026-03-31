@@ -537,7 +537,8 @@
         "enterVideoRatio": "请选择影片比例",
         "enterImageModel": "请选择图片模型",
         "enterVideoModel": "请选择视频模型",
-        "visualManualDeleted": "删除成功"
+        "visualManualDeleted": "删除成功",
+        "selectMode": "请选择模式"
       },
       "type": {
         "novel": "基于小说原文",
@@ -1000,7 +1001,8 @@
         "layoutTB": "自动排版-上下布局",
         "uploadAssetImage": "资产图片上传",
         "uploadStoryboardImage": "分镜图片上传",
-        "uploadImage": "资产图片上传"
+        "uploadImage": "资产图片上传",
+        "mode": "模式"
       },
       "save": "选取",
       "cancel": "取消",
@@ -1327,7 +1329,8 @@
     "sessionExpired": "登录已过期，请重新登录",
     "openSettings": "打开设置",
     "cancelled": "已取消生成",
-    "defaultReel": "正文卷"
+    "defaultReel": "正文卷",
+    "save": "保存"
   },
   "workbench.project.msg.enterProjectQuality": "请选择图片质量",
   "promptManage": {
@@ -1339,5 +1342,57 @@
   "workbench.production.node.storyboard.removeFailed": "删除分镜失败",
   "workbench.production.node.storyboard.editNode": "编辑",
   "workbench.production.node.storyboard.deleteNode": "删除",
-  "workbench.production.node.storyboard.confirmDeleteBody": "确认是否删除该分镜"
+  "workbench.production.node.storyboard.confirmDeleteBody": "确认是否删除该分镜",
+  "hello": {
+    "welcomeTitle": "欢迎使用 ToonFlow",
+    "welcomeDesc": "AI 驱动的漫画创作工作流平台，让我们花一分钟完成初始配置。",
+    "startConfig": "开始配置",
+    "skip": "跳过引导",
+    "configModel": "添加模型服务",
+    "configData": "配置 Agent",
+    "startUse": "开始使用",
+    "configModelTitle": "添加模型服务供应商",
+    "configModelDesc": "首先，你需要在设置中添加至少一个 AI 模型服务供应商（如 OpenAI、Claude 等），并填写对应的 API Key。",
+    "configModelTip": "点击下方按钮将打开设置页面的「模型服务」选项卡，添加供应商后回到此处继续。",
+    "configModelBtn": "前往配置模型服务",
+    "configAgentTitle": "分配 Agent 模型",
+    "configAgentDesc": "接下来，在 Agent 配置中为各个功能模块分配模型，这样系统才知道调用哪个模型来完成任务。",
+    "configAgentTip": "点击下方按钮将打开设置页面的「Agent 配置」选项卡，为各功能分配模型后回到此处。",
+    "configAgentBtn": "前往配置 Agent",
+    "finishTitle": "🎉 一切就绪！",
+    "finishDesc": "配置完成，现在你可以开始使用所有功能了。如需调整，随时可以在设置中修改。",
+    "qrcodeLabel": "加入微信交流群，获取更多帮助：",
+    "githubLabel": "如果觉得好用，请给我们一个 ⭐ Star 吧！",
+    "prevStep": "上一步",
+    "nextStep": "下一步",
+    "finish": "开始使用"
+  },
+  "setting": {
+    "skillManagement": {
+      "search": "搜索文件名",
+      "empty": "没有匹配的文件",
+      "edit": "编辑",
+      "selectOnTheLeft": "请从左侧选择文件"
+    }
+  },
+  "storyboard": {
+    "assetsNotExists": "资产不存在",
+    "assets": {
+      "notExist": "资产不存在",
+      "notDerivativeExist": "衍生资产不存在",
+      "derivativeUpdateSuccess": "更新成功",
+      "derivativeState": "未生成",
+      "derivativeAddSuccess": "添加成功",
+      "derivativeDelSuccess": "删除成功",
+      "notGenerated": "未生成"
+    },
+    "addSuccess": "更新成功",
+    "state": {
+      "unused": "未生成"
+    },
+    "saveSuccess": "添加成功"
+  },
+  "productionAgent": {
+    "generating": "生成中"
+  }
 }

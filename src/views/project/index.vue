@@ -73,6 +73,7 @@ const editProjectData = ref<{
   videoModel: string;
   projectType: string;
   imageQuality: "1K" | "2K" | "4K" | "";
+  mode: string;
 } | null>(null);
 
 function getAllProject() {
@@ -112,6 +113,7 @@ function openEdit(item: {
   videoModel: string;
   imageQuality: "1K" | "2K" | "4K" | "";
   projectType: string;
+  mode: string;
 }) {
   editProjectData.value = {
     ...item,
@@ -129,6 +131,7 @@ function editProjectFn(data: {
   imageModel: string;
   videoModel: string;
   imageQuality: "1K" | "2K" | "4K" | "";
+  mode: string;
 }) {
   axios
     .post("/project/editProject", data)
@@ -151,6 +154,7 @@ function addProjectFn(data: {
   imageModel: string;
   videoModel: string;
   imageQuality: string;
+  mode: string;
 }) {
   axios
     .post("/project/addProject", data)
@@ -185,7 +189,6 @@ function delProjcer(projectId: string | undefined) {
     },
   });
 }
-
 </script>
 
 <style lang="scss" scoped>

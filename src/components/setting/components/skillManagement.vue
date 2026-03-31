@@ -1,7 +1,7 @@
 <template>
   <div class="skillManagement">
     <aside class="sidebarPanel">
-      <t-input v-model="keyword" clearable placeholder="搜索文件名" />
+      <t-input v-model="keyword" clearable :placeholder="$t('setting.skillManagement.search')" />
       <div class="treeWrap">
         <t-tree v-if="treeData.length" activable hover line expand-on-click-node :data="treeData" :actived="activedKeys" @active="onTreeActive">
           <template #icon="{ node }">
@@ -10,29 +10,29 @@
             <i-file-text v-else theme="outline" size="16" />
           </template>
         </t-tree>
-        <t-empty v-else description="没有匹配的文件" />
+        <t-empty v-else :description="$t('setting.skillManagement.empty')" />
       </div>
     </aside>
 
     <section class="viewPanel">
       <div v-if="activeEntry" class="viewHeader">
         <span class="fileName">{{ activeEntry }}</span>
-        <t-button size="small" theme="primary" variant="outline" @click="openEditDialog">编辑</t-button>
+        <t-button size="small" theme="primary" variant="outline" @click="openEditDialog">{{ $t("setting.skillManagement.edit") }}</t-button>
       </div>
 
       <div v-if="activeEntry" class="previewWrap">
         <MdPreview :modelValue="content" :toolbars="[]" preview-only preview-theme="github" code-theme="atom" />
       </div>
 
-      <t-empty v-else description="请从左侧选择文件" />
+      <t-empty v-else :description="$t('setting.skillManagement.selectOnTheLeft')" />
     </section>
 
     <t-dialog
       placement="center"
       v-model:visible="editVisible"
-      :header="`编辑 ${activeEntry}`"
+      :header="$t('setting.skillManagement.edit') + ` ${activeEntry}`"
       width="80vw"
-      confirm-btn="保存"
+      :confirm-btn="$t('common.save')"
       :confirm-on-enter="false"
       :on-confirm="onSave"
       :loading="isSaving">
@@ -244,5 +244,4 @@ onMounted(() => fetchList());
     }
   }
 }
-
 </style>

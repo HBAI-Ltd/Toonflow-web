@@ -524,7 +524,8 @@
         "enterVideoRatio": "Please select video ratio",
         "enterImageModel": "Please select a picture model",
         "enterVideoModel": "Please select a video model",
-        "visualManualDeleted": "Delete successfully"
+        "visualManualDeleted": "Delete successfully",
+        "selectMode": "Please select mode"
       },
       "type": {
         "novel": "Based on the original novel",
@@ -998,7 +999,8 @@
         "layoutTB": "Auto Layout - Vertical",
         "uploadAssetImage": "Upload Asset Image",
         "uploadStoryboardImage": "Upload Storyboard Image",
-        "uploadImage": "Asset image upload"
+        "uploadImage": "Asset image upload",
+        "mode": "model"
       },
       "save": "Select",
       "cancel": "Cancel",
@@ -1323,7 +1325,8 @@
     "sessionExpired": "Session expired, please log in again",
     "openSettings": "Open Settings",
     "cancelled": "Generation cancelled",
-    "defaultReel": "Main Volume"
+    "defaultReel": "Main Volume",
+    "save": "save"
   },
   "components.storyboardImageCheck.camera": "Camera",
   "components.storyboardImageCheck.dialogTitle": "Select Storyboard Image",
@@ -1336,5 +1339,56 @@
   "workbench.script.extractAssets": "Extract Assets",
   "promptManage": {
     "prompt": "prompt word"
+  },
+  "hello": {
+    "welcomeTitle": "Welcome to ToonFlow",
+    "welcomeDesc": "AI-driven comic creation workflow platform, let us spend a minute to complete the initial configuration.",
+    "startConfig": "Start configuration",
+    "skip": "Skip boot",
+    "configModel": "Add model service",
+    "configData": "Configure Agent",
+    "startUse": "Get started",
+    "configModelTitle": "Add model service provider",
+    "configModelDesc": "First, you need to add at least one AI model service provider (such as OpenAI, Claude, etc.) in the settings and fill in the corresponding API Key.",
+    "configModelTip": "Clicking the button below will open the \"Model Service\" tab of the settings page. After adding the supplier, return here to continue.",
+    "configModelBtn": "Go to configure model service",
+    "configAgentTitle": "Assign Agent Model",
+    "configAgentDesc": "Next, assign models to each functional module in the Agent configuration so that the system knows which model to call to complete the task.",
+    "configAgentTip": "Clicking the button below will open the \"Agent Configuration\" tab of the settings page. Return here after assigning models to each function.",
+    "configAgentBtn": "Go to configure Agent",
+    "finishTitle": "🎉 Everything is ready!",
+    "finishDesc": "The configuration is complete and now you can start using all the features. \nIf you need to adjust it, you can modify it in the settings at any time.",
+    "qrcodeLabel": "Join the WeChat communication group to get more help:",
+    "githubLabel": "If you find it useful, please give us a ⭐ Star!",
+    "prevStep": "Previous step",
+    "nextStep": "Next step",
+    "finish": "Get started"
+  },
+  "setting": {
+    "skillManagement": {
+      "search": "Search file name",
+      "empty": "No matching files",
+      "edit": "edit",
+      "selectOnTheLeft": "Please select a file from the left"
+    }
+  },
+  "storyboard": {
+    "assets": {
+      "notExist": "Asset does not exist",
+      "notDerivativeExist": "Derivative assets do not exist",
+      "derivativeUpdateSuccess": "Update successful",
+      "derivativeState": "Not generated",
+      "derivativeAddSuccess": "Added successfully",
+      "derivativeDelSuccess": "Delete successfully",
+      "notGenerated": "Not generated"
+    },
+    "addSuccess": "Update successful",
+    "state": {
+      "unused": "Not generated"
+    },
+    "saveSuccess": "Added successfully"
+  },
+  "productionAgent": {
+    "generating": "Generating"
   }
 }

@@ -11,6 +11,7 @@ interface Project {
   videoModel: string;
   projectType: string;
   imageQuality: "1K" | "2K" | "4K" | "";
+  mode: string;
 }
 
 export default defineStore(

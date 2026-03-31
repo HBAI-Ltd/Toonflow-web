@@ -176,8 +176,6 @@ async function downLoadImage() {
       },
       { responseType: "blob" },
     );
-    console.log("%c Line:152 🍺 res", "background:#ea7e5c", res);
-
     // 创建下载链接
     const url = URL.createObjectURL(res as unknown as Blob);
     const a = document.createElement("a");
@@ -190,7 +188,6 @@ async function downLoadImage() {
   } finally {
     LoadingPlugin(false);
   }
-  console.log("%c Line:148 🍔", "background:#ed9ec7");
 }
 async function previewAll() {
   LoadingPlugin(true);
