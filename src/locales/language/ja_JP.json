@@ -614,7 +614,11 @@
         "error": "保存に失敗しました",
         "reconnect": "再接続",
         "notReconnect": "再接続の会話が切断されることを確認しますか?",
-        "keepReconnect": "確認する"
+        "keepReconnect": "確認する",
+        "deleteConfirm": "削除確認",
+        "deleteBody": "テキストの削除",
+        "confirmDelete": "削除の確認",
+        "scriptDeleted": "スクリプトが削除されました"
       },
       "reconnect": "再接続"
     },
@@ -701,7 +705,9 @@
         "selectDelScript": "スクリプトを削除することを選択してください",
         "batchDeleteHeader": "一括削除",
         "batchDeleteBody": "選択した {count} 件のシナリオを削除してもよろしいですか？この操作は取り消せません。",
-        "batchDeleteSuccess": "一括削除に成功しました"
+        "batchDeleteSuccess": "一括削除に成功しました",
+        "extractingInProgress": "抽出中",
+        "projectNotFound": "アイテムが見つかりません"
       },
       "add": {
         "title": "シナリオの追加",
@@ -1231,7 +1237,27 @@
     "noVideo": "まだビデオはありません",
     "prompt": "ビデオのプロンプトワード",
     "generateText": "AIが生成したプロンプトワード",
-    "selectStoryboard": "ストーリーボードを選択"
+    "selectStoryboard": "ストーリーボードを選択",
+    "generate": {
+      "noVideo": "まだビデオはありません",
+      "generateText": "AIが生成したプロンプトワード",
+      "selectStoryboard": "ストーリーボードを選択",
+      "generate": "ビデオの生成",
+      "history": "歴史的バージョン",
+      "generating": "生成中",
+      "generateFailed": "失敗",
+      "selectAll": "すべて選択",
+      "selected": "選択済み",
+      "batchGenerateText": "プロンプト単語をバッチで生成する",
+      "batchGenerateVideo": "バッチでビデオを生成する",
+      "importVideo": "ビデオをインポートする",
+      "emptyTrack": "段落 {インデックス 1}",
+      "del": "消去",
+      "delConfirm": "この段落を削除してもよろしいですか?",
+      "selectSource": "ソースを選択",
+      "confirm": "アセットから選択",
+      "cancel": "ストーリーボードから選択"
+    }
   },
   "login": {
     "slogan": "ショードラ制作支援ツール",
@@ -1253,7 +1279,6 @@
     "selectAssets": "アセットを選択",
     "sessionExpired": "セッションが期限切れです。再度ログインしてください",
     "openSettings": "設定を開く",
-    "cancelled": "生成がキャンセルされました",
     "defaultReel": "本文巻",
     "save": "保存",
     "submitting": "提出する",
@@ -1345,8 +1370,6 @@
   "generateFailed": "失敗",
   "selectAll": "すべて選択",
   "selected": "選択済み",
-  "batchGenerateText": "プロンプト単語をバッチで生成する",
-  "batchGenerateVideo": "バッチでビデオを生成する",
   "importVideo": "ビデオをインポートする",
   "emptyTrack": "段落 {インデックス 1}",
   "del": "削除の確認",

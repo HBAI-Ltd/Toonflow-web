@@ -3,12 +3,15 @@
     <div class="data f">
       <div class="videoToImage">
         <video v-if="videoUrl" :src="videoUrl" class="previewVideo" controls preload="metadata" />
-        <div v-else class="emptyVideo c">{{ $t("workbench.noVideo") }}</div>
+        <div v-else class="emptyVideo c">{{ $t("workbench.generate.noVideo") }}</div>
       </div>
-      <div class="configurationParameters">
+      <div class="configurationParameters" :class="{ hasActive: trackList.length > 0 }">
         <div class="promptsMenu f ac jb">
-          <div class="title">{{ $t("workbench.prompt") }}</div>
-          <t-button size="small" class="genTextbtn">{{ $t("workbench.generateText") }}</t-button>
+          <div class="title">
+            <t-tag theme="primary" size="small" style="margin-right: 10px">{{ $t("workbench.track") }} {{ activeTrackIndex + 1 }}</t-tag>
+            {{ $t("workbench.generate.prompt") }}
+          </div>
+          <t-button size="small" class="genTextbtn">{{ $t("workbench.generate.generateText") }}</t-button>
         </div>
         <div class="promptInput">
           <t-textarea class="input" v-model="promptText" :autosize="{ minRows: 4, maxRows: 12 }" />
@@ -25,7 +28,7 @@
           </div>
         </div>
         <!-- 分镜选择弹窗 -->
-        <t-dialog v-model:visible="storyboardDialogVisible" :header="$t('workbench.selectStoryboard')" :footer="false" width="600px">
+        <t-dialog v-model:visible="storyboardDialogVisible" :header="$t('workbench.generate.selectStoryboard')" :footer="false" width="600px">
           <div class="storyboardGrid">
             <div class="storyboardItem" v-for="sb in storyboardList" :key="sb.id" @click="pickStoryboard(sb)">
               <img :src="sb.src" />
@@ -52,19 +55,19 @@
             </div>
           </div>
           <div class="genBtn">
-            <t-button size="small" :loading="generating" @click="generateVideo">{{ $t("generate") }}</t-button>
+            <t-button size="small" :loading="generating" @click="generateVideo">{{ $t("workbench.generate.generate") }}</t-button>
           </div>
         </div>
         <div class="history">
           <div class="titleBox f ac">
             <i-time />
-            <span class="title">{{ $t("history") }}（{{ activeVideoList.length }}）</span>
+            <span class="title">{{ $t("workbench.generate.history") }}（{{ activeVideoList.length }}）</span>
           </div>
           <div class="itemBox">
             <div class="item" :class="{ active: v.id === selectedVideoId }" v-for="v in activeVideoList" :key="v.id" @click="selectVideo(v)">
               <video :src="v.src" preload="metadata" muted />
-              <t-tag v-if="v.state === '生成中'" class="stateTag" theme="primary" size="small">{{ $t("generating") }}</t-tag>
-              <t-tag v-else-if="v.state === '生成失败'" class="stateTag" theme="danger" size="small">{{ $t("generateFailed") }}</t-tag>
+              <t-tag v-if="v.state === '生成中'" class="stateTag" theme="primary" size="small">{{ $t("workbench.generate.generating") }}</t-tag>
+              <t-tag v-else-if="v.state === '生成失败'" class="stateTag" theme="danger" size="small">{{ $t("workbench.generate.generateFailed") }}</t-tag>
               <i-check-one v-if="v.id === selectedVideoId" class="checkIcon" size="20" />
             </div>
           </div>
@@ -74,13 +77,13 @@
     <div class="videoTrack">
       <div class="trackMenu f ac jb">
         <div class="left f ac">
-          <t-checkbox v-model="checkAll" @change="handleCheckAll">{{ $t("selectAll") }}</t-checkbox>
-          <span class="selectedCount" v-if="checkedTracks.length">{{ $t("selected") }} {{ checkedTracks.length }} 段</span>
+          <t-checkbox v-model="checkAll" @change="handleCheckAll">{{ $t("workbench.generate.selectAll") }}</t-checkbox>
+          <span class="selectedCount" v-if="checkedTracks.length">{{ $t("workbench.generate.selected") }} {{ checkedTracks.length }} 段</span>
         </div>
         <div class="right f ac">
-          <t-button size="small" variant="outline" @click="batchGenText">{{ $t("batchGenerateText") }}</t-button>
-          <t-button size="small" variant="outline" @click="batchGenVideo">{{ $t("batchGenerateVideo") }}</t-button>
-          <t-button size="small" variant="outline" @click="importVideo">{{ $t("importVideo") }}</t-button>
+          <t-button size="small" variant="outline" @click="batchGenText">{{ $t("workbench.generate.batchGenerateText") }}</t-button>
+          <t-button size="small" variant="outline" @click="batchGenVideo">{{ $t("workbench.generate.batchGenerateVideo") }}</t-button>
+          <t-button size="small" variant="outline" @click="importVideo">{{ $t("workbench.generate.importVideo") }}</t-button>
         </div>
       </div>
       <div class="itemBox">
@@ -91,6 +94,7 @@
           :key="index"
           @click="activeTrackIndex = index">
           <t-checkbox class="trackCheck" :checked="checkedTracks.includes(index)" @click.stop @change="(val: boolean) => toggleCheck(index, val)" />
+          <t-tag class="indexTag" size="small">{{ index + 1 }}</t-tag>
           <div class="thumbGroup" v-if="track.medias.length">
             <template v-for="(m, i) in track.medias" :key="i">
               <img v-if="m.fileType === 'image'" :src="m.src" class="thumb" />
@@ -100,7 +104,7 @@
               </div>
             </template>
           </div>
-          <span v-else class="emptyTrack">{{ $t("emptyTrack", index + 1) }}</span>
+          <span v-else class="emptyTrack">{{ $t("workbench.generate.emptyTrack", index + 1) }}</span>
           <div class="deleteBtn" @click.stop="confirmDeleteTrack(index)">
             <i-close size="14" />
           </div>
@@ -114,19 +118,27 @@
 </template>
 
 <script setup lang="ts">
+import type { Ref } from "vue";
 import assetsCheck, { type AssetType } from "@/utils/assetsCheck";
 import { DialogPlugin } from "tdesign-vue-next";
 import axios from "@/utils/axios";
 import projectStore from "@/stores/project";
 
-const props = defineProps<{
-  episodesId?: number;
-}>();
+const episodesId = inject<Ref<number>>("episodesId")!;
 
 const { project } = storeToRefs(projectStore());
 
 const videoUrl = ref("");
-const promptText = ref("");
+const promptText = computed({
+  get: () => {
+    const track = trackList.value[activeTrackIndex.value];
+    return track?.prompt ?? "";
+  },
+  set: (val: string) => {
+    const track = trackList.value[activeTrackIndex.value];
+    if (track) track.prompt = val;
+  },
+});
 const selectedResolution = ref("480p");
 const selectedDuration = ref(8);
 const selectedAudio = ref(false);
@@ -197,26 +209,28 @@ interface TrackMedia {
 
 interface TrackItem {
   id?: number;
+  prompt: string;
+  state: "未生成" | "生成中" | "已完成" | "生成失败";
+  reason?: string;
   medias: TrackMedia[];
   videoList: VideoItem[];
 }
-
-const trackList = ref<TrackItem[]>([{ medias: [], videoList: [] }]);
+const trackList = ref<TrackItem[]>([{ prompt: "", state: "未生成", medias: [], videoList: [] }]);
 const activeTrackIndex = ref(0);
 
 async function addTrack() {
   const { data } = await axios.post("/production/workbench/addTrack", {
     projectId: project.value?.id,
-    scriptId: props.episodesId ?? 0,
+    scriptId: episodesId.value ?? 0,
   });
-  trackList.value.push({ id: data.id, medias: [], videoList: [] });
+  trackList.value.push({ id: data.id, prompt: "", state: "未生成", medias: [], videoList: [] });
   activeTrackIndex.value = trackList.value.length - 1;
 }
 
 function confirmDeleteTrack(index: number) {
   const dlg = DialogPlugin.confirm({
-    header:$t("del"),
-    body: $t("delConfirm"),
+    header:$t("workbench.generate.del"),
+    body: $t("workbench.generate.delConfirm"),
     onConfirm: () => {
       dlg.destroy();
       deleteTrack(index);
@@ -234,7 +248,7 @@ async function deleteTrack(index: number) {
   // await axios.post("/production/workbench/deleteTrack", { index });
   trackList.value.splice(index, 1);
   if (trackList.value.length === 0) {
-    trackList.value.push({ medias: [], videoList: [] });
+    trackList.value.push({ prompt: "", state: "未生成", medias: [], videoList: [] });
   }
   if (activeTrackIndex.value >= trackList.value.length) {
     activeTrackIndex.value = trackList.value.length - 1;
@@ -300,13 +314,14 @@ function handleSelectSource(index: number) {
   pendingIndex.value = index;
 
   const dlg = DialogPlugin.confirm({
-    header: $t("selectSource"),
-    confirmBtn: $t("confirm"),
-    cancelBtn: $t("cancel"),
+    header: $t("workbench.generate.selectSource"),
+    confirmBtn: $t("workbench.generate.confirm"),
+    cancelBtn: $t("workbench.generate.cancel"),
     onConfirm: async () => {
       dlg.destroy();
       const assets = await assetsCheck({ types: fileTypeMap[item.fileType], multiple: false });
       if (assets.length > 0) {
+        userEditedUploadBox.value = true;
         uploadBox.value[index] = { ...item, sources: "assets", src: assets[0].src, id: assets[0].id, prompt: assets[0].prompt };
       }
     },
@@ -321,6 +336,7 @@ function pickStoryboard(sb: StoryboardItem) {
   storyboardDialogVisible.value = false;
   const item = uploadBox.value[pendingIndex.value];
   if (!item) return;
+  userEditedUploadBox.value = true;
   uploadBox.value[pendingIndex.value] = { ...item, sources: "storyboard", src: sb.src, id: sb.id, prompt: sb.prompt };
 }
 
@@ -330,7 +346,7 @@ async function generateVideo() {
   try {
     const payload = {
       projectId: project.value?.id,
-      scriptId: props.episodesId ?? 0,
+      scriptId: episodesId.value,
       uploadData: uploadBox.value,
       prompt: promptText.value,
       model: tempModel.value,
@@ -378,13 +394,17 @@ watch(tempModel, (val) => {
   });
 });
 
+const userEditedUploadBox = ref(false);
+
 watch(tempMode, (val) => {
+  userEditedUploadBox.value = false;
   uploadBox.value = buildUploadBox(val);
 });
 
 watch(
   uploadBox,
   (items) => {
+    if (!userEditedUploadBox.value) return;
     const track = trackList.value[activeTrackIndex.value];
     if (!track) return;
     track.medias = items.filter((item) => item.src).map((item) => ({ src: item.src!, id: item.id, fileType: item.fileType }));
@@ -423,7 +443,7 @@ function importVideo() {
 async function getGenerateData() {
   const { data } = await axios.post("/production/workbench/getGenerateData", {
     projectId: project.value?.id,
-    scriptId: props.episodesId ?? 0,
+    scriptId: episodesId.value ?? 0,
   });
   trackList.value = data;
 }
@@ -483,6 +503,11 @@ watch(
       height: 100%;
       border-radius: 8px;
       padding: 16px;
+      .activeTrackInfo {
+        padding: 8px 0;
+        gap: 8px;
+        margin-bottom: 4px;
+      }
       .promptsMenu {
         .title {
           font-weight: bold;
@@ -641,9 +666,18 @@ watch(
         position: relative;
         &.active {
           border-color: var(--td-brand-color);
+          border-width: 2px;
+          box-shadow: 0 0 0 3px rgba(var(--td-brand-color-rgb, 0, 82, 217), 0.25);
+          background: linear-gradient(180deg, rgba(var(--td-brand-color-rgb, 0, 82, 217), 0.05) 0%, transparent 100%);
         }
         &:hover {
           filter: brightness(90%);
+        }
+        .indexTag {
+          position: absolute;
+          bottom: 4px;
+          left: 4px;
+          z-index: 1;
         }
         .thumbGroup {
           width: 100%;

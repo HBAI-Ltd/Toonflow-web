@@ -707,7 +707,11 @@
         "error": "保存失败",
         "reconnect": "重新连接",
         "notReconnect": "重新连接对话会被切断是否确认",
-        "keepReconnect": "确认"
+        "keepReconnect": "确认",
+        "deleteConfirm": "删除确认",
+        "deleteBody": "删除正文",
+        "confirmDelete": "确认删除",
+        "scriptDeleted": "脚本已删除"
       },
       "reconnect": "重新连接"
     },
@@ -783,7 +787,9 @@
       "exportScript": "导出剧本",
       "msg": {
         "extracting": "资产提取中",
-        "extractFailed": "资产提取失败"
+        "extractFailed": "资产提取失败",
+        "extractingInProgress": "正在提取中",
+        "projectNotFound": "项目未找到"
       },
       "add": {
         "title": "新增剧本",
@@ -1325,7 +1331,28 @@
     "noVideo": "暂无视频",
     "prompt": "视频提示词",
     "generateText": "AI生成提示词",
-    "selectStoryboard": "选择分镜"
+    "selectStoryboard": "选择分镜",
+    "generate": {
+      "noVideo": "暂无视频",
+      "prompt": "视频提示词",
+      "generateText": "AI生成提示词",
+      "selectStoryboard": "选择分镜",
+      "generate": "生成视频",
+      "history": "历史版本",
+      "generating": "生成中",
+      "generateFailed": "失败",
+      "selectAll": "全选",
+      "selected": "已选",
+      "batchGenerateText": "批量生成提示词",
+      "batchGenerateVideo": "批量生成视频",
+      "importVideo": "导入视频",
+      "emptyTrack": "第{index+1}段",
+      "del": "删除",
+      "delConfirm": "确认删除该段？",
+      "selectSource": "选择来源",
+      "confirm": "从资产选择",
+      "cancel": "从分镜选择"
+    }
   },
   "login": {
     "slogan": "智能短剧创作平台",
@@ -1439,10 +1466,8 @@
   "generateFailed": "失败",
   "selectAll": "全选",
   "selected": "已选 ",
-  "batchGenerateText": "批量生成提示词",
-  "batchGenerateVideo": "批量生成视频",
   "importVideo": "导入视频",
-  "emptyTrack": "第{index+1}段",
+  "emptyTrack": "123",
   "del": "确认删除",
   "delConfirm": "确认删除该段？",
   "selectSource": "选择来源",
