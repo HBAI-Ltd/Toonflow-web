@@ -63,7 +63,7 @@
         </div>
       </div>
     </div>
-    <editImage v-model:visible="visible" v-if="visible" :editData="currentRow" :type="currentRow.type" @save="save" />
+    <editImage v-model="visible" v-if="visible" :editData="currentRow" :type="currentRow.type" @save="save" />
   </t-card>
 </template>
 

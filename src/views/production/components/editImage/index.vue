@@ -41,7 +41,7 @@
             </div>
           </t-tooltip>
           <t-tooltip theme="primary" content="$t('workbench.production.autoLayoutTB')">
-            <div class="item c" @click="layoutGraph('TB')">
+             <div class="item c" @click="layoutGraph('TB')">
               <i-branch-one theme="outline" size="24" />
             </div>
           </t-tooltip>
@@ -250,8 +250,8 @@ async function sureNode(imageUrl: string = "") {
     let insertId = "";
     if (flowId.value) {
       await axios.post("/production/editImage/updateImageFlow", { ...payload, flowId: flowId.value });
-    } else if (imageUrl) {
-      const { data } = await axios.post("/production/editImage/saveImageFlow", { ...payload, projectId: projectId.value });
+    } else {
+      const { data } = await axios.post("/production/editImage/saveImageFlow", payload);
       insertId = data?.id || null;
     }
     emit("save", { imageUrl, insertId });

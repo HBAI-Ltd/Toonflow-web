@@ -80,13 +80,13 @@ export default defineStore(
               });
               if (notExistItems.length > 0) {
                 addStoryboardInfo(notExistItems);
-
                 flowData.value.storyboard = [...flowData.value.storyboard, ...notExistItems];
               }
             }
-
-            setFlowData();
           }
+        }
+        if (status == "complete") {
+          setFlowData();
         }
       },
     });
