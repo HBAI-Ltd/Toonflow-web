@@ -6,8 +6,8 @@
     :max-zoom="10"
     :min-zoom="0.1"
     fit-view-on-init
-    :pan-on-scroll="canvasScroll"
-    :zoom-on-scroll="canvasZoom"
+    :pan-on-scroll="canvasWheelEvent == 'scroll' ? true : false"
+    :zoom-on-scroll="canvasWheelEvent == 'zoom' ? true : false"
     :selection-key-code="null"
     :multi-selection-key-code="null">
     <template #node-script="props">
@@ -102,9 +102,9 @@ import projectStore from "@/stores/project";
 
 const { project } = storeToRefs(projectStore());
 import settingStore from "@/stores/setting";
-const { canvasScroll, canvasZoom } = storeToRefs(settingStore());
+const { canvasWheelEvent } = storeToRefs(settingStore());
 const openShowVisible = ref(true);
-const { toObject, fromObject, fitView, findNode, onNodeDragStop } = useVueFlow();
+const { toObject, fromObject, fitView, findNode, onNodeDragStop, updateNodeInternals, getNodes } = useVueFlow();
 const { layout } = useLayout();
 
 import productionAgentStore from "@/stores/productionAgent";
@@ -131,6 +131,17 @@ onNodeDragStop(({ nodes: draggedNodes }) => {
     nodePositions.value[node.id] = { x: node.position.x, y: node.position.y };
   }
 });
+
+// flowData 变化时，将 VueFlow 中节点的当前实际位置同步到 nodePositions，防止位置回跳
+watch(
+  flowData,
+  () => {
+    for (const node of getNodes.value) {
+      nodePositions.value[node.id] = { x: node.position.x, y: node.position.y };
+    }
+  },
+  { deep: true },
+);
 
 onMounted(() => {
   getScriptData();
@@ -197,9 +208,29 @@ async function getScriptData() {
 }
 
 async function layoutGraph(direction: "LR" | "TB" = "LR") {
+  // 等待 DOM 渲染完成
+  await nextTick();
+
+  // 强制 VueFlow 重新测量所有节点尺寸
+  const nodeIds = getNodes.value.map((n) => n.id);
+  updateNodeInternals(nodeIds);
+  await nextTick();
+
+  // 等待所有节点的 dimensions 都已被 VueFlow 正确测量
+  // VueFlow 测量是异步的，可能需要多轮 nextTick
+  let retries = 10;
+  while (retries-- > 0) {
+    const allMeasured = nodeIds.every((id) => {
+      const node = findNode(id);
+      return node?.dimensions?.width && node.dimensions.width > 0;
+    });
+    if (allMeasured) break;
+    await new Promise((r) => setTimeout(r, 50));
+  }
+
   const oldData = toObject();
 
-  // 收集每个节点的实际尺寸
+  // 从 VueFlow 内部获取已测量的尺寸（流坐标系，无需 zoom 换算）
   const dims = new Map<string, { w: number; h: number }>();
   for (const n of oldData.nodes) {
     const vNode = findNode(n.id);
@@ -278,6 +309,12 @@ async function layoutGraph(direction: "LR" | "TB" = "LR") {
 
   await fromObject(oldData);
   await nextTick();
+
+  // 布局后同步新位置到 nodePositions，防止后续 flowData 变化时回跳
+  for (const node of getNodes.value) {
+    nodePositions.value[node.id] = { x: node.position.x, y: node.position.y };
+  }
+
   fitView({ duration: 300 });
 }
 

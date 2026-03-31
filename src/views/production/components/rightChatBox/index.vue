@@ -29,7 +29,7 @@
       </t-chat-list>
       <t-chat-sender
         class="inputBox"
-        :disabled="status === 'pending' || status === 'streaming'"
+        :disabled="status === 'pending' || status === 'streaming' || !connected"
         v-model="inputValue"
         :loading="status === 'pending' || status === 'streaming'"
         :placeholder="$t('workbench.production.chatBox.inputPlaceholder')"
@@ -45,6 +45,10 @@
               </t-button>
               <template #content>
                 <div class="settingMenu">
+                  <div class="settingMenuItem" @click="handleReconnect()">
+                    <i-api size="14" />
+                    <span>{{ $t("workbench.scriptAgent.reconnect") }}</span>
+                  </div>
                   <div class="settingMenuItem" @click="handleClearMemory('message')">
                     <i-delete size="14" />
                     <span>{{ $t("workbench.production.chatBox.clearMessageMemory") }}</span>
@@ -88,6 +92,19 @@ function handleSend(text: string) {
 }
 function handleStop() {
   productionAgentStore().stopGenerate();
+}
+function handleReconnect() {
+  const dialog = DialogPlugin.confirm({
+    header: $t("workbench.scriptAgent.msg.reconnect"),
+    body: $t("workbench.scriptAgent.msg.notReconnect"),
+    confirmBtn: $t("workbench.scriptAgent.msg.keepReconnect"),
+    cancelBtn: $t("workbench.scriptAgent.msg.cancel"),
+    theme: "warning",
+    onConfirm: async () => {
+      productionAgentStore().reconnect();
+      dialog.destroy();
+    },
+  });
 }
 
 //快捷发送

@@ -17,11 +17,11 @@
           :allowInputOverLimit="false"
           :placeholder="$t('settings.other.inputSeconds')" />
       </t-form-item>
-      <t-form-item :label="$t('settings.other.canvasScroll')">
-        <t-switch size="large" v-model="canvasScroll" @change="canvasScrollFn"></t-switch>
-      </t-form-item>
-      <t-form-item :label="$t('settings.other.canvasIsDisabled')">
-        <t-switch size="large" v-model="canvasZoom" @change="canvasZoomFn"></t-switch>
+      <t-form-item :label="$t('settings.other.agentCanvasScalingMethod')">
+        <t-radio-group variant="default-filled" v-model="canvasWheelEvent">
+          <t-radio-button value="zoom">{{ $t("settings.other.zoom") }}</t-radio-button>
+          <t-radio-button value="scroll">{{ $t("settings.other.scroll") }}</t-radio-button>
+        </t-radio-group>
       </t-form-item>
       <!-- <t-form-item :label="$t('settings.other.assetConcurrency')" name="assetsBatchGenereateSize">
         <t-input-number
@@ -38,7 +38,7 @@
 
 <script setup lang="ts">
 import settingStore from "@/stores/setting";
-const { otherSetting, isElectron, canvasScroll, canvasZoom } = storeToRefs(settingStore());
+const { otherSetting, isElectron, canvasWheelEvent } = storeToRefs(settingStore());
 
 import { computed } from "vue";
 // 将毫秒转换为秒显示，输入时转换回毫秒存储
@@ -53,12 +53,6 @@ const axiosTimeOutInSeconds = computed({
     otherSetting.value.axiosTimeOut = val * 1000;
   },
 });
-function canvasScrollFn(val: any) {
-  canvasScroll.value = val;
-}
-function canvasZoomFn(val: any) {
-  canvasZoom.value = val;
-}
 
 function setDefaultReg() {
   otherSetting.value.chapterReg = "/第\\s*([0-9０-９零一二三四五六七八九十百千万]+)\\s*[章回节]\\s*([^\\n\\r]*)/g";

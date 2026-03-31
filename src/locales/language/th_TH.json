@@ -271,7 +271,10 @@
       "showTitleBar": "แสดงแถบชื่อเรื่อง",
       "isElectron": "สลับไปที่โหมดเดสก์ท็อป",
       "canvasScroll": "เลื่อนผ้าใบ",
-      "canvasIsDisabled": "แคนวาสซูม"
+      "canvasIsDisabled": "แคนวาสซูม",
+      "agentCanvasScalingMethod": "งานล้อผ้าใบตัวแทน",
+      "zoom": "ซูม",
+      "scroll": "เลื่อน"
     },
     "request": {
       "warning": "หากไม่มีกรณีพิเศษ ไม่จำเป็นต้องแก้ไขหรือตั้งค่าใดๆ",
@@ -609,8 +612,12 @@
         "scriptUpdateFailed": "อัปเดตบทภาพยนตร์ล้มเหลว โปรดลองอีกครั้งในภายหลัง",
         "searchScriptFailed": "ค้นหาบทภาพยนตร์ล้มเหลว",
         "updated": "บันทึกเรียบร้อยแล้ว",
-        "error": "บันทึกล้มเหลว"
-      }
+        "error": "บันทึกล้มเหลว",
+        "reconnect": "เชื่อมต่อใหม่",
+        "notReconnect": "ยืนยันว่าการสนทนาการเชื่อมต่อใหม่จะถูกตัดออกหรือไม่",
+        "keepReconnect": "ยืนยัน"
+      },
+      "reconnect": "เชื่อมต่อใหม่"
     },
     "cornerScape": {
       "batchSettings": "การตั้งค่าการสร้างเป็นชุด",

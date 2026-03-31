@@ -13,7 +13,7 @@ import enConfig from "tdesign-vue-next/es/locale/en_US";
 import { cachedLocale } from "@/locales";
 import { initTheme } from "@/utils/theme";
 import { type GlobalConfigProvider } from "tdesign-vue-next";
-const { baseUrl, isElectron } = storeToRefs(settingStore());
+const { baseUrl, isElectron, themeSetting } = storeToRefs(settingStore());
 
 watch(
   () => isElectron.value,
@@ -38,6 +38,7 @@ onBeforeMount(() => {
 
 // 初始化主题
 onMounted(() => {
+  themeSetting.value.primaryColor = "#000";
   initTheme();
   getPort();
 });

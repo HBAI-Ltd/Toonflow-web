@@ -118,8 +118,6 @@ import assetsCheck, { type AssetType } from "@/utils/assetsCheck";
 import { DialogPlugin } from "tdesign-vue-next";
 import axios from "@/utils/axios";
 import projectStore from "@/stores/project";
-import productionAgentStore from "@/stores/productionAgent";
-const { episodesId, flowData, status } = storeToRefs(productionAgentStore());
 
 const props = defineProps<{
   episodesId?: number;
@@ -422,9 +420,18 @@ function importVideo() {
   // TODO
 }
 
+async function getGenerateData() {
+  const { data } = await axios.post("/production/workbench/getGenerateData", {
+    projectId: project.value?.id,
+    scriptId: props.episodesId ?? 0,
+  });
+  trackList.value = data;
+}
+
 onMounted(() => {
   tempModel.value = project.value?.videoModel || "";
   tempMode.value = project.value?.mode || "";
+  getGenerateData();
 });
 
 const hasGeneratedVideo = computed(() => {

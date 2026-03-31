@@ -347,7 +347,10 @@
       "restoreDefault": "恢复默认",
       "regexPlaceholder": "请输入正则表达式",
       "canvasScroll": "画布滚动",
-      "canvasIsDisabled": "画布缩放"
+      "canvasIsDisabled": "画布缩放",
+      "agentCanvasScalingMethod": "生产页无限画布滚轮操作",
+      "zoom": "缩放",
+      "scroll": "滚动"
     },
     "request": {
       "warning": "如非特殊情况，不需要修改或者配置",
@@ -701,8 +704,12 @@
         "scriptUpdateFailed": "更新剧本失败，请稍后再试",
         "searchScriptFailed": "搜索剧本失败",
         "updated": "保存成功",
-        "error": "保存失败"
-      }
+        "error": "保存失败",
+        "reconnect": "重新连接",
+        "notReconnect": "重新连接对话会被切断是否确认",
+        "keepReconnect": "确认"
+      },
+      "reconnect": "重新连接"
     },
     "cornerScape": {
       "batchSettings": "批量生成设置",

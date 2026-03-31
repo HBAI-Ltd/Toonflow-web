@@ -425,6 +425,7 @@ export default defineStore(
       getHistory,
       loadingHistory,
       batchGenerateStoryboard,
+      reconnect,
     };
   },
   { persist: false },

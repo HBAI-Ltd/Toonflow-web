@@ -277,7 +277,10 @@
       "restoreDefault": "還原預設",
       "regexPlaceholder": "請輸入正規表示式",
       "canvasScroll": "畫布滾動",
-      "canvasIsDisabled": "畫布縮放"
+      "canvasIsDisabled": "畫布縮放",
+      "agentCanvasScalingMethod": "生產頁無限畫布滾輪操作",
+      "zoom": "縮放",
+      "scroll": "捲動"
     },
     "request": {
       "warning": "若非特殊情況，不需要修改或者設定",
@@ -614,8 +617,12 @@
         "scriptUpdateFailed": "更新劇本失敗，請稍後再試",
         "searchScriptFailed": "搜尋劇本失敗",
         "updated": "保存成功",
-        "error": "保存失敗"
-      }
+        "error": "保存失敗",
+        "reconnect": "重新連接",
+        "notReconnect": "重新連結對話會被切斷是否確認",
+        "keepReconnect": "確認"
+      },
+      "reconnect": "重新連接"
     },
     "cornerScape": {
       "batchSettings": "批次生成設定",

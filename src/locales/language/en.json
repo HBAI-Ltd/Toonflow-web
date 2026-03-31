@@ -338,7 +338,10 @@
       "showTitleBar": "show title bar",
       "isElectron": "Switch to desktop mode",
       "canvasScroll": "Canvas scroll",
-      "canvasIsDisabled": "Canvas zoom"
+      "canvasIsDisabled": "Canvas zoom",
+      "agentCanvasScalingMethod": "Unlimited canvas wheel operation on production page",
+      "zoom": "Zoom",
+      "scroll": "scroll"
     },
     "request": {
       "warning": "Do not modify unless absolutely necessary",
@@ -688,8 +691,12 @@
         "scriptUpdateFailed": "Failed to update script, please try again later",
         "searchScriptFailed": "Failed to search scripts",
         "updated": "Saved successfully",
-        "error": "Save failed"
-      }
+        "error": "Save failed",
+        "reconnect": "Reconnect",
+        "notReconnect": "Confirm that the reconnection conversation will be cut off?",
+        "keepReconnect": "confirm"
+      },
+      "reconnect": "Reconnect"
     },
     "cornerScape": {
       "batchSettings": "Batch Gen Settings",

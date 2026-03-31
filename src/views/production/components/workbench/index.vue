@@ -32,9 +32,9 @@
     </div>
     <div class="content">
       <preview v-if="activeMenu === 'preview'" />
-      <generate v-show="activeMenu === 'generate'" @close="handleBatchDownload" v-model="extractLines" />
+      <generate v-if="activeMenu === 'generate'" @close="handleBatchDownload" v-model="extractLines" />
       <editVideo
-        v-show="activeMenu === 'editVideo'"
+        v-if="activeMenu === 'editVideo'"
         :initial-video-items="initialVideoItems"
         :initial-media-items="mockMediaItems"
         :initial-audio-items="mockAudioItems"

@@ -268,7 +268,10 @@
       "restoreDefault": "Khôi phục mặc định",
       "regexPlaceholder": "Vui lòng nhập biểu thức chính quy (Regex)",
       "canvasScroll": "Cuộn vải",
-      "canvasIsDisabled": "Thu phóng canvas"
+      "canvasIsDisabled": "Thu phóng canvas",
+      "agentCanvasScalingMethod": "Hoạt động bánh xe vải không giới hạn trên trang sản xuất",
+      "zoom": "Phóng",
+      "scroll": "cuộn"
     },
     "request": {
       "warning": "Nếu không có trường hợp đặc biệt, không cần sửa đổi hoặc cấu hình",
@@ -599,8 +602,12 @@
         "scriptUpdateFailed": "Cập nhật kịch bản thất bại, vui lòng thử lại sau",
         "searchScriptFailed": "Tìm kiếm kịch bản thất bại",
         "updated": "Đã lưu thành công",
-        "error": "Lưu không thành công"
-      }
+        "error": "Lưu không thành công",
+        "reconnect": "Kết nối lại",
+        "notReconnect": "Xác nhận rằng cuộc trò chuyện kết nối lại sẽ bị cắt?",
+        "keepReconnect": "xác nhận"
+      },
+      "reconnect": "kết nối lại"
     },
     "cornerScape": {
       "batchSettings": "Cài đặt tạo hàng loạt",

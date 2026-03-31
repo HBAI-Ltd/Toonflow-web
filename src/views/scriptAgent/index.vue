@@ -30,13 +30,17 @@
             @stop="handleStop">
             <template #footer-prefix>
               <t-popup trigger="click" placement="top-left">
-                <t-button shape="square" variant="outline" size="small">
+                <t-button shape="square" variant="outline" size="small" :disabled="status === 'pending' || status === 'streaming'">
                   <template #icon>
                     <i-setting-config size="16" />
                   </template>
                 </t-button>
                 <template #content>
                   <div class="settingMenu">
+                    <div class="settingMenuItem" @click="handleReconnect()">
+                      <i-api size="14" />
+                      <span>{{ $t("workbench.scriptAgent.reconnect") }}</span>
+                    </div>
                     <div class="settingMenuItem" @click="handleClearMemory('message')">
                       <i-delete size="14" />
                       <span>{{ $t("workbench.scriptAgent.clearMessageMemory") }}</span>
@@ -170,6 +174,7 @@ const { project } = storeToRefs(projectStore());
 import editMdPreivew from "@/components/editMdPreivew.vue";
 import scriptAgentStore from "@/stores/scriptAgent";
 const { connected, messages, status, planData } = storeToRefs(scriptAgentStore());
+import productionAgentStore from "@/stores/productionAgent";
 const currentTable = ref(1);
 const inputValue = ref("");
 const toolbars: ToolbarNames[] = [
@@ -246,7 +251,7 @@ const memoryTypeLabel: Record<string, string> = {
   summary: $t("workbench.scriptAgent.memoryType.summary"),
   all: $t("workbench.scriptAgent.memoryType.all"),
 };
-function handleClearMemory(type: "message" | "summary" | "all") {
+function handleClearMemory(type: "message" | "summary" | "all" | "reconnect") {
   const dialog = DialogPlugin.confirm({
     header: $t("workbench.scriptAgent.msg.clearConfirm"),
     body: $t("workbench.scriptAgent.msg.clearBody", { type: memoryTypeLabel[type] }),
@@ -260,6 +265,9 @@ function handleClearMemory(type: "message" | "summary" | "all") {
       getHistory();
     },
   });
+}
+function handleReconnect() {
+  productionAgentStore().reconnect();
 }
 
 const loadingHistory = ref(false);
@@ -625,6 +633,12 @@ function onConfirm(value: string) {
     font-size: 13px;
     cursor: pointer;
     white-space: nowrap;
+    &:hover {
+      background-color: #f3f3f3;
+    }
+    &.danger {
+      color: #e34d59;
+    }
   }
 }
 :deep(.t-tabs__operations--right) {

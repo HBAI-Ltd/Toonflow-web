@@ -271,7 +271,10 @@
       "showTitleBar": "タイトルバーを表示する",
       "isElectron": "デスクトップモードに切り替える",
       "canvasScroll": "キャンバススクロール",
-      "canvasIsDisabled": "キャンバスのズーム"
+      "canvasIsDisabled": "キャンバスのズーム",
+      "agentCanvasScalingMethod": "制作ページでの無制限のキャンバス ホイール操作",
+      "zoom": "ズーム",
+      "scroll": "スクロール"
     },
     "request": {
       "warning": "特別な理由がない限り、変更や設定は不要です",
@@ -608,8 +611,12 @@
         "scriptUpdateFailed": "シナリオの更新に失敗しました。後で再試行してください",
         "searchScriptFailed": "シナリオの検索に失敗しました",
         "updated": "正常に保存されました",
-        "error": "保存に失敗しました"
-      }
+        "error": "保存に失敗しました",
+        "reconnect": "再接続",
+        "notReconnect": "再接続の会話が切断されることを確認しますか?",
+        "keepReconnect": "確認する"
+      },
+      "reconnect": "再接続"
     },
     "cornerScape": {
       "batchSettings": "一括生成設定",
