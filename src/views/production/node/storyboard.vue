@@ -77,7 +77,7 @@
         </t-button> -->
       </div>
     </div>
-    <editImage v-model:visible="visible" v-if="visible" :editData="currentRow" type="storyboard" @save="save" />
+    <editImage v-model="visible" v-if="visible" :editData="currentRow" type="storyboard" @save="save" />
     <t-image-viewer
       v-model:visible="previewVisible"
       :images="previewImages"
@@ -189,27 +189,27 @@ async function previewAll() {
   }
 }
 const generateLoading = ref(false);
-async function batchGenerateImage() {
-  // LoadingPlugin(true);
-  // generateLoading.value = true;
-  // try {
-  //   await batchGenerateStoryboard();
-  //   window.$message.success($t("workbench.production.node.storyboard.batchGenerateSuccess"));
-  // } catch (e) {
-  //   window.$message.error($t("workbench.production.node.storyboard.batchGenerateFailed"));
-  // } finally {
-  //   generateLoading.value = false;
-  // }
-  // const allIds = (storyboard.value ?? []).filter((s) => s.src).map((s) => s.id!);
-  // if (!allIds.length) {
-  //   window.$message.warning($t("workbench.production.node.storyboard.noPreviewImages"));
-  //   LoadingPlugin(false);
-  //   return;
-  // }
-  // axios.post("/production/storyboard/batchGenerateImage", {
-  //   scriptId: allIds,
-  // });
-}
+// async function batchGenerateImage() {
+// LoadingPlugin(true);
+// generateLoading.value = true;
+// try {
+//   await batchGenerateStoryboard();
+//   window.$message.success($t("workbench.production.node.storyboard.batchGenerateSuccess"));
+// } catch (e) {
+//   window.$message.error($t("workbench.production.node.storyboard.batchGenerateFailed"));
+// } finally {
+//   generateLoading.value = false;
+// }
+// const allIds = (storyboard.value ?? []).filter((s) => s.src).map((s) => s.id!);
+// if (!allIds.length) {
+//   window.$message.warning($t("workbench.production.node.storyboard.noPreviewImages"));
+//   LoadingPlugin(false);
+//   return;
+// }
+// axios.post("/production/storyboard/batchGenerateImage", {
+//   scriptId: allIds,
+// });
+// }
 function editStoryboaryImage(item: Storyboard, images: string[], insertAfterIndex: number | null = null) {
   const id = item.id;
   currentRow.value = {

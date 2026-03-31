@@ -132,6 +132,7 @@ onNodeDragStop(({ nodes: draggedNodes }) => {
 
 onMounted(() => {
   getScriptData();
+  productionAgentStore().getFlowData();
 });
 
 const episodesOptions = ref<{ label: string; value: number }[]>([]);
