@@ -1058,7 +1058,7 @@
         "exportFilename": "分镜图片.zip"
       },
       "generate": {
-        "noVideo": "暂无视频",
+        "noVideo": "暂无数据",
         "videoPrompt": "视频提示词",
         "promptPlaceholder": "输入提示词，描述你想要生成的视频内容...",
         "refImage": "参考图",
