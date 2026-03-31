@@ -28,7 +28,7 @@ export default defineStore(
       xmlTags: [
         { tag: "storySkeleton", keepInMessage: false },
         { tag: "adaptationStrategy", keepInMessage: false },
-        { tag: "script", keepInMessage: false },
+        { tag: "scriptItem", keepInMessage: false },
       ],
       onXmlTag: (data) => {
         const { tag, value, children, status, attrs } = data;

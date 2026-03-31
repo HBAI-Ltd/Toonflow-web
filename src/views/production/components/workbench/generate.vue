@@ -3,15 +3,15 @@
     <div class="data f">
       <div class="videoToImage">
         <video v-if="videoUrl" :src="videoUrl" class="previewVideo" controls preload="metadata" />
-        <div v-else class="emptyVideo c">{{ $t("workbench.noVideo") }}</div>
+        <div v-else class="emptyVideo c">{{ $t("workbench.generate.noVideo") }}</div>
       </div>
       <div class="configurationParameters" :class="{ hasActive: trackList.length > 0 }">
         <div class="promptsMenu f ac jb">
           <div class="title">
             <t-tag theme="primary" size="small" style="margin-right: 10px">{{ $t("workbench.track") }} {{ activeTrackIndex + 1 }}</t-tag>
-            {{ $t("workbench.prompt") }}
+            {{ $t("workbench.generate.prompt") }}
           </div>
-          <t-button size="small" class="genTextbtn">{{ $t("workbench.generateText") }}</t-button>
+          <t-button size="small" class="genTextbtn">{{ $t("workbench.generate.generateText") }}</t-button>
         </div>
         <div class="promptInput">
           <t-textarea class="input" v-model="promptText" :autosize="{ minRows: 4, maxRows: 12 }" />
@@ -28,7 +28,7 @@
           </div>
         </div>
         <!-- 分镜选择弹窗 -->
-        <t-dialog v-model:visible="storyboardDialogVisible" :header="$t('workbench.selectStoryboard')" :footer="false" width="600px">
+        <t-dialog v-model:visible="storyboardDialogVisible" :header="$t('workbench.generate.selectStoryboard')" :footer="false" width="600px">
           <div class="storyboardGrid">
             <div class="storyboardItem" v-for="sb in storyboardList" :key="sb.id" @click="pickStoryboard(sb)">
               <img :src="sb.src" />
@@ -55,19 +55,19 @@
             </div>
           </div>
           <div class="genBtn">
-            <t-button size="small" :loading="generating" @click="generateVideo">{{ $t("generate") }}</t-button>
+            <t-button size="small" :loading="generating" @click="generateVideo">{{ $t("workbench.generate.generate") }}</t-button>
           </div>
         </div>
         <div class="history">
           <div class="titleBox f ac">
             <i-time />
-            <span class="title">{{ $t("history") }}（{{ activeVideoList.length }}）</span>
+            <span class="title">{{ $t("workbench.generate.history") }}（{{ activeVideoList.length }}）</span>
           </div>
           <div class="itemBox">
             <div class="item" :class="{ active: v.id === selectedVideoId }" v-for="v in activeVideoList" :key="v.id" @click="selectVideo(v)">
               <video :src="v.src" preload="metadata" muted />
-              <t-tag v-if="v.state === '生成中'" class="stateTag" theme="primary" size="small">{{ $t("generating") }}</t-tag>
-              <t-tag v-else-if="v.state === '生成失败'" class="stateTag" theme="danger" size="small">{{ $t("generateFailed") }}</t-tag>
+              <t-tag v-if="v.state === '生成中'" class="stateTag" theme="primary" size="small">{{ $t("workbench.generate.generating") }}</t-tag>
+              <t-tag v-else-if="v.state === '生成失败'" class="stateTag" theme="danger" size="small">{{ $t("workbench.generate.generateFailed") }}</t-tag>
               <i-check-one v-if="v.id === selectedVideoId" class="checkIcon" size="20" />
             </div>
           </div>
@@ -77,13 +77,13 @@
     <div class="videoTrack">
       <div class="trackMenu f ac jb">
         <div class="left f ac">
-          <t-checkbox v-model="checkAll" @change="handleCheckAll">{{ $t("selectAll") }}</t-checkbox>
-          <span class="selectedCount" v-if="checkedTracks.length">{{ $t("selected") }} {{ checkedTracks.length }} 段</span>
+          <t-checkbox v-model="checkAll" @change="handleCheckAll">{{ $t("workbench.generate.selectAll") }}</t-checkbox>
+          <span class="selectedCount" v-if="checkedTracks.length">{{ $t("workbench.generate.selected") }} {{ checkedTracks.length }} 段</span>
         </div>
         <div class="right f ac">
-          <t-button size="small" variant="outline" @click="batchGenText">{{ $t("batchGenerateText") }}</t-button>
-          <t-button size="small" variant="outline" @click="batchGenVideo">{{ $t("batchGenerateVideo") }}</t-button>
-          <t-button size="small" variant="outline" @click="importVideo">{{ $t("importVideo") }}</t-button>
+          <t-button size="small" variant="outline" @click="batchGenText">{{ $t("workbench.generate.batchGenerateText") }}</t-button>
+          <t-button size="small" variant="outline" @click="batchGenVideo">{{ $t("workbench.generate.batchGenerateVideo") }}</t-button>
+          <t-button size="small" variant="outline" @click="importVideo">{{ $t("workbench.generate.importVideo") }}</t-button>
         </div>
       </div>
       <div class="itemBox">
@@ -104,7 +104,7 @@
               </div>
             </template>
           </div>
-          <span v-else class="emptyTrack">{{ $t("emptyTrack", index + 1) }}</span>
+          <span v-else class="emptyTrack">{{ $t("workbench.generate.emptyTrack", index + 1) }}</span>
           <div class="deleteBtn" @click.stop="confirmDeleteTrack(index)">
             <i-close size="14" />
           </div>
@@ -229,8 +229,8 @@ async function addTrack() {
 
 function confirmDeleteTrack(index: number) {
   const dlg = DialogPlugin.confirm({
-    header: $t("del"),
-    body: $t("delConfirm"),
+    header:$t("workbench.generate.del"),
+    body: $t("workbench.generate.delConfirm"),
     onConfirm: () => {
       dlg.destroy();
       deleteTrack(index);
@@ -314,9 +314,9 @@ function handleSelectSource(index: number) {
   pendingIndex.value = index;
 
   const dlg = DialogPlugin.confirm({
-    header: $t("selectSource"),
-    confirmBtn: $t("confirm"),
-    cancelBtn: $t("cancel"),
+    header: $t("workbench.generate.selectSource"),
+    confirmBtn: $t("workbench.generate.confirm"),
+    cancelBtn: $t("workbench.generate.cancel"),
     onConfirm: async () => {
       dlg.destroy();
       const assets = await assetsCheck({ types: fileTypeMap[item.fileType], multiple: false });

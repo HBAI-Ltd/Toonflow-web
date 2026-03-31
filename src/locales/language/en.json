@@ -694,7 +694,11 @@
         "error": "Save failed",
         "reconnect": "Reconnect",
         "notReconnect": "Confirm that the reconnection conversation will be cut off?",
-        "keepReconnect": "confirm"
+        "keepReconnect": "confirm",
+        "deleteConfirm": "Delete confirmation",
+        "deleteBody": "Delete text",
+        "confirmDelete": "Confirm deletion",
+        "scriptDeleted": "Script deleted"
       },
       "reconnect": "Reconnect"
     },
@@ -781,7 +785,9 @@
         "selectDelScript": "Please choose to delete the script",
         "batchDeleteHeader": "Batch Delete",
         "batchDeleteBody": "Are you sure you want to delete the selected {count} scripts? This cannot be undone.",
-        "batchDeleteSuccess": "Batch deletion successful"
+        "batchDeleteSuccess": "Batch deletion successful",
+        "extractingInProgress": "Extracting",
+        "projectNotFound": "Item not found"
       },
       "add": {
         "title": "Add Script",
@@ -1321,7 +1327,27 @@
     "noVideo": "No video yet",
     "prompt": "Video prompt words",
     "generateText": "AI generated prompt words",
-    "selectStoryboard": "Select storyboard"
+    "selectStoryboard": "Select storyboard",
+    "generate": {
+      "noVideo": "No video yet",
+      "generateText": "AI generated prompt words",
+      "selectStoryboard": "Select storyboard",
+      "generate": "Generate video",
+      "history": "Historical version",
+      "generating": "Generating",
+      "generateFailed": "fail",
+      "selectAll": "Select all",
+      "selected": "Selected",
+      "batchGenerateText": "Generate prompt words in batches",
+      "batchGenerateVideo": "Generate videos in batches",
+      "importVideo": "Import video",
+      "emptyTrack": "Paragraph {index 1}",
+      "del": "delete",
+      "delConfirm": "Are you sure you want to delete this paragraph?",
+      "selectSource": "Select source",
+      "confirm": "Select from assets",
+      "cancel": "Select from storyboard"
+    }
   },
   "login": {
     "slogan": "Intelligent Short Drama Creation Platform",
@@ -1336,20 +1362,6 @@
     "enterUsernameAndPassword": "Please enter username or password",
     "loginSuccess": "Login successful",
     "settingsSaved": "Settings saved"
-  },
-  "common": {
-    "cancel": "Cancel",
-    "confirm": "Confirm",
-    "selectAssets": "Select Assets",
-    "sessionExpired": "Session expired, please log in again",
-    "openSettings": "Open Settings",
-    "cancelled": "Generation cancelled",
-    "defaultReel": "Main Volume",
-    "save": "save",
-    "submitting": "Submitting",
-    "editSuccess": "Modification successful",
-    "editFailed": "Modification failed",
-    "submit": "submit"
   },
   "components.storyboardImageCheck.camera": "Camera",
   "components.storyboardImageCheck.dialogTitle": "Select Storyboard Image",
@@ -1435,8 +1447,6 @@
   "generateFailed": "fail",
   "selectAll": "Select all",
   "selected": "Selected",
-  "batchGenerateText": "Generate prompt words in batches",
-  "batchGenerateVideo": "Generate videos in batches",
   "importVideo": "Import video",
   "emptyTrack": "Paragraph {index 1}",
   "del": "Confirm deletion",

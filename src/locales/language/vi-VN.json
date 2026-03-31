@@ -605,7 +605,11 @@
         "error": "Lưu không thành công",
         "reconnect": "Kết nối lại",
         "notReconnect": "Xác nhận rằng cuộc trò chuyện kết nối lại sẽ bị cắt?",
-        "keepReconnect": "xác nhận"
+        "keepReconnect": "xác nhận",
+        "deleteConfirm": "Xóa xác nhận",
+        "deleteBody": "Xóa văn bản",
+        "confirmDelete": "Xác nhận xóa",
+        "scriptDeleted": "Đã xóa tập lệnh"
       },
       "reconnect": "kết nối lại"
     },
@@ -692,7 +696,9 @@
         "selectDelScript": "Vui lòng chọn xóa tập lệnh",
         "batchDeleteHeader": "Xóa hàng loạt",
         "batchDeleteBody": "Bạn có chắc chắn muốn xóa {count} kịch bản đã chọn không? Không thể hoàn tác thao tác này.",
-        "batchDeleteSuccess": "Xóa hàng loạt thành công"
+        "batchDeleteSuccess": "Xóa hàng loạt thành công",
+        "extractingInProgress": "Giải nén",
+        "projectNotFound": "Không tìm thấy mục"
       },
       "add": {
         "title": "Thêm kịch bản mới",
@@ -1222,7 +1228,27 @@
     "noVideo": "Chưa có video",
     "prompt": "Lời nhắc video",
     "generateText": "Lời nhắc do AI tạo ra",
-    "selectStoryboard": "Chọn bảng phân cảnh"
+    "selectStoryboard": "Chọn bảng phân cảnh",
+    "generate": {
+      "noVideo": "Chưa có video",
+      "generateText": "Lời nhắc do AI tạo ra",
+      "selectStoryboard": "Chọn bảng phân cảnh",
+      "generate": "Tạo video",
+      "history": "Phiên bản lịch sử",
+      "generating": "Đang tạo",
+      "generateFailed": "thất bại",
+      "selectAll": "Chọn tất cả",
+      "selected": "Đã chọn",
+      "batchGenerateText": "Tạo các từ nhắc nhở theo đợt",
+      "batchGenerateVideo": "Tạo video hàng loạt",
+      "importVideo": "Nhập video",
+      "emptyTrack": "Đoạn {chỉ mục 1}",
+      "del": "xóa bỏ",
+      "delConfirm": "Bạn có chắc chắn muốn xóa đoạn này?",
+      "selectSource": "Chọn nguồn",
+      "confirm": "Chọn từ nội dung",
+      "cancel": "Chọn từ bảng phân cảnh"
+    }
   },
   "login": {
     "slogan": "Nền tảng sáng tạo phim ngắn thông minh",
@@ -1336,8 +1362,6 @@
   "generateFailed": "thất bại",
   "selectAll": "Chọn tất cả",
   "selected": "Đã chọn",
-  "batchGenerateText": "Tạo các từ nhắc nhở theo đợt",
-  "batchGenerateVideo": "Tạo video hàng loạt",
   "importVideo": "Nhập video",
   "emptyTrack": "Đoạn {chỉ mục 1}",
   "del": "Xác nhận xóa",

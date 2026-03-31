@@ -615,7 +615,11 @@
         "error": "บันทึกล้มเหลว",
         "reconnect": "เชื่อมต่อใหม่",
         "notReconnect": "ยืนยันว่าการสนทนาการเชื่อมต่อใหม่จะถูกตัดออกหรือไม่",
-        "keepReconnect": "ยืนยัน"
+        "keepReconnect": "ยืนยัน",
+        "deleteConfirm": "ลบการยืนยัน",
+        "deleteBody": "ลบข้อความ",
+        "confirmDelete": "ยืนยันการลบ",
+        "scriptDeleted": "ลบสคริปต์แล้ว"
       },
       "reconnect": "เชื่อมต่อใหม่"
     },
@@ -702,7 +706,9 @@
         "selectDelScript": "โปรดเลือกที่จะลบสคริปต์",
         "batchDeleteHeader": "ลบเป็นกลุ่ม",
         "batchDeleteBody": "แน่ใจหรือไม่ว่าต้องการลบบทภาพยนตร์ที่เลือก {count} รายการ? การดำเนินการนี้ไม่สามารถยกเลิกได้",
-        "batchDeleteSuccess": "ลบเป็นกลุ่มสำเร็จ"
+        "batchDeleteSuccess": "ลบเป็นกลุ่มสำเร็จ",
+        "extractingInProgress": "การสกัด",
+        "projectNotFound": "ไม่พบรายการ"
       },
       "add": {
         "title": "เพิ่มบทภาพยนตร์",
@@ -1232,7 +1238,27 @@
     "noVideo": "ยังไม่มีวิดีโอ",
     "prompt": "คำแจ้งวิดีโอ",
     "generateText": "AI สร้างคำที่รวดเร็ว",
-    "selectStoryboard": "เลือกกระดานเรื่องราว"
+    "selectStoryboard": "เลือกกระดานเรื่องราว",
+    "generate": {
+      "noVideo": "ยังไม่มีวิดีโอ",
+      "generateText": "AI สร้างคำที่รวดเร็ว",
+      "selectStoryboard": "เลือกกระดานเรื่องราว",
+      "generate": "สร้างวิดีโอ",
+      "history": "เวอร์ชันประวัติศาสตร์",
+      "generating": "กำลังสร้าง",
+      "generateFailed": "ล้มเหลว",
+      "selectAll": "เลือกทั้งหมด",
+      "selected": "เลือกแล้ว",
+      "batchGenerateText": "สร้างคำพร้อมท์เป็นชุด",
+      "batchGenerateVideo": "สร้างวิดีโอเป็นชุด",
+      "importVideo": "นำเข้าวิดีโอ",
+      "emptyTrack": "ย่อหน้า {ดัชนี 1}",
+      "del": "ลบ",
+      "delConfirm": "คุณแน่ใจหรือไม่ว่าต้องการลบย่อหน้านี้",
+      "selectSource": "เลือกแหล่งที่มา",
+      "confirm": "เลือกจากสินทรัพย์",
+      "cancel": "เลือกจากกระดานเรื่องราว"
+    }
   },
   "login": {
     "slogan": "แพลตฟอร์มสร้างละครสั้นอัจฉริยะ",
@@ -1247,20 +1273,6 @@
     "enterUsernameAndPassword": "โปรดกรอกชื่อผู้ใช้หรือรหัสผ่าน",
     "loginSuccess": "เข้าสู่ระบบสำเร็จ",
     "settingsSaved": "บันทึกการตั้งค่าแล้ว"
-  },
-  "common": {
-    "cancel": "ยกเลิก",
-    "confirm": "ยืนยัน",
-    "selectAssets": "เลือกทรัพยากร",
-    "sessionExpired": "เซสชันหมดอายุ กรุณาเข้าสู่ระบบอีกครั้ง",
-    "openSettings": "เปิดการตั้งค่า",
-    "cancelled": "ยกเลิกการสร้าง",
-    "defaultReel": "เล่มหลัก",
-    "save": "บันทึก",
-    "submitting": "กำลังส่ง",
-    "editSuccess": "การปรับเปลี่ยนสำเร็จ",
-    "editFailed": "การปรับเปลี่ยนล้มเหลว",
-    "submit": "ส่ง"
   },
   "components.storyboardImageCheck.camera": "กล้อง",
   "components.storyboardImageCheck.dialogTitle": "เลือกรูปสตอรี่บอร์ด",
@@ -1346,8 +1358,6 @@
   "generateFailed": "ล้มเหลว",
   "selectAll": "เลือกทั้งหมด",
   "selected": "เลือกแล้ว",
-  "batchGenerateText": "สร้างคำพร้อมท์เป็นชุด",
-  "batchGenerateVideo": "สร้างวิดีโอเป็นชุด",
   "importVideo": "นำเข้าวิดีโอ",
   "emptyTrack": "ย่อหน้า {ดัชนี 1}",
   "del": "ยืนยันการลบ",
