@@ -1483,5 +1483,8 @@
   "delConfirm": "确认删除该段？",
   "selectSource": "选择来源",
   "confirm": "从资产选择",
-  "cancel": "从分镜选择"
+  "cancel": "从分镜选择",
+  "workbench.script.msg.waitExtract": "等待提取",
+  "workbench.script.msg.exportSuccess": "导出成功",
+  "workbench.script.msg.exportFailed": "导出失败"
 }

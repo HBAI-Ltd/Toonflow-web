@@ -1463,5 +1463,7 @@
   "delConfirm": "Are you sure you want to delete this paragraph?",
   "selectSource": "Select source",
   "confirm": "Select from assets",
-  "cancel": "Select from storyboard"
+  "cancel": "Select from storyboard",
+  "workbench.script.msg.selectExport": "",
+  "workbench.script.msg.exportFailed": "Export failed"
 }

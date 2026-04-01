@@ -26,23 +26,23 @@
                   width: `${200 * gridScale}px`,
                   height: `${200 * gridScale}px`,
                 }">
-                <t-tag class="frameTypeTag" :style="{ backgroundColor: tagColors[index % tagColors.length] }">
+                <t-tag class="frameTypeTag" :style="{ backgroundColor: tagColors[index % tagColors.length], transform: `scale(${styleMaxSize})` }">
                   S{{ String(index + 1).padStart(2, "0") }}
                 </t-tag>
                 <t-image v-if="item.src" :src="item.src" fit="contain" class="frameImg" @click="editStoryboaryImage(item, [item.src])">
                   <template #overlayContent>
                     <div class="imageToolsWrap show">
                       <t-tooltip theme="primary" :content="$t('workbench.production.node.storyboard.deleteNode')">
-                        <div class="remove ac" @click.stop="removeFn(item.id!)">
+                        <div class="remove ac" :style="{ transform: `scale(${styleMaxSize})` }" @click.stop="removeFn(item.id!)">
                           <i-delete theme="outline" size="18" fill="#fff" />
                         </div>
                       </t-tooltip>
                       <t-tooltip theme="primary" :content="$t('workbench.production.node.storyboard.editNode')">
-                        <div class="editNode ac" @click.stop="editInfo(item)">
+                        <div class="editNode ac" :style="{ transform: `scale(${styleMaxSize})` }" @click.stop="editInfo(item)">
                           <i-edit theme="outline" size="18" fill="#fff" />
                         </div>
                       </t-tooltip>
-                      <ImageTools :src="item.src" position="br" />
+                      <ImageTools :style="{ transform: `scale(${styleMaxSize})` }" :src="item.src" position="br" />
                     </div>
                   </template>
                 </t-image>
@@ -191,6 +191,10 @@ const currentRowStoryboardInfo = ref<{ id: number | null; insertAfterIndex: numb
   insertAfterIndex: null,
 });
 const generateLoading = ref(false);
+const styleMaxSize = computed(() => {
+  if (gridScale.value <= 1) return gridScale.value;
+  else 1;
+});
 // async function batchGenerateImage() {
 // LoadingPlugin(true);
 // generateLoading.value = true;
@@ -214,7 +218,7 @@ const generateLoading = ref(false);
 // }
 function editStoryboaryImage(item: Storyboard, images: string[], insertAfterIndex: number | null = null) {
   currentRowStoryboardInfo.value = {
-    id: item?.id ?? null,
+    id: insertAfterIndex == null ? item?.id! : null,
     insertAfterIndex,
   };
   currentRow.value = {
@@ -222,7 +226,11 @@ function editStoryboaryImage(item: Storyboard, images: string[], insertAfterInde
     resultImages: [],
     referanceImages: [],
   };
-  if (item.id) {
+  console.log("%c Line:221 🍢 currentRow.value", "background:#fca650", currentRow.value);
+
+  console.log("%c Line:217 🍡 currentRowStoryboardInfo.value", "background:#e41a6a", currentRowStoryboardInfo.value);
+
+  if (currentRowStoryboardInfo.value.id) {
     let imagesPush: string[] = [];
 
     if (item.associateAssetsIds && item.associateAssetsIds.length > 0) {
@@ -271,6 +279,7 @@ async function save({ imageUrl, flowId }: { imageUrl: string; flowId: number }) 
       ...newFrame,
       projectId: project.value?.id,
       scriptId: episodesId.value,
+      flowId,
     });
 
     storyboard.value.splice(insertAfterIndex + 1, 0, { ...newFrame, id: data.id! });
@@ -471,8 +480,8 @@ function editInfo(item: Storyboard) {
       transition: opacity 0.2s ease;
       .remove {
         position: absolute;
-        top: 10px;
-        right: 10px;
+        top: 3px;
+        right: 3px;
         z-index: 9999;
         padding: 5px;
         border-radius: 10px;
@@ -484,8 +493,8 @@ function editInfo(item: Storyboard) {
       }
       .editNode {
         position: absolute;
-        bottom: 10px;
-        left: 10px;
+        bottom: 3px;
+        left: 3px;
         z-index: 9999;
         padding: 5px;
         border-radius: 10px;

@@ -1386,5 +1386,6 @@
   "delConfirm": "この段落を削除してもよろしいですか?",
   "selectSource": "ソースを選択",
   "confirm": "アセットから選択",
-  "cancel": "ストーリーボードから選択"
+  "cancel": "ストーリーボードから選択",
+  "workbench.script.msg.exportFailed": "エクスポートに失敗しました"
 }

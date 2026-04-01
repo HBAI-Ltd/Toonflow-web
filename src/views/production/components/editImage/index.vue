@@ -5,8 +5,8 @@
     :closeBtn="false"
     v-model:visible="visible"
     attach="body"
-    width="80vw"
     placement="center"
+    mode="full-screen"
     class="fullscreenDialog">
     <div class="closure">
       <i-close-small theme="outline" size="24" fill="#4a4a4a" @click="closeFn" />
@@ -25,7 +25,7 @@
       </template>
 
       <template #node-generated="{ id, data }">
-        <generatedNode :id="id" :data="data" :projectId="projectId" :imageDefaultModle="imageDefaultModle" @keep="sureNode" />
+        <generatedNode :id="id" :data="data" :projectId="+project!.id" :imageDefaultModle="imageDefaultModle" @keep="sureNode" />
       </template>
       <template #edge-removeLine="edgeProps">
         <removeLine v-bind="edgeProps" />
@@ -58,13 +58,8 @@
         </div>
       </Panel>
     </VueFlow>
+    <storyboardImageCheck telepor v-model="storyboardVisible" :scriptId="episodesId!" @confirm="onStoryboardConfirm" @cancel="onStoryboardCancel" />
   </t-dialog>
-  <storyboardImageCheck
-    v-model="storyboardVisible"
-    v-if="storyboardVisible"
-    :scriptId="episodesId!"
-    @confirm="onStoryboardConfirm"
-    @cancel="onStoryboardCancel" />
 </template>
 
 <script setup lang="ts">
@@ -81,7 +76,8 @@ import "@vue-flow/core/dist/style.css";
 import "@vue-flow/core/dist/theme-default.css";
 import "@vue-flow/controls/dist/style.css";
 import removeLine from "./removeLine.vue";
-import store from "@/stores";
+import projectStore from "@/stores/project";
+
 import axios from "@/utils/axios";
 import type { NodeType, UploadNodeData, GeneratedNodeData } from "../../utils/editImageType";
 import { DEFAULT_EDGE_OPTIONS, createGeneratedData, cleanNodes, cleanEdges } from "../../utils/editImageType";
@@ -89,36 +85,17 @@ import { useLayout } from "../../utils/dagre";
 import { v4 as uuid } from "uuid";
 
 const episodesId = inject<Ref<number>>("episodesId");
+const { project } = storeToRefs(projectStore());
 
 // ---- storyboardImageCheck 统一管理 ----
 const storyboardVisible = ref(false);
 let storyboardResolve: ((rows: Storyboard[]) => void) | null = null;
-
-function openStoryboardCheck(): Promise<Storyboard[]> {
-  storyboardVisible.value = true;
-  return new Promise<Storyboard[]>((resolve) => {
-    storyboardResolve = resolve;
-  });
-}
-
-function onStoryboardConfirm(rows: Storyboard[]) {
-  storyboardVisible.value = false;
-  storyboardResolve?.(rows);
-  storyboardResolve = null;
-}
-
-function onStoryboardCancel() {
-  storyboardVisible.value = false;
-  storyboardResolve?.([]);
-  storyboardResolve = null;
-}
 
 provide("openStoryboardCheck", openStoryboardCheck);
 
 const { toObject, fromObject, fitView } = useVueFlow({ id: "editImage" });
 const { layout } = useLayout("editImage");
 
-const { projectId } = storeToRefs(store());
 const props = withDefaults(
   defineProps<{
     flowData: {
@@ -149,6 +126,24 @@ const edges = ref<Edge<any, any, string>[]>([]);
 
 // 防抖定时器
 let syncTimer: ReturnType<typeof setTimeout> | null = null;
+function openStoryboardCheck(): Promise<Storyboard[]> {
+  storyboardVisible.value = true;
+  return new Promise<Storyboard[]>((resolve) => {
+    storyboardResolve = resolve;
+  });
+}
+
+function onStoryboardConfirm(rows: Storyboard[]) {
+  storyboardVisible.value = false;
+  storyboardResolve?.(rows);
+  storyboardResolve = null;
+}
+
+function onStoryboardCancel() {
+  storyboardVisible.value = false;
+  storyboardResolve?.([]);
+  storyboardResolve = null;
+}
 
 // 根据当前连线，将 upload 节点的图片同步到 generated 节点的 references
 function syncReferences() {
@@ -266,9 +261,13 @@ const imageDefaultModle = ref({
 });
 onMounted(async () => {
   try {
+    console.log("%c Line:271 🥝 project.value", "background:#6ec1c2", project.value);
+
     const { data: imageModel } = await axios.post("/production/editImage/getImageDefaultModle", {
-      projectId: projectId.value,
+      projectId: project.value!.id,
     });
+    console.log("%c Line:270 🍓 imageModel", "background:#ed9ec7", imageModel);
+
     if (imageModel) {
       imageDefaultModle.value = imageModel;
     }
@@ -338,7 +337,6 @@ async function layoutGraph(direction: "LR" | "TB") {
   }
   .editImage {
     width: 100%;
-    height: 75vh;
   }
 }
 

@@ -71,7 +71,7 @@
 import { Handle, Position, type Edge } from "@vue-flow/core";
 import editImage from "../components/editImage/index.vue";
 import { type AssetItem, type DeriveAsset } from "../utils/flowBuilder";
-
+import axios from "@/utils/axios";
 const props = defineProps<{
   id: string;
   handleIds: {
@@ -107,9 +107,10 @@ async function save({ imageUrl, flowId }: { imageUrl: string; flowId: number }) 
     const target = i.derive.find((s) => s.id === currentAssetsId.value);
     if (target) {
       target.src = imageUrl;
-      return;
+      break;
     }
   }
+
   await axios.post("/production/assets/updateAssetsUrl", {
     id: currentAssetsId.value,
     url: imageUrl,

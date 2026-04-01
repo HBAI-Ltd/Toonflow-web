@@ -1377,5 +1377,6 @@
   "delConfirm": "確認刪除該段？",
   "selectSource": "選擇來源",
   "confirm": "從資產選擇",
-  "cancel": "從分鏡選擇"
+  "cancel": "從分鏡選擇",
+  "workbench.script.msg.exportFailed": "匯出失敗"
 }

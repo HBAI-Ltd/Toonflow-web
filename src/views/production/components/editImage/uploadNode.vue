@@ -64,8 +64,8 @@ const currentImageUrl = ref(props.data?.image || "");
 const currentObjectUrl = ref<string | null>(null);
 
 const options = [
-  { content: "$t('workbench.production.editImage.uploadImage')", value: 1 },
-  { content: "$t('workbench.production.editImage.uploadStoryboardImage')", value: 2 },
+  { content: $t("workbench.production.editImage.uploadImage"), value: 1 },
+  { content: $t("workbench.production.editImage.uploadStoryboardImage"), value: 2 },
 ];
 
 watch(

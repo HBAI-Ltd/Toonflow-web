@@ -28,6 +28,11 @@
           <template #icon><i-delete /></template>
           {{ $t("workbench.script.deleteScript") }}{{ selectedIds.length ? `(${selectedIds.length})` : "" }}
         </t-button>
+        <t-button ghost theme="primary" @click="settingVisable = true">
+          <template #icon>
+            <i-setting-two size="1rem" ghost />
+          </template>
+        </t-button>
       </div>
     </div>
     <div class="contentArea">
@@ -46,6 +51,7 @@
             <span class="content">{{ item.content }}</span>
 
             <t-loading v-if="item?.extractState == 0" :text="$t('workbench.script.msg.extracting')" size="small"></t-loading>
+            <t-loading v-if="item?.extractState == 2" :text="$t('workbench.script.msg.waitExtract')" size="small"></t-loading>
             <t-tooltip :content="item.errorReason" v-if="item?.extractState == -1" theme="light">
               <t-tag theme="danger" size="small">{{ $t("workbench.script.msg.extractFailed") }}</t-tag>
             </t-tooltip>
@@ -64,6 +70,29 @@
     </div>
     <editScript v-model="detailsShow" :item="selectedScript" @searchScripts="searchScripts" />
     <addScript v-model="addScriptShow" @searchScripts="searchScripts" />
+
+    <!-- 设置弹窗 -->
+    <t-dialog
+      v-model:visible="settingVisable"
+      header="提取设置"
+      :footer="false"
+      width="400px"
+    >
+      <div class="settingDialogContent">
+        <div class="settingItem f ac">
+          <span class="settingLabel">提取并发数：</span>
+          <t-input-number
+            v-model="concurrentCount"
+            :min="1"
+            :allowInputOverLimit="false"
+            autoWidth
+            :placeholder="$t('workbench.cornerScape.concurrencyPh')" />
+        </div>
+      </div>
+      <div class="settingDialogFooter">
+        <t-button theme="primary" @click="settingVisable = false">确定</t-button>
+      </div>
+    </t-dialog>
   </div>
 </template>
 
@@ -86,7 +115,7 @@ interface Script {
   name: string;
   content: string;
   createTime?: number;
-  extractState?: -1 | 0 | 1;
+  extractState?: -1 | 0 | 1 | 2; // -1 失败 0 正在提取 1 成功 2 未提取
   errorReason?: string;
   relatedAssets?: ScriptAsset[];
 }
@@ -96,7 +125,8 @@ const addScriptShow = ref(false);
 const selectedIds = ref<number[]>([]);
 const scriptLoad = ref(false);
 const isAllSelected = computed(() => scripts.value.length > 0 && selectedIds.value.length === scripts.value.length);
-
+const concurrentCount = ref(5);
+const settingVisable = ref(false);
 function toggleSelect(id: number) {
   const idx = selectedIds.value.indexOf(id);
   if (idx === -1) {
@@ -155,7 +185,7 @@ async function handleExportScript() {
     window.$message.success($t("workbench.script.msg.exportSuccess"));
   } catch (error) {
     console.error("导出剧本失败:", error);
-    window.$message.error($t("workbench.script.msg.exportFailed"));
+    window.$message.error((error as Error).message ?? $t("workbench.script.msg.exportFailed"));
   }
 }
 const selectedScript = ref<Script>({
@@ -212,6 +242,7 @@ async function handleExtractAssets() {
     await axios.post("/script/extractAssets", {
       scriptIds: selectedIds.value,
       projectId: project.value!.id,
+      groupSize: concurrentCount.value,
     });
     searchScripts();
   } catch (e) {
@@ -320,6 +351,9 @@ watch(
     }
     .actionBar-right {
       gap: 12px;
+      .countBox {
+        gap: 5px;
+      }
     }
   }
   .contentArea {
@@ -372,5 +406,25 @@ watch(
       height: 600px;
     }
   }
+}
+
+.settingDialogContent {
+  padding: 16px 0;
+  .settingItem {
+    gap: 12px;
+    margin-bottom: 16px;
+    &:last-child {
+      margin-bottom: 0;
+    }
+    .settingLabel {
+      white-space: nowrap;
+      min-width: 80px;
+    }
+  }
+}
+.settingDialogFooter {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 24px;
 }
 </style>

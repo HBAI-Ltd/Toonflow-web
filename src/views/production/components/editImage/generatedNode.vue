@@ -121,11 +121,11 @@ function handleKeep() {
   emit("keep", props.data.generatedImage);
 }
 onMounted(() => {
-  console.log("%c Line:125 🍊", "background:#4fff4B");
+  console.log("%c Line:125 🍊", "background:#4fff4B", props.imageDefaultModle);
   if (props.imageDefaultModle) {
     props.data.model = props.imageDefaultModle?.imageModel ?? "";
     props.data.quality = props.imageDefaultModle?.imageQuality ?? "";
-    props.data.ratio = "2K";
+    props.data.ratio = "16:9";
   }
 });
 </script>

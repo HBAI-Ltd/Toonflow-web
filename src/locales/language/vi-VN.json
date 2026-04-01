@@ -1378,5 +1378,6 @@
   "delConfirm": "Bạn có chắc chắn muốn xóa đoạn này?",
   "selectSource": "Chọn nguồn",
   "confirm": "Chọn từ nội dung",
-  "cancel": "Chọn từ bảng phân cảnh"
+  "cancel": "Chọn từ bảng phân cảnh",
+  "workbench.script.msg.exportFailed": "Xuất không thành công"
 }

@@ -5,6 +5,7 @@
     width="80vw"
     :footer="true"
     placement="center"
+    :zIndex="999999999999"
     @close="handleClose"
     @confirm="handleConfirm"
     @cancel="handleClose">
