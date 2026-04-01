@@ -16,7 +16,7 @@
             </template>
             <span>{{ item.name }}</span>
             <t-switch
-              v-model="item.enableEnglish"
+              v-model="item.enable"
               @change="onChange"
               style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); z-index: 10"></t-switch>
           </t-menu-item>
@@ -27,12 +27,12 @@
     </div>
     <!-- 右侧配置面板 -->
     <div v-if="currentVendor" class="modelParameter">
-      <div class="infoBox ac jb">
-        <span class="idBox">#{{ currentVendor.id }}</span>
-        <span class="author">@{{ currentVendor.author }}</span>
-      </div>
       <div class="configuration">
         <t-form :data="currentVendor" labelAlign="top">
+          <div class="infoBox ac jb">
+            <span class="idBox">#{{ currentVendor.id }}</span>
+            <span class="author">@{{ currentVendor.author }}</span>
+          </div>
           <t-form-item>
             <MdPreview v-model="currentVendor.description" :theme="'light'" />
           </t-form-item>
@@ -107,11 +107,11 @@
             </div>
           </t-card>
         </t-form>
-      </div>
-      <div class="updateAction">
-        <t-button theme="danger" :loading="updating" @click="handleDeleteVendor">{{ $t("settings.vendor.deleteVendor") }}</t-button>
-        <t-button theme="default" :loading="updating" @click="handleEditVendorCode">{{ $t("settings.vendor.editCode") }}</t-button>
-        <!-- <t-button theme="primary" :loading="updating" @click="handleUpdateVendor">{{ $t("settings.vendor.updateConfig") }}</t-button> -->
+        <div class="updateAction">
+          <t-button theme="danger" :loading="updating" @click="handleDeleteVendor">{{ $t("settings.vendor.deleteVendor") }}</t-button>
+          <t-button theme="default" :loading="updating" @click="handleEditVendorCode">{{ $t("settings.vendor.editCode") }}</t-button>
+          <!-- <t-button theme="primary" :loading="updating" @click="handleUpdateVendor">{{ $t("settings.vendor.updateConfig") }}</t-button> -->
+        </div>
       </div>
     </div>
 
@@ -246,14 +246,18 @@
       :maskClosable="false">
       <div class="data">
         <t-radio-group variant="default-filled" v-model="addMode">
-          <t-radio-button value="linkAdd">链接添加</t-radio-button>
-          <t-radio-button value="importAdd">导入添加</t-radio-button>
-          <t-radio-button value="codeAdd">代码添加</t-radio-button>
+          <t-radio-button value="linkAdd">通过链接添加</t-radio-button>
+          <t-radio-button value="importAdd">通过文件导入</t-radio-button>
+          <t-radio-button value="codeAdd">通过代码添加</t-radio-button>
         </t-radio-group>
         <div class="linkAdd" v-if="addMode == 'linkAdd'">
+          <t-alert theme="warning" style="margin-bottom: 20px">
+            请勿输入不可靠的地址！点击“确定”后，Toonflow
+            将自动从该地址拉取代码并添加为供应商。如果地址存在安全隐患，可能导致引入存在风险的供应商代码。建议仅输入来自可信来源的地址。
+          </t-alert>
           <t-input v-model="link" :placeholder="$t('settings.vendor.linkAddPlaceholder')"></t-input>
           <div style="margin-top: 10px; text-align: right; width: 100%">
-            <t-button @click="linkRead">{{ $t("settings.vendor.linkAdd") }}</t-button>
+            <t-button :loading="linkReading" :disabled="!link.trim()" @click="linkRead">{{ $t("settings.vendor.linkAdd") }}</t-button>
           </div>
         </div>
         <div class="importAdd" v-if="addMode == 'importAdd'">
@@ -287,7 +291,26 @@
       :header="$t('settings.vendor.code')"
       :maskClosable="false"
       @confirm="handleConfirmVendor">
-      <CodeEditor v-model:value="vendorCode" language="typescript" theme="vs-dark" :height="600" :options="editorOptions" />
+       <div class="editorToolbar">
+        <div class="editorInfo">
+          <t-icon name="info-circle" size="16px" />
+          <span>{{ $t("settings.vendor.codeEditorInfo") }}</span>
+        </div>
+        <div class="editorActions">
+          <t-button variant="text" size="small" @click="vendorCode = VENDOR_CODE_TEMPLATE">
+            <template #icon><t-icon name="rollback" /></template>
+            {{ $t("settings.vendor.reset") }}
+          </t-button>
+          <t-button variant="outline" size="small" @click="fileInputRef?.click()">
+            <template #icon><t-icon name="upload" /></template>
+            {{ $t("settings.vendor.importFile") }}
+          </t-button>
+          <input ref="fileInputRef" type="file" accept=".ts,.js,.txt,.json" style="display: none" @change="handleFileChange" />
+        </div>
+      </div>
+      <div class="editorWrapper">
+        <CodeEditor v-model:value="vendorCode" language="typescript" theme="vs-dark" :height="600" :options="editorOptions" />
+      </div>
     </t-dialog>
   </div>
 </template>
@@ -298,7 +321,7 @@ import { CodeEditor } from "monaco-editor-vue3";
 import { DialogPlugin } from "tdesign-vue-next";
 import axios from "@/utils/axios";
 import VENDOR_CODE_TEMPLATE from "@/lib/vendorTemplate.ts?raw";
-import type { UploadFile, PrimaryTableCol, TableRowData } from "tdesign-vue-next";
+import type { UploadFile } from "tdesign-vue-next";
 import { LoadingPlugin } from "tdesign-vue-next";
 import mammoth from "mammoth";
 // ── 类型 ──
@@ -353,7 +376,7 @@ interface VendorItem {
   modelName?: string;
   model?: VendorModel[];
   models?: VendorModel[];
-  enableEnglish: number; //1启用 0禁用
+  enable: number; //1启用 0禁用
 }
 
 // ── 常量 ──
@@ -440,7 +463,7 @@ async function getVendorList() {
     vendorList.value = res.data.map((item: any) => {
       return {
         ...item,
-        enableEnglish: item.enableEnglish == 1 ? true : false,
+        enable: item.enable == 1 ? true : false,
       };
     });
 
@@ -990,9 +1013,9 @@ function onBlurFn() {
 function onChange(val: any) {
   const id = currentVendor.value?.id;
   axios
-    .post("/setting/vendorConfig/enableEnglishVendor", {
+    .post("/setting/vendorConfig/enableVendor", {
       id: id,
-      enableEnglish: val == true ? 1 : 0,
+      enable: val == true ? 1 : 0,
     })
     .then(() => {
       if (val == true) window.$message.success($t("settings.vendor.msg.enabled"));
@@ -1005,6 +1028,7 @@ function onChange(val: any) {
 }
 const addMode = ref("linkAdd");
 const link = ref("");
+const linkReading = ref(false);
 
 watch(addMode, (val) => {
   if (val == "codeAdd") codeDialogVisible.value = true;
@@ -1013,6 +1037,7 @@ watch(addMode, (val) => {
 
 //链接读取
 function linkRead() {
+  if (linkReading.value) return;
   const firstConfirm = DialogPlugin.confirm({
     theme: "danger",
     header: $t("settings.vendor.msg.highRiskConfirm"),
@@ -1028,10 +1053,36 @@ function linkRead() {
         confirmBtn: { content: $t("settings.vendor.msg.confirmAndAdd"), theme: "danger" },
         cancelBtn: $t("settings.vendor.msg.goBackCheck"),
         onConfirm: async () => {
-          console.log("%c Line:1044 🍡 link.value", "background:#465975", link.value);
-          vendorDialogVisible.value = false;
-          codeDialogVisible.value = false;
-          secondConfirm.destroy();
+          const instance = LoadingPlugin({
+            fullscreen: true,
+            attach: "body",
+            preventScrollThrough: false,
+          });
+          const timer = setTimeout(() => {
+            instance.hide();
+            clearTimeout(timer);
+          }, 1000);
+          linkReading.value = true;
+          try {
+            const { data } = await axios.post("/setting/vendorConfig/getCodeByLink", { link: link.value });
+            if (data) {
+              await axios.post("/setting/vendorConfig/addVendor", { tsCode: data });
+              window.$message.success($t("settings.vendor.msg.vendorAdded"));
+              vendorDialogVisible.value = false;
+              codeDialogVisible.value = false;
+              getVendorList();
+            } else {
+              window.$message.error($t("settings.vendor.msg.linkAddFailed"));
+              codeDialogVisible.value = false;
+            }
+          } catch (err: any) {
+            window.$message.error(`${$t("settings.vendor.msg.addFailed")}${err.message}`);
+          } finally {
+            clearTimeout(timer);
+            instance.hide();
+            linkReading.value = false;
+            secondConfirm.destroy();
+          }
         },
         onClose: () => secondConfirm.hide(),
       });
@@ -1040,7 +1091,6 @@ function linkRead() {
   });
 }
 const uploadRef = ref();
-const content = ref("");
 // 上传前校验并解析
 async function handleBeforeUpload(file: UploadFile) {
   const rawFile = file.raw;
@@ -1125,6 +1175,17 @@ async function handleDrop(e: DragEvent) {
     await handleBeforeUpload({ raw: files[0] });
   }
 }
+function handleFileChange(e: Event) {
+  const input = e.target as HTMLInputElement;
+  const file = input.files?.[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    vendorCode.value = (ev.target?.result as string) || "";
+  };
+  reader.readAsText(file);
+  input.value = "";
+}
 </script>
 
 <style lang="scss" scoped>
@@ -1150,7 +1211,6 @@ async function handleDrop(e: DragEvent) {
   }
 
   .modelParameter {
-    flex: 1;
     width: 100%;
     height: 100%;
     .infoBox {
@@ -1158,7 +1218,8 @@ async function handleDrop(e: DragEvent) {
       opacity: 0.6;
     }
     .configuration {
-      height: 80%;
+      height: 95%;
+      padding-right: 10px;
       overflow-y: auto;
       .modelCard {
         width: 100%;
