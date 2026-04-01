@@ -166,7 +166,8 @@
         "enabled": "Đã bật",
         "disabled": "Tàn tật",
         "linkAddVendorRiskBody": "Việc thêm nhà cung cấp AI mới sẽ cấp cho nhà cung cấp đó quyền truy cập vào API hệ thống, vui lòng đảm bảo rằng bạn tin cậy nguồn liên kết của nhà cung cấp đó!",
-        "importAdd": "Việc thêm nhà cung cấp AI mới sẽ cấp cho nhà cung cấp đó quyền truy cập vào API hệ thống, vui lòng đảm bảo rằng bạn tin cậy vào nguồn tài liệu của nhà cung cấp đó!"
+        "importAdd": "Việc thêm nhà cung cấp AI mới sẽ cấp cho nhà cung cấp đó quyền truy cập vào API hệ thống, vui lòng đảm bảo rằng bạn tin cậy vào nguồn tài liệu của nhà cung cấp đó!",
+        "linkAddFailed": "Không thể thêm liên kết"
       },
       "associationSkills": "Kỹ năng liên quan",
       "think": "suy nghĩ sâu sắc",

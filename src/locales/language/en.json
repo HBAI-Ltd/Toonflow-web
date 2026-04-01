@@ -167,7 +167,8 @@
         "enabled": "Enabled",
         "disabled": "Disabled",
         "linkAddVendorRiskBody": "Adding a new AI vendor will give it access to the system API, please make sure you trust the vendor's link source!",
-        "importAdd": "Adding a new AI vendor will give it access to the system API, please make sure you trust the vendor's documentation source!"
+        "importAdd": "Adding a new AI vendor will give it access to the system API, please make sure you trust the vendor's documentation source!",
+        "linkAddFailed": "Failed to add link"
       },
       "associationSkills": "Associated skills",
       "think": "deep thinking",

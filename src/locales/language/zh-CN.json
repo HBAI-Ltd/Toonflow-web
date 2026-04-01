@@ -178,7 +178,8 @@
         "enabled": "已启用",
         "disabled": "已禁用",
         "linkAddVendorRiskBody": "添加新的 AI 供应商将赋予其访问系统 API 的权限，请确认您信任该供应商的链接来源！",
-        "importAdd": "添加新的 AI 供应商将赋予其访问系统 API 的权限，请确认您信任该供应商的文件来源！"
+        "importAdd": "添加新的 AI 供应商将赋予其访问系统 API 的权限，请确认您信任该供应商的文件来源！",
+        "linkAddFailed": "链接添加失败"
       },
       "associationSkills": "关联skills",
       "think": "深度思考",
