@@ -359,7 +359,10 @@
       "canvasIsDisabled": "画布缩放",
       "agentCanvasScalingMethod": "生产页无限画布滚轮操作",
       "zoom": "缩放",
-      "scroll": "滚动"
+      "scroll": "滚动",
+      "isInteracting": "生产页无限画布拖拽性能优化",
+      "closeIsInteracting": "关闭",
+      "openIsInteracting": "开启"
     },
     "request": {
       "warning": "如非特殊情况，不需要修改或者配置",
@@ -1501,5 +1504,7 @@
   "cancel": "从分镜选择",
   "workbench.script.msg.waitExtract": "等待提取",
   "workbench.script.msg.exportSuccess": "导出成功",
-  "workbench.script.msg.exportFailed": "导出失败"
+  "workbench.script.msg.exportFailed": "导出失败",
+  "workbench.production.node.storyboard.videoDescPlaceholder": "请输入视频描述",
+  "workbench.production.node.storyboard.videoDesc": "videoDesc"
 }

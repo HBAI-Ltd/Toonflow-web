@@ -46,13 +46,75 @@ const editorContent = ref("");
 let savedRange: Range | null = null;
 let internalUpdate = false;
 
+// 创建引用标签元素
+function createRefTag(index: number): HTMLSpanElement {
+  const imgSrc = props.references?.[index]?.image ?? "";
+  const container = document.createElement("span");
+  container.contentEditable = "false";
+  container.dataset.refIndex = String(index);
+  container.dataset.imgSrc = imgSrc;
+
+  const vnode = h(
+    Popup,
+    {
+      content: () =>
+        h("img", {
+          src: imgSrc,
+          style: { width: "200px", borderRadius: "8px", display: "block" },
+          alt: "",
+        }),
+      placement: "top",
+    },
+    {
+      default: () => [
+        h("div", { class: "tag" }, [
+          h("img", { src: imgSrc, alt: "" }),
+          h("span", null, $t("workbench.production.editImage.imageRef", { index: index + 1 })),
+        ]),
+      ],
+    },
+  );
+  render(vnode, container);
+  return container;
+}
+
+// 将 prompt 文本渲染到编辑器，处理 @图N 为标签
+function renderPromptToEditor(text: string) {
+  if (!editorRef.value) return;
+  editorRef.value.innerHTML = "";
+  const regex = /@图(\d+)/g;
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+  while ((match = regex.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      editorRef.value.appendChild(document.createTextNode(text.substring(lastIndex, match.index)));
+    }
+    editorRef.value.appendChild(createRefTag(Number(match[1]) - 1));
+    editorRef.value.appendChild(document.createTextNode("\u200B"));
+    lastIndex = regex.lastIndex;
+  }
+  if (lastIndex < text.length) {
+    editorRef.value.appendChild(document.createTextNode(text.substring(lastIndex)));
+  }
+  editorContent.value = editorRef.value.textContent || "";
+}
+
 // 初始化编辑器内容
 onMounted(() => {
   if (editorRef.value && prompt.value) {
-    editorRef.value.textContent = prompt.value;
-    editorContent.value = prompt.value;
+    renderPromptToEditor(prompt.value);
   }
 });
+
+// 监听 references 变化，重新渲染标签（避免 props 数据延迟导致图片为空）
+watch(
+  () => props.references,
+  () => {
+    if (editorRef.value && prompt.value) {
+      renderPromptToEditor(prompt.value);
+    }
+  },
+);
 
 // 监听外部 prompt 变化，同步到编辑器
 watch(prompt, (newVal) => {
@@ -63,8 +125,7 @@ watch(prompt, (newVal) => {
   if (!editorRef.value) return;
   const currentText = editorRef.value.textContent?.replace(/\u200B/g, "") || "";
   if (newVal !== undefined && newVal !== currentText) {
-    editorRef.value.textContent = newVal;
-    editorContent.value = newVal;
+    renderPromptToEditor(newVal);
   }
 });
 
@@ -150,35 +211,7 @@ function selectReference(index: number) {
   const lastAt = fullText.lastIndexOf("@", cursorOffset - 1);
   if (lastAt === -1) return;
 
-  const container = document.createElement("span");
-  container.contentEditable = "false";
-  container.dataset.refIndex = String(index);
-
-  const imgSrc = props.references?.[index]?.image ?? "";
-  container.dataset.imgSrc = imgSrc;
-
-  const vnode = h(
-    Popup,
-    {
-      content: () =>
-        h("img", {
-          src: imgSrc,
-          style: { width: "200px", borderRadius: "8px", display: "block" },
-          alt: "",
-        }),
-      placement: "top",
-    },
-    {
-      default: () => [
-        h("div", { class: "tag" }, [
-          h("img", { src: imgSrc, alt: "" }),
-          h("span", null, $t("workbench.production.editImage.imageRef", { index: index + 1 })),
-        ]),
-      ],
-    },
-  );
-
-  render(vnode, container);
+  const container = createRefTag(index);
 
   // 将 @ 及其后面输入的内容替换为标签
   // 先拆分文本节点：在 lastAt 处拆分，保留前半段

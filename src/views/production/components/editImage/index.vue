@@ -35,16 +35,6 @@
 
       <Panel position="top-left">
         <div class="ac" style="gap: 8px">
-          <t-tooltip theme="primary" content="$t('workbench.production.autoLayoutLR')">
-            <div class="item c" @click="layoutGraph('LR')">
-              <i-tree-diagram theme="outline" size="24" />
-            </div>
-          </t-tooltip>
-          <t-tooltip theme="primary" content="$t('workbench.production.autoLayoutTB')">
-            <div class="item c" @click="layoutGraph('TB')">
-              <i-branch-one theme="outline" size="24" />
-            </div>
-          </t-tooltip>
           <t-dropdown
             :options="[
               { content: $t('workbench.production.editImage.upload'), value: 1 },
@@ -55,6 +45,13 @@
               <template #icon><i-plus /></template>
             </t-button>
           </t-dropdown>
+          <t-tooltip theme="primary" content="$t('workbench.production.autoLayoutLR')">
+            <t-button class="guide-layout-btn" @click="layoutGraph('LR')" variant="outline" shape="circle">
+              <template #icon>
+                <i-tree-diagram />
+              </template>
+            </t-button>
+          </t-tooltip>
         </div>
       </Panel>
     </VueFlow>
@@ -93,7 +90,7 @@ let storyboardResolve: ((rows: Storyboard[]) => void) | null = null;
 
 provide("openStoryboardCheck", openStoryboardCheck);
 
-const { toObject, fromObject, fitView } = useVueFlow({ id: "editImage" });
+const { toObject, fromObject, fitView } = useVueFlow("editImage");
 const { layout } = useLayout("editImage");
 
 const props = withDefaults(
@@ -119,7 +116,7 @@ const visible = defineModel({
   type: Boolean,
   default: false,
 });
-const { addEdges, getNodes, getEdges, updateNodeData } = useVueFlow({ id: "editImage" });
+const { addEdges, getNodes, getEdges, updateNodeData } = useVueFlow("editImage");
 
 const nodes = ref<NodeType[]>([]);
 const edges = ref<Edge<any, any, string>[]>([]);
@@ -261,13 +258,9 @@ const imageDefaultModle = ref({
 });
 onMounted(async () => {
   try {
-    console.log("%c Line:271 🥝 project.value", "background:#6ec1c2", project.value);
-
     const { data: imageModel } = await axios.post("/production/editImage/getImageDefaultModle", {
       projectId: project.value!.id,
     });
-    console.log("%c Line:270 🍓 imageModel", "background:#ed9ec7", imageModel);
-
     if (imageModel) {
       imageDefaultModle.value = imageModel;
     }
@@ -307,15 +300,24 @@ function buildFlow() {
 }
 
 function closeFn() {
-  if (props.flowData.flowId) {
-    const payload = {
-      flowId: props.flowData.flowId,
-      nodes: cleanNodes(getNodes.value as NodeType[]),
-      edges: cleanEdges(getEdges.value),
-    };
-    axios.post("/production/editImage/updateImageFlow", { ...payload });
-  }
-  visible.value = false;
+  const dialog = DialogPlugin.confirm({
+    header: $t("workbench.production.editImage.closeConfirmTitle"),
+    body: $t("workbench.production.editImage.closeConfirmBody"),
+    confirmBtn: $t("common.confirm"),
+    cancelBtn: $t("common.cancel"),
+    onConfirm: () => {
+      if (props.flowData.flowId) {
+        const payload = {
+          flowId: props.flowData.flowId,
+          nodes: cleanNodes(getNodes.value as NodeType[]),
+          edges: cleanEdges(getEdges.value),
+        };
+        axios.post("/production/editImage/updateImageFlow", { ...payload });
+      }
+      visible.value = false;
+      dialog.destroy();
+    },
+  });
 }
 async function layoutGraph(direction: "LR" | "TB") {
   const oldData = toObject();
@@ -360,5 +362,16 @@ async function layoutGraph(direction: "LR" | "TB") {
     border-radius: 4px;
     cursor: pointer;
   }
+}
+
+$handelSize: 12px;
+
+:deep(.source) {
+  height: $handelSize;
+  width: $handelSize;
+}
+:deep(.target) {
+  height: $handelSize;
+  width: $handelSize;
 }
 </style>

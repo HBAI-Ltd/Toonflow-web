@@ -154,6 +154,8 @@ async function save({ imageUrl, flowId }: { imageUrl: string; flowId: number }) 
         align-items: stretch;
         gap: 12px;
         padding: 10px;
+        content-visibility: auto;
+        contain-intrinsic-size: auto 250px;
 
         &:not(:first-child) {
           margin-top: 8px;

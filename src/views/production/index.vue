@@ -1,6 +1,7 @@
 <template>
   <VueFlow
     class="flowMain"
+    :class="{ 'is-interacting': isInteracting && otherSetting.interacting }"
     :nodes="episodesId ? nodes : []"
     :edges="episodesId ? edges : []"
     :max-zoom="10"
@@ -102,9 +103,30 @@ import projectStore from "@/stores/project";
 
 const { project } = storeToRefs(projectStore());
 import settingStore from "@/stores/setting";
-const { canvasWheelEvent } = storeToRefs(settingStore());
+const { canvasWheelEvent, otherSetting } = storeToRefs(settingStore());
 const openShowVisible = ref(true);
-const { toObject, fromObject, fitView, findNode, onNodeDragStop, updateNodeInternals, getNodes } = useVueFlow();
+const { toObject, fromObject, fitView, findNode, onNodeDragStart, onNodeDragStop, onMoveStart, onMoveEnd, updateNodeInternals, getNodes } =
+  useVueFlow();
+
+// 拖拽/平移期间降低渲染复杂度，优化性能
+const isInteracting = ref(false);
+let interactionTimer: ReturnType<typeof setTimeout> | null = null;
+
+function startInteracting() {
+  if (interactionTimer) clearTimeout(interactionTimer);
+  isInteracting.value = true;
+}
+function stopInteracting() {
+  // 延迟恢复，避免频繁切换
+  if (interactionTimer) clearTimeout(interactionTimer);
+  interactionTimer = setTimeout(() => {
+    isInteracting.value = false;
+  }, 150);
+}
+
+onNodeDragStart(() => startInteracting());
+onMoveStart(() => startInteracting());
+onMoveEnd(() => stopInteracting());
 const { layout } = useLayout();
 
 import productionAgentStore from "@/stores/productionAgent";
@@ -126,7 +148,9 @@ const nodePositions = ref<Record<string, { x: number; y: number }>>({
 const { nodes, edges } = useFlowBuilder(flowData, nodePositions);
 
 // 用户拖拽节点后，同步位置到 nodePositions，防止 flowData 更新时位置被复原
-onNodeDragStop(({ nodes: draggedNodes }) => {
+onNodeDragStop(async ({ nodes: draggedNodes }) => {
+  await nextTick();
+  stopInteracting();
   for (const node of draggedNodes) {
     nodePositions.value[node.id] = { x: node.position.x, y: node.position.y };
   }
@@ -143,8 +167,27 @@ watch(
   { deep: true },
 );
 
-onMounted(() => {
-  getScriptData();
+async function waitForNodesReady(maxRetries = 60, delay = 100) {
+  while (maxRetries-- > 0) {
+    const nodes = getNodes.value;
+    if (nodes.length > 0) {
+      // 等待所有节点的 DOM 尺寸都已被 VueFlow 测量完成
+      const allMeasured = nodes.every((n) => n.dimensions?.width && n.dimensions.width > 0);
+      if (allMeasured) return true;
+    }
+    await new Promise((resolve) => setTimeout(resolve, delay));
+  }
+  return false;
+}
+
+onMounted(async () => {
+  await getScriptData();
+  if (!episodesId.value) return;
+
+  const nodesReady = await waitForNodesReady();
+  if (nodesReady) {
+    await layoutGraph();
+  }
 });
 
 const episodesOptions = ref<{ label: string; value: number }[]>([]);
@@ -216,16 +259,32 @@ async function layoutGraph(direction: "LR" | "TB" = "LR") {
   updateNodeInternals(nodeIds);
   await nextTick();
 
-  // 等待所有节点的 dimensions 都已被 VueFlow 正确测量
-  // VueFlow 测量是异步的，可能需要多轮 nextTick
-  let retries = 10;
+  // 等待所有节点的 dimensions 都已被 VueFlow 正确测量且尺寸稳定
+  let retries = 30;
+  let lastSnapshot = "";
+  let stableCount = 0;
   while (retries-- > 0) {
     const allMeasured = nodeIds.every((id) => {
       const node = findNode(id);
       return node?.dimensions?.width && node.dimensions.width > 0;
     });
-    if (allMeasured) break;
-    await new Promise((r) => setTimeout(r, 50));
+    if (allMeasured) {
+      // 检查尺寸是否稳定（连续两次相同才算就绪）
+      const snapshot = nodeIds
+        .map((id) => {
+          const node = findNode(id);
+          return `${id}:${node?.dimensions?.width}x${node?.dimensions?.height}`;
+        })
+        .join(",");
+      if (snapshot === lastSnapshot) {
+        stableCount++;
+        if (stableCount >= 2) break;
+      } else {
+        stableCount = 0;
+        lastSnapshot = snapshot;
+      }
+    }
+    await new Promise((r) => setTimeout(r, 80));
   }
 
   const oldData = toObject();
@@ -413,6 +472,28 @@ const steps = [
   }
   :deep(.slide-leave-to) {
     transform: translateX(100%);
+  }
+}
+// 拖拽/平移时优化渲染性能
+.flowMain.is-interacting {
+  :deep(.vue-flow__node) {
+    will-change: transform;
+    contain: layout style paint;
+  }
+  :deep(.vue-flow__transformationpane) {
+    will-change: transform;
+  }
+  :deep(.t-image),
+  :deep(.assetImage),
+  :deep(.frameImg),
+  :deep(.assetImageWrap) {
+    pointer-events: none;
+    contain: strict;
+  }
+  // 禁用 hover 效果，减少样式重算
+  :deep(.imageToolsWrap),
+  :deep(.addBetween) {
+    display: none !important;
   }
 }
 $handelSize: 12px;

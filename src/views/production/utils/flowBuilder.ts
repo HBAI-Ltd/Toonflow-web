@@ -50,8 +50,8 @@ export interface Storyboard {
   src: string | null;
   state: "未生成" | "生成中" | "已完成" | "生成失败";
   flowId?: number;
-  errorReason?: string;
-  videoPrompt: string;
+  reason?: string;
+  videoDesc: string;
   shouldGenerateImage: number;
 }
 
@@ -246,15 +246,15 @@ export function useFlowBuilder(flowData: Ref<FlowData>, nodePositions: Ref<NodeP
         style: edgeStyle,
       },
       // Workbench -> Poster
-      {
-        id: `${ids.workbench}-${ids.poster}`,
-        source: ids.workbench,
-        target: ids.poster,
-        sourceHandle: `${ids.workbench}-source`,
-        targetHandle: `${ids.poster}-target`,
-        animated: false,
-        style: edgeStyle,
-      },
+      // {
+      //   id: `${ids.workbench}-${ids.poster}`,
+      //   source: ids.workbench,
+      //   target: ids.poster,
+      //   sourceHandle: `${ids.workbench}-source`,
+      //   targetHandle: `${ids.poster}-target`,
+      //   animated: false,
+      //   style: edgeStyle,
+      // },
     ];
 
     return allEdges;

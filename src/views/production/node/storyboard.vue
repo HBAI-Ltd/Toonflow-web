@@ -34,30 +34,31 @@
                   :src="item.src"
                   fit="contain"
                   class="frameImg"
-                  @click="editStoryboaryImage(item, [item.src])">
+                  @click="editStoryboaryImage(item, [item.src])"
+                  lazy>
                   <template #overlayContent>
                     <div class="imageToolsWrap show">
-                      <t-tooltip theme="primary" :content="$t('workbench.production.node.storyboard.deleteNode')">
-                        <div class="remove ac" :style="{ transform: `scale(${styleMaxSize})` }" @click.stop="removeFn(item.id!)">
-                          <i-delete theme="outline" size="18" fill="#fff" />
-                        </div>
-                      </t-tooltip>
-                      <t-tooltip theme="primary" :content="$t('workbench.production.node.storyboard.editNode')">
-                        <div class="editNode ac" :style="{ transform: `scale(${styleMaxSize})` }" @click.stop="editInfo(item)">
-                          <i-edit theme="outline" size="18" fill="#fff" />
-                        </div>
-                      </t-tooltip>
                       <ImageTools :style="{ transform: `scale(${styleMaxSize})` }" :src="item.src" position="br" />
                     </div>
                   </template>
                 </t-image>
                 <div v-else class="generatingPlaceholder" @click="editStoryboaryImage(item, [])">
                   <t-loading v-if="item.state === '生成中'" size="small" />
-                  <t-tooltip v-else-if="item.state == '生成失败'" :content="item?.errorReason">
+                  <t-tooltip v-else-if="item.state == '生成失败'" :content="item?.reason">
                     <span style="color: #ff4d4f">生成失败</span>
                   </t-tooltip>
                   <t-empty v-else size="small" :title="$t('workbench.production.node.storyboard.notGenerated')" />
                 </div>
+                <t-tooltip theme="primary" :content="$t('workbench.production.node.storyboard.deleteNode')">
+                  <div class="remove ac" :style="{ transform: `scale(${styleMaxSize})` }" @click.stop="removeFn(item.id!)">
+                    <i-delete theme="outline" size="18" fill="#fff" />
+                  </div>
+                </t-tooltip>
+                <t-tooltip theme="primary" :content="$t('workbench.production.node.storyboard.editNode')">
+                  <div class="editNode ac" :style="{ transform: `scale(${styleMaxSize})` }" @click.stop="editInfo(item)">
+                    <i-edit theme="outline" size="18" fill="#fff" />
+                  </div>
+                </t-tooltip>
               </div>
             </div>
             <div
@@ -276,7 +277,7 @@ async function save({ imageUrl, flowId }: { imageUrl: string; flowId: number }) 
       duration: 0,
       prompt: "",
       src: imageUrl,
-      videoPrompt: "",
+      videoDesc: "",
       shouldGenerateImage: 1,
       state: "已完成",
     };
@@ -334,6 +335,7 @@ async function removeFn(id: number) {
 function editInfo(item: Storyboard) {
   const formData = reactive({
     prompt: item.prompt ?? "",
+    videoDesc: item?.videoDesc ?? "",
   });
 
   const bodyVNode = () =>
@@ -345,6 +347,15 @@ function editInfo(item: Storyboard) {
           placeholder: $t("workbench.production.node.storyboard.promptPlaceholder"),
           autosize: { minRows: 3, maxRows: 6 },
           "onUpdate:value": (v: string) => (formData.prompt = v),
+        }),
+      ]),
+      h("div", { class: "editInfoField" }, [
+        h("label", { class: "editInfoLabel" }, $t("workbench.production.node.storyboard.videoDesc")),
+        h(resolveComponent("t-textarea"), {
+          value: formData.videoDesc,
+          placeholder: $t("workbench.production.node.storyboard.videoDescPlaceholder"),
+          autosize: { minRows: 3, maxRows: 6 },
+          "onUpdate:value": (v: string) => (formData.videoDesc = v),
         }),
       ]),
     ]);
@@ -364,6 +375,7 @@ function editInfo(item: Storyboard) {
         await axios.post("/production/storyboard/editStoryboardInfo", {
           id: item.id,
           prompt: formData.prompt,
+          videoDesc: formData.videoDesc,
         });
         item.prompt = formData.prompt;
         window.$message.success($t("common.editSuccess"));
@@ -464,6 +476,42 @@ function editInfo(item: Storyboard) {
     border-radius: 8px;
     overflow: hidden;
     flex-shrink: 0;
+    transition: opacity 0.2s ease;
+    &:hover {
+      background-color: rgba(220, 50, 50, 1);
+      .remove,
+      .editNode {
+        opacity: 1;
+      }
+    }
+    .remove {
+      position: absolute;
+      top: 3px;
+      right: 3px;
+      z-index: 9999;
+      padding: 5px;
+      border-radius: 10px;
+      background-color: rgba(220, 50, 50, 0.7);
+      cursor: pointer;
+      opacity: 0;
+      &:hover {
+        background-color: rgba(220, 50, 50, 1);
+      }
+    }
+    .editNode {
+      position: absolute;
+      bottom: 3px;
+      left: 3px;
+      z-index: 9999;
+      padding: 5px;
+      border-radius: 10px;
+      background-color: rgba(24, 144, 255, 0.7);
+      cursor: pointer;
+      opacity: 0;
+      &:hover {
+        background-color: rgba(24, 144, 255, 1);
+      }
+    }
   }
 
   .generatingPlaceholder {
@@ -486,32 +534,6 @@ function editInfo(item: Storyboard) {
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.2s ease;
-      .remove {
-        position: absolute;
-        top: 3px;
-        right: 3px;
-        z-index: 9999;
-        padding: 5px;
-        border-radius: 10px;
-        background-color: rgba(220, 50, 50, 0.7);
-        cursor: pointer;
-        &:hover {
-          background-color: rgba(220, 50, 50, 1);
-        }
-      }
-      .editNode {
-        position: absolute;
-        bottom: 3px;
-        left: 3px;
-        z-index: 9999;
-        padding: 5px;
-        border-radius: 10px;
-        background-color: rgba(24, 144, 255, 0.7);
-        cursor: pointer;
-        &:hover {
-          background-color: rgba(24, 144, 255, 1);
-        }
-      }
     }
 
     &:hover {

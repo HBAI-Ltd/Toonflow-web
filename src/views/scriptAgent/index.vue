@@ -621,9 +621,6 @@ function onConfirm(value: string) {
     flex-direction: column;
     align-items: center;
     gap: 10px;
-    .forceGenerateDesc {
-      font-size: 12px;
-    }
     .forceGenerateActions {
       display: flex;
       gap: 12px;

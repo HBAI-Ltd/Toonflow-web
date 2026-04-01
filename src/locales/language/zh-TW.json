@@ -289,7 +289,9 @@
       "canvasIsDisabled": "畫布縮放",
       "agentCanvasScalingMethod": "生產頁無限畫布滾輪操作",
       "zoom": "縮放",
-      "scroll": "捲動"
+      "scroll": "捲動",
+      "isInteracting": "生產頁無限畫布拖曳性能優化",
+      "closeIsInteracting": "關閉"
     },
     "request": {
       "warning": "若非特殊情況，不需要修改或者設定",

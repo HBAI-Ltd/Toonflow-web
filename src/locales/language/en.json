@@ -350,7 +350,9 @@
       "canvasIsDisabled": "Canvas zoom",
       "agentCanvasScalingMethod": "Unlimited canvas wheel operation on production page",
       "zoom": "Zoom",
-      "scroll": "scroll"
+      "scroll": "scroll",
+      "isInteracting": "Unlimited canvas drag performance optimization on production page",
+      "closeIsInteracting": "closure"
     },
     "request": {
       "warning": "Do not modify unless absolutely necessary",

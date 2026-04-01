@@ -283,7 +283,9 @@
       "canvasIsDisabled": "キャンバスのズーム",
       "agentCanvasScalingMethod": "制作ページでの無制限のキャンバス ホイール操作",
       "zoom": "ズーム",
-      "scroll": "スクロール"
+      "scroll": "スクロール",
+      "isInteracting": "制作ページでの無制限のキャンバス ドラッグ パフォーマンスの最適化",
+      "closeIsInteracting": "閉鎖"
     },
     "request": {
       "warning": "特別な理由がない限り、変更や設定は不要です",

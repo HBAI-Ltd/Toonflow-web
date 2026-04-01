@@ -23,6 +23,12 @@
           <t-radio-button value="scroll">{{ $t("settings.other.scroll") }}</t-radio-button>
         </t-radio-group>
       </t-form-item>
+      <t-form-item :label="$t('settings.other.isInteracting')">
+        <t-radio-group variant="default-filled" v-model="otherSetting.interacting">
+          <t-radio-button :value="false">{{ $t("settings.other.closeIsInteracting") }}</t-radio-button>
+          <t-radio-button :value="true">{{ $t("settings.other.openIsInteracting") }}</t-radio-button>
+        </t-radio-group>
+      </t-form-item>
       <t-form-item :label="$t('settings.other.assetConcurrency')" name="assetsBatchGenereateSize">
         <t-input-number
           auto-width
@@ -38,7 +44,7 @@
 
 <script setup lang="ts">
 import settingStore from "@/stores/setting";
-const { otherSetting, isElectron, canvasWheelEvent } = storeToRefs(settingStore());
+const { otherSetting, canvasWheelEvent } = storeToRefs(settingStore());
 
 import { computed } from "vue";
 // 将毫秒转换为秒显示，输入时转换回毫秒存储

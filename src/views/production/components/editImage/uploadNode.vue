@@ -59,7 +59,7 @@ const props = defineProps<{
 }>();
 const openStoryboardCheck = inject<() => Promise<Storyboard[]>>("openStoryboardCheck")!;
 
-const { updateNodeData, removeNodes } = useVueFlow({ id: "editImage" });
+const { updateNodeData, removeNodes } = useVueFlow("editImage");
 const currentImageUrl = ref(props.data?.image || "");
 const currentObjectUrl = ref<string | null>(null);
 

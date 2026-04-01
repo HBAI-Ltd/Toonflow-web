@@ -283,7 +283,9 @@
       "canvasIsDisabled": "แคนวาสซูม",
       "agentCanvasScalingMethod": "งานล้อผ้าใบตัวแทน",
       "zoom": "ซูม",
-      "scroll": "เลื่อน"
+      "scroll": "เลื่อน",
+      "isInteracting": "การเพิ่มประสิทธิภาพการลากผ้าใบไม่จำกัดบนหน้าการผลิต",
+      "closeIsInteracting": "ปิด"
     },
     "request": {
       "warning": "หากไม่มีกรณีพิเศษ ไม่จำเป็นต้องแก้ไขหรือตั้งค่าใดๆ",

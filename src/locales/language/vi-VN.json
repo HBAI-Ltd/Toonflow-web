@@ -280,7 +280,9 @@
       "canvasIsDisabled": "Thu phóng canvas",
       "agentCanvasScalingMethod": "Hoạt động bánh xe vải không giới hạn trên trang sản xuất",
       "zoom": "Phóng",
-      "scroll": "cuộn"
+      "scroll": "cuộn",
+      "isInteracting": "Tối ưu hóa hiệu suất kéo canvas không giới hạn trên trang sản xuất",
+      "closeIsInteracting": "đóng cửa"
     },
     "request": {
       "warning": "Nếu không có trường hợp đặc biệt, không cần sửa đổi hoặc cấu hình",

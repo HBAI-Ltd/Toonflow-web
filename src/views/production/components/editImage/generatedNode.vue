@@ -79,7 +79,7 @@ import { type GeneratedNodeData } from "../../utils/editImageType";
 const selected = ref(true);
 const generating = ref(false);
 const emit = defineEmits(["keep"]);
-const { removeNodes } = useVueFlow({ id: "editImage" });
+const { removeNodes } = useVueFlow("editImage");
 
 const props = defineProps<{
   id: string;
@@ -121,7 +121,6 @@ function handleKeep() {
   emit("keep", props.data.generatedImage);
 }
 onMounted(() => {
-  console.log("%c Line:125 🍊", "background:#4fff4B", props.imageDefaultModle);
   if (props.imageDefaultModle) {
     props.data.model = props.imageDefaultModle?.imageModel ?? "";
     props.data.quality = props.imageDefaultModle?.imageQuality ?? "";
