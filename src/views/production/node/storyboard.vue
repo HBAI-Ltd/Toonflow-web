@@ -276,6 +276,8 @@ async function save({ imageUrl, flowId }: { imageUrl: string; flowId: number }) 
       duration: 0,
       prompt: "",
       src: imageUrl,
+      videoPrompt: "",
+      shouldGenerateImage: 1,
       state: "已完成",
     };
     const { data } = await axios.post("/production/storyboard/addStoryboard", {

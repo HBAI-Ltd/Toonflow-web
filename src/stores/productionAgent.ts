@@ -4,6 +4,7 @@ import settingStore from "@/stores/setting";
 import { useChat } from "@/utils/useChat";
 import type { FlowData, Storyboard } from "@/views/production/utils/flowBuilder";
 import type { ChatMessagesData } from "@tdesign-vue-next/chat";
+import { useThrottleFn } from "@vueuse/core";
 
 export default defineStore(
   "productionAgent",
@@ -54,7 +55,7 @@ export default defineStore(
         { tag: "storyboardTable", keepInMessage: false },
         { tag: "storyboardItem", keepInMessage: false },
       ],
-      onXmlTag: (data) => {
+      onXmlTag: async (data) => {
         const { tag, value, children, attrs, status } = data;
         if (tag === "script") {
           flowData.value.script = value ?? "";
@@ -65,11 +66,12 @@ export default defineStore(
         } else if (tag === "storyboardItem") {
           if (status === "complete") {
             const prompt = attrs.prompt ?? "";
+            console.log("%c Line:70 🥚 attrs.duration", "background:#33a5ff", attrs.duration);
+
             const duration = Number(attrs.duration) || 0;
             const track = attrs.track || "";
             const shouldGenerateImage = attrs.shouldGenerateImage == "true" ? 1 : 0;
-
-            // if (name) {
+            const videoPrompt = attrs?.videoPrompt ?? "";
             const existingIndex = flowData.value.storyboard.findIndex((s) => s.prompt === prompt);
             if (existingIndex !== -1) {
               // 已存在则更新 content，保留 id
@@ -82,45 +84,39 @@ export default defineStore(
                 state: "未生成" as "未生成" | "生成中" | "已完成" | "生成失败",
                 src: null,
                 associateAssetsIds: JSON.parse(attrs.associateAssetsIds) || [],
+                videoPrompt: videoPrompt,
+                shouldGenerateImage: shouldGenerateImage,
               });
-              addStoryboardInfo([
+              await addStoryboardInfo([
                 {
                   prompt: prompt || "",
                   duration: Number(duration) || 0,
                   track: track || "",
                   state: "未生成" as "未生成" | "生成中" | "已完成" | "生成失败",
                   src: null,
+                  videoPrompt,
+                  shouldGenerateImage,
                   associateAssetsIds: JSON.parse(attrs.associateAssetsIds) || [],
                 },
               ]);
             }
-            // }
-            // const newItems = children.map((child) => {
-            //   return {
-            //     prompt: child.attrs.prompt || "",
-            //     duration: Number(child.attrs.duration) || 0,
-            //     track: child.attrs.track || "",
-            //     state: "未生成" as "未生成" | "生成中" | "已完成" | "生成失败",
-            //     src: null,
-            //     associateAssetsIds: JSON.parse(child.attrs.associateAssetsIds) || [],
-            //   };
-            // });
-            // if (newItems.length > 0) {
-            //   const notExistItems = newItems.filter((newItem) => {
-            //     return !flowData.value.storyboard.some((story) => story.prompt === newItem.prompt && story.duration === newItem.duration);
-            //   });
-            //   if (notExistItems.length > 0) {
-            //     addStoryboardInfo(notExistItems);
-            //     flowData.value.storyboard = [...flowData.value.storyboard, ...notExistItems];
-            //   }
-            // }
           }
         }
         if (status == "complete") {
-          setFlowData(episodesId.value);
+          throttledFn();
         }
       },
     });
+
+    // 实际的节流方法
+    const throttledFn = useThrottleFn(
+      () => {
+        setFlowData(episodesId.value);
+      },
+      500,
+      true,
+      true,
+    );
     // 注册 getPlanData 事件（无需依赖组件生命周期）
     watch(
       socket,

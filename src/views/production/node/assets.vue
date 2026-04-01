@@ -34,8 +34,8 @@
             <i-right size="32"></i-right>
           </div>
           <div class="deriveAssets">
-            <t-card v-for="(item, index) in asset.derive" :key="index" class="assetCard">
-              <div v-if="item.src && item.state == '已完成'" class="assetImageWrap" @click="generateAssetsImage(item, asset.src)">
+            <t-card v-for="(item, index) in asset.derive" :key="index" class="assetCard" @click="generateAssetsImage(item, asset.src)">
+              <div v-if="item.src && item.state == '已完成'" class="assetImageWrap">
                 <t-image :src="item.src" fit="contain" class="assetImage" :preview="true" :lazy="true">
                   <template #overlayContent>
                     <div class="imageToolsWrap show">

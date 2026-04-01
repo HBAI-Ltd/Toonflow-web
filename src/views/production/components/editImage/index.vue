@@ -33,7 +33,7 @@
       <Background></Background>
       <Controls />
 
-      <Panel position="top-right">
+      <Panel position="top-left">
         <div class="ac" style="gap: 8px">
           <t-tooltip theme="primary" content="$t('workbench.production.autoLayoutLR')">
             <div class="item c" @click="layoutGraph('LR')">

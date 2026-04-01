@@ -51,6 +51,8 @@ export interface Storyboard {
   state: "未生成" | "生成中" | "已完成" | "生成失败";
   flowId?: number;
   errorReason?: string;
+  videoPrompt: string;
+  shouldGenerateImage: number;
 }
 
 interface VideoList {
