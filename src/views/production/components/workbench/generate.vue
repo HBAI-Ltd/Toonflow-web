@@ -59,10 +59,55 @@
               </template>
             </t-button>
             <div class="status">
-              <t-popup trigger="click" placement="bottom">
+              <t-popup
+                trigger="click"
+                placement="top"
+                overlay-class-name="resDurPickerPopup"
+                :overlay-inner-style="{ padding: '16px', borderRadius: '8px' }">
                 <t-tag class="btn" variant="outline">{{ selectedResolution }}·{{ selectedDuration }}s</t-tag>
                 <template #content>
-                  {{ modeOptions }}
+                  <div class="resolutionDurationPicker">
+                    <div
+                      v-if="
+                        Array.isArray(modeOptions.durationResolutionMap) &&
+                        modeOptions.durationResolutionMap.length > 0 &&
+                        modeOptions.durationResolutionMap[0].resolution &&
+                        modeOptions.durationResolutionMap[0].resolution.length > 0
+                      "
+                      class="pickerSection">
+                      <div class="pickerLabel">分辨率</div>
+                      <div class="pickerOptions">
+                        <div
+                          v-for="res in modeOptions.durationResolutionMap[0].resolution"
+                          :key="res"
+                          class="pickerOption"
+                          :class="{ active: selectedResolution === res }"
+                          @click="handleResolutionChange(res)">
+                          {{ res }}
+                        </div>
+                      </div>
+                    </div>
+                    <div
+                      v-if="
+                        Array.isArray(modeOptions.durationResolutionMap) &&
+                        modeOptions.durationResolutionMap.length > 0 &&
+                        modeOptions.durationResolutionMap[0].duration &&
+                        modeOptions.durationResolutionMap[0].duration.length > 0
+                      "
+                      class="pickerSection">
+                      <div class="pickerLabel">时长</div>
+                      <div class="pickerOptions">
+                        <div
+                          v-for="dur in modeOptions.durationResolutionMap[0].duration"
+                          :key="dur"
+                          class="pickerOption"
+                          :class="{ active: selectedDuration === dur }"
+                          @click="handleDurationChange(dur)">
+                          {{ dur }}s
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </template>
               </t-popup>
             </div>
@@ -642,6 +687,13 @@ async function getVideoList() {
 watch(activeTrackIndex, () => {
   syncMediasToUploadBox();
 });
+function handleResolutionChange(res: string) {
+  selectedResolution.value = res;
+}
+
+function handleDurationChange(dur: number) {
+  selectedDuration.value = dur;
+}
 </script>
 
 <style lang="scss" scoped>
@@ -980,6 +1032,54 @@ watch(activeTrackIndex, () => {
       .addItem {
         border: 4px dashed var(--td-component-border);
         cursor: pointer;
+      }
+    }
+  }
+}
+</style>
+<style lang="scss">
+.resolutionDurationPicker {
+  min-width: 240px;
+  .pickerSection {
+    margin-bottom: 16px;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    .pickerLabel {
+      font-size: 13px;
+      font-weight: 600;
+      color: #1a1a1a;
+      margin-bottom: 10px;
+    }
+
+    .pickerOptions {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+
+      .pickerOption {
+        padding: 6px 0;
+        border-radius: 8px;
+        border: 1.5px solid #e8e8e8;
+        font-size: 13px;
+        color: #333;
+        cursor: pointer;
+        transition: all 0.15s;
+        user-select: none;
+        text-align: center;
+        background: #fff;
+
+        &:hover {
+          border-color: #999;
+        }
+
+        &.active {
+          border-color: #1a1a1a;
+          color: #1a1a1a;
+          font-weight: 500;
+        }
       }
     }
   }
