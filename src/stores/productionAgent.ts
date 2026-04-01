@@ -66,12 +66,11 @@ export default defineStore(
         } else if (tag === "storyboardItem") {
           if (status === "complete") {
             const prompt = attrs.prompt ?? "";
-            console.log("%c Line:70 🥚 attrs.duration", "background:#33a5ff", attrs.duration);
 
             const duration = Number(attrs.duration) || 0;
             const track = attrs.track || "";
             const shouldGenerateImage = attrs.shouldGenerateImage == "true" ? 1 : 0;
-            const videoPrompt = attrs?.videoPrompt ?? "";
+            const videoDesc = attrs?.videoDesc ?? "";
             const existingIndex = flowData.value.storyboard.findIndex((s) => s.prompt === prompt);
             if (existingIndex !== -1) {
               // 已存在则更新 content，保留 id
@@ -84,7 +83,7 @@ export default defineStore(
                 state: "未生成" as "未生成" | "生成中" | "已完成" | "生成失败",
                 src: null,
                 associateAssetsIds: JSON.parse(attrs.associateAssetsIds) || [],
-                videoPrompt: videoPrompt,
+                videoDesc: videoDesc,
                 shouldGenerateImage: shouldGenerateImage,
               });
               await addStoryboardInfo([
@@ -94,7 +93,7 @@ export default defineStore(
                   track: track || "",
                   state: "未生成" as "未生成" | "生成中" | "已完成" | "生成失败",
                   src: null,
-                  videoPrompt,
+                  videoDesc,
                   shouldGenerateImage,
                   associateAssetsIds: JSON.parse(attrs.associateAssetsIds) || [],
                 },
@@ -289,7 +288,7 @@ export default defineStore(
           ids: ids,
         });
         if (!data || data.length === 0) return;
-        const records = data as Array<{ id: number; state: string; src?: string }>;
+        const records = data as Array<{ id: number; state: string; src?: string; errorReason?: string }>;
         records.forEach((record) => {
           flowData.value.assets.forEach((asset) => {
             if (!asset.derive) return;
@@ -297,6 +296,7 @@ export default defineStore(
               if (derive.id === record.id) {
                 derive.state = record.state as "未生成" | "生成中" | "已完成" | "生成失败";
                 if (record.src) derive.src = record.src;
+                derive.errorReason = record?.errorReason ?? "";
               }
             });
           });
@@ -352,12 +352,13 @@ export default defineStore(
           ids: ids,
         });
         if (!data || data.length === 0) return;
-        const records = data as Array<{ id: number; state: string; src?: string }>;
+        const records = data as Array<{ id: number; state: string; src?: string; reason?: string }>;
         records.forEach((record) => {
           const item = flowData.value.storyboard.find((s) => s.id === record.id);
           if (item) {
             item.state = record.state as "未生成" | "生成中" | "已完成" | "生成失败";
             if (record.src) item.src = record.src;
+            item.reason = record?.reason ?? "";
           }
         });
       } catch (e) {

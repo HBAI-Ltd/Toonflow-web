@@ -1500,5 +1500,7 @@
   "cancel": "从分镜选择",
   "workbench.script.msg.waitExtract": "等待提取",
   "workbench.script.msg.exportSuccess": "导出成功",
-  "workbench.script.msg.exportFailed": "导出失败"
+  "workbench.script.msg.exportFailed": "导出失败",
+  "workbench.production.node.storyboard.videoDescPlaceholder": "请输入视频描述",
+  "workbench.production.node.storyboard.videoDesc": "videoDesc"
 }
