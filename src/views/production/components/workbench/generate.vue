@@ -253,14 +253,18 @@ const selectedResolution = ref("480p");
 const selectedDuration = ref(8);
 
 //仅批量生成视频，如果单个生成视频切换模型需要选择时长
-const effectiveDuration = computed(() => {
-  const trackDuration = trackList.value[activeTrackIndex.value]?.duration || selectedDuration.value;
+function clampDuration(trackDuration: number): number {
   const drMap = modeOptions.value.durationResolutionMap;
   if (Array.isArray(drMap) && drMap.length > 0 && drMap[0].duration?.length) {
     const maxDuration = Math.max(...drMap[0].duration);
     return Math.min(trackDuration, maxDuration);
   }
   return trackDuration;
+}
+
+const effectiveDuration = computed(() => {
+  const trackDuration = trackList.value[activeTrackIndex.value]?.duration || selectedDuration.value;
+  return clampDuration(trackDuration);
 });
 const selectedAudio = ref(false);
 const generating = ref(false);
@@ -841,34 +845,32 @@ function batchGenVideo() {
       trackList.value
         .filter((track) => checkedTrackIds.value.includes(track.id))
         .forEach(async (track) => {
-          console.log("%c Line:834 🌭 track", "background:#ed9ec7", track);
-          // try {
-          //   // 根据当前 mode 的槽位数量，按位置取对应的 media，只取有 src 的
-          //   const uploadData = modeTemplate.map((_, i) => track.medias[i]).filter((item) => item && Boolean(item.src));
-          //   const payload = {
-          //     projectId: project.value?.id,
-          //     duration: track.duration,
-          //     scriptId: episodesId.value,
-          //     uploadData: uploadData.map((item) => {
-          //       return {
-          //         id: item.id,
-          //         sources: item.sources ? item.sources : "storyboard",
-          //       };
-          //     }),
-          //     prompt: track.prompt,
-          //     model: selectModel.value,
-          //     mode: selectMode.value,
-          //     resolution: selectedResolution.value,
-          //     audio: selectedAudio.value,
-          //     trackId: track.id,
-          //   };
-          //   if (payload.prompt === "") return window.$message.warning($t("workbench.generate.skipDataWithEmptyVideoPromptWords"));
-          //   const { data } = await axios.post("/production/workbench/generateVideo", payload);
-          //   window.$message.success($t("workbench.generate.generateStarted"));
-          //   getVideoList();
-          // } finally {
-          //   generating.value = false;
-          // }
+          try {
+            const uploadData = modeTemplate.map((_, i) => track.medias[i]).filter((item) => item && Boolean(item.src));
+            const payload = {
+              projectId: project.value?.id,
+              duration: clampDuration(track.duration || selectedDuration.value),
+              scriptId: episodesId.value,
+              uploadData: uploadData.map((item) => {
+                return {
+                  id: item.id,
+                  sources: item.sources ? item.sources : "storyboard",
+                };
+              }),
+              prompt: track.prompt,
+              model: selectModel.value,
+              mode: selectMode.value,
+              resolution: selectedResolution.value,
+              audio: selectedAudio.value,
+              trackId: track.id,
+            };
+            if (payload.prompt === "") return window.$message.warning($t("workbench.generate.skipDataWithEmptyVideoPromptWords"));
+            const { data } = await axios.post("/production/workbench/generateVideo", payload);
+            window.$message.success($t("workbench.generate.generateStarted"));
+            getVideoList();
+          } finally {
+            generating.value = false;
+          }
         });
     },
     onCancel: () => {
