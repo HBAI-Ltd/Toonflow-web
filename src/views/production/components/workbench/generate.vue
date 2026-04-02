@@ -16,21 +16,42 @@
           </t-button>
         </div>
         <div class="promptInput">
-          <t-textarea class="input" v-model="promptText" :autosize="{ minRows: 4, maxRows: 8 }" :disabled="activeTrackGenTextLoading" />
+          <promptEditor v-model="promptText" :references="references" :placeholder="$t('workbench.generate.promptPlaceholder')" />
+          <!-- <t-textarea class="input" v-model="promptText" :autosize="{ minRows: 4, maxRows: 8 }" :disabled="activeTrackGenTextLoading" /> -->
         </div>
-        <div class="modeOpt f">
-          <div class="uploadBtn c fc" v-for="(item, index) in uploadBox" :key="index" @click="handleSelectSource(index)">
-            <template v-if="item.src">
-              <img :src="item.src" class="uploadPreview" />
-              <div class="clearBtn" @click.stop="clearUpload(index)">
-                <i-close size="12" />
-              </div>
-            </template>
-            <template v-else>
+        <div class="modeOpt f w">
+          <template v-if="isMixedMode">
+            <div class="uploadBtn c fc" v-for="(item, index) in uploadBox" :key="index" v-show="item.src">
+              <template v-if="item.src">
+                <img v-if="item.fileType === 'image'" :src="item.src" class="uploadPreview" />
+                <div v-else class="uploadPreview c">
+                  <i-volume-notice v-if="item.fileType === 'audio'" size="24" />
+                  <i-video v-else size="24" />
+                </div>
+                <div class="clearBtn" @click.stop="clearUpload(index)">
+                  <i-close size="12" />
+                </div>
+              </template>
+            </div>
+            <div class="uploadBtn c fc" @click="handleMixedAdd">
               <i-plus size="24"></i-plus>
-              {{ item.label }}
-            </template>
-          </div>
+              {{ $t("workbench.generate.addReference") }}
+            </div>
+          </template>
+          <template v-else>
+            <div class="uploadBtn c fc" v-for="(item, index) in uploadBox" :key="index" @click="handleSelectSource(index)">
+              <template v-if="item.src">
+                <img :src="item.src" class="uploadPreview" />
+                <div class="clearBtn" @click.stop="clearUpload(index)">
+                  <i-close size="12" />
+                </div>
+              </template>
+              <template v-else>
+                <i-plus size="24"></i-plus>
+                {{ item.label }}
+              </template>
+            </div>
+          </template>
         </div>
         <!-- 分镜选择弹窗 -->
         <t-dialog
@@ -188,7 +209,7 @@
               <img v-if="m.fileType === 'image'" :src="m.src" class="thumb" />
               <div v-else class="thumb placeholder c">
                 <i-volume-notice v-if="m.fileType === 'audio'" size="20" />
-                <span v-else>Video</span>
+                <i-video v-else size="24" />
               </div>
             </template>
           </div>
@@ -207,7 +228,8 @@
 
 <script setup lang="ts">
 import type { Ref } from "vue";
-import assetsCheck, { type AssetType } from "@/utils/assetsCheck";
+import promptEditor from "@/components/promptEditor.vue";
+import assetsCheck, { type AssetType, type ClipMediaType } from "@/utils/assetsCheck";
 import { DialogPlugin } from "tdesign-vue-next";
 import axios from "@/utils/axios";
 import projectStore from "@/stores/project";
@@ -378,6 +400,22 @@ const modeList = computed(() => {
 const selectModel = ref<string>();
 const selectMode = ref<string>();
 
+const isMixedMode = computed(() => {
+  const mode = parseMode(selectMode.value || "");
+  return Array.isArray(mode);
+});
+
+const mixedClipMediaTypes = computed<ClipMediaType[]>(() => {
+  const mode = parseMode(selectMode.value || "");
+  if (!Array.isArray(mode)) return [];
+  const map: Record<string, ClipMediaType> = {
+    audioReference: "audio",
+    imageReference: "image",
+    videoReference: "video",
+  };
+  return mode.filter((m) => m in map).map((m) => map[m]);
+});
+
 function parseMode(value: string): VideoMode | null {
   if (!value) return null;
   try {
@@ -449,6 +487,15 @@ async function deleteTrack(index: number) {
 }
 
 const uploadBox = ref<UploadItem[]>([]);
+
+const references = computed(() => {
+  return uploadBox.value
+    .filter((item) => item.src)
+    .map((item) => ({
+      type: item.fileType,
+      src: item.src!,
+    }));
+});
 
 interface StoryboardItem {
   src: string;
@@ -533,11 +580,70 @@ function handleSelectSource(index: number) {
   });
 }
 
+async function handleMixedAdd() {
+  const dlg = DialogPlugin.confirm({
+    header: $t("workbench.generate.selectSource"),
+    confirmBtn: $t("workbench.generate.confirm"),
+    cancelBtn: $t("workbench.generate.cancel"),
+    onConfirm: async () => {
+      dlg.destroy();
+      const assets = await assetsCheck({ types: ["role", "tool", "scene", "clip"], clipMediaTypes: mixedClipMediaTypes.value, multiple: true });
+      if (!assets.length) return;
+      userEditedUploadBox.value = true;
+      for (const asset of assets) {
+        const fileType = getFileTypeByExt(asset.src);
+        uploadBox.value.push({
+          fileType,
+          type: refTypeMap[fileType] as Type,
+          sources: "assets",
+          src: asset.src,
+          id: asset.id,
+          prompt: asset.prompt,
+          label: "",
+        });
+      }
+    },
+    onCancel: () => {
+      dlg.destroy();
+      pendingIndex.value = -1;
+      storyboardDialogVisible.value = true;
+    },
+  });
+}
+
+const refTypeMap: Record<string, ReferenceType> = {
+  image: "imageReference",
+  video: "videoReference",
+  audio: "audioReference",
+};
+
+function getFileTypeByExt(src: string | undefined): "image" | "video" | "audio" {
+  const ext = src?.split(".").pop()?.toLowerCase() ?? "";
+  const videoExts = ["mp4", "webm", "mov", "avi", "mkv"];
+  const audioExts = ["mp3", "wav", "ogg", "aac", "flac", "m4a"];
+  if (videoExts.includes(ext)) return "video";
+  if (audioExts.includes(ext)) return "audio";
+  return "image";
+}
+
 function pickStoryboard(sb: StoryboardItem) {
   storyboardDialogVisible.value = false;
+  userEditedUploadBox.value = true;
+  if (isMixedMode.value) {
+    const fileType = getFileTypeByExt(sb.src);
+    uploadBox.value.push({
+      fileType,
+      type: refTypeMap[fileType] as Type,
+      sources: "storyboard",
+      src: sb.src,
+      id: sb.id,
+      prompt: sb.prompt ?? undefined,
+      label: "",
+    });
+    return;
+  }
   const item = uploadBox.value[pendingIndex.value];
   if (!item) return;
-  userEditedUploadBox.value = true;
   uploadBox.value[pendingIndex.value] = { ...item, sources: "storyboard", src: sb.src, id: sb.id, prompt: sb.prompt ?? undefined };
 }
 
@@ -545,7 +651,11 @@ function clearUpload(index: number) {
   const item = uploadBox.value[index];
   if (!item) return;
   userEditedUploadBox.value = true;
-  uploadBox.value[index] = { ...item, sources: "storyboard", src: undefined, id: undefined, prompt: undefined };
+  if (isMixedMode.value) {
+    uploadBox.value.splice(index, 1);
+  } else {
+    uploadBox.value[index] = { ...item, sources: "storyboard", src: undefined, id: undefined, prompt: undefined };
+  }
 }
 
 async function generateVideo() {
@@ -590,12 +700,30 @@ watch(selectModel, (val) => {
   }
   axios.post("/modelSelect/getModelDetail", { modelId: val }).then(({ data }) => {
     modeOptions.value = data;
+    // 重置 mode 为第一个可选项
+    if (data.mode?.length) {
+      const firstMode = data.mode[0];
+      selectMode.value = Array.isArray(firstMode) ? JSON.stringify(firstMode) : firstMode;
+    } else {
+      selectMode.value = undefined;
+    }
+    // 重置分辨率和时长为第一个可选项
+    const drMap = data.durationResolutionMap;
+    if (Array.isArray(drMap) && drMap.length > 0) {
+      if (drMap[0].resolution?.length) {
+        selectedResolution.value = drMap[0].resolution[0];
+      }
+      if (drMap[0].duration?.length) {
+        selectedDuration.value = drMap[0].duration[0];
+      }
+    }
   });
 });
 
 const userEditedUploadBox = ref(false);
 
 watch(selectMode, (val) => {
+  console.log("%c Line:616 🍢 val", "background:#ed9ec7", val);
   if (!val) return (uploadBox.value = []);
   userEditedUploadBox.value = false;
   uploadBox.value = buildUploadBox(val);
@@ -937,6 +1065,12 @@ function handleDeleteVideo(value: HistoryVideoItem) {
         }
         padding-top: 10px;
         padding-bottom: 10px;
+      }
+      .promptInput {
+        border: 1px solid var(--td-component-border);
+        border-radius: 8px;
+        max-height: 200px;
+        overflow: auto;
       }
       .modeOpt {
         width: 100%;

@@ -358,6 +358,8 @@ const props = withDefaults(
     selectorMode?: boolean;
     /** 限制显示的资产类型 */
     allowedTypes?: ("role" | "tool" | "scene" | "clip")[];
+    /** 当类型为 clip 时，限制媒体子类型 */
+    clipMediaTypes?: ("image" | "video" | "audio")[];
     /** 是否多选 */
     multiple?: boolean;
   }>(),
@@ -461,6 +463,13 @@ async function getFilteredData(type: string) {
     });
 
     tableData.value = data.data || [];
+    // 当 clip 类型且指定了 clipMediaTypes 时，进行二次过滤
+    if (type === 'clip' && props.clipMediaTypes?.length) {
+      tableData.value = tableData.value.filter((item) => {
+        const mt = getMediaType(item.src);
+        return props.clipMediaTypes!.includes(mt as any);
+      });
+    }
     pagination.value.total = data.total || 0;
     return tableData.value;
   } catch (error) {

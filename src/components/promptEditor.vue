@@ -1,10 +1,11 @@
 <template>
   <div class="textareaWrapper">
+    {{ prompt }}
     <div
       ref="editorRef"
       class="promptEditor"
       contenteditable="true"
-      :data-placeholder="editorContent.length === 0 ? $t('workbench.production.editImage.promptPlaceholder') : ''"
+      :data-placeholder="editorContent.length === 0 ? props.placeholder : ''"
       @input="handleInput"
       @keydown="handleKeydown"
       @blur="handleBlur"
@@ -17,8 +18,10 @@
           class="reference-item"
           :class="{ active: activeIndex === index }"
           @mousedown.prevent="selectReference(index)">
-          <t-image :src="item.image" fit="cover" class="ref-popup-img" />
-          <span class="reference-label">{{ $t("workbench.production.editImage.imageRef", { index: index + 1 }) }}</span>
+          <t-image v-if="item.type === 'image'" :src="item.src" fit="cover" class="ref-popup-img" />
+          <i-video v-else-if="item.type === 'video'" class="ref-popup-icon" />
+          <i-volume-mute v-else-if="item.type === 'audio'" class="ref-popup-icon" />
+          <span class="reference-label">{{ $t("workbench.production.editImage.reference", { index: index + 1 }) }}</span>
           <span class="ref-index-badge">#{{ index + 1 }}</span>
         </div>
         <div v-if="!references?.length" class="no-references">{{ $t("workbench.production.editImage.noReferences") }}</div>
@@ -30,12 +33,14 @@
 <script setup lang="ts">
 import { h, render } from "vue";
 import { Popup } from "tdesign-vue-next";
+import { Video, VolumeMute } from "@icon-park/vue-next";
 
 const props = defineProps<{
-  references?: { image: string }[];
+  references?: { type: "image" | "video" | "audio"; src: string }[];
+  placeholder?: String;
 }>();
 
-const prompt = defineModel<string>("prompt", { default: "" });
+const prompt = defineModel<string>({ default: "" });
 
 const editorRef = ref<HTMLDivElement | null>(null);
 const showReferences = ref(false);
@@ -48,29 +53,44 @@ let internalUpdate = false;
 
 // 创建引用标签元素
 function createRefTag(index: number): HTMLSpanElement {
-  const imgSrc = props.references?.[index]?.image ?? "";
+  const ref = props.references?.[index];
+  const refType = ref?.type ?? "image";
+  const refSrc = ref?.src ?? "";
   const container = document.createElement("span");
   container.contentEditable = "false";
   container.dataset.refIndex = String(index);
-  container.dataset.imgSrc = imgSrc;
+  container.dataset.imgSrc = refSrc;
+
+  const popupContent = () => {
+    if (refType === "image") {
+      return h("img", {
+        src: refSrc,
+        style: { width: "200px", borderRadius: "8px", display: "block" },
+        alt: "",
+      });
+    }
+    return h("span", { style: { padding: "8px", display: "block" } }, refSrc);
+  };
+
+  const tagContent = () => {
+    if (refType === "image") {
+      return h("img", { src: refSrc, alt: "" });
+    }
+    if (refType === "video") {
+      return h(Video);
+    }
+    return h(VolumeMute);
+  };
 
   const vnode = h(
     Popup,
     {
-      content: () =>
-        h("img", {
-          src: imgSrc,
-          style: { width: "200px", borderRadius: "8px", display: "block" },
-          alt: "",
-        }),
+      content: popupContent,
       placement: "top",
     },
     {
       default: () => [
-        h("div", { class: "tag" }, [
-          h("img", { src: imgSrc, alt: "" }),
-          h("span", null, $t("workbench.production.editImage.imageRef", { index: index + 1 })),
-        ]),
+        h("div", { class: "tag" }, [tagContent(), h("span", null, $t("workbench.production.editImage.reference", { index: index + 1 }))]),
       ],
     },
   );
@@ -281,8 +301,6 @@ function handleBlur() {
   color: #333;
   white-space: pre-wrap;
   word-break: break-all;
-  margin-left: 5px;
-  margin-top: 10px;
   cursor: text;
 
   &:empty::before {
@@ -337,6 +355,19 @@ function handleBlur() {
       border-radius: 6px;
       flex-shrink: 0;
       border: 1px solid #efefef;
+    }
+
+    .ref-popup-icon {
+      width: 38px;
+      height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      flex-shrink: 0;
+      background: #f5f5f5;
+      font-size: 18px;
+      color: #666;
     }
 
     .reference-label {
@@ -400,6 +431,11 @@ function handleBlur() {
     object-fit: cover;
     flex-shrink: 0;
     border: 1px solid rgba(91, 204, 179, 0.2);
+  }
+
+  i {
+    font-size: 14px;
+    flex-shrink: 0;
   }
 }
 </style>
