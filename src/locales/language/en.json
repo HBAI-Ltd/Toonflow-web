@@ -603,7 +603,7 @@
         },
         "msg": {
           "parseFailed": "Failed to parse file. Please re-upload",
-          "selectFile": "Please select a file first",
+          "selectFile": "Select file",
           "docNotSupported": ".doc files do not support parsing, please convert to .ts files",
           "unsupportedType": "Unsupported file type",
           "fileTooLarge": "File exceeds 10MB. Please upload a smaller file",
@@ -1035,7 +1035,9 @@
         "uploadAssetImage": "Upload Asset Image",
         "uploadStoryboardImage": "Upload Storyboard Image",
         "uploadImage": "Asset image upload",
-        "mode": "model"
+        "mode": "model",
+        "closeConfirmTitle": "Close the editing panel?",
+        "closeConfirmBody": "Unsaved data will be lost after closing"
       },
       "save": "Select",
       "cancel": "Cancel",

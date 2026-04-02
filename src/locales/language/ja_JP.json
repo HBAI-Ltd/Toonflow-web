@@ -529,7 +529,7 @@
         },
         "msg": {
           "parseFailed": "ファイルの解析に失敗しました。再アップロードしてください",
-          "selectFile": "先にファイルを選択してください",
+          "selectFile": "ファイルを選択",
           "docNotSupported": ".doc ファイルは解析をサポートしていません。.ts ファイルに変換してください。",
           "unsupportedType": "未対応のファイル形式です",
           "fileTooLarge": "ファイルサイズが10MBを超えています。より小さなファイルをアップロードしてください",
@@ -952,7 +952,9 @@
         "uploadAssetImage": "アセット画像アップロード",
         "uploadStoryboardImage": "絵コンテ画像アップロード",
         "uploadImage": "アセットイメージのアップロード",
-        "mode": "モデル"
+        "mode": "モデル",
+        "closeConfirmTitle": "編集パネルを閉じますか?",
+        "closeConfirmBody": "保存していないデータは閉じると失われます"
       },
       "save": "選択",
       "cancel": "キャンセル",

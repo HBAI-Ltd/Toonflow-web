@@ -520,7 +520,7 @@
         },
         "msg": {
           "parseFailed": "Phân tích tệp thất bại, vui lòng tải lên lại",
-          "selectFile": "Vui lòng chọn tệp trước",
+          "selectFile": "Chọn tập tin",
           "docNotSupported": "File .doc không hỗ trợ phân tích cú pháp, vui lòng chuyển đổi sang file .ts",
           "unsupportedType": "Loại tệp không được hỗ trợ",
           "fileTooLarge": "Dung lượng tệp vượt quá 10MB, vui lòng tải lên tệp nhỏ hơn",
@@ -943,7 +943,9 @@
         "uploadAssetImage": "Tải lên hình ảnh tài sản",
         "uploadStoryboardImage": "Tải lên hình ảnh storyboard",
         "uploadImage": "Tải lên hình ảnh nội dung",
-        "mode": "người mẫu"
+        "mode": "người mẫu",
+        "closeConfirmTitle": "Đóng bảng chỉnh sửa?",
+        "closeConfirmBody": "Dữ liệu chưa lưu sẽ bị mất sau khi đóng"
       },
       "save": "Lựa chọn",
       "cancel": "Hủy",

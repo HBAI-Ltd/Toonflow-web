@@ -378,6 +378,7 @@ function editInfo(item: Storyboard) {
           videoDesc: formData.videoDesc,
         });
         item.prompt = formData.prompt;
+        item.videoDesc = formData.videoDesc;
         window.$message.success($t("common.editSuccess"));
       } catch (e) {
         window.$message.error((e as any)?.message || $t("common.editFailed"));

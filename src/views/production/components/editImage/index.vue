@@ -45,7 +45,7 @@
               <template #icon><i-plus /></template>
             </t-button>
           </t-dropdown>
-          <t-tooltip theme="primary" content="$t('workbench.production.autoLayoutLR')">
+          <t-tooltip theme="primary" :content="$t('workbench.production.autoLayoutLR')">
             <t-button class="guide-layout-btn" @click="layoutGraph('LR')" variant="outline" shape="circle">
               <template #icon>
                 <i-tree-diagram />
@@ -332,6 +332,7 @@ async function layoutGraph(direction: "LR" | "TB") {
 .fullscreenDialog {
   .closure {
     position: absolute;
+    margin-top: 10px;
     top: var(--td-comp-paddingTB-xl);
     right: var(--td-comp-paddingLR-xxl);
     z-index: 9999;

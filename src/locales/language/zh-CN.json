@@ -617,7 +617,7 @@
         },
         "msg": {
           "parseFailed": "文件解析失败，请重新上传",
-          "selectFile": "请先选择文件",
+          "selectFile": "选择文件",
           "docNotSupported": ".doc文件不支持解析，请转换为.ts文件",
           "unsupportedType": "不支持的文件类型",
           "fileTooLarge": "文件大小超过10MB，请上传更小的文件",
@@ -1038,7 +1038,9 @@
         "uploadAssetImage": "资产图片上传",
         "uploadStoryboardImage": "分镜图片上传",
         "uploadImage": "资产图片上传",
-        "mode": "模式"
+        "mode": "模式",
+        "closeConfirmTitle": "是否关闭编辑面板？",
+        "closeConfirmBody": "关闭之后未保存的数据会丢失"
       },
       "save": "选取",
       "cancel": "取消",
@@ -1511,5 +1513,5 @@
   "workbench.script.msg.exportSuccess": "导出成功",
   "workbench.script.msg.exportFailed": "导出失败",
   "workbench.production.node.storyboard.videoDescPlaceholder": "请输入视频描述",
-  "workbench.production.node.storyboard.videoDesc": "videoDesc"
+  "workbench.production.node.storyboard.videoDesc": "视频描述"
 }

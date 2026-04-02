@@ -64,6 +64,8 @@ export default defineStore(
         } else if (tag === "storyboardTable") {
           flowData.value.storyboardTable = value ?? "";
         } else if (tag === "storyboardItem") {
+        console.log("%c Line:60 🥔 status", "background:#3f7cff", status);
+
           if (status === "complete") {
             const prompt = attrs.prompt ?? "";
 
