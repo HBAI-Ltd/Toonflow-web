@@ -19,7 +19,7 @@
               v-model="item.enable"
               :customValue="[1, 0]"
               @click.stop
-              @change="onChange(item)"
+              @change="(val: number) => onChange(item, val)"
               style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); z-index: 10"></t-switch>
           </t-menu-item>
         </t-menu>
@@ -1012,21 +1012,16 @@ function onBlurFn() {
     });
 }
 //是否启用供应商
-function onChange(item: any) {
-  const prevEnable = item.enable;
+function onChange(item: any, val: number) {
+  const prevEnable = val === 1 ? 0 : 1;
   axios
     .post("/setting/vendorConfig/enableVendor", {
       id: item.id,
-      enable: item.enable,
+      enable: val,
     })
-    .then(() => {
-      if (item.enable == 1) window.$message.success($t("settings.vendor.msg.enabled"));
-      else window.$message.warning($t("settings.vendor.msg.disabled"));
-    })
+    .then(() => {})
     .catch((err) => {
-      // 请求失败时回滚状态
-      item.enable = prevEnable === 1 ? 0 : 1;
-      window.$message.error(`${$t("settings.vendor.msg.updateFailed")}${err.message}`);
+      item.enable = prevEnable;
     });
 }
 const addMode = ref("linkAdd");

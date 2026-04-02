@@ -14,6 +14,7 @@ import { cachedLocale } from "@/locales";
 import { initTheme } from "@/utils/theme";
 import { type GlobalConfigProvider } from "tdesign-vue-next";
 const { baseUrl, isElectron, themeSetting } = storeToRefs(settingStore());
+import { config } from "md-editor-v3";
 
 watch(
   () => isElectron.value,
@@ -43,6 +44,23 @@ onMounted(() => {
   getPort();
 });
 
+async function handleLinkClick(event: MouseEvent) {
+  event.preventDefault();
+  const target = event.currentTarget as HTMLAnchorElement | null;
+  const url = target?.getAttribute("data-link") || target?.getAttribute("href");
+  if (!url) return;
+
+  if (isElectron.value) {
+    await fetch(`toonflow://openurlwithbrowser?url=${url}`);
+  } else {
+    window.open(url, "_blank");
+  }
+}
+
+onMounted(() => {
+  (window as any).handleLinkClick = handleLinkClick;
+});
+
 async function getPort() {
   await nextTick();
   await nextTick();
@@ -56,6 +74,33 @@ async function getPort() {
       isElectron.value = true;
     }
   } catch (error) {}
+
+  config({
+    markdownItConfig(md) {
+      // 自定义链接渲染
+      const defaultRender =
+        md.renderer.rules.link_open ||
+        function (tokens, idx, options, env, self) {
+          return self.renderToken(tokens, idx, options);
+        };
+      md.renderer.rules.link_open = function (tokens, idx, options, env, self) {
+        const token = tokens[idx];
+        const href = token.attrGet("href");
+
+        if (href) {
+          // 添加 target="_blank" 在新窗口打开
+          token.attrPush(["target", "_blank"]);
+          token.attrPush(["rel", "noopener noreferrer"]);
+
+          // 或者添加自定义点击事件的标识
+          token.attrPush(["data-link", href]);
+          token.attrPush(["onclick", "handleLinkClick(event)"]);
+        }
+
+        return defaultRender(tokens, idx, options, env, self);
+      };
+    },
+  });
 }
 
 const tdesignLocaleMap: Record<string, object> = {
