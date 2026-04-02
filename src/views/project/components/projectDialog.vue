@@ -701,8 +701,8 @@ interface DirectorManualItem {
 }
 const DIRECTOR_DEFAULT_TAB_DATA: () => Data[] = () => [
   { label: "README", value: "README", data: "" },
-  { label: "导演规划", value: "art_directorPlanning", data: "" },
-  { label: "分镜表", value: "art_storyboard", data: "" },
+  { label: "导演规划", value: "narrative_sweet_romance", data: "" },
+  { label: "分镜表", value: "storyboard_table_narrative", data: "" },
 ];
 const directorManualForm = ref({ name: "", images: [] as string[], directorManual: "" });
 const directorManualLoading = ref(false);

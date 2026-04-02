@@ -1400,7 +1400,7 @@
       "resolution": "分辨率",
       "delVideo": "确认删除此视频？",
       "delSuccess": "删除成功",
-      "addReference": "参考素材",
+      "addReference": "添加参考",
       "promptPlaceholder": "请输入视频提示词"
     }
   },

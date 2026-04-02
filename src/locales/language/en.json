@@ -1391,7 +1391,9 @@
       "duration": "duration",
       "resolution": "resolution",
       "delVideo": "Confirm to delete this video?",
-      "delSuccess": "Delete successfully"
+      "delSuccess": "Delete successfully",
+      "addReference": "add reference",
+      "promptPlaceholder": "Please enter the video prompt word"
     }
   },
   "login": {

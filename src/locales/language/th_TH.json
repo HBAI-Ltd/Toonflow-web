@@ -1300,7 +1300,9 @@
       "duration": "ระยะเวลา",
       "resolution": "ปณิธาน",
       "delVideo": "ยืนยันการลบวิดีโอนี้หรือไม่",
-      "delSuccess": "ลบสำเร็จ"
+      "delSuccess": "ลบสำเร็จ",
+      "addReference": "เพิ่มการอ้างอิง",
+      "promptPlaceholder": "โปรดป้อนคำแจ้งของวิดีโอ"
     }
   },
   "login": {

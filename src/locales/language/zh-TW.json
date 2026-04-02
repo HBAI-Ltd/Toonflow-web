@@ -1304,7 +1304,9 @@
       "duration": "時長",
       "resolution": "解析度",
       "delVideo": "確認刪除此影片？",
-      "delSuccess": "刪除成功"
+      "delSuccess": "刪除成功",
+      "addReference": "新增參考",
+      "promptPlaceholder": "請輸入影片提示詞"
     }
   },
   "login": {

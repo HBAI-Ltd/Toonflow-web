@@ -1299,7 +1299,9 @@
       "duration": "間隔",
       "resolution": "解決",
       "delVideo": "このビデオを削除しますか?",
-      "delSuccess": "正常に削除されました"
+      "delSuccess": "正常に削除されました",
+      "addReference": "参照を追加",
+      "promptPlaceholder": "動画のプロンプトワードを入力してください"
     }
   },
   "login": {
