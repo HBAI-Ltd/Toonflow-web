@@ -48,6 +48,7 @@
       "vendorConfig": "Dịch vụ mô hình",
       "agentConfig": "Cấu hình Agent",
       "promptManage": "Quản lý Prompt",
+      "skillManagement": "Quản lý kĩ năng",
       "memoryConfig": "Cấu hình bộ nhớ Agent",
       "loginConfig": "Cấu hình đăng nhập",
       "dbConfig": "Thao tác cơ sở dữ liệu",
@@ -55,7 +56,8 @@
       "otherConfig": "Cấu hình khác",
       "requestConfig": "Địa chỉ yêu cầu (API)",
       "about": "Kiểm tra cập nhật",
-      "logoutConfig": "Đăng xuất"
+      "logoutConfig": "Đăng xuất",
+      "skillsSkillsManagement": "Kỹ năngQuản lý kỹ năng"
     },
     "language": {
       "desc": "Chọn ngôn ngữ hiển thị giao diện",
@@ -1293,7 +1295,9 @@
       "delVideo": "Xác nhận xóa video này?",
       "delSuccess": "Xóa thành công",
       "addReference": "thêm tài liệu tham khảo",
-      "promptPlaceholder": "Vui lòng nhập từ nhắc video"
+      "promptPlaceholder": "Vui lòng nhập từ nhắc video",
+      "downloadVideo": "Tải xuống video hàng loạt",
+      "selectVideo": "Vui lòng kiểm tra video bạn muốn tải xuống"
     }
   },
   "login": {

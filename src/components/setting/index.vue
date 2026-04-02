@@ -57,7 +57,7 @@ const menuItems = [
   { key: "vendorConfig", label: "settings.menu.vendorConfig", icon: "i-computer" },
   { key: "agentConfog", label: "settings.menu.agentConfig", icon: "i-color-filter" },
   { key: "promptManage", label: "settings.menu.promptManage", icon: "i-tips" },
-  { key: "skillManagement", label: "Skills技能管理", icon: "i-ring" },
+  { key: "skillManagement", label: "settings.menu.skillsSkillsManagement", icon: "i-ring" },
   { key: "memoryConfig", label: "settings.menu.memoryConfig", icon: "i-memory-card-one" },
   { key: "loginConfig", label: "settings.menu.loginConfig", icon: "i-lock" },
   { key: "dbConfig", label: "settings.menu.dbConfig", icon: "i-data" },

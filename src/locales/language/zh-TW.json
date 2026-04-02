@@ -57,6 +57,7 @@
       "vendorConfig": "模型服務",
       "agentConfig": "Agent 設定",
       "promptManage": "提示詞管理",
+      "skillManagement": "Skills技能管理",
       "memoryConfig": "Agent 記憶設定",
       "loginConfig": "登入設定",
       "dbConfig": "資料庫操作",
@@ -64,7 +65,8 @@
       "otherConfig": "其他設定",
       "requestConfig": "請求網址",
       "about": "檢查更新",
-      "logoutConfig": "登出"
+      "logoutConfig": "登出",
+      "skillsSkillsManagement": "Skills技能管理"
     },
     "language": {
       "desc": "選擇介面顯示語言",
@@ -1306,7 +1308,9 @@
       "delVideo": "確認刪除此影片？",
       "delSuccess": "刪除成功",
       "addReference": "新增參考",
-      "promptPlaceholder": "請輸入影片提示詞"
+      "promptPlaceholder": "請輸入影片提示詞",
+      "downloadVideo": "批量下載視頻",
+      "selectVideo": "請勾選需要下載的視頻"
     }
   },
   "login": {

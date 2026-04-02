@@ -49,6 +49,7 @@
       "vendorConfig": "Model Providers",
       "agentConfig": "Agent Config",
       "promptManage": "Prompt Management",
+      "skillManagement": "skillsSkillsManagement",
       "memoryConfig": "Agent Memory",
       "loginConfig": "Login Config",
       "dbConfig": "Database",
@@ -56,7 +57,8 @@
       "otherConfig": "Other Config",
       "requestConfig": "Request URL",
       "about": "Check for Updates",
-      "logoutConfig": "Logout"
+      "logoutConfig": "Logout",
+      "skillsSkillsManagement": "SkillsSkills Management"
     },
     "language": {
       "desc": "Select the interface display language",
@@ -1394,7 +1396,9 @@
       "delVideo": "Confirm to delete this video?",
       "delSuccess": "Delete successfully",
       "addReference": "add reference",
-      "promptPlaceholder": "Please enter the video prompt word"
+      "promptPlaceholder": "Please enter the video prompt word",
+      "downloadVideo": "Download videos in batches",
+      "selectVideo": "Please check the video you want to download"
     }
   },
   "login": {

@@ -166,12 +166,14 @@
                   {{ $t("workbench.generate.generateFailed") }}
                 </t-tag>
               </t-tooltip>
-
               <div v-if="v.state !== '生成中'" class="selectBtn" @click.stop="selectVideo(v)">
                 <i-check size="16" />
               </div>
               <div class="delBtn" @click.stop="handleDeleteVideo(v)">
                 <i-delete size="16" />
+              </div>
+              <div class="download" @click.stop="downloadVideo(v)">
+                <i-to-bottom size="16" />
               </div>
             </div>
           </div>
@@ -1074,6 +1076,20 @@ function handleDeleteVideo(value: HistoryVideoItem) {
     },
   });
 }
+//下载视频
+async function downloadVideo(value: HistoryVideoItem) {
+  const url = value.src;
+  const response = await fetch(url);
+  const blob = await response.blob();
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  const filename = "视频" + ".mp4";
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(link.href);
+}
 </script>
 
 <style lang="scss" scoped>
@@ -1328,6 +1344,24 @@ function handleDeleteVideo(value: HistoryVideoItem) {
               position: absolute;
               bottom: 4px;
               left: 4px;
+            }
+            .download {
+              position: absolute;
+              top: 4px;
+              left: 4px;
+              width: 24px;
+              height: 24px;
+              border-radius: 50%;
+              background: rgba(0, 0, 0, 0.5);
+              color: #fff;
+              display: none;
+              align-items: center;
+              justify-content: center;
+              cursor: pointer;
+              transition: background 0.2s;
+            }
+            &:hover .download {
+              display: flex;
             }
           }
         }

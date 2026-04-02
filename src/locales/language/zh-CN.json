@@ -59,6 +59,7 @@
       "vendorConfig": "模型服务",
       "agentConfig": "Agent配置",
       "promptManage": "提示词管理",
+      "skillManagement": "Skills技能管理",
       "memoryConfig": "Agent记忆配置",
       "loginConfig": "登录配置",
       "dbConfig": "数据库操作",
@@ -67,7 +68,8 @@
       "requestConfig": "请求地址",
       "devConfig": "开发者选项",
       "about": "检查更新",
-      "logoutConfig": "退出登录"
+      "logoutConfig": "退出登录",
+      "skillsSkillsManagement": "Skills技能管理"
     },
     "language": {
       "desc": "选择界面显示语言",
@@ -1402,7 +1404,9 @@
       "delVideo": "确认删除此视频？",
       "delSuccess": "删除成功",
       "addReference": "添加参考",
-      "promptPlaceholder": "请输入视频提示词"
+      "promptPlaceholder": "请输入视频提示词",
+      "downloadVideo": "批量下载视频",
+      "selectVideo": "请勾选需要下载的视频"
     }
   },
   "login": {
