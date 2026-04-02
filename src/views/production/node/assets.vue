@@ -117,6 +117,7 @@ async function save({ imageUrl, flowId }: { imageUrl: string; flowId: number }) 
     const target = i.derive.find((s) => s.id === currentAssetsId.value);
     if (target) {
       target.src = imageUrl;
+      target.flowId = flowId;
       break;
     }
   }

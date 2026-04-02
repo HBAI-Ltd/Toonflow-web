@@ -135,11 +135,7 @@
               :class="{ active: updateSource === source.value, disabled: source.disabled }"
               @click="!source.disabled && (updateSource = source.value)">
               <div class="sourceIcon" :class="source.iconClass" :style="source.iconBg ? { background: source.iconBg } : undefined">
-                <img
-                  v-if="source.iconType === 'image'"
-                  :src="source.iconSrc"
-                  :alt="source.label"
-                  style="width: 22px; height: 22px" />
+                <img v-if="source.iconType === 'image'" :src="source.iconSrc" :alt="source.label" style="width: 22px; height: 22px" />
                 <i-github v-else-if="source.iconName === 'github'" theme="outline" size="22" />
                 <i-code v-else-if="source.iconName === 'code'" theme="outline" size="22" />
               </div>
@@ -177,6 +173,9 @@ import { useI18n } from "vue-i18n";
 
 const { t } = useI18n();
 const { version } = storeToRefs(store());
+
+import settingStore from "@/stores/setting";
+const { isElectron } = storeToRefs(settingStore());
 
 type UpdateSource = "github" | "gitee" | "toonflow" | "atomgit";
 
@@ -239,8 +238,12 @@ watch(updateSource, () => {
   updateInfo.value = { needUpdate: false, latestVersion: "", reinstall: false, time: 0, url: "" };
 });
 
-function openLink(url: string) {
-  window.open(url, "_blank");
+async function openLink(url: string) {
+  if (isElectron.value) {
+    await fetch(`toonflow://openurlwithbrowser?url=${url}`);
+  } else {
+    window.open(url, "_blank");
+  }
 }
 
 onMounted(async () => {
@@ -312,9 +315,7 @@ async function doConfirmUpdate() {
 }
 
 function confirmUpdate() {
-  const reinstallWarning = updateInfo.value.reinstall
-    ? "\n\n检测到该版本需要重新安装更新，安装过程中可能会替换现有安装，请先保存当前工作。"
-    : "";
+  const reinstallWarning = updateInfo.value.reinstall ? "\n\n检测到该版本需要重新安装更新，安装过程中可能会替换现有安装，请先保存当前工作。" : "";
 
   const dialog = DialogPlugin.confirm({
     header: "确认更新",

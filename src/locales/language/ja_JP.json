@@ -201,7 +201,8 @@
         "keyInvalid": "KEYが無効です。確認して再入力してください：",
         "enterKey": "KEYを入力してください",
         "saveFailed": "保存に失敗しました：",
-        "getAgentListFailed": "Agent設定リストの取得に失敗しました："
+        "getAgentListFailed": "Agent設定リストの取得に失敗しました：",
+        "toonflowNotFound": "トゥーンフロー公式乗換駅は存在しない"
       }
     },
     "memory": {

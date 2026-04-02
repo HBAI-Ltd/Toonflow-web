@@ -212,7 +212,8 @@
         "keyInvalid": "KEY无效，请检查后重新输入：",
         "enterKey": "请输入 KEY",
         "saveFailed": "保存失败：",
-        "getAgentListFailed": "获取Agent配置列表失败："
+        "getAgentListFailed": "获取Agent配置列表失败：",
+        "toonflowNotFound": "Toonflow官方中转站不存在"
       }
     },
     "memory": {

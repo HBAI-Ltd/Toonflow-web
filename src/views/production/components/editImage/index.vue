@@ -264,6 +264,8 @@ onMounted(async () => {
     if (imageModel) {
       imageDefaultModle.value = imageModel;
     }
+    console.log("%c Line:268 🥔 props.flowData.flowId", "background:#33a5ff", props.flowData.flowId);
+
     if (!props.flowData.flowId) return buildFlow();
     const { data } = await axios.post("/production/editImage/getImageFlow", {
       id: props.flowData.flowId,

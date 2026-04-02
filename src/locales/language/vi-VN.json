@@ -200,7 +200,8 @@
         "keyInvalid": "KEY không hợp lệ, vui lòng kiểm tra và nhập lại:",
         "enterKey": "Vui lòng nhập KEY",
         "saveFailed": "Lưu thất bại:",
-        "getAgentListFailed": "Lấy danh sách cấu hình Agent thất bại:"
+        "getAgentListFailed": "Lấy danh sách cấu hình Agent thất bại:",
+        "toonflowNotFound": "Trạm trung chuyển chính thức của Toonflow không tồn tại"
       }
     },
     "memory": {

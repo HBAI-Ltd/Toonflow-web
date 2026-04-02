@@ -288,7 +288,7 @@ async function save({ imageUrl, flowId }: { imageUrl: string; flowId: number }) 
       flowId,
     });
 
-    storyboard.value.splice(insertAfterIndex + 1, 0, { ...newFrame, id: data.id! });
+    storyboard.value.splice(insertAfterIndex + 1, 0, { ...newFrame, id: data.id!, flowId });
     productionAgentStore().setFlowData();
     return;
   }
@@ -298,6 +298,7 @@ async function save({ imageUrl, flowId }: { imageUrl: string; flowId: number }) 
   if (target) {
     target.src = imageUrl;
     target.state = "已完成";
+    target.flowId = flowId;
   }
   await axios.post("/production/storyboard/updateStoryboardUrl", {
     id: id,

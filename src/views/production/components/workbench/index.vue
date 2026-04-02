@@ -72,6 +72,20 @@ const activeMenu = ref("preview");
 const canvasWidth = ref(1920);
 const canvasHeight = ref(1080);
 
+onMounted(() => {
+  const size = project.value?.videoRatio;
+  if (size == "16:9") {
+    canvasWidth.value = 1920;
+    canvasHeight.value = 1080;
+  } else if (size == "1:1") {
+    canvasWidth.value = 1080;
+    canvasHeight.value = 1080;
+  } else if (size == "9:16") {
+    canvasWidth.value = 1080;
+    canvasHeight.value = 1920;
+  }
+});
+
 // ============ 演示数据（可替换为在线资源地址） ============
 
 /** 资源库 - 分镜视频 */

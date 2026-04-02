@@ -201,7 +201,8 @@
         "keyInvalid": "KEY ไม่ถูกต้อง โปรดตรวจสอบและกรอกใหม่อีกครั้ง:",
         "enterKey": "โปรดกรอก KEY",
         "saveFailed": "บันทึกล้มเหลว:",
-        "getAgentListFailed": "ดึงรายการการตั้งค่า Agent ล้มเหลว:"
+        "getAgentListFailed": "ดึงรายการการตั้งค่า Agent ล้มเหลว:",
+        "toonflowNotFound": "ไม่มีสถานีรับส่งอย่างเป็นทางการของ Toonflow"
       }
     },
     "memory": {

@@ -1159,15 +1159,6 @@ function requestMethod() {
     status: "success",
   } as const);
 }
-// 读取文件内容
-async function readFile(file: File): Promise<string> {
-  const buffer = await file.arrayBuffer();
-  if (file.type === "text/plain") {
-    return new TextDecoder().decode(buffer);
-  }
-  const result = await mammoth.extractRawText({ arrayBuffer: buffer });
-  return result.value;
-}
 // 处理拖拽上传
 async function handleDrop(e: DragEvent) {
   const files = e.dataTransfer?.files;

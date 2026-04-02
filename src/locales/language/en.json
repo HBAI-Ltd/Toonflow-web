@@ -201,7 +201,8 @@
         "keyInvalid": "KEY is invalid. Please check and re-enter: ",
         "enterKey": "Please enter KEY",
         "saveFailed": "Save failed: ",
-        "getAgentListFailed": "Failed to fetch Agent config list: "
+        "getAgentListFailed": "Failed to fetch Agent config list: ",
+        "toonflowNotFound": "Toonflow official transfer station does not exist"
       }
     },
     "memory": {
