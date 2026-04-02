@@ -1036,7 +1036,10 @@
         "imageGeneration": "图片生成",
         "promptPlaceholder": "描述你想要生成的图片...",
         "imageRef": "图{index}",
-        "noReferences": "暂无可引用的参考图",
+        "videoRef": "视频{index}",
+        "audioRef": "音频{index}",
+        "reference": "参考{index}",
+        "noReferences": "暂无可引用的参考文件",
         "selectModel": "请先选择模型",
         "selectQuality": "请选择画质",
         "selectRatio": "请选择比例",
@@ -1396,7 +1399,9 @@
       "duration": "时长",
       "resolution": "分辨率",
       "delVideo": "确认删除此视频？",
-      "delSuccess": "删除成功"
+      "delSuccess": "删除成功",
+      "addReference": "参考素材",
+      "promptPlaceholder": "请输入视频提示词"
     }
   },
   "login": {

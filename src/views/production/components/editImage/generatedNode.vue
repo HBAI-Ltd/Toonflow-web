@@ -34,7 +34,7 @@
         </div>
       </div>
       <div class="text w">
-        <PromptEditor v-model:prompt="data.prompt" :references="data.references" />
+        <PromptEditor v-model="data.prompt" :references="references" :placeholder="$t('workbench.production.editImage.promptPlaceholder')"/>
       </div>
       <div class="operate ac jb">
         <div class="ac">
@@ -72,7 +72,7 @@
 <script setup lang="ts">
 import { Handle, useVueFlow, Position } from "@vue-flow/core";
 import modelSelect from "@/components/modelSelect.vue";
-import PromptEditor from "./promptEditor.vue";
+import PromptEditor from "@/components/promptEditor.vue";
 import axios from "@/utils/axios";
 import { type GeneratedNodeData } from "../../utils/editImageType";
 
@@ -80,6 +80,10 @@ const selected = ref(true);
 const generating = ref(false);
 const emit = defineEmits(["keep"]);
 const { removeNodes } = useVueFlow("editImage");
+
+const references = computed(() => {
+  return props.data.references.map((i) => ({ type: 'image' as const, src: i.image })).filter(Boolean);
+});
 
 const props = defineProps<{
   id: string;

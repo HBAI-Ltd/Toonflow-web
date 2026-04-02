@@ -17,10 +17,13 @@ interface Asset {
 }
 
 export type AssetType = "role" | "tool" | "scene" | "clip";
+export type ClipMediaType = "image" | "video" | "audio";
 
 export interface AssetsSelectOptions {
   /** 限制显示的资产类型，不传则显示全部 */
   types?: AssetType[];
+  /** 当 types 包含 clip 时，限制 clip 的媒体子类型（图片/视频/音频），不传则显示全部 */
+  clipMediaTypes?: ClipMediaType[];
   /** 是否多选，默认 true */
   multiple?: boolean;
   /** 弹窗标题 */
@@ -28,7 +31,7 @@ export interface AssetsSelectOptions {
 }
 
 export default function openAssetsSelector(options: AssetsSelectOptions = {}): Promise<Asset[]> {
-  const { types, multiple = true, title = window.$t("common.selectAssets") } = options;
+  const { types, clipMediaTypes, multiple = true, title = window.$t("common.selectAssets") } = options;
   return new Promise((resolve) => {
     const container = document.createElement("div");
     document.body.appendChild(container);
@@ -78,6 +81,7 @@ export default function openAssetsSelector(options: AssetsSelectOptions = {}): P
                 ref: assetsRef,
                 selectorMode: true,
                 allowedTypes: types,
+                clipMediaTypes,
                 multiple,
               }),
             ]),
