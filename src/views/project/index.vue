@@ -4,7 +4,7 @@
       <div class="fc">
         <span class="title">{{ $t("workbench.project.title") }}</span>
         <span class="sub">{{ $t("workbench.project.subtitle") }}</span>
-      </div>123123
+      </div>
       <t-button
         class="addBtn"
         @click="

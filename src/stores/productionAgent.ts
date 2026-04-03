@@ -64,7 +64,7 @@ export default defineStore(
         } else if (tag === "storyboardTable") {
           flowData.value.storyboardTable = value ?? "";
         } else if (tag === "storyboardItem") {
-        console.log("%c Line:60 🥔 status", "background:#3f7cff", status);
+          console.log("%c Line:60 🥔 status", "background:#3f7cff", status);
 
           if (status === "complete") {
             const prompt = attrs.prompt ?? "";
@@ -290,7 +290,7 @@ export default defineStore(
           ids: ids,
         });
         if (!data || data.length === 0) return;
-        const records = data as Array<{ id: number; state: string; src?: string; errorReason?: string }>;
+        const records = data as Array<{ id: number; state: string; src?: string; errorReason?: string; prompt?: string }>;
         records.forEach((record) => {
           flowData.value.assets.forEach((asset) => {
             if (!asset.derive) return;
@@ -299,6 +299,7 @@ export default defineStore(
                 derive.state = record.state as "未生成" | "生成中" | "已完成" | "生成失败";
                 if (record.src) derive.src = record.src;
                 derive.errorReason = record?.errorReason ?? "";
+                derive.prompt = record?.prompt ?? "";
               }
             });
           });
