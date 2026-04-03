@@ -1248,7 +1248,7 @@
     "task": {
       "title": "タスクリスト",
       "subtitle": "最新のタスク実行履歴",
-      "refresh": "更新",
+      "refresh": "リフレッシュする",
       "categoryLabel": "タスクカテゴリ：",
       "stateLabel": "ステータス：",
       "noFailReason": "失敗理由なし",
@@ -1263,7 +1263,8 @@
         "model": "モデル",
         "describe": "説明",
         "state": "ステータス",
-        "startTime": "時間"
+        "startTime": "時間",
+        "reason": "失敗の理由"
       },
       "project": "プロジェクト名:"
     },

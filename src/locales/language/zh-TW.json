@@ -1267,7 +1267,8 @@
         "model": "模型",
         "describe": "描述",
         "state": "狀態",
-        "startTime": "時間"
+        "startTime": "時間",
+        "reason": "失敗原因"
       },
       "project": "項目名稱:"
     },

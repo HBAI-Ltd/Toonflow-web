@@ -1341,7 +1341,7 @@
     "task": {
       "title": "Task List",
       "subtitle": "Your latest task execution records",
-      "refresh": "Refresh",
+      "refresh": "refresh",
       "categoryLabel": "Task Category:",
       "stateLabel": "Status:",
       "noFailReason": "No failure reason",
@@ -1356,7 +1356,8 @@
         "model": "Model",
         "describe": "Description",
         "state": "Status",
-        "startTime": "Time"
+        "startTime": "Time",
+        "reason": "Reason for failure"
       },
       "project": "Project name:"
     },

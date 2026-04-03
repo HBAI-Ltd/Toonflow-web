@@ -1239,7 +1239,7 @@
     "task": {
       "title": "Danh sách tác vụ",
       "subtitle": "Nhật ký thực thi tác vụ mới nhất của bạn",
-      "refresh": "Làm mới",
+      "refresh": "làm cho khỏe lại",
       "categoryLabel": "Loại tác vụ:",
       "stateLabel": "Trạng thái:",
       "noFailReason": "Chưa có lý do thất bại",
@@ -1254,7 +1254,8 @@
         "model": "Mô hình",
         "describe": "Mô tả",
         "state": "Trạng thái",
-        "startTime": "Thời gian"
+        "startTime": "Thời gian",
+        "reason": "Lý do thất bại"
       },
       "project": "Tên dự án:"
     },

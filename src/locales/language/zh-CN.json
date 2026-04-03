@@ -1372,7 +1372,8 @@
         "model": "模型",
         "describe": "描述",
         "state": "状态",
-        "startTime": "时间"
+        "startTime": "时间",
+        "reason": "失败原因"
       },
       "project": "项目名称:"
     },

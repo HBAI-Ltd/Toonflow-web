@@ -31,7 +31,7 @@
       <div class="content">
         <t-table :data="taskList" :columns="columns" row-key="id" :loading="pagination.loading" hover stripe>
           <template #state="{ row }">
-            <t-tooltip v-if="row.state === '生成失败'" :content="row.reason || $t('workbench.task.noFailReason')" placement="top">
+            <t-tooltip v-if="row.state === '生成失败'" placement="top">
               <span class="stateText stateFail">{{ row.state }}</span>
             </t-tooltip>
             <span v-else class="stateText" :class="row.state === '进行中' ? 'stateRunning' : 'stateSuccess'">
@@ -80,6 +80,7 @@ const columns = [
   { colKey: "relatedObjects", title: $t("workbench.task.col.relatedObjects"), width: 120, ellipsis: true },
   { colKey: "model", title: $t("workbench.task.col.model"), width: 280, ellipsis: true },
   { colKey: "describe", title: $t("workbench.task.col.describe"), ellipsis: true },
+  { colKey: "reason", title: $t("workbench.task.col.reason"), width: 200, cell: "reason" },
   { colKey: "state", title: $t("workbench.task.col.state"), width: 100, cell: "state" },
   { colKey: "startTime", title: $t("workbench.task.col.startTime"), width: 200, cell: "startTime" },
 ];
