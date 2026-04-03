@@ -738,12 +738,12 @@ watch(selectModel, (val) => {
   axios.post("/modelSelect/getModelDetail", { modelId: val }).then(({ data }) => {
     modeOptions.value = data;
     // 重置 mode 为第一个可选项
-    if (data.mode?.length) {
-      const firstMode = data.mode[0];
-      selectMode.value = Array.isArray(firstMode) ? JSON.stringify(firstMode) : firstMode;
-    } else {
-      selectMode.value = undefined;
-    }
+    // if (data.mode?.length) {
+    //   const firstMode = data.mode[0];
+    //   selectMode.value = Array.isArray(firstMode) ? JSON.stringify(firstMode) : firstMode;
+    // } else {
+    //   selectMode.value = undefined;
+    // }
     // 重置分辨率和时长为第一个可选项
     const drMap = data.durationResolutionMap;
     if (Array.isArray(drMap) && drMap.length > 0) {
