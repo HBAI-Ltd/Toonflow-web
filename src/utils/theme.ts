@@ -9,7 +9,7 @@ interface ThemeSetting {
 // 使用 VueUse 的 useStorage 进行本地存储缓存
 export const themeSetting = useStorage<ThemeSetting>("theme-setting", {
   mode: "light",
-  primaryColor: "#9810fa",
+  primaryColor: "#000",
 });
 
 // HEX 转 HSL

@@ -1,4 +1,9 @@
 /**
+ * 全局变量类型声明
+ */
+declare const $t: (key: string, ...args: any[]) => string;
+
+/**
  * Vite 环境变量类型定义
  */
 interface ImportMetaEnv {

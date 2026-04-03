@@ -1,0 +1,141 @@
+<template>
+  <t-card class="scriptPlan">
+    <div class="titleBar dragHandle pr">
+      <div class="title c">{{ $t("workbench.production.node.scriptPlan.title") }}</div>
+      <t-button size="small" variant="text" @click="openEdit">{{ $t("workbench.production.edit") }}</t-button>
+      <Handle :id="props.handleIds.target" type="target" :position="Position.Left" style="left: calc(-1 * var(--td-comp-paddingLR-xl))" />
+      <Handle :id="props.handleIds.source" type="source" :position="Position.Right" style="right: calc(-1 * var(--td-comp-paddingLR-xl))" />
+    </div>
+    <div class="content">
+      <t-empty v-if="!scriptPlan" style="margin-top: 16px"></t-empty>
+      <MdPreview v-else v-model="scriptPlan" :theme="'light'" />
+    </div>
+  </t-card>
+
+  <t-dialog
+    v-model:visible="dialogVisible"
+    :header="$t('workbench.production.node.scriptPlan.editDialog')"
+    :width="'90vw'"
+    :confirm-btn="$t('workbench.production.save')"
+    :cancel-btn="$t('workbench.production.cancel')"
+    @confirm="onConfirm"
+    @cancel="onCancel"
+    @close="onCancel"
+    :close-on-overlay-click="false"
+    placement="center"
+    attach="body">
+    <MdEditor
+      v-model="editContent"
+      :theme="'light'"
+      :toolbars="toolbars"
+      :footers="[]"
+      style="height: 72vh"
+      @onUploadImg="() => {}"
+      @drop.prevent
+      @paste="onPaste" />
+  </t-dialog>
+</template>
+
+<script setup lang="ts">
+import { ref } from "vue";
+import { Handle, Position } from "@vue-flow/core";
+import { MdEditor, MdPreview } from "md-editor-v3";
+import type { ToolbarNames } from "md-editor-v3";
+import "md-editor-v3/lib/style.css";
+
+const props = defineProps<{
+  id: string;
+  handleIds: {
+    target: string;
+    source: string;
+  };
+}>();
+
+const scriptPlan = defineModel<string>({ required: true });
+const editContent = ref("");
+const dialogVisible = ref(false);
+
+const toolbars: ToolbarNames[] = [
+  "bold",
+  "underline",
+  "italic",
+  "strikeThrough",
+  "-",
+  "title",
+  "sub",
+  "sup",
+  "quote",
+  "unorderedList",
+  "orderedList",
+  "task",
+  "-",
+  "codeRow",
+  "code",
+  "table",
+  "-",
+  "revoke",
+  "next",
+  "=",
+  "preview",
+];
+
+function openEdit() {
+  editContent.value = scriptPlan.value ?? "";
+  dialogVisible.value = true;
+}
+
+function onConfirm() {
+  scriptPlan.value = editContent.value;
+  dialogVisible.value = false;
+}
+
+function onCancel() {
+  dialogVisible.value = false;
+}
+
+function onPaste(e: ClipboardEvent) {
+  const items = e.clipboardData?.items;
+  if (!items) return;
+  for (const item of items) {
+    if (item.type.startsWith("image/") || item.type.startsWith("video/")) {
+      e.preventDefault();
+      return;
+    }
+  }
+}
+</script>
+
+<style lang="scss" scoped>
+.scriptPlan {
+  max-width: 100vw;
+  width: fit-content;
+  min-width: 200px;
+  user-select: text;
+  cursor: default;
+
+  .titleBar {
+    cursor: grab;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .title {
+    background-color: #000;
+    width: fit-content;
+    padding: 5px 10px;
+    color: #fff;
+    border-radius: 8px 0;
+    font-size: 16px;
+  }
+
+  .content {
+    margin-top: 8px;
+
+    :deep(.md-editor) {
+      border: none;
+    }
+  }
+}
+</style>

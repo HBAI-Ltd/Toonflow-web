@@ -216,7 +216,7 @@ server {
 
     # API 代理（可选）
     location /api/ {
-        proxy_pass http://localhost:60000/;
+        proxy_pass http://localhost:10588/;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
     }
@@ -380,8 +380,8 @@ export default defineConfig({
 
 ```bash
 VITE_TYPE=dev
-VITE_BASE_URL=http://127.0.0.1:60000
-VITE_WS_URL=ws://127.0.0.1:60000
+VITE_BASE_URL=http://127.0.0.1:10588
+VITE_WS_URL=ws://127.0.0.1:10588
 ```
 
 ### Q: 我只想使用 Toonflow，不需要开发，怎么办？

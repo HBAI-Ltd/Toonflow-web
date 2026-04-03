@@ -1,5 +1,6 @@
 {
   "include": ["vite.config.*", "vitest.config.*", "cypress.config.*", "nightwatch.conf.*", "playwright.config.*"],
+  "exclude": ["node_modules", "**/node_modules/*", "dist", "coverage", "**/*.test.ts"],
   "compilerOptions": {
     "noEmit": true,
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo",
@@ -8,12 +9,11 @@
     "lib": ["ES2023"],
     "module": "ESNext",
     "moduleResolution": "Bundler",
-    "types": ["node", "vite/client", "element-plus/global"],
+    "types": ["node", "vite/client"],
     "verbatimModuleSyntax": false,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
-    "skipLibCheck": true,
-    "exclude": ["node_modules", "dist", "coverage", "**/*.test.ts"]
+    "skipLibCheck": true
   }
 }

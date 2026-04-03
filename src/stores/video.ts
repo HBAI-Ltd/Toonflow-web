@@ -263,7 +263,7 @@ export default defineStore(
       const config = videoConfigs.value.find((c) => c.id === configId);
 
       if (!config) {
-        throw new Error("配置不存在");
+        throw new Error($t("workbench.production.generate.configNotFound"));
       }
 
       // 构建图片路径列表

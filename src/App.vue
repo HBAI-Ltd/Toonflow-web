@@ -1,83 +1,128 @@
 <template>
+  <titleBar v-if="isElectron" />
   <t-config-provider :global-config="globalConfig">
-    <el-config-provider>
-      <a-config-provider :theme="theme" :locale="zhCN">
-        <router-view></router-view>
-        <UpdateDialog />
-      </a-config-provider>
-    </el-config-provider>
+    <router-view></router-view>
   </t-config-provider>
 </template>
 
 <script setup lang="ts">
-import { onMounted } from "vue";
-import { useRoute } from "vue-router";
-import zhCN from "ant-design-vue/es/locale/zh_CN";
-import UpdateDialog from "@/components/update.vue";
-import { initTheme } from "@/utils/theme";
 import settingStore from "@/stores/setting";
-import { storeToRefs } from "pinia";
-
-const route = useRoute();
-const store = settingStore();
-const { baseUrl, wsBaseUrl } = storeToRefs(store);
-
-// 从 URL query 参数设置请求地址
-const initFromQuery = () => {
-  const query = route.query;
-  // 支持通过 ?baseUrl=xxx 设置请求地址
-  if (query.baseUrl && typeof query.baseUrl === "string") {
-    baseUrl.value = query.baseUrl;
-    console.log('Set baseUrl to:', query.baseUrl);
-  }
-  // 支持通过 ?wsBaseUrl=xxx 设置 WebSocket 地址
-  if (query.wsBaseUrl && typeof query.wsBaseUrl === "string") {
-    wsBaseUrl.value = query.wsBaseUrl;
-    console.log('Set wsBaseUrl to:', query.wsBaseUrl);
-  }
-};
-// 监听路由变化，确保 query 参数更新时也能处理
-watch(
-  () => route.query,
-  () => {
-    initFromQuery();
-  },
-  { immediate: true, deep: true }
-);
-// 初始化主题
-onMounted(() => {
-  initTheme();
-});
-
-const theme = {
-  token: {
-    colorPrimary: "#9810fa",
-  },
-};
-
 import { merge } from "lodash-es";
 import zhConfig from "tdesign-vue-next/es/locale/zh_CN";
-
+import enConfig from "tdesign-vue-next/es/locale/en_US";
+import { cachedLocale } from "@/locales";
+import { initTheme } from "@/utils/theme";
 import { type GlobalConfigProvider } from "tdesign-vue-next";
-const empty: GlobalConfigProvider = {};
+const { baseUrl, isElectron, themeSetting } = storeToRefs(settingStore());
+import { config } from "md-editor-v3";
+
+watch(
+  () => isElectron.value,
+  (newVal) => {
+    if (newVal) {
+      document.body.classList.add("is-electron");
+    } else {
+      document.body.classList.remove("is-electron");
+    }
+  },
+  { immediate: true },
+);
+
+onBeforeMount(() => {
+  document.addEventListener("keydown", function (event) {
+    if (event.key === "F8") {
+      event.preventDefault();
+      debugger;
+    }
+  });
+});
+
+// 初始化主题
+onMounted(() => {
+  themeSetting.value.primaryColor = "#000";
+  initTheme();
+  getPort();
+});
+
+async function handleLinkClick(event: MouseEvent) {
+  event.preventDefault();
+  event.stopPropagation();
+
+  const target = event.currentTarget as HTMLAnchorElement | null;
+  const url = target?.getAttribute("data-link") || target?.getAttribute("href");
+  if (!url) return false;
+
+  if (isElectron.value) {
+    await fetch(`toonflow://openurlwithbrowser?url=${encodeURIComponent(url)}`);
+  } else {
+    window.open(url, "_blank", "noopener,noreferrer");
+  }
+
+  return false;
+}
+
+onMounted(() => {
+  (window as any).handleLinkClick = handleLinkClick;
+});
+
+async function getPort() {
+  await nextTick();
+  await nextTick();
+  await nextTick();
+  await nextTick();
+  try {
+    const res = await fetch("toonflow://getPort");
+    const data = await res.json();
+    if (data?.port) {
+      baseUrl.value = `http://localhost:${data.port}/api`;
+      isElectron.value = true;
+    }
+  } catch (error) {}
+
+  config({
+    markdownItConfig(md) {
+      // 自定义链接渲染
+      const defaultRender =
+        md.renderer.rules.link_open ||
+        function (tokens, idx, options, env, self) {
+          return self.renderToken(tokens, idx, options);
+        };
+      md.renderer.rules.link_open = function (tokens, idx, options, env, self) {
+        const token = tokens[idx];
+        const href = token.attrGet("href");
+
+        if (href) {
+          // 添加 target="_blank" 在新窗口打开
+          token.attrSet("target", "_blank");
+          token.attrSet("rel", "noopener noreferrer");
+
+          // 或者添加自定义点击事件的标识
+          token.attrSet("data-link", href);
+          token.attrSet("onclick", "return handleLinkClick(event)");
+        }
+
+        return defaultRender(tokens, idx, options, env, self);
+      };
+    },
+  });
+}
+
+const tdesignLocaleMap: Record<string, object> = {
+  "zh-CN": zhConfig,
+  en: enConfig,
+};
+
 const customConfig: GlobalConfigProvider = {
   calendar: {},
   table: {},
   pagination: {},
 };
-const globalConfig: GlobalConfigProvider = merge(empty, zhConfig, customConfig);
+const globalConfig = computed<GlobalConfigProvider>(() => merge({}, tdesignLocaleMap[cachedLocale.value] || zhConfig, customConfig));
 
-// document.documentElement.setAttribute('theme-mode', 'dark');
-// document.documentElement.setAttribute('theme-mode', 'light');
+onBeforeMount(() => {
+  document.documentElement.setAttribute("theme-mode", "light");
+  document.documentElement.setAttribute("data-theme", "light");
+});
 </script>
 
-<style lang="scss">
-:root {
-  --mainColor: #9810fa;
-  --mainColorLight: #faf5ff;
-  --mainColorHover: #7c0dd4;
-  --mainColorActive: #6a0bb5;
-  --mainGradient: linear-gradient(135deg, #9810fa 0%, #7c3aed 100%);
-  --mainGradientHover: linear-gradient(135deg, #a020fb 0%, #8b5cf6 100%);
-}
-</style>
+<style lang="scss"></style>

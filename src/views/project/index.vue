@@ -1,302 +1,271 @@
 <template>
-  <div class="root">
+  <div class="project">
     <div class="header">
-      <div>
-        <h2 class="title">我的项目</h2>
-        <p class="sub">管理您的所有短剧项目</p>
+      <div class="fc">
+        <span class="title">{{ $t("workbench.project.title") }}</span>
+        <span class="sub">{{ $t("workbench.project.subtitle") }}</span>
       </div>
-      <button class="addBtn" @click="routeToCreateProject">
-        <i-plus class="addIcon" :size="20" />
-        新建项目
-      </button>
+      <t-button
+        class="addBtn"
+        @click="
+          editProjectData = null;
+          dialogShow = true;
+        ">
+        <template #icon><i-plus class="addIcon" :size="20" /></template>
+        {{ $t("workbench.project.newProject") }}
+      </t-button>
     </div>
-    <div v-if="projects.length === 0" class="empty">
-      <div class="emptyIcon">
-        <i-folder-open class="iconEmpty" :size="48" />
-      </div>
-      <h3 class="emptyTitle">暂无项目</h3>
-      <p class="emptyDesc">创建您的第一个项目，开始AI创作之旅</p>
-    </div>
-
-    <div v-else class="list">
-      <div v-for="project in projects" :key="project.id" class="card" @click="openProject(project.id)">
-        <div class="content">
-          <div class="cardHeader">
-            <div class="left">
-              <div class="folderIcon">
-                <i-folder-open class="iconFolder" :size="24" />
+    <div class="list">
+      <t-row style="gap: 20px">
+        <t-col :xs="12" :sm="6" :md="6" :lg="4" :xl="4" v-for="project in allProject" :key="project.id">
+          <t-card hoverShadow class="card" @click="openProject(project.id)">
+            <div class="jb ac">
+              <div class="title">
+                {{ project.name }}
               </div>
               <div>
-                <h3 class="name">{{ project.name }}</h3>
-                <div class="type">
-                  <span class="desc">类型：{{ project.type }}</span>
+                <t-tag shape="round">
+                  {{ project.projectType == "novel" ? $t(`workbench.project.type.novel`) : $t(`workbench.project.type.script`) }}
+                </t-tag>
+              </div>
+            </div>
+            <t-tag shape="round" v-if="project.artStyle">{{ project.artStyle }}</t-tag>
+            <div class="intro">
+              {{ project.intro }}
+            </div>
+            <div class="bottomMenu f ac jb">
+              <div class="time">
+                <span>{{ dayjs(project?.createTime).format("YYYY-MM-DD HH:mm:ss") }}</span>
+              </div>
+              <div class="actionBtns f ac">
+                <div class="editBtn" @click.stop="openEdit(project)">
+                  <i-edit :size="18" />
+                </div>
+                <div class="removeBtn" @click.stop="delProjcer(project.id)">
+                  <i-delete :size="18" />
                 </div>
               </div>
             </div>
-            <div class="menu">
-              <a-popconfirm title="确定要删除这个项目吗？" okText="确定" cancelText="取消" @confirm="deleteProject(project.id)" @click.stop>
-                <button class="delBtn">
-                  <i-delete :size="14" />
-                </button>
-              </a-popconfirm>
-            </div>
-          </div>
-          <p v-if="project.intro" class="summary">
-            {{ project.intro }}
-          </p>
-          <div class="time">
-            <span>创建于 {{ dayjs(project?.createTime).format("YYYY-MM-DD HH:mm:ss") }}</span>
-          </div>
-        </div>
-      </div>
+          </t-card>
+        </t-col>
+      </t-row>
     </div>
-    <addProject v-model="addProjectShow" @getProjects="getProjects" />
   </div>
+  <projectDialog v-model="dialogShow" :projectData="editProjectData" @add="addProjectFn" @edit="editProjectFn" />
 </template>
 
 <script setup lang="ts">
+import projectDialog from "./components/projectDialog.vue";
 import dayjs from "dayjs";
 import axios from "@/utils/axios";
+<<<<<<< HEAD
 import store from "@/stores";
 import addProject from "./components/addProject.vue";
 const { project } = storeToRefs(store());
+=======
+import projectStore from "@/stores/project";
+const { allProject, project } = storeToRefs(projectStore());
+>>>>>>> master
 
-const projects = ref<
-  {
-    id: string;
-    name: string;
-    intro: string;
-    type: string;
-    artStyle: string | null;
-    videoRatio: string | null;
-    createTime: number;
-    updatedAt: number;
-  }[]
->([]);
+const dialogShow = ref(false);
+const editProjectData = ref<{
+  id: string;
+  name: string;
+  intro: string;
+  type: string;
+  artStyle: string | null;
+  videoRatio: string | null;
+  imageModel: string;
+  videoModel: string;
+  projectType: string;
+  imageQuality: "1K" | "2K" | "4K" | "";
+  mode: string;
+  directorManual: string;
+} | null>(null);
 
-const router = useRouter();
-function getProjects() {
+function getAllProject() {
   axios
     .post("/project/getProject")
     .then(({ data }) => {
-      projects.value = data;
+      allProject.value = data;
     })
+<<<<<<< HEAD
     .catch(() => {
       window.$message.error("获取项目列表失败");
+=======
+    .catch((err) => {
+      window.$message.error($t("workbench.project.msg.fetchFailed"));
+>>>>>>> master
     });
 }
 
 onMounted(() => {
-  getProjects();
+  project.value = null;
+  getAllProject();
 });
 
+const router = useRouter();
+
 function openProject(projectId: string | undefined) {
-  const item = projects.value.find((p) => p.id === projectId);
+  const item = allProject.value.find((p) => p.id === projectId);
   if (item) project.value = item;
+<<<<<<< HEAD
   else return window.$message.error("未找到该项目!");
   router.push(`/projectDetail?id=${projectId}`);
+=======
+  else return window.$message.error($t("workbench.project.msg.notFound"));
+  if (item.projectType === "novel") router.push(`/novel`);
+  else if (item.projectType === "script") router.push(`/script`);
+>>>>>>> master
 }
-const addProjectShow = ref(false);
-function routeToCreateProject() {
-  addProjectShow.value = true;
+
+function openEdit(item: {
+  id: string;
+  name: string;
+  intro: string;
+  type: string;
+  artStyle: string | null;
+  directorManual: string;
+  videoRatio: string | null;
+  imageModel: string;
+  videoModel: string;
+  imageQuality: "1K" | "2K" | "4K" | "";
+  projectType: string;
+  mode: string;
+}) {
+  editProjectData.value = {
+    ...item,
+  };
+  dialogShow.value = true;
 }
-function deleteProject(projectId: string | undefined) {
+
+function editProjectFn(data: {
+  id: string;
+  name: string;
+  intro: string;
+  type: string;
+  artStyle: string;
+  directorManual: string;
+  videoRatio: string;
+  imageModel: string;
+  videoModel: string;
+  imageQuality: "1K" | "2K" | "4K" | "";
+  mode: string;
+}) {
   axios
-    .post("/project/delProject", { id: projectId })
+    .post("/project/editProject", data)
     .then(() => {
+<<<<<<< HEAD
       window.$message.success("项目删除成功");
       getProjects();
     })
     .catch(() => {
       window.$message.error("项目删除失败");
+=======
+      window.$message.success($t("workbench.project.msg.editSuccess"));
+      getAllProject();
+    })
+    .catch((e) => {
+      window.$message.error(e.message ?? $t("workbench.project.msg.editFailed"));
+>>>>>>> master
     });
+}
+
+function addProjectFn(data: {
+  projectType: string;
+  name: string;
+  intro: string;
+  type: string;
+  artStyle: string;
+  directorManual: string;
+  videoRatio: string;
+  imageModel: string;
+  videoModel: string;
+  imageQuality: string;
+  mode: string;
+}) {
+  axios
+    .post("/project/addProject", data)
+    .then(() => {
+      window.$message.success($t("workbench.project.msg.addSuccess"));
+      getAllProject();
+    })
+    .catch((e) => {
+      window.$message.error(e.message ?? $t("workbench.project.msg.addFailed"));
+    });
+}
+
+function delProjcer(projectId: string | undefined) {
+  const dialog = DialogPlugin.confirm({
+    header: $t("workbench.project.msg.deleteHeader"),
+    body: $t("workbench.project.msg.deleteBody"),
+    confirmBtn: $t("workbench.project.msg.deleteConfirm"),
+    cancelBtn: $t("workbench.project.msg.deleteCancel"),
+    onConfirm: () => {
+      axios
+        .post("/project/delProject", { id: projectId })
+        .then(() => {
+          window.$message.success($t("workbench.project.msg.deleteSuccess"));
+          getAllProject();
+        })
+        .catch((e) => {
+          window.$message.error(e.message ?? $t("workbench.project.msg.deleteFailed"));
+        })
+        .finally(() => {
+          dialog.destroy();
+        });
+    },
+  });
 }
 </script>
 
 <style lang="scss" scoped>
-.root {
-  max-width: 112rem;
-  margin: 0 auto;
-  padding: 2rem;
-  background: transparent;
-
+.project {
   .header {
-    margin-bottom: 2rem;
+    padding-top: 32px;
+    margin-bottom: 32px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     .title {
-      font-size: 2rem;
+      font-size: 32px;
       font-weight: 600;
-      color: var(--td-text-color-primary);
-      margin-bottom: 0.5rem;
     }
     .sub {
-      color: var(--td-text-color-secondary);
-    }
-    .addBtn {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      background: var(--td-bg-color-container);
-      border: 1px solid var(--td-border-level-1-color);
-      border-radius: 0.5rem;
-      color: var(--td-brand-color);
-      font-weight: 500;
-      padding: 0.5rem 1rem;
-      cursor: pointer;
-
-      .addIcon {
-        margin-right: 0.25rem;
-      }
+      opacity: 0.5;
     }
   }
-
-  .empty {
-    text-align: center;
-    padding: 4rem 0;
-
-    .emptyIcon {
-      width: 6rem;
-      height: 6rem;
-      background: var(--td-bg-color-secondarycontainer);
-      border-radius: 9999px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto 1rem;
-      .iconEmpty {
-        color: var(--td-text-color-placeholder);
-      }
-    }
-    .emptyTitle {
-      font-size: 1.125rem;
-      font-weight: 500;
-      color: var(--td-text-color-primary);
-      margin-bottom: 0.5rem;
-    }
-    .emptyDesc {
-      color: var(--td-text-color-secondary);
-      margin-bottom: 1.5rem;
-    }
-  }
-
   .list {
-    max-height: 80vh;
-    overflow-y: auto;
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
-    @media (min-width: 768px) {
-      grid-template-columns: repeat(2, 1fr);
-    }
-    @media (min-width: 1024px) {
-      grid-template-columns: repeat(3, 1fr);
-    }
-
     .card {
-      background: var(--td-bg-color-container);
-      border-radius: 1rem;
-      border: 1px solid var(--td-border-level-1-color);
-      transition: box-shadow 0.3s;
-      height: 100%;
       cursor: pointer;
-      &:hover {
-        box-shadow: var(--td-shadow-2);
+      .title {
+        font-size: 20px;
+        font-weight: bold;
+        margin-bottom: 8px;
       }
-      .content {
-        padding: 1.5rem;
-
-        .cardHeader {
-          display: flex;
-          align-items: flex-start;
-          justify-content: space-between;
-          margin-bottom: 1rem;
-
-          .left {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-
-            .folderIcon {
-              width: 3rem;
-              height: 3rem;
-              background: linear-gradient(135deg, var(--td-brand-color) 0%, var(--td-brand-color-5) 100%);
-              border-radius: 0.75rem;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              .iconFolder {
-                color: var(--td-text-color-anti);
-              }
-            }
-
-            .name {
-              font-weight: 600;
-              color: var(--td-text-color-primary);
-            }
-            .status {
-              display: flex;
-              align-items: center;
-              gap: 0.5rem;
-              margin-top: 0.25rem;
-              .desc {
-                font-size: 0.75rem;
-                color: var(--td-text-color-secondary);
-              }
-            }
-          }
-          @keyframes spin {
-            to {
-              transform: rotate(360deg);
-            }
-          }
-
-          .menu {
-            position: relative;
-            .delBtn {
-              padding: 0.5rem;
-              color: var(--td-error-color);
-              border-radius: 0.5rem;
-              background: none;
-              border: none;
-              transition:
-                color 0.2s,
-                background 0.2s;
-              &:hover {
-                background: var(--td-error-color-light);
-                cursor: pointer;
-              }
-            }
-          }
-        }
-
-        .summary {
-          color: var(--td-text-color-secondary);
-          margin-bottom: 1rem;
-          font-size: 0.9375rem;
-          line-clamp: 2;
-          overflow: hidden;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-        }
-        .meta {
-          display: flex;
-          align-items: center;
-          gap: 1.5rem;
-          color: var(--td-text-color-secondary);
-          font-size: 0.9375rem;
-        }
+      .intro {
+        margin-top: 8px;
+        margin-bottom: 8px;
+      }
+      .bottomMenu {
+        margin-top: 32px;
         .time {
-          margin-top: 1rem;
-          padding-top: 1rem;
-          border-top: 1px solid var(--td-border-level-1-color);
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          color: var(--td-text-color-secondary);
-          font-size: 0.8125rem;
+          opacity: 0.5;
+        }
+        .actionBtns {
+          gap: 12px;
+        }
+        .editBtn {
+          cursor: pointer;
+          &:hover {
+            color: var(--td-brand-color);
+          }
+        }
+        .removeBtn {
+          cursor: pointer;
+          &:hover {
+            color: red;
+          }
         }
       }
     }

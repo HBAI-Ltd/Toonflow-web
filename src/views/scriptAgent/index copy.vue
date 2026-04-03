@@ -1,0 +1,730 @@
+<template>
+  <div class="scriptAgent">
+    <Splitpanes class="default-theme data f">
+      <Pane :size="30" :min-size="15" class="operate">
+        <div class="box pr">
+          <t-chat-list :clear-history="false">
+            <t-chat-message
+              v-for="message in messages"
+              :key="message.id"
+              :message="message"
+              :name="(message as any).name"
+              :placement="message.role === 'user' ? 'right' : 'left'"
+              :variant="message.role === 'user' ? 'base' : 'outline'"
+              :handleActions="message.role === 'user' ? {} : handleActions"
+              :status="message.status"
+              allowContentSegmentCustom>
+              <!-- <template #actionbar> -->
+              <!-- <t-chat-actionbar :action-bar="['replay', 'copy']" /> -->
+              <!-- <t-chat-actionbar :action-bar="['replay', 'copy']" /> -->
+              <!-- </template> -->
+            </t-chat-message>
+          </t-chat-list>
+          <t-chat-sender
+            class="inputBox"
+            v-model="inputValue"
+            :loading="status === 'pending' || status === 'streaming'"
+            placeholder="$t('workbench.scriptAgent.inputPlaceholder')"
+            @send="handleSend"
+            @stop="handleStop">
+            <template #footer-prefix>
+              <t-popup trigger="click" placement="top-left">
+                <t-button shape="square" variant="outline" size="small">
+                  <template #icon>
+                    <i-setting-config size="16" />
+                  </template>
+                </t-button>
+                <template #content>
+                  <div class="settingMenu">
+                    <div class="settingMenuItem" @click="handleClearMemory('message')">
+                      <i-delete size="14" />
+                      <span>{{ $t("workbench.scriptAgent.clearMessageMemory") }}</span>
+                    </div>
+                    <div class="settingMenuItem" @click="handleClearMemory('summary')">
+                      <i-close size="14" />
+                      <span>{{ $t("workbench.scriptAgent.clearSummaryMemory") }}</span>
+                    </div>
+                    <div class="settingMenuItem danger" @click="handleClearMemory('all')">
+                      <i-delete-one size="14" />
+                      <span>{{ $t("workbench.scriptAgent.clearAllMemory") }}</span>
+                    </div>
+                  </div>
+                </template>
+              </t-popup>
+            </template>
+          </t-chat-sender>
+          <i-dot class="dot" theme="outline" :fill="connected ? 'green' : 'red'" />
+          <transition name="fade">
+            <div v-if="forceGenerateVisible" class="forceGenerateMask">
+              <div class="forceGenerateCard">
+                <div class="forceGenerateDesc">{{ $t("workbench.scriptAgent.forceGenerate.desc") }}</div>
+                <div class="forceGenerateActions">
+                  <t-button @click="handleForceConfirm">{{ $t("workbench.scriptAgent.forceGenerate.confirm") }}</t-button>
+                </div>
+              </div>
+            </div>
+          </transition>
+        </div>
+      </Pane>
+      <Pane :size="70" :min-size="30" class="data">
+        <div class="tabsWrapper">
+          <t-tabs v-model="currentTable" @change="changeTab">
+            <template #action>
+              <div class="ac" v-if="currentTable == 1 && canEditPlan.storySkeleton">
+                <t-button @click="editMdPreview">{{ $t("workbench.scriptAgent.edit") }}</t-button>
+              </div>
+              <div class="ac" v-else-if="currentTable == 2 && canEditPlan.adaptationStrategy">
+                <t-button @click="editMdPreview">{{ $t("workbench.scriptAgent.edit") }}</t-button>
+              </div>
+            </template>
+            <!-- <t-tab-panel :value="1" :label="$t('workbench.scriptAgent.chapterEvents')">
+              <pre>{{ planData.event }}</pre>
+            </t-tab-panel> -->
+            <t-tab-panel :value="1" :label="$t('workbench.scriptAgent.storySkeleton')">
+              <div class="panelContent">
+                <MdPreview v-if="planData.storySkeleton" :modelValue="planData.storySkeleton" />
+                <t-empty v-else :title="$t('workbench.scriptAgent.noContent')" />
+              </div>
+            </t-tab-panel>
+            <t-tab-panel :value="2" :label="$t('workbench.scriptAgent.adaptationStrategy')">
+              <div class="panelContent">
+                <MdPreview v-if="planData.adaptationStrategy" :modelValue="planData.adaptationStrategy" />
+                <t-empty v-else :title="$t('workbench.scriptAgent.noContent')" />
+              </div>
+            </t-tab-panel>
+            <t-tab-panel :value="3" :label="$t('workbench.scriptAgent.script')">
+              <div class="panelContent">
+                <t-empty v-if="!planData.script?.length" :title="$t('workbench.scriptAgent.noContent')" />
+                <div v-else class="scriptList">
+                  <div v-for="(item, index) in planData.script" :key="index" class="scriptCard">
+                    <div class="scriptCardHeader">
+                      <div class="scriptCardHeaderLeft">
+                        <span class="scriptIndex">#{{ index + 1 }}</span>
+                        <span class="scriptTitle">{{ item.name }}</span>
+                      </div>
+                      <div class="scriptCardActions">
+                        <t-button size="small" @click="editScript(index)">
+                          <template #icon><i-edit size="14" /></template>
+                          {{ $t("workbench.scriptAgent.edit") }}
+                        </t-button>
+                      </div>
+                    </div>
+                    <div class="scriptCardBody">
+                      <pre v-if="item.content">{{ item.content }}</pre>
+                      <span v-else class="emptyContent">{{ $t("workbench.scriptAgent.noContent") }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </t-tab-panel>
+          </t-tabs>
+        </div>
+      </Pane>
+    </Splitpanes>
+    <editMdPreivew v-model="dialogVisible" @save="onConfirm" :content="editContent" />
+
+    <!-- 剧本编辑对话框 -->
+    <t-dialog
+      v-model:visible="scriptEditVisible"
+      :header="$t('workbench.scriptAgent.editScript')"
+      width="680px"
+      top="1vh"
+      :confirm-btn="{ content: $t('workbench.scriptAgent.save'), theme: 'primary' }"
+      @confirm="saveScript"
+      @close="scriptEditVisible = false">
+      <div class="scriptEditForm">
+        <div class="scriptEditField">
+          <label>{{ $t("workbench.scriptAgent.scriptTitle") }}</label>
+          <t-input v-model="scriptEditData.name" :placeholder="$t('workbench.scriptAgent.titlePlaceholder')" />
+        </div>
+        <div class="scriptEditField">
+          <label>{{ $t("workbench.scriptAgent.content") }}</label>
+          <t-textarea
+            v-model="scriptEditData.content"
+            :placeholder="$t('workbench.scriptAgent.contentPlaceholder')"
+            :autosize="{ minRows: 8, maxRows: 16 }" />
+        </div>
+        <div class="scriptEditField">
+          <label>{{ $t("workbench.scriptAgent.relatedAssets") }}</label>
+
+          <div class="assets-section">
+            <div class="assets-header">
+              <t-button size="small" theme="primary" variant="outline" @click="handleSelectAssets">
+                <template #icon><i-plus /></template>
+                {{ $t("workbench.scriptAgent.selectAssets") }}
+              </t-button>
+            </div>
+            <div class="assets-list" v-if="scriptEditData.relatedAssets.length">
+              <t-tag v-for="asset in scriptEditData.relatedAssets" :key="asset.id" closable variant="light-outline" @close="removeAsset(asset.id)">
+                {{ asset.name }}
+              </t-tag>
+            </div>
+            <div v-else class="assets-empty">{{ $t("workbench.scriptAgent.noAssets") }}</div>
+          </div>
+        </div>
+      </div>
+    </t-dialog>
+  </div>
+</template>
+
+<script setup lang="ts">
+import _ from "lodash";
+import axios from "@/utils/axios";
+import projectStore from "@/stores/project";
+import { MdPreview } from "md-editor-v3";
+import type { ChatMessagesData } from "@tdesign-vue-next/chat";
+import settingStore from "@/stores/setting";
+import { Splitpanes, Pane } from "splitpanes";
+import "splitpanes/dist/splitpanes.css";
+import editMdPreivew from "@/components/editMdPreivew.vue";
+import openAssetsSelector from "@/utils/assetsCheck";
+import type { TabValue } from "tdesign-vue-next/es/tabs/type";
+import { useChat } from "@/utils/useChat";
+const { baseUrl } = storeToRefs(settingStore());
+const { project } = storeToRefs(projectStore());
+
+const inputValue = ref("");
+const loadingHistory = ref(false);
+const status = ref<"idle" | "pending" | "streaming">("idle");
+
+const dialogVisible = ref(false);
+const editContent = ref("");
+const memoryTypeLabel: Record<string, string> = {
+  message: $t("workbench.scriptAgent.memoryType.message"),
+  summary: $t("workbench.scriptAgent.memoryType.summary"),
+  all: $t("workbench.scriptAgent.memoryType.all"),
+};
+const currentTable = ref(1);
+interface Asset {
+  id: number;
+  name: string;
+  describe: string;
+  prompt: string;
+  type: "role" | "tool" | "scene" | "clip";
+}
+interface Script {
+  id: number;
+  name: string;
+  content: string;
+  relatedAssets: Asset[];
+}
+interface PlanData {
+  storySkeleton: string;
+  adaptationStrategy: string;
+  script: Script[];
+}
+
+const planData = ref<PlanData>({
+  storySkeleton: "",
+  adaptationStrategy: "",
+  script: [],
+});
+
+const canEditPlan = ref({
+  storySkeleton: true,
+  adaptationStrategy: true,
+});
+
+async function getPlanData() {
+  const { data } = await axios.post("/scriptAgent/getPlanData", { projectId: project.value?.id, agentType: "scriptAgent" });
+  planData.value.storySkeleton = data.storySkeleton;
+  planData.value.adaptationStrategy = data.adaptationStrategy;
+}
+async function setPlanData() {
+  await axios.post("/scriptAgent/setPlanData", { projectId: project.value?.id, agentType: "scriptAgent", data: planData.value });
+}
+onMounted(() => {
+  getPlanData();
+  getNovel();
+});
+
+const defMsg: ChatMessagesData[] = [
+  {
+    id: "welcome",
+    role: "assistant",
+    content: [
+      { type: "text", status: "complete", data: $t("workbench.scriptAgent.welcomeMsg") },
+      {
+        type: "suggestion",
+        status: "complete",
+        data: [{ title: $t("workbench.scriptAgent.start"), prompt: $t("workbench.scriptAgent.start") }],
+      },
+    ],
+  },
+];
+
+const { connected, messages, chat, stopGenerate, socket } = useChat({
+  url: `${baseUrl.value}/socket/scriptAgent`,
+  auth: {
+    isolationKey: `${project.value?.id}:scriptAgent`,
+    projectId: project.value?.id,
+  },
+  xmlTags: [
+    { tag: "storySkeleton", keepInMessage: false },
+    { tag: "adaptationStrategy", keepInMessage: false },
+  ],
+  onXmlTag: ({ tag, value, status }) => {
+    if (status === "streaming") {
+      if (tag === "storySkeleton") {
+        planData.value.storySkeleton = value;
+        canEditPlan.value.storySkeleton = false;
+      } else if (tag === "adaptationStrategy") {
+        planData.value.adaptationStrategy = value;
+        canEditPlan.value.adaptationStrategy = false;
+      }
+    }
+    if (status === "complete") {
+      if (tag === "storySkeleton") {
+        planData.value.storySkeleton = value;
+        canEditPlan.value.storySkeleton = true;
+      } else if (tag === "adaptationStrategy") {
+        planData.value.adaptationStrategy = value;
+        canEditPlan.value.adaptationStrategy = true;
+      }
+      setPlanData();
+    }
+  },
+  autoConnect: true,
+});
+
+onMounted(() => {
+  messages.value = [...defMsg, ...messages.value];
+
+  socket.value?.on("getPlanData", (_, callback) => {
+    callback(planData.value);
+  });
+
+  socket.value?.on("setPlanData", ({ key, value }: any) => {
+    getScriptApi();
+  });
+  getHistory();
+});
+
+onUnmounted(() => {});
+
+// ============== Actions ==============
+
+const currentMsgId = ref("");
+
+// 强制生成蒙层
+const forceGenerateVisible = ref(false);
+const novelData = ref([]);
+function getNovel() {
+  axios.post("/novel/getNovelData", { projectId: project.value?.id }).then((res) => {
+    novelData.value = res.data;
+    const hasUnfinished = (novelData.value as any[]).some((item: any) => item.eventState === 0);
+    if (hasUnfinished && !forceGenerateVisible.value) {
+      forceGenerateVisible.value = true;
+    }
+  });
+}
+
+function handleSend(text: string) {
+  chat(text);
+  inputValue.value = "";
+}
+function handleForceConfirm() {
+  forceGenerateVisible.value = false;
+}
+
+function handleStop() {
+  if (currentMsgId.value) {
+    stopGenerate(currentMsgId.value);
+  }
+}
+
+const handleActions = {
+  suggestion: (data?: any) => handleSend(data?.content?.prompt),
+};
+
+function handleClearMemory(type: "message" | "summary" | "all") {
+  const dialog = DialogPlugin.confirm({
+    header: $t("workbench.scriptAgent.msg.clearConfirm"),
+    body: $t("workbench.scriptAgent.msg.clearBody", { type: memoryTypeLabel[type] }),
+    confirmBtn: $t("workbench.scriptAgent.msg.confirmClear"),
+    cancelBtn: $t("workbench.scriptAgent.msg.cancel"),
+    theme: "warning",
+    onConfirm: async () => {
+      await axios.post(`/agents/clearMemory`, { projectId: project.value?.id, agentType: "scriptAgent", type });
+      window.$message.success($t("workbench.scriptAgent.msg.memoryCleared", { type: memoryTypeLabel[type] }));
+      dialog.destroy();
+      getHistory();
+    },
+  });
+}
+
+async function getHistory() {
+  loadingHistory.value = true;
+  const { data } = await axios.post(`/agents/getMemory`, {
+    projectId: project.value?.id,
+    agentType: "scriptAgent",
+  });
+  messages.value = [...defMsg, ...data];
+  loadingHistory.value = false;
+}
+
+// ============== 剧本编辑 ==============
+const scriptEditVisible = ref(false);
+const scriptEditIndex = ref(-1);
+const newAssetInput = ref("");
+const scriptEditData = ref<Script>({ id: -1, name: "", content: "", relatedAssets: [] });
+
+function editScript(index: number) {
+  const item = planData.value.script[index];
+  scriptEditIndex.value = index;
+  scriptEditData.value = {
+    id: item.id,
+    name: item.name,
+    content: item.content,
+    relatedAssets: [...(item.relatedAssets ?? [])],
+  };
+  newAssetInput.value = "";
+  scriptEditVisible.value = true;
+}
+
+async function saveScript() {
+  if (scriptEditIndex.value < 0) return;
+
+  try {
+    await axios.post("/script/updateScript", {
+      id: scriptEditData.value.id,
+      name: scriptEditData.value.name,
+      content: scriptEditData.value.content,
+      assets: scriptEditData.value.relatedAssets.map((a) => a.id),
+    });
+    window.$message.success($t("workbench.scriptAgent.msg.scriptUpdated"));
+    planData.value.script[scriptEditIndex.value] = {
+      ...planData.value.script[scriptEditIndex.value],
+      ...scriptEditData.value,
+    };
+    scriptEditVisible.value = false;
+  } catch (error) {
+    console.error("更新剧本失败:", error);
+    window.$message.error($t("workbench.scriptAgent.msg.scriptUpdateFailed"));
+  } finally {
+  }
+}
+
+function removeAsset(id: number) {
+  scriptEditData.value.relatedAssets = scriptEditData.value.relatedAssets.filter((a) => a.id !== id);
+}
+
+//编辑markdown
+function editMdPreview() {
+  if (currentTable.value == 1) editContent.value = planData.value.storySkeleton;
+  else if (currentTable.value == 2) editContent.value = planData.value.adaptationStrategy;
+  dialogVisible.value = true;
+}
+function onConfirm(value: string) {
+  editContent.value = value;
+  switch (currentTable.value) {
+    case 1:
+      planData.value.storySkeleton = value;
+      return;
+    case 2:
+      planData.value.adaptationStrategy = value;
+      return;
+  }
+  dialogVisible.value = false;
+}
+
+async function handleSelectAssets() {
+  const assets = await openAssetsSelector({ title: $t("workbench.scriptAgent.selectAssetsTitle"), types: ["role", "tool", "scene"] });
+  if (assets.length) {
+    const existing = new Set(scriptEditData.value.relatedAssets.map((a) => a.id));
+    for (const a of assets) {
+      if (!existing.has(a.id)) {
+        scriptEditData.value.relatedAssets.push({ id: a.id, name: a.name, describe: a.describe, prompt: a.prompt, type: a.type });
+      }
+    }
+  }
+}
+
+async function getScriptApi() {
+  try {
+    const res = await axios.post("/script/getScrptApi", {
+      projectId: project.value?.id,
+    });
+    planData.value.script = res.data;
+  } catch (error) {
+    console.error("搜索剧本失败:", error);
+    window.$message.error($t("workbench.scriptAgent.msg.searchScriptFailed"));
+  }
+}
+function changeTab(value: TabValue) {
+  if (value == 3) {
+    getScriptApi();
+  }
+}
+</script>
+
+<style lang="scss" scoped>
+.scriptAgent {
+  height: calc(100% - 16px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  :deep(.splitpanes__pane) {
+    background-color: transparent !important;
+  }
+  :deep(.splitpanes__splitter) {
+    border-left: none;
+    margin-left: 1px;
+  }
+  .data {
+    flex: 1;
+    overflow: hidden;
+    :deep(.operate) {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      min-width: 250px;
+      height: 100%;
+      .box {
+        padding-top: 8px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        border-radius: 10px;
+        border: 1px solid #e6e3e3;
+        background-color: #fff;
+        overflow: hidden;
+        position: relative;
+        width: 100%;
+        height: 100%;
+        padding-left: 8px;
+        .inputBox {
+          padding-right: 8px;
+          padding-bottom: 8px;
+        }
+        .dot {
+          position: absolute;
+          top: 10px;
+          left: 10px;
+        }
+      }
+      .t-chat__list {
+        padding-right: 8px;
+      }
+    }
+    :deep(.data) {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      position: relative;
+      .tabsWrapper {
+        flex: 1;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        transition: padding-bottom 0.3s ease;
+        .t-tabs {
+          display: flex;
+          flex-direction: column;
+          height: 100%;
+          .t-tabs__header {
+            flex-shrink: 0;
+          }
+          .t-tabs__content {
+            flex: 1;
+            overflow: hidden;
+          }
+          .t-tab-panel {
+            height: 100%;
+          }
+        }
+      }
+    }
+  }
+}
+
+.panelContent {
+  height: 100%;
+  overflow-y: auto;
+  padding: 12px 16px;
+  box-sizing: border-box;
+}
+
+.scriptList {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.scriptCard {
+  border: 1px solid var(--td-border-level-2-color);
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  transition: box-shadow 0.2s ease;
+  .scriptCardHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 8px 12px;
+    background-color: #f5f7fa;
+    border-bottom: 1px solid var(--td-border-level-2-color);
+    .scriptCardHeaderLeft {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+    .scriptCardActions {
+      flex-shrink: 0;
+    }
+    .scriptIndex {
+      font-size: 12px;
+      font-weight: 600;
+      flex-shrink: 0;
+      background: #e6e3e3;
+      padding: 1px 6px;
+      border-radius: 4px;
+    }
+    .scriptTitle {
+      font-size: 14px;
+      font-weight: 600;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+  .scriptCardBody {
+    font-size: 13px;
+    line-height: 1.7;
+    padding: 10px 12px;
+    flex: 1;
+    max-height: 300px;
+    overflow-y: auto;
+    pre {
+      margin: 0;
+      white-space: pre-wrap;
+      word-break: break-all;
+      font-family: inherit;
+    }
+    .emptyContent {
+      display: block;
+      font-size: 13px;
+    }
+    :deep(.md-editor-preview-wrapper) {
+      padding: 0;
+    }
+  }
+  .scriptCardFooter {
+    gap: 8px;
+    padding: 8px 12px;
+    border-top: 1px solid #e6e3e3;
+    background-color: #fafafa;
+    .assetsLabel {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      font-size: 12px;
+      white-space: nowrap;
+      margin-top: 2px;
+      flex-shrink: 0;
+    }
+    .assetsTags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5.6px;
+    }
+  }
+}
+
+.scriptEditForm {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 4px 0;
+  .scriptEditField {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    label {
+      font-size: 13px;
+      font-weight: 500;
+    }
+    .assets-list {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-top: 10px;
+    }
+  }
+  .assetsEditor {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    border-radius: 6px;
+    padding: 8px 12px;
+    background: #fafafa;
+    .assetsTagList {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5.6px;
+      min-height: 24px;
+    }
+    .assetsInputRow {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+  }
+}
+
+.forceGenerateMask {
+  position: absolute;
+  inset: 0;
+  background: rgba(170, 170, 170, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  border-radius: 10px;
+  .forceGenerateCard {
+    background: #fdfbfb;
+    border-radius: 12px;
+    padding: 28px 32px 24px;
+    max-width: 300px;
+    width: 90%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    .forceGenerateDesc {
+      font-size: 12px;
+    }
+    .forceGenerateActions {
+      display: flex;
+      gap: 12px;
+      margin-top: 8px;
+      width: 100%;
+      justify-content: center;
+    }
+  }
+}
+.settingMenu {
+  padding: 4px 0;
+  .settingMenuItem {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 16px;
+    font-size: 13px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+}
+:deep(.t-tabs__operations--right) {
+  top: 0;
+  bottom: 0;
+}
+:deep(.t-tabs__btn--right) {
+  display: none;
+}
+</style>

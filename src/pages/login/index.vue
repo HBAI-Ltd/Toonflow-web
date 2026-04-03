@@ -1,61 +1,40 @@
 <template>
-  <div class="bg"></div>
-  <div class="loginPage">
+  <div class="loginPage" :style="{ height: isElectron ? 'calc(100vh - 32px)' : '100vh' }">
     <div class="formBox">
-      <!-- 右下角设置按钮 -->
       <!-- 设置弹窗 -->
-      <a-modal v-model:open="showSettingModal" title="服务器设置" @ok="handleSaveSetting" :width="400">
-        <a-form :label-col="{ span: 6 }" :wrapper-col="{ span: 18 }">
-          <a-form-item label="请求地址">
-            <a-input v-model:value="tempBaseUrl" placeholder="http://localhost:60000" />
-          </a-form-item>
-          <a-form-item label="WS地址">
-            <a-input v-model:value="tempWsBaseUrl" placeholder="ws://localhost:60000" />
-          </a-form-item>
-        </a-form>
-      </a-modal>
-      <div class="logoBox">
-        <img :src="logo" alt="logo" class="logo-img" />
-        <span class="logo-text">Toonflow</span>
+      <t-dialog v-model:visible="showSettingModal" :header="$t('login.settings')" @confirm="handleSaveSetting" :width="400">
+        <t-form label-width="80px" labelAlign="top">
+          <t-form-item :label="$t('login.requestAddress')">
+            <t-input v-model="tempBaseUrl" placeholder="http://localhost:10588" />
+          </t-form-item>
+        </t-form>
+      </t-dialog>
+      <div class="logoBox fc">
+        <img :src="logo" alt="logo" class="logoImg" />
+        <div class="fc c">
+          <span class="logoText">ToonFlow</span>
+          <span class="slogan">{{ $t("login.slogan") }}</span>
+        </div>
       </div>
-      <a-form :model="state.user" :rules="state.rules" ref="ruleFormRef" @finish="handleFinish" class="login-form">
-        <a-form-item name="username">
-          <a-input v-model:value="state.user.username" placeholder="请输入账号" autocomplete="username" size="large">
-            <template #prefix>
-              <i-people theme="outline" class="input-icon" />
-            </template>
-          </a-input>
-        </a-form-item>
-        <a-form-item name="password">
-          <a-input-password v-model:value="state.user.password" placeholder="请输入密码" size="large">
-            <template #prefix>
-              <i-lock theme="outline" class="input-icon" />
-            </template>
-          </a-input-password>
-        </a-form-item>
-        <a-form-item>
-          <a-button class="loginBtn" type="primary" size="large" :loading="state.loginLoading" html-type="submit" block>登录</a-button>
-        </a-form-item>
-      </a-form>
-      <a-alert v-if="showHint" class="default-hint" type="info" closable @close="showHint = false">
-        <template #message>
-          <div class="hint-content">
-            <p>
-              默认账号：
-              <code>admin</code>
-            </p>
-            <p>
-              默认密码：
-              <code>admin123</code>
-            </p>
-            <p>登录后可在设置中修改</p>
-          </div>
-        </template>
-      </a-alert>
+      <div class="login-form">
+        <t-input v-model="state.user.username" :placeholder="$t('login.username')" autocomplete="username" size="large"></t-input>
+        <t-input v-model="state.user.password" type="password" :placeholder="$t('login.password')" size="large"></t-input>
+        <t-button class="loginBtn" theme="primary" size="large" :loading="state.loginLoading" @click="handleLogin" block>
+          {{ $t("login.login") }}
+        </t-button>
+      </div>
+      <div class="tips c">{{ $t("login.tips") }}</div>
     </div>
   </div>
-  <div class="settingBtn" @click="showSettingModal = true">
-    <t-button shape="circle" theme="primary" size="large">
+  <div class="settingBtn">
+    <t-dropdown :options="langOptions" trigger="click" @click="handleChangeLang" :maxColumnWidth="150">
+      <t-button shape="circle" theme="default" size="large">
+        <template #icon>
+          <i-translate theme="outline" size="20" />
+        </template>
+      </t-button>
+    </t-dropdown>
+    <t-button shape="circle" theme="primary" size="large" @click="showSettingModal = true">
       <template #icon>
         <i-setting-two theme="outline" size="20" />
       </template>
@@ -64,29 +43,35 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { useI18n } from "vue-i18n";
 import Router from "@/router/index.ts";
-import { Alert, message } from "ant-design-vue";
 import logo from "@/assets/logo.png";
 import axios from "@/utils/axios";
 import settingStore from "@/stores/setting";
 import { storeToRefs } from "pinia";
+import { languageList, cachedLocale } from "@/locales";
+
+const { locale } = useI18n();
+const langOptions = languageList.map((item) => ({
+  content: item.label,
+  value: item.value,
+}));
+const handleChangeLang = (data) => {
+  locale.value = data.value;
+  cachedLocale.value = data.value;
+};
 
 const store = settingStore();
-const { baseUrl, wsBaseUrl } = storeToRefs(store);
+const { baseUrl, isElectron } = storeToRefs(store);
 
-const svgRef = ref(null);
-const showHint = ref(true);
 const showSettingModal = ref(false);
 const tempBaseUrl = ref(baseUrl.value);
-const tempWsBaseUrl = ref(wsBaseUrl.value);
 
 // 保存设置
 const handleSaveSetting = () => {
   baseUrl.value = tempBaseUrl.value;
-  wsBaseUrl.value = tempWsBaseUrl.value;
   showSettingModal.value = false;
-  message.success("设置已保存");
+  window.$message.success($t("login.settingsSaved"));
 };
 const state = ref({
   show: true,
@@ -94,76 +79,49 @@ const state = ref({
   user: {
     username: "",
     password: "",
-    captcha: "",
-    identity: "商家",
   },
   rules: {
-    username: [{ required: true, message: "请输入您的账号" }],
-    password: [{ required: true, message: "请输入密码" }],
-    captcha: [{ required: true, message: "请输入验证码" }],
+    username: [{ required: true, message: $t("login.usernameRequired") }],
+    password: [{ required: true, message: $t("login.passwordRequired") }],
   },
 });
 
-const svg = ref();
-const captcha = ref();
-
-onMounted(() => {
-  resSvg();
-});
-const handleFinish = (values) => {
+const handleLogin = () => {
+  if (!state.value.user.username || !state.value.user.password) {
+    window.$message.warning($t("login.enterUsernameAndPassword"));
+    return;
+  }
   state.value.loginLoading = true;
-  const obj = { ...values };
+  const obj = { ...state.value.user };
   axios
-    .post("/other/login", obj)
+    .post("/login/login", obj)
     .then(({ data }) => {
       localStorage.setItem("token", data.token);
       localStorage.setItem("userId", data.id);
       Router.push("/project");
-      message.success("登录成功");
+      window.$message.success($t("login.loginSuccess"));
       state.value.loginLoading = false;
     })
     .catch((e) => {
       state.value.loginLoading = false;
-      message.error(e.message);
-      resSvg();
+      window.$message.error(e.message);
     });
-};
-
-const resSvg = async () => {
-  return;
-  const { data } = await axios.get("/other/getCaptcha");
-  svgRef.value.innerHTML = data.svg;
-  captcha.value = data.captcha;
 };
 </script>
 
 <style lang="scss" scoped>
-.bg {
-  position: fixed;
-  height: 100vh;
-  width: 100vw;
-  background-image: url("@/assets/bg.png");
-  background-size: cover;
-  background-repeat: no-repeat;
-  background-position: center;
-}
-
 .loginPage {
-  z-index: 999;
-  width: 100vw;
   height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
-  position: relative;
 
   .formBox {
     width: 380px;
     padding: 40px 40px 30px;
-    background: rgba(255, 255, 255, 0.95);
-    border-radius: 12px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
-    backdrop-filter: blur(10px);
+    background: #fff;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
 
     .logoBox {
       display: flex;
@@ -172,53 +130,42 @@ const resSvg = async () => {
       margin-bottom: 30px;
       gap: 12px;
 
-      .logo-img {
-        width: 48px;
-        height: 48px;
+      .logoImg {
+        width: 64px;
+        height: 64px;
       }
 
-      .logo-text {
-        font-size: 28px;
-        font-weight: 600;
+      .logoText {
+        font-size: 36px;
+        font-weight: 800;
         color: #333;
         letter-spacing: 1px;
+      }
+      .slogan {
+        opacity: 0.5;
+        white-space: nowrap;
       }
     }
 
     .login-form {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+
       .input-icon {
         color: #999;
         font-size: 18px;
       }
 
-      :deep(.ant-input-affix-wrapper) {
-        padding: 8px 12px;
+      :deep(.t-input) {
         border-radius: 8px;
-
-        &:hover,
-        &:focus-within {
-          border-color: var(--mainColor);
-        }
-      }
-
-      :deep(.ant-form-item) {
-        margin-bottom: 20px;
       }
     }
-
-    .loginBtn {
-      height: 44px;
-      border-radius: 8px;
-      font-size: 16px;
-      font-weight: 500;
-      margin-top: 8px;
-      background: var(--mainGradient);
-      border: none;
-
-      &:hover {
-        background: var(--mainGradientHover);
-      }
-    }
+  }
+  .tips {
+    opacity: 0.5;
+    font-size: 12px;
+    margin-top: 18px;
   }
 }
 
@@ -226,7 +173,7 @@ const resSvg = async () => {
   margin-top: 20px;
   border-radius: 8px;
 
-  :deep(.ant-alert-message) {
+  :deep(.t-alert__message) {
     width: 100%;
   }
 
@@ -250,7 +197,6 @@ const resSvg = async () => {
     padding: 2px 10px;
     border-radius: 4px;
     font-family: "Monaco", "Menlo", monospace;
-    color: var(--mainColor);
     font-weight: 500;
     font-size: 13px;
     border: 1px solid #e8d5ff;
@@ -262,5 +208,8 @@ const resSvg = async () => {
   right: 24px;
   bottom: 24px;
   z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 </style>

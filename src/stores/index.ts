@@ -21,11 +21,11 @@ export default defineStore(
     async function setProjectById(id: number) {
       const res = await axios.post("/project/getSingleProject", { id: id });
       project.value = res.data[0];
-      const scriptData = await axios.post("/script/geScriptApi", { projectId: id });
+      const scriptData = await axios.post("/script/getScrptApi", { projectId: id });
       currentScriptId.value = scriptData.data?.id || null;
     }
 
-    return { version,activeMenu, project, projectId, currentScriptId, setProjectById };
+    return { version, activeMenu, project, projectId, currentScriptId, setProjectById };
   },
   { persist: false },
 );

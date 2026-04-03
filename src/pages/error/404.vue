@@ -1,8 +1,8 @@
 <template>
-  <div class="notFound">
-    <i-search :size="56" class="notFoundIcon" />
+  <div class="notFound" :style="{ height: isElectron ? 'calc(100vh - 32px)' : '100vh' }">
+    <span class="title">404</span>
     <div class="notFoundText">页面不存在</div>
-    <a-button class="notFoundBtn" type="primary" @click="goHome">返回首页</a-button>
+    <t-button class="notFoundBtn" theme="primary" @click="goHome">返回首页</t-button>
   </div>
 </template>
 
@@ -12,16 +12,20 @@ const router = useRouter();
 function goHome() {
   router.push("/");
 }
+const isElectron = computed(() => {
+  return window?.$electron;
+});
 </script>
 
 <style lang="scss" scoped>
 .notFound {
-  min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  .notFoundIcon {
+  .title {
+    font-size: 64px;
+    font-weight: bold;
     margin-bottom: 32px;
     color: #d0d0d0;
   }
@@ -30,9 +34,6 @@ function goHome() {
     margin-bottom: 24px;
     font-weight: 500;
     color: #333;
-  }
-  .notFoundBtn {
-    min-width: 120px;
   }
 }
 </style>

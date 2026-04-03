@@ -1,20 +1,30 @@
 export default defineStore(
   "setting",
   () => {
-    const baseUrl = ref<string>("http://localhost:60000");
-    const wsBaseUrl = ref<string>("ws://localhost:60000");
+    const showSetting = ref(false);
+    const isElectron = ref(false);
+    const canvasWheelEvent = ref("zoom");
+    const activeMenu = ref("language");
+
+    const baseUrl = ref<string>("http://localhost:10588/api");
+
+    const needUpdate = ref(false);
 
     const otherSetting = ref({
       axiosTimeOut: 60 * 10 * 1000,
       assetsBatchGenereateSize: 5,
+      chapterReg: "/第\\s*([0-9０-９零一二三四五六七八九十百千万]+)\\s*[章回节]\\s*([^\\n\\r]*)/g",
+      interacting: true,
     });
 
     const themeSetting = ref({
       mode: "light" as "light" | "dark" | "auto",
-      primaryColor: "#9810fa",
+      primaryColor: "#000",
     });
 
-    return { baseUrl, wsBaseUrl, otherSetting, themeSetting };
+    const language = ref<string>("zh-CN");
+
+    return { showSetting, baseUrl, otherSetting, themeSetting, language, activeMenu, isElectron, canvasWheelEvent, needUpdate };
   },
-  { persist: true },
+  { persist: { pick: ["baseUrl", "otherSetting", "themeSetting", "language"] } },
 );

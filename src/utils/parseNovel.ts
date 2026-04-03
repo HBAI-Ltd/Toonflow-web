@@ -1,5 +1,6 @@
+import settingStore from "@/stores/setting";
 const REEL_REGEX = /^(第[\d一二三四五六七八九十百千]+卷)\s*([^\n第]*)/gm;
-const CHAPTER_REGEX = /(第[\d一二三四五六七八九十百千]+章)\s*([^\n\r]*)/g;
+const DEFAULT_CHAPTER_REGEX = /第\s*([0-9０-９零一二三四五六七八九十百千万]+)\s*[章回节]\s*([^\n\r]*)/g;
 const CHINESE_NUM_MAP: { [key: string]: number } = {
   零: 0,
   一: 1,
@@ -50,6 +51,19 @@ export default function parseNovel(text: string): Reel[] {
   REEL_REGEX.lastIndex = 0;
   const reelMatches = Array.from(text.matchAll(REEL_REGEX));
   const reels: Reel[] = [];
+  let CHAPTER_REGEX;
+
+  const regStr = settingStore().otherSetting.chapterReg;
+  if (regStr) {
+    const match = regStr.match(/^\/(.*)\/([igmuy]*)$/);
+    if (match) {
+      CHAPTER_REGEX = new RegExp(match[1], match[2]);
+    } else {
+      CHAPTER_REGEX = new RegExp(regStr);
+    }
+  } else {
+    CHAPTER_REGEX = DEFAULT_CHAPTER_REGEX;
+  }
 
   // 没有卷结构
   if (reelMatches.length === 0) {

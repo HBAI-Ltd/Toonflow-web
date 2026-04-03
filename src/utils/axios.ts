@@ -1,6 +1,7 @@
 import axios from "axios";
 import router from "@/router/index";
 import { storeToRefs } from "pinia";
+import { MessagePlugin } from "tdesign-vue-next";
 import settingStore from "@/stores/setting";
 
 const instance = axios.create();
@@ -13,7 +14,7 @@ instance.interceptors.request.use(function (config) {
   if (token) {
     config.headers.Authorization = token;
   }
-  return config;
+  return config; 
 });
 
 instance.interceptors.response.use(
@@ -24,7 +25,11 @@ instance.interceptors.response.use(
     if (error.status === 401) {
       localStorage.removeItem("token");
       router.push("/login");
+<<<<<<< HEAD
       window.$message.error("登录已过期，请重新登录");
+=======
+      MessagePlugin.error(window.$t("common.sessionExpired"));
+>>>>>>> master
     }
     return Promise.reject(error?.response?.data ?? error);
   }
