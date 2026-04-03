@@ -717,7 +717,8 @@
       "history": "歷史圖片",
       "confirmReplace": "確認替換",
       "batchGenerationPrompt": "大量生成提示詞",
-      "generatingPrompt": "生成中"
+      "generatingPrompt": "生成中",
+      "selectPromptEmpty": "全選提示詞為空"
     },
     "script": {
       "searchPlaceholder": "搜尋劇本名稱...",

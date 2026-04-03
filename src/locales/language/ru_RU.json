@@ -713,7 +713,8 @@
       "history": "исторические фотографии",
       "confirmReplace": "Подтвердить замену",
       "batchGenerationPrompt": "Генерируйте подсказки в пакетном режиме",
-      "generatingPrompt": "Создание"
+      "generatingPrompt": "Создание",
+      "selectPromptEmpty": "Выбрать все подсказки. Слово пусто."
     },
     "script": {
       "searchPlaceholder": "Поиск по названию сценария...",

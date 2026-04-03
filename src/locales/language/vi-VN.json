@@ -704,7 +704,8 @@
       "history": "hình ảnh lịch sử",
       "confirmReplace": "Xác nhận thay thế",
       "batchGenerationPrompt": "Tạo các từ nhắc nhở theo đợt",
-      "generatingPrompt": "Đang tạo"
+      "generatingPrompt": "Đang tạo",
+      "selectPromptEmpty": "Chọn tất cả từ nhắc trống"
     },
     "script": {
       "searchPlaceholder": "Tìm kiếm tên kịch bản...",

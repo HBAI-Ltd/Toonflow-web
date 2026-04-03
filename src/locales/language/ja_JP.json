@@ -713,7 +713,8 @@
       "history": "歴史的な写真",
       "confirmReplace": "交換の確認",
       "batchGenerationPrompt": "プロンプト単語をバッチで生成する",
-      "generatingPrompt": "生成中"
+      "generatingPrompt": "生成中",
+      "selectPromptEmpty": "プロンプトの単語が空であることをすべて選択してください"
     },
     "script": {
       "searchPlaceholder": "シナリオ名を検索...",

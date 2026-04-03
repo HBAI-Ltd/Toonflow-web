@@ -5,6 +5,7 @@
         <t-form labelAlign="top">
           <t-form-item :label="$t('workbench.cornerScape.quickActions')">
             <div class="quickActions">
+              <t-button theme="primary" variant="outline" @click="selectPromptEmpty()">{{ $t("workbench.cornerScape.selectPromptEmpty") }}</t-button>
               <t-button theme="primary" variant="outline" @click="selectByState('')">{{ $t("workbench.cornerScape.selectUngenerated") }}</t-button>
               <t-button theme="primary" variant="outline" @click="selectByState('已完成')">
                 {{ $t("workbench.cornerScape.selectGenerated") }}
@@ -321,6 +322,10 @@ const toggleSelect = (id: number) => {
 const selectByState = (state: string) => {
   selectedIds.value = dataList.value.filter((item) => (state === "" ? !item.state : item.state === state)).map((item) => item.id);
 };
+//全选提示词为空的
+function selectPromptEmpty() {
+  selectedIds.value = dataList.value.filter((item) => item.prompt === "").map((item) => item.id);
+}
 
 function toggleSelectAll() {
   if (selectedIds.value.length === dataList.value.length) {

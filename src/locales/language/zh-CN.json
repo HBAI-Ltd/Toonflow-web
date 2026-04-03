@@ -808,7 +808,8 @@
       "history": "历史图片",
       "confirmReplace": "确认替换",
       "batchGenerationPrompt": "批量生成提示词",
-      "generatingPrompt": "生成中"
+      "generatingPrompt": "生成中",
+      "selectPromptEmpty": "全选提示词为空"
     },
     "script": {
       "searchPlaceholder": "搜索剧本名称...",
