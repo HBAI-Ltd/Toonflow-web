@@ -789,6 +789,8 @@ async function generateVideo() {
           audio: selectedAudio.value,
           trackId,
         };
+        console.log("%c Line:781 🍯 payload", "background:#3f7cff", payload);
+
         const { data } = await axios.post("/production/workbench/generateVideo", payload);
         window.$message.success($t("workbench.generate.generateStarted"));
         getVideoList();
@@ -1265,8 +1267,10 @@ async function downloadVideo(value: HistoryVideoItem) {
       .promptInput {
         border: 1px solid var(--td-component-border);
         border-radius: 8px;
-        max-height: 200px;
+        min-height: 100px;
+        height: 200px;
         overflow: auto;
+        resize: vertical;
       }
       .modeOpt {
         width: 100%;
