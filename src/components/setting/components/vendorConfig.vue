@@ -640,7 +640,7 @@ function handleConfirmVendor() {
                 getVendorList();
               })
               .catch((err) => {
-                window.$message.error(`${$t("settings.vendor.msg.addFailed")}${err.message}`);
+                window.$message.error(err.message ?? `${$t("settings.vendor.msg.addFailed")}`);
               })
               .finally(() => {
                 secondConfirm.destroy();
@@ -1149,7 +1149,7 @@ async function handleBeforeUpload(file: UploadFile) {
                   getVendorList();
                 })
                 .catch((err) => {
-                  window.$message.error(`${$t("settings.vendor.msg.addFailed")}${err.message}`);
+                  window.$message.error(err.message ?? `${$t("settings.vendor.msg.addFailed")}`);
                 })
                 .finally(() => {
                   secondConfirm.destroy();
