@@ -1448,5 +1448,16 @@
   },
   "workbench.production.generatedNode.localUpload": "Локальная загрузка",
   "workbench.production.editImage.uploadFailed": "Не удалось загрузить изображение.",
-  "workbench.production.editImage.noImage": "Пожалуйста, сначала добавьте фотографии"
+  "workbench.production.editImage.noImage": "Пожалуйста, сначала добавьте фотографии",
+  "workbench.script.batchAddScript": "Загружайте скрипты партиями",
+  "workbench.script.import.pasteLabel": "Вставьте содержимое скрипта напрямую",
+  "workbench.script.import.col.scriptName": "Имя сценария",
+  "workbench.script.import.col.scriptData": "Содержимое сценария",
+  "workbench.script.import.episodeRegex": "Правила разделения скриптов",
+  "workbench.script.import.episodeRegexPh": "Настройте правило разделения сценария. Оставьте это поле пустым, чтобы использовать правило разделения по умолчанию (по умолчанию используется разделение в соответствии с форматом Episode X).",
+  "workbench.script.import.regexInvalid": "Неверный формат регулярного выражения",
+  "workbench.script.import.parsedChapters": "{count} набор проанализирован",
+  "workbench.script.import.msg.selectChapters": "Пожалуйста, сначала проверьте сценарий",
+  "workbench.script.import.msg.saveSuccess": "Скрипт успешно сохранен",
+  "workbench.script.import.batchTitle": "Загружайте скрипты партиями"
 }

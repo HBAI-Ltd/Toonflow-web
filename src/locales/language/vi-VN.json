@@ -1440,5 +1440,16 @@
   },
   "workbench.production.generatedNode.localUpload": "Tải lên cục bộ",
   "workbench.production.editImage.uploadFailed": "Tải hình ảnh lên không thành công",
-  "workbench.production.editImage.noImage": "Vui lòng thêm hình ảnh trước"
+  "workbench.production.editImage.noImage": "Vui lòng thêm hình ảnh trước",
+  "workbench.script.batchAddScript": "Tải lên tập lệnh theo đợt",
+  "workbench.script.import.pasteLabel": "Dán nội dung tập lệnh trực tiếp",
+  "workbench.script.import.col.scriptName": "Tên tập lệnh",
+  "workbench.script.import.col.scriptData": "Nội dung kịch bản",
+  "workbench.script.import.episodeRegex": "Quy tắc chia tập lệnh",
+  "workbench.script.import.episodeRegexPh": "Tùy chỉnh quy tắc chia tập lệnh, để trống để sử dụng quy tắc chia tập lệnh mặc định (mặc định là chia theo định dạng Tập X)",
+  "workbench.script.import.regexInvalid": "Định dạng biểu thức chính quy không hợp lệ",
+  "workbench.script.import.parsedChapters": "bộ {count} được phân tích cú pháp",
+  "workbench.script.import.msg.selectChapters": "Vui lòng kiểm tra kịch bản trước",
+  "workbench.script.import.msg.saveSuccess": "Tập lệnh đã được lưu thành công",
+  "workbench.script.import.batchTitle": "Tải lên tập lệnh theo đợt"
 }

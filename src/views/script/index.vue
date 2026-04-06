@@ -11,6 +11,10 @@
           <template #icon><i-plus /></template>
           {{ $t("workbench.script.addScript") }}
         </t-button>
+        <!-- <t-button theme="primary" @click="handleBatchAddScript">
+          <template #icon><i-plus /></template>
+          {{ $t("workbench.script.batchAddScript") }}
+        </t-button> -->
       </div>
       <div class="actionBar-right f ac" v-if="scripts.length">
         <t-button :theme="isAllSelected ? 'default' : 'primary'" variant="outline" @click="toggleSelectAll(!isAllSelected)">
@@ -65,6 +69,7 @@
     </div>
     <editScript v-model="detailsShow" :item="selectedScript" @searchScripts="searchScripts" />
     <addScript v-model="addScriptShow" @searchScripts="searchScripts" />
+    <batchAddScript v-model="batchScriptShow" @select="searchScripts" />
   </div>
 </template>
 
@@ -72,6 +77,7 @@
 import axios from "@/utils/axios";
 import editScript from "./components/editScript.vue";
 import addScript from "./components/addScript.vue";
+import batchAddScript from "./components/batchAddScript.vue";
 import projectStore from "@/stores/project";
 import settingStore from "@/stores/setting";
 const { otherSetting } = storeToRefs(settingStore());
@@ -97,6 +103,7 @@ const searchQuery = ref("");
 const addScriptShow = ref(false);
 const selectedIds = ref<number[]>([]);
 const scriptLoad = ref(false);
+const batchScriptShow = ref(false);
 const isAllSelected = computed(() => scripts.value.length > 0 && selectedIds.value.length === scripts.value.length);
 function toggleSelect(id: number) {
   const idx = selectedIds.value.indexOf(id);
@@ -135,6 +142,9 @@ function onChange() {
 // 新增剧本
 function handleAddScript() {
   addScriptShow.value = true;
+}
+function handleBatchAddScript() {
+  batchScriptShow.value = true;
 }
 //导出剧本
 async function handleExportScript() {

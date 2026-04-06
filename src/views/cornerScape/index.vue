@@ -86,7 +86,11 @@
           </t-image>
         </div>
         <div class="infoBox">
-          <div class="title">{{ item.name }}</div>
+          <div class="title ac jb">
+            {{ item.name }}
+            <t-tag size="small" variant="outline" theme="success" v-if="item.prompt">已生成提示词</t-tag>
+            <t-tag size="small" variant="outline" theme="danger" v-else>未生成提示词</t-tag>
+          </div>
           <div class="meta">
             <t-tag size="small" variant="light-outline" theme="warning" class="typeTag">
               {{
@@ -275,7 +279,6 @@ onMounted(() => {
 onUnmounted(() => {
   if (abortController) {
     abortController.abort();
-    dataList.value;
     abortController = null;
   }
   stopPolling();

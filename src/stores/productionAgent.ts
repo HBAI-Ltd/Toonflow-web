@@ -133,7 +133,25 @@ function createProductionAgentStore(projectId: string) {
                 getHistory();
               });
               s.on("getFlowData", (_, callback) => {
-                callback(flowData.value);
+                const returnData = JSON.parse(JSON.stringify(flowData.value));
+                returnData.assets.forEach((item: any) => {
+                  delete item.prompt;
+                  delete item.flowId;
+                  delete item.src;
+                  if (item.derive && item.derive.length) {
+                    item.derive.forEach((deriveItem: any) => {
+                      delete deriveItem.prompt;
+                      delete deriveItem.flowId;
+                      delete deriveItem.src;
+                    });
+                  }
+                });
+                returnData.storyboard.forEach((item: any) => {
+                  delete item.prompt;
+                  delete item.src;
+                  delete item.flowId;
+                });
+                callback(returnData);
               });
               s.on("addDeriveAsset", async (data, callback) => {
                 const assets = flowData.value.assets.find((a) => a.id === data.assetsId);

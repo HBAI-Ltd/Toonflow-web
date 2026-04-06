@@ -1528,5 +1528,16 @@
   },
   "workbench.production.generatedNode.localUpload": "Local upload",
   "workbench.production.editImage.uploadFailed": "Image upload failed",
-  "workbench.production.editImage.noImage": "Please add pictures first"
+  "workbench.production.editImage.noImage": "Please add pictures first",
+  "workbench.script.batchAddScript": "Upload scripts in batches",
+  "workbench.script.import.pasteLabel": "Paste the script content directly",
+  "workbench.script.import.col.scriptName": "Script name",
+  "workbench.script.import.col.scriptData": "Script content",
+  "workbench.script.import.episodeRegex": "Script splitting rules",
+  "workbench.script.import.episodeRegexPh": "Customize the script splitting rule, leave it blank to use the default splitting rule (the default is to split according to the Episode X format)",
+  "workbench.script.import.regexInvalid": "Invalid regular expression",
+  "workbench.script.import.parsedChapters": "{count} set parsed",
+  "workbench.script.import.msg.selectChapters": "Please check the script first",
+  "workbench.script.import.msg.saveSuccess": "Script saved successfully",
+  "workbench.script.import.batchTitle": "Upload scripts in batches"
 }

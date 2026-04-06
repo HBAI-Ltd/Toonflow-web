@@ -1438,5 +1438,16 @@
   },
   "workbench.production.generatedNode.localUpload": "本地上傳",
   "workbench.production.editImage.uploadFailed": "圖片上傳失敗",
-  "workbench.production.editImage.noImage": "請先加入圖片"
+  "workbench.production.editImage.noImage": "請先加入圖片",
+  "workbench.script.batchAddScript": "大量上傳劇本",
+  "workbench.script.import.pasteLabel": "直接貼上劇本內容",
+  "workbench.script.import.col.scriptName": "劇本名稱",
+  "workbench.script.import.col.scriptData": "劇本內容",
+  "workbench.script.import.episodeRegex": "劇本拆分正規",
+  "workbench.script.import.episodeRegexPh": "自訂劇本拆分正規，留空使用預設拆分正規（預設按 第X集 格式拆分）",
+  "workbench.script.import.regexInvalid": "正規表示式格式錯誤",
+  "workbench.script.import.parsedChapters": "已解析 {count} 集",
+  "workbench.script.import.msg.selectChapters": "請先勾選劇本",
+  "workbench.script.import.msg.saveSuccess": "劇本保存成功",
+  "workbench.script.import.batchTitle": "大量上傳劇本"
 }

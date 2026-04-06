@@ -1565,5 +1565,17 @@
   },
   "workbench.production.generatedNode.localUpload": "本地上传",
   "workbench.production.editImage.uploadFailed": "图片上传失败",
-  "workbench.production.editImage.noImage": "请先添加图片"
+  "workbench.production.editImage.noImage": "请先添加图片",
+  "workbench.script.batchAddScript": "批量上传剧本",
+  "workbench.script.import.pasteLabel": "直接粘贴剧本内容",
+  "workbench.script.import.col.chapter": "集",
+  "workbench.script.import.col.scriptName": "剧本名称",
+  "workbench.script.import.col.scriptData": "剧本内容",
+  "workbench.script.import.episodeRegex": "剧本拆分正则",
+  "workbench.script.import.episodeRegexPh": "自定义剧本拆分正则，留空使用默认拆分正则（默认按 第X集 格式拆分）",
+  "workbench.script.import.regexInvalid": "正则表达式格式错误",
+  "workbench.script.import.parsedChapters": "已解析 {count} 集",
+  "workbench.script.import.msg.selectChapters": "请先勾选剧本",
+  "workbench.script.import.msg.saveSuccess": "剧本保存成功",
+  "workbench.script.import.batchTitle": "批量上传剧本"
 }

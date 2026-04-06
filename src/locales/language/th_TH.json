@@ -1436,5 +1436,16 @@
   },
   "workbench.production.generatedNode.localUpload": "การอัปโหลดในเครื่อง",
   "workbench.production.editImage.uploadFailed": "การอัปโหลดรูปภาพล้มเหลว",
-  "workbench.production.editImage.noImage": "กรุณาเพิ่มรูปภาพก่อน"
+  "workbench.production.editImage.noImage": "กรุณาเพิ่มรูปภาพก่อน",
+  "workbench.script.batchAddScript": "อัปโหลดสคริปต์เป็นชุด",
+  "workbench.script.import.pasteLabel": "วางเนื้อหาสคริปต์โดยตรง",
+  "workbench.script.import.col.scriptName": "ชื่อสคริปต์",
+  "workbench.script.import.col.scriptData": "เนื้อหาสคริปต์",
+  "workbench.script.import.episodeRegex": "กฎการแยกสคริปต์",
+  "workbench.script.import.episodeRegexPh": "ปรับแต่งกฎการแยกสคริปต์ ปล่อยว่างไว้เพื่อใช้กฎการแยกเริ่มต้น (ค่าเริ่มต้นคือการแบ่งตามรูปแบบ Episode X)",
+  "workbench.script.import.regexInvalid": "รูปแบบนิพจน์ปกติไม่ถูกต้อง",
+  "workbench.script.import.parsedChapters": "แยกวิเคราะห์แล้ว {count} ชุด",
+  "workbench.script.import.msg.selectChapters": "โปรดตรวจสอบสคริปต์ก่อน",
+  "workbench.script.import.msg.saveSuccess": "บันทึกสคริปต์เรียบร้อยแล้ว",
+  "workbench.script.import.batchTitle": "อัปโหลดสคริปต์เป็นชุด"
 }
