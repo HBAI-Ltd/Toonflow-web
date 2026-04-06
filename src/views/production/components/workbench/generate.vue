@@ -261,15 +261,10 @@ const episodesId = inject<Ref<number>>("episodesId")!;
 const { project } = storeToRefs(projectStore());
 
 const videoUrl = ref("");
-const promptText = computed({
-  get: () => {
-    const track = trackList.value[activeTrackIndex.value];
+const promptText = computed(() =>{
+   const track = trackList.value[activeTrackIndex.value];
+   console.log("%c Line:266 🥟 track", "background:#fca650", track);
     return track?.prompt ?? "";
-  },
-  set: (val: string) => {
-    const track = trackList.value[activeTrackIndex.value];
-    if (track) track.prompt = val;
-  },
 });
 const selectedResolution = ref("480p");
 const selectedDuration = ref(8);

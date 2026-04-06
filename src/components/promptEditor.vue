@@ -127,12 +127,25 @@ onMounted(() => {
   }
 });
 
+// 防抖标记，避免 references 和 prompt 同时变化时重复渲染
+let pendingRender = false;
+
+function scheduleRender() {
+  if (pendingRender) return;
+  pendingRender = true;
+  nextTick(() => {
+    pendingRender = false;
+    if (!editorRef.value || prompt.value === undefined) return;
+    renderPromptToEditor(prompt.value);
+  });
+}
+
 // 监听 references 变化，重新渲染标签（避免 props 数据延迟导致图片为空）
 watch(
   () => props.references,
   () => {
     if (editorRef.value && prompt.value) {
-      renderPromptToEditor(prompt.value);
+      scheduleRender();
     }
   },
 );
@@ -146,7 +159,7 @@ watch(prompt, (newVal) => {
   if (!editorRef.value) return;
   const currentText = editorRef.value.textContent?.replace(/\u200B/g, "") || "";
   if (newVal !== undefined && newVal !== currentText) {
-    renderPromptToEditor(newVal);
+    scheduleRender();
   }
 });
 
