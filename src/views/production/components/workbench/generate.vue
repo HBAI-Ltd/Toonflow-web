@@ -318,7 +318,7 @@ async function genText() {
 
   const info = infoSource.map((item) => ({
     id: item.id,
-    sources: item.sources ? item.sources : "storyboard",
+    sources: item.sources,
   }));
   genTextLoadingMap.value[trackId] = true;
   try {
@@ -931,7 +931,7 @@ function batchGenText() {
       const infoSource = isTextMode ? track.medias : modeTemplate.map((_, i) => track.medias[i]).filter(Boolean);
       const info = infoSource.map((m) => ({
         id: m.id,
-        sources: m.sources ? m.sources : "storyboard",
+        sources: m.sources,
       }));
       genTextLoadingMap.value[trackId] = true;
       try {
