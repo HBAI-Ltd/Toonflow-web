@@ -151,7 +151,7 @@
               class="shotItem"
               :class="{ active: currentShotIndex === index }"
               @click="selectShot(index)">
-              <t-checkbox v-model="shot.selected" class="shotCheckbox" @click.stop />
+              <t-checkbox v-model="shot.selected" class="shotCheckbox" @click.stop @mousedown.stop />
               <div class="shotImageWrapper">
                 <img v-if="shot.filePath" :src="shot.filePath" :alt="shot.description" class="shotImage" />
                 <div v-else class="shotPlaceholder">
@@ -168,6 +168,7 @@
 </template>
 
 <script setup lang="ts">
+import { useLocalStorage, useEventListener } from "@vueuse/core";
 import { ref, computed, watch, nextTick, onUnmounted, type Ref } from "vue";
 import { VueDraggable } from "vue-draggable-plus";
 import { DialogPlugin } from "tdesign-vue-next";
@@ -371,6 +372,15 @@ const handleSelectAll = (checked: boolean | string[]) => {
   const isChecked = Array.isArray(checked) ? checked.length > 0 : checked;
   shotList.value.forEach((shot) => (shot.selected = isChecked));
 };
+useEventListener(document, "keydown", (e: KeyboardEvent) => {
+  if (e.code === "Space" && !e.repeat) {
+    e.preventDefault();
+    const data = shotList.value[currentShotIndex.value];
+    if (data) {
+      data.selected = !data.selected;
+    }
+  }
+});
 
 const confirmRestoreSort = () => {
   const dialog = DialogPlugin.confirm({

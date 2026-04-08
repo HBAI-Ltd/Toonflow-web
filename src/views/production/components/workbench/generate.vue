@@ -349,6 +349,7 @@ interface VideoItem {
   id: number;
   src: string;
   state: "未生成" | "生成中" | "已完成" | "生成失败";
+  errorReason?: string | null;
 }
 
 const selectVideoId = ref<number | null>(null);
@@ -423,7 +424,9 @@ watch(
 const activeTrackVideos = computed(() => {
   const track = trackList.value[activeTrackIndex.value];
   if (!track?.id) return [];
-  return historyVideo.value.filter((v) => v.videoTrackId === track.id);
+  const fromHistory = historyVideo.value.filter((v) => v.videoTrackId === track.id);
+  if (fromHistory.length > 0) return fromHistory;
+  return (track.videoList ?? []).map((v) => ({ ...v, videoTrackId: track.id }));
 });
 
 function previewVideo(v: HistoryVideoItem) {
