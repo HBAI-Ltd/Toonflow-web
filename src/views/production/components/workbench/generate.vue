@@ -791,6 +791,11 @@ function handleSelectSource(index: number) {
       const assets = await assetsCheck({ types: fileTypeMap[item.fileType], multiple: false });
       if (assets.length > 0) {
         userEditedUploadBox.value = true;
+        // 先把该 slot 原来的旧 id 从 genVideoParams 移除，再写入新的
+        const oldId = uploadBox.value[index]?.id;
+        if (oldId != null) {
+          genVideoParams.value = genVideoParams.value.filter((p) => p.id !== oldId);
+        }
         uploadBox.value[index] = { ...item, sources: "assets", src: assets[0].src, id: assets[0].id, prompt: assets[0].prompt };
         genVideoParams.value.push({ id: assets[0].id, sources: "assets" });
         genVideoParams.value = genVideoParams.value.filter((item, index, self) => self.findIndex((t) => t.id === item.id) === index);
@@ -877,6 +882,13 @@ function pickStoryboard(sb: StoryboardItem) {
   }
   const item = uploadBox.value[pendingIndex.value];
   if (!item) return;
+  // 先把该 slot 原来的旧 id 从 genVideoParams 移除，再写入新的
+  const oldId = item.id;
+  if (oldId != null) {
+    genVideoParams.value = genVideoParams.value.filter((p) => p.id !== oldId);
+    const curTrackId4 = trackList.value[activeTrackIndex.value]?.id;
+    if (curTrackId4 != null) genVideoParamsMap.value[curTrackId4] = [...genVideoParams.value];
+  }
   uploadBox.value[pendingIndex.value] = { ...item, sources: "storyboard", src: sb.src, id: sb.id, prompt: sb.prompt ?? undefined };
 }
 
@@ -898,8 +910,22 @@ const uploadBoxSnapshot = ref<UploadItem[]>([]);
 watch(selectMode, (val) => {
   if (!val) return (uploadBox.value = []);
   const oldBox = uploadBox.value;
+  // 保存快照：无论是否有 src，都保留当前 uploadBox 供切换时恢复；
+  // 同时也把 track.medias 作为更可靠的快照来源
+  const activeTrack = trackList.value[activeTrackIndex.value];
   if (oldBox.some((item) => item.src)) {
     uploadBoxSnapshot.value = oldBox.map((item) => ({ ...item }));
+  } else if (activeTrack?.medias?.length) {
+    // 当前 uploadBox 为空（如文生图模式），从 track.medias 构建快照
+    uploadBoxSnapshot.value = activeTrack.medias.map((m) => ({
+      fileType: m.fileType,
+      type: (refTypeMap[m.fileType] ?? "imageReference") as Type,
+      sources: m.sources ?? "storyboard",
+      src: m.src,
+      id: m.id,
+      prompt: m.prompt,
+      label: "",
+    }));
   }
   const newBox = buildUploadBox(val);
   const newParsedMode = parseMode(val);
@@ -922,6 +948,24 @@ watch(selectMode, (val) => {
     });
   }
   userEditedUploadBox.value = false;
+  // 模式切换后，根据新 uploadBox 重建 genVideoParams
+  const newParams = uploadBox.value.filter((item) => item.src && item.id != null).map((item) => ({ id: item.id, sources: item.sources }));
+  if (newParsedMode === "text") {
+    // 文生图模式：从 track.medias 或快照获取分镜数据填入 genVideoParams
+    const mediaSources = (activeTrack?.medias ?? []).filter((m) => m.id != null).map((m) => ({ id: m.id, sources: m.sources }));
+    const snapshotSources = uploadBoxSnapshot.value.filter((item) => item.id != null).map((item) => ({ id: item.id, sources: item.sources }));
+    const combined = [...mediaSources, ...snapshotSources];
+    genVideoParams.value = combined.filter((item, index, self) => self.findIndex((t) => t.id === item.id) === index);
+  } else if (newParams.length > 0) {
+    // 合并已有参数并去重
+    const merged = [...genVideoParams.value, ...newParams];
+    genVideoParams.value = merged.filter((item, index, self) => self.findIndex((t) => t.id === item.id) === index);
+  } else {
+    // 新模式无有效资源，清空 genVideoParams
+    genVideoParams.value = [];
+  }
+  const curTrackId = trackList.value[activeTrackIndex.value]?.id;
+  if (curTrackId != null) genVideoParamsMap.value[curTrackId] = [...genVideoParams.value];
 });
 
 watch(
