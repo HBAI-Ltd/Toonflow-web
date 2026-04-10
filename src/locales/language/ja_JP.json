@@ -1325,7 +1325,9 @@
       "batchDownloadVideo": "動画をバッチでダウンロードする",
       "storyboard": "絵コンテ",
       "assets": "資産",
-      "promptText": "ビデオプロンプトワードデータの生成"
+      "promptText": "ビデオプロンプトワードデータの生成",
+      "videoMenu": "ビデオの生成",
+      "videoPreview": "ビデオプレビュー"
     }
   },
   "login": {

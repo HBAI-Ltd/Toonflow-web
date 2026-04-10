@@ -1418,7 +1418,9 @@
       "batchDownloadVideo": "Download videos in batches",
       "storyboard": "Storyboard",
       "assets": "assets",
-      "promptText": "Generate video prompt word data"
+      "promptText": "Generate video prompt word data",
+      "videoMenu": "Generate video",
+      "videoPreview": "Video preview"
     }
   },
   "login": {

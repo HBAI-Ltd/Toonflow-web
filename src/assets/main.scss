@@ -10,6 +10,18 @@ body,
   color: var(--td-text-color-primary);
 }
 
+// 防止弹窗出现时滚动条消失导致页面宽度变化引起抖动
+html {
+  scrollbar-gutter: stable;
+}
+
+// TDesign Dialog 弹出时会给 body 加 overflow:hidden，用 padding-right 补偿滚动条宽度
+// 但若页面本身无滚动条此补偿无效，直接禁用 body 的 overflow 锁定
+body.t-overflow-hidden {
+  overflow: auto !important;
+  padding-right: 0 !important;
+}
+
 // Electron titleBar 偏移：一劳永逸处理所有 TDesign 固定定位弹出层被 titleBar 遮挡的问题
 // 如果新增了 TDesign 弹出层组件，在此处补充对应 class 即可
 body.is-electron {

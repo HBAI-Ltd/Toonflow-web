@@ -1316,7 +1316,9 @@
       "batchDownloadVideo": "Tải xuống video hàng loạt",
       "storyboard": "Bảng phân cảnh",
       "assets": "tài sản",
-      "promptText": "Tạo dữ liệu từ nhắc video"
+      "promptText": "Tạo dữ liệu từ nhắc video",
+      "videoMenu": "Tạo video",
+      "videoPreview": "Xem trước video"
     }
   },
   "login": {

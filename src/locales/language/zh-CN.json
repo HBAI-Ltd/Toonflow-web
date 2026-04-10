@@ -1400,7 +1400,7 @@
     "generate": {
       "noVideo": "暂无数据",
       "prompt": "视频提示词",
-      "generateText": "AI生成提示词",
+      "generateText": "生成提示词",
       "selectStoryboard": "选择分镜",
       "generate": "生成视频",
       "history": "历史版本",
@@ -1439,7 +1439,9 @@
       "batchDownloadVideo": "批量下载视频",
       "storyboard": "分镜",
       "assets": "资产",
-      "promptText": "生成视频提示词数据"
+      "promptText": "生成视频提示词数据",
+      "videoMenu": "生成视频",
+      "videoPreview": "视频预览"
     }
   },
   "login": {

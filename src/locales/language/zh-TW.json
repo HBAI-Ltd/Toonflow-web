@@ -1330,7 +1330,9 @@
       "batchDownloadVideo": "批量下載視頻",
       "storyboard": "分鏡",
       "assets": "資產",
-      "promptText": "產生影片提示詞數據"
+      "promptText": "產生影片提示詞數據",
+      "videoMenu": "產生影片",
+      "videoPreview": "影片預覽"
     }
   },
   "login": {

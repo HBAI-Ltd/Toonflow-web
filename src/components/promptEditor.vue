@@ -21,6 +21,7 @@
           <t-image v-if="item.type === 'image'" :src="item.src" fit="cover" class="ref-popup-img" />
           <i-video v-else-if="item.type === 'video'" class="ref-popup-icon" />
           <i-volume-mute v-else-if="item.type === 'audio'" class="ref-popup-icon" />
+          <span v-else class="ref-popup-text">文</span>
           <span class="reference-label">{{ $t("workbench.production.editImage.reference", { index: index + 1 }) }}</span>
           <span class="ref-index-badge">#{{ index + 1 }}</span>
         </div>
@@ -37,7 +38,7 @@ import { Popup } from "tdesign-vue-next";
 import { Video, VolumeMute } from "@icon-park/vue-next";
 
 const props = defineProps<{
-  references?: { type: "image" | "video" | "audio"; src: string }[];
+  references?: { type: "image" | "video" | "audio" | "text"; src: string }[];
   placeholder?: String;
 }>();
 
@@ -70,6 +71,9 @@ function createRefTag(index: number): HTMLSpanElement {
         alt: "",
       });
     }
+    if (refType === "text") {
+      return h("span", { style: { padding: "8px", display: "block", fontSize: "14px" } }, "文本参考");
+    }
     return h("span", { style: { padding: "8px", display: "block" } }, refSrc);
   };
 
@@ -80,7 +84,11 @@ function createRefTag(index: number): HTMLSpanElement {
     if (refType === "video") {
       return h(Video);
     }
-    return h(VolumeMute);
+    if (refType === "audio") {
+      return h(VolumeMute);
+    }
+    // text 类型：显示"文"字，避免图片裂开
+    return h("span", { class: "tag-text-icon" }, "文");
   };
 
   const vnode = h(
@@ -381,6 +389,20 @@ function handleBlur() {
       color: var(--td-text-color-secondary);
     }
 
+    .ref-popup-text {
+      width: 38px;
+      height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      flex-shrink: 0;
+      background: var(--td-bg-color-secondarycontainer);
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--td-text-color-secondary);
+    }
+
     .reference-label {
       font-size: 13px;
       font-weight: 500;
@@ -446,6 +468,17 @@ function handleBlur() {
 
   i {
     font-size: 14px;
+    flex-shrink: 0;
+  }
+
+  .tag-text-icon {
+    width: 18px;
+    height: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
     flex-shrink: 0;
   }
 }
