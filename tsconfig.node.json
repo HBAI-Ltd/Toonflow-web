@@ -1,15 +1,34 @@
 {
-  "include": ["vite.config.*", "vitest.config.*", "cypress.config.*", "nightwatch.conf.*", "playwright.config.*"],
-  "exclude": ["node_modules", "**/node_modules/*", "dist", "coverage", "**/*.test.ts"],
+  "include": [
+    "vite.config.*",
+    "vitest.config.*",
+    "cypress.config.*",
+    "nightwatch.conf.*",
+    "playwright.config.*"
+  ],
+  "exclude": [
+    "node_modules",
+    "**/node_modules/*",
+    "dist",
+    "coverage",
+    "**/*.test.ts"
+  ],
   "compilerOptions": {
-    "noEmit": true,
+    "ignoreDeprecations": "5.0",
+    "composite": true,
+    "noEmit": false,
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo",
     "noImplicitAny": false,
     "target": "ES2022",
-    "lib": ["ES2023"],
+    "lib": [
+      "ES2023"
+    ],
     "module": "ESNext",
     "moduleResolution": "Bundler",
-    "types": ["node", "vite/client"],
+    "types": [
+      "node",
+      "vite/client"
+    ],
     "verbatimModuleSyntax": false,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,

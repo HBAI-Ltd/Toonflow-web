@@ -6,6 +6,7 @@ import Components from "unplugin-vue-components/vite";
 import { TDesignResolver } from "@tdesign-vue-next/auto-import-resolver";
 import { viteSingleFile } from "vite-plugin-singlefile";
 import postcsspxtoviewport from "postcss-px-to-viewport";
+import viteCompression from "vite-plugin-compression";
 
 export default defineConfig({
   base: "./",
@@ -41,6 +42,13 @@ export default defineConfig({
           library: "chat",
         }),
       ],
+    }),
+    viteCompression({
+      algorithm: "gzip",
+      threshold: 10240,
+      verbose: true, // 是否在控制台中输出压缩结果
+      ext: ".gz",
+      deleteOriginFile: true, // 源文件压缩后是否删除
     }),
     viteSingleFile(),
   ],

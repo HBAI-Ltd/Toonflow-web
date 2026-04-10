@@ -13,7 +13,7 @@ import enConfig from "tdesign-vue-next/es/locale/en_US";
 import { cachedLocale } from "@/locales";
 import { initTheme } from "@/utils/theme";
 import { type GlobalConfigProvider } from "tdesign-vue-next";
-const { baseUrl, isElectron, themeSetting } = storeToRefs(settingStore());
+const { baseUrl, isElectron } = storeToRefs(settingStore());
 import { config } from "md-editor-v3";
 
 watch(

@@ -112,6 +112,7 @@
       "singleImage": "単一画像",
       "multiImage": "複数画像モード",
       "multiReference": "複数画像参照",
+      "multiReferenceMode": "マルチ参照モード",
       "gridImage": "グリッド単一画像",
       "startEndRequired": "開始・終了フレーム（両方必須）",
       "endFrameOptional": "開始・終了フレーム（終了フレームは任意）",

@@ -111,6 +111,7 @@
       "singleImage": "Ảnh đơn",
       "multiImage": "Chế độ nhiều ảnh",
       "multiReference": "Tham chiếu nhiều ảnh",
+      "multiReferenceMode": "Chế độ đa tham chiếu",
       "gridImage": "Lưới ảnh đơn",
       "startEndRequired": "Khung hình đầu và cuối (Bắt buộc cả hai)",
       "endFrameOptional": "Khung hình đầu và cuối (Khung hình cuối tùy chọn)",

@@ -82,7 +82,10 @@
           </div>
           <t-card v-for="(item, index) in vendorModels" :key="index" class="modelCard">
             <div class="topInfo jb ac">
-              <span class="modelCardName">{{ item.name }}</span>
+              <div class="modelCardNameWrap">
+                <t-avatar v-if="getModelLogo(item.modelName)" size="24px" shape="round" :image="getModelLogo(item.modelName)!" />
+                <span class="modelCardName">{{ item.name }}</span>
+              </div>
               <div class="actionBtns">
                 <t-button size="small" variant="text" :loading="!!testingModels[item.modelName]" @click="handleTestModel(item)">
                   <template #icon><i-lightning theme="outline" /></template>
@@ -100,10 +103,11 @@
             </div>
             <div class="tags">
               <t-tag theme="primary">{{ $t(getTypeLabel(item.type)) }}</t-tag>
+              <t-tag v-if="item.type === 'text' && (item as any).think" variant="light">{{ $t("settings.vendor.think") }}</t-tag>
               <template v-for="(mode, mIdx) in (item as any).mode" :key="mIdx">
-                <t-tag v-if="!Array.isArray(mode)" variant="light">{{ $t(getModeLabel(mode, item.type)) }}</t-tag>
+                <t-tag v-if="!Array.isArray(mode)" variant="light">{{ getModeLabel(mode, item.type) }}</t-tag>
                 <t-tag v-else variant="light" v-for="(m, mmIdx) in mode" :key="mmIdx">
-                  {{ $t(getModeLabel(m, item.type)) }}
+                  {{ getModeLabel(m, item.type) }}
                 </t-tag>
               </template>
             </div>
@@ -163,9 +167,19 @@
                 <t-checkbox-group v-model="modelFormData.mode">
                   <t-checkbox v-for="opt in videoModeOptions" :key="opt.value" :value="opt.value">{{ $t(opt.label) }}</t-checkbox>
                 </t-checkbox-group>
-                <div style="border: 1px solid #ddd; border-radius: 6px; padding: 6px 12px; margin-top: 6px">
-                  <t-checkbox-group v-model="modelFormData.mixedMode" style="display: flex; flex-direction: row; gap: 8px">
-                    <t-checkbox v-for="opt in otherOptions" :key="opt.value" :value="opt.value">{{ $t(opt.label) }}</t-checkbox>
+                <div v-if="modelFormData.mode.includes('multiReference')" style="border: 1px solid #ddd; border-radius: 6px; padding: 6px 12px; margin-top: 6px">
+                  <t-checkbox-group v-model="modelFormData.mixedMode" style="display: flex; flex-direction: row; gap: 8px; flex-wrap: wrap; align-items: center">
+                    <template v-for="opt in referenceOptions" :key="opt.value">
+                      <t-checkbox :value="opt.value">{{ $t(opt.label) }}</t-checkbox>
+                      <t-input-number
+                        v-if="modelFormData.mixedMode.includes(opt.value)"
+                        v-model="modelFormData.mixedModeCount[opt.value]"
+                        :min="1"
+                        :max="99"
+                        size="small"
+                        style="width: 80px"
+                        :placeholder="$t('settings.vendor.count')" />
+                    </template>
                   </t-checkbox-group>
                 </div>
               </div>
@@ -318,6 +332,7 @@ import { CodeEditor } from "monaco-editor-vue3";
 import { DialogPlugin } from "tdesign-vue-next";
 import axios from "@/utils/axios";
 import VENDOR_CODE_TEMPLATE from "@/lib/vendorTemplate.ts?raw";
+import { providersLogo, modelProviderRules } from "@/utils/providersLogo";
 import type { UploadFile } from "tdesign-vue-next";
 import { LoadingPlugin } from "tdesign-vue-next";
 import settingStore from "@/stores/setting";
@@ -335,14 +350,21 @@ interface ImageModel {
   name: string;
   modelName: string;
   type: "image";
-  mode: ("text" | "singleImage")[];
+  mode: ("text" | "singleImage" | "multiReference")[];
 }
 
 interface VideoModel {
   name: string;
   modelName: string;
   type: "video";
-  mode: ("singleImage" | "multiImage" | "startEndRequired" | "endFrameOptional" | "startFrameOptional" | "text")[];
+  mode: (
+    | "singleImage"
+    | "startEndRequired"
+    | "endFrameOptional"
+    | "startFrameOptional"
+    | "text"
+    | (`videoReference:${number}` | `imageReference:${number}` | `audioReference:${number}`)[] 
+  )[];
   audio: "optional" | false | true;
   durationResolutionMap: { duration: number[]; resolution: string[] }[];
 }
@@ -384,15 +406,12 @@ const TYPE_LABEL_MAP: Record<string, string> = {
 
 const MODE_LABEL_MAP: Record<string, string> = {
   singleImage: "settings.vendor.singleImage",
-  multiImage: "settings.vendor.multiImage",
-  // multiReference: "settings.vendor.multiReference",
-  // gridImage: "settings.vendor.gridImage",
+  multiReference: "settings.vendor.multiReference",
   startEndRequired: "settings.vendor.startEndRequired",
   endFrameOptional: "settings.vendor.endFrameOptional",
   startFrameOptional: "settings.vendor.startFrameOptional",
   audioReference: "settings.vendor.audioRef",
   videoReference: "settings.vendor.videoRef",
-  textReference: "settings.vendor.textRef",
   imageReference: "settings.vendor.imageRef",
 };
 
@@ -401,8 +420,14 @@ function getTypeLabel(type: string) {
 }
 
 function getModeLabel(mode: string, type: string) {
-  if (mode === "text") return type === "image" ? "settings.vendor.textToImage" : "settings.vendor.textToVideo";
-  return MODE_LABEL_MAP[mode] || mode;
+  if (mode === "text") return $t(type === "image" ? "settings.vendor.textToImage" : "settings.vendor.textToVideo");
+  // Handle reference:number format like "videoReference:2"
+  const refMatch = String(mode).match(/^(videoReference|imageReference|audioReference):(\d+)$/);
+  if (refMatch) {
+    const label = MODE_LABEL_MAP[refMatch[1]];
+    return label ? `${$t(label)} ×${refMatch[2]}` : mode;
+  }
+  return MODE_LABEL_MAP[mode] ? $t(MODE_LABEL_MAP[mode]) : mode;
 }
 
 const editorOptions = {
@@ -423,22 +448,20 @@ const modelTypeOptions = [
 const imageModeOptions = [
   { label: "settings.vendor.textToImage", value: "text" },
   { label: "settings.vendor.singleImage", value: "singleImage" },
-  // { label: "settings.vendor.multiReference", value: "multiReference" },
+  { label: "settings.vendor.multiReference", value: "multiReference" },
 ];
 
 const videoModeOptions = [
   { label: "settings.vendor.singleImage", value: "singleImage" },
-  { label: "settings.vendor.multiImage", value: "multiImage" },
-  // { label: "settings.vendor.gridImage", value: "gridImage" },
   { label: "settings.vendor.startEndRequired", value: "startEndRequired" },
   { label: "settings.vendor.endFrameOptional", value: "endFrameOptional" },
   { label: "settings.vendor.startFrameOptional", value: "startFrameOptional" },
   { label: "settings.vendor.textToVideo", value: "text" },
+  { label: "settings.vendor.multiReferenceMode", value: "multiReference" },
 ];
-const otherOptions = [
-  { label: "settings.vendor.textRef", value: "textReference" },
-  { label: "settings.vendor.imageRef", value: "videoReference" },
-  { label: "settings.vendor.videoRef", value: "imageReference" },
+const referenceOptions = [
+  { label: "settings.vendor.videoRef", value: "videoReference" },
+  { label: "settings.vendor.imageRef", value: "imageReference" },
   { label: "settings.vendor.audioRef", value: "audioReference" },
 ];
 
@@ -525,6 +548,12 @@ function isValidBase64(str?: string): boolean {
   // 检查是否是 base64 数据 URI 或纯 base64 字符串
   const base64Regex = /^(?:data:[^;]+;base64,)?[A-Za-z0-9+/]*={0,2}$/;
   return base64Regex.test(str) && str.length > 0;
+}
+
+function getModelLogo(modelName: string): string | null {
+  if (!modelName) return null;
+  const rule = modelProviderRules.find((r) => r.pattern.test(modelName));
+  return rule ? providersLogo[rule.provider] : null;
 }
 
 function buildVendorUpdatePayload(vendor: VendorItem) {
@@ -701,7 +730,8 @@ const modelFormData = ref({
   type: "text" as "text" | "image" | "video",
   think: false,
   mode: [] as string[],
-  mixedMode: [] as string[], // otherOptions 选中项，单独存放，构建时作为数组元素加入 mode
+  mixedMode: [] as string[], // referenceOptions 选中项，单独存放，构建时作为数组元素加入 mode
+  mixedModeCount: {} as Record<string, number>, // 每个 reference 的数量限制
   audio: "optional" as "optional" | false | true,
   durationResolutionMap: [{ duration: [] as string[], resolution: [] as string[] }] as DrmRow[],
 });
@@ -714,6 +744,7 @@ function resetModelForm(type: "text" | "image" | "video" = "text") {
     think: false,
     mode: [],
     mixedMode: [],
+    mixedModeCount: {},
     audio: "optional",
     durationResolutionMap: [{ duration: [], resolution: [] }],
   };
@@ -762,10 +793,14 @@ function buildModelFromForm(): VendorModel | null {
     };
   }
 
-  // 把 mixedMode（otherOptions 选中项）作为一个数组元素追加到 mode
-  const mode = [...modelFormData.value.mode] as VideoModel["mode"];
+  // 把 mixedMode（referenceOptions 选中项）作为带数量的数组元素追加到 mode
+  const mode = [...modelFormData.value.mode].filter((m) => m !== "multiReference") as VideoModel["mode"];
   if (modelFormData.value.mixedMode.length > 0) {
-    (mode as any[]).push([...modelFormData.value.mixedMode]);
+    const refs = modelFormData.value.mixedMode.map((ref) => {
+      const count = modelFormData.value.mixedModeCount[ref] ?? 1;
+      return `${ref}:${count}`;
+    });
+    (mode as any[]).push(refs);
   }
   if (!mode.length) {
     window.$message.error($t("settings.vendor.msg.selectVideoMode"));
@@ -878,9 +913,16 @@ function handleEditModel(model: VendorModel) {
     // 反解：把 mode 中数组类型的元素提取为 mixedMode，其余为普通 mode
     const flatMode: string[] = [];
     let mixedMode: string[] = [];
+    const mixedModeCount: Record<string, number> = {};
     for (const m of model.mode) {
       if (Array.isArray(m)) {
-        mixedMode = [...m];
+        for (const ref of m) {
+          const match = String(ref).match(/^(videoReference|imageReference|audioReference):(\d+)$/);
+          if (match) {
+            mixedMode.push(match[1]);
+            mixedModeCount[match[1]] = Number(match[2]);
+          }
+        }
       } else {
         flatMode.push(m);
       }
@@ -890,8 +932,9 @@ function handleEditModel(model: VendorModel) {
       modelName: model.modelName,
       type: "video",
       think: false,
-      mode: flatMode,
+      mode: mixedMode.length > 0 ? [...flatMode, "multiReference"] : flatMode,
       mixedMode,
+      mixedModeCount,
       audio: model.audio,
       durationResolutionMap: rows,
     };
@@ -1225,6 +1268,11 @@ function handleFileChange(e: Event) {
         .topInfo {
           margin-left: 4px;
           margin-right: 4px;
+          .modelCardNameWrap {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+          }
           .modelCardName {
             font-size: 15px;
             font-weight: 900;

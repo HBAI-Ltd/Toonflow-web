@@ -61,7 +61,7 @@
 
 <script setup lang="ts">
 import modelSelect from "@/components/modelSelect.vue";
-import providersLogo from "@/utils/ai/providersLogo";
+import { providersLogo, modelProviderRules } from "@/utils/providersLogo";
 import axios from "@/utils/axios";
 import settingStore from "@/stores/setting";
 const { isElectron } = storeToRefs(settingStore());
@@ -83,19 +83,7 @@ const modelDataShow = ref(false);
 const currentItem = ref<ModelType | null>(null);
 const selectValue = ref<string>("");
 
-const modelProviderRules: Array<{ pattern: RegExp; provider: keyof typeof providersLogo }> = [
-  { pattern: /gpt|o1|o3|o4|openai/i, provider: "openai" },
-  { pattern: /claude|anthropic/i, provider: "anthropic" },
-  { pattern: /deepseek/i, provider: "deepSeek" },
-  { pattern: /gemini|veo/i, provider: "gemini" },
-  { pattern: /qwen|qwq|tongyi|通义|wanx|万相|wan/i, provider: "qwen" },
-  { pattern: /glm|zhipu|智谱/i, provider: "zhipu" },
-  { pattern: /doubao|seedream|seedance|volc/i, provider: "volcengine" },
-  { pattern: /kling|可灵/i, provider: "kling" },
-  { pattern: /vidu/i, provider: "vidu" },
-  { pattern: /runninghub/i, provider: "runninghub" },
-  { pattern: /grok|xai|grsai/i, provider: "grsai" },
-];
+
 
 function getProviderLogo(manufacturer: string) {
   if (!manufacturer) return null;

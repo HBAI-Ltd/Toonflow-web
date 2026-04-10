@@ -120,6 +120,7 @@
       "singleImage": "單圖",
       "multiImage": "多圖模式",
       "multiReference": "多圖參考",
+      "multiReferenceMode": "多參模式",
       "gridImage": "網格單圖",
       "startEndRequired": "首尾影格（兩張必填）",
       "endFrameOptional": "首尾影格（尾影格選填）",

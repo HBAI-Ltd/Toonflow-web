@@ -112,6 +112,7 @@
       "singleImage": "Single Image",
       "multiImage": "Multi-Image Mode",
       "multiReference": "Multi-Image Reference",
+      "multiReferenceMode": "Multi-Reference Mode",
       "gridImage": "Grid Single Image",
       "startEndRequired": "Start & End Frames (Both Required)",
       "endFrameOptional": "Start & End Frames (End Frame Optional)",

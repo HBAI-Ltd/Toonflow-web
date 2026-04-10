@@ -10,7 +10,7 @@
         </t-form>
       </t-dialog>
       <div class="logoBox fc">
-        <img :src="logo" alt="logo" class="logoImg" />
+        <div class="logoImg"></div>
         <div class="fc c">
           <span class="logoText">ToonFlow</span>
           <span class="slogan">{{ $t("login.slogan") }}</span>
@@ -119,9 +119,9 @@ const handleLogin = () => {
   .formBox {
     width: 380px;
     padding: 40px 40px 30px;
-    background: #fff;
+    background: var(--td-bg-color-container);
     border-radius: 20px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
+    box-shadow: var(--td-shadow-3);
 
     .logoBox {
       display: flex;
@@ -133,12 +133,17 @@ const handleLogin = () => {
       .logoImg {
         width: 64px;
         height: 64px;
+        background-color: var(--td-text-color-primary);
+        mask: url("@/assets/logo.svg") no-repeat center;
+        mask-size: contain;
+        -webkit-mask: url("@/assets/logo.svg") no-repeat center;
+        -webkit-mask-size: contain;
       }
 
       .logoText {
         font-size: 36px;
         font-weight: 800;
-        color: #333;
+        color: var(--td-text-color-primary);
         letter-spacing: 1px;
       }
       .slogan {
@@ -153,7 +158,7 @@ const handleLogin = () => {
       gap: 20px;
 
       .input-icon {
-        color: #999;
+        color: var(--td-text-color-placeholder);
         font-size: 18px;
       }
 
@@ -193,13 +198,13 @@ const handleLogin = () => {
   }
 
   code {
-    background: #fff;
+    background: var(--td-bg-color-container);
     padding: 2px 10px;
     border-radius: 4px;
     font-family: "Monaco", "Menlo", monospace;
     font-weight: 500;
     font-size: 13px;
-    border: 1px solid #e8d5ff;
+    border: 1px solid var(--td-component-border);
   }
 }
 

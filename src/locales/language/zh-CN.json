@@ -124,6 +124,7 @@
       "singleImage": "单图",
       "multiImage": "多图模式",
       "multiReference": "多图参考",
+      "multiReferenceMode": "多参模式",
       "gridImage": "网格单图",
       "startEndRequired": "首尾帧（两张必填）",
       "endFrameOptional": "首尾帧（尾帧可选）",
