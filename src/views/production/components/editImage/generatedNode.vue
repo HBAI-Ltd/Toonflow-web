@@ -177,7 +177,6 @@ async function handleGenerate() {
   if (!props.data.model) return window.$message.error($t("workbench.production.editImage.selectModel"));
   if (!props.data.quality) return window.$message.error($t("workbench.production.editImage.selectQuality"));
   if (!props.data.ratio) return window.$message.error($t("workbench.production.editImage.selectRatio"));
-
   generating.value = true;
   try {
     const { data } = await axios.post("/production/editImage/generateFlowImage", {

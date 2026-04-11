@@ -7,6 +7,7 @@
       :data-placeholder="editorContent.length === 0 ? props.placeholder : ''"
       @input="handleInput"
       @keydown="handleKeydown"
+      @paste="handlePaste"
       @blur="handleBlur"
       @mousedown.stop></div>
     <Teleport to="body">
@@ -299,6 +300,23 @@ function handleBlur() {
   setTimeout(() => {
     showReferences.value = false;
   }, 150);
+}
+
+function handlePaste(e: ClipboardEvent) {
+  e.preventDefault();
+  const text = e.clipboardData?.getData("text/plain") ?? "";
+  const sel = window.getSelection();
+  if (!sel || sel.rangeCount === 0) return;
+  const range = sel.getRangeAt(0);
+  range.deleteContents();
+  const textNode = document.createTextNode(text);
+  range.insertNode(textNode);
+  range.setStartAfter(textNode);
+  range.collapse(true);
+  sel.removeAllRanges();
+  sel.addRange(range);
+  editorContent.value = editorRef.value?.textContent || "";
+  syncPrompt();
 }
 </script>
 
