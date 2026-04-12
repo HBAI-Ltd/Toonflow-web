@@ -1,15 +1,15 @@
 <template>
   <div class="imageUploadBox ac">
     <!-- 单图模式 -->
-    <template v-if="mode == 'singleImage'">
-      <div class="uploadBtn c fc" v-for="item in imageList" :key="item.id">
+    <template v-if="mode == 'singleImage' || Array.isArray(parseMode(mode as string))">
+      <div class="uploadBtn c fc" v-for="(item, index) in imageList" :key="index">
         <template v-if="item.src">
           <img class="uploadPreview" :src="item.src" />
         </template>
         <template v-else>
           <span style="font-size: 20px">文</span>
         </template>
-        <div class="clearBtn" @click="imageList = []">
+        <div class="clearBtn" @click="splitImage(index)">
           <i-close size="12" />
         </div>
         <div class="source">
@@ -21,14 +21,14 @@
     </template>
     <template v-else-if="mode == 'endFrameOptional' || mode == 'startFrameOptional' || mode == 'startEndRequired'">
       <div class="uploadBtn c fc" v-for="(item, index) in buildLable" :key="index" @click="handleMixedAdd(item.value)">
-        <div v-if="imageList?.[index] && imageList?.[index].id">
+        <div v-if="imageList?.[index] && imageList?.[index].id" style="flex: 1">
           <template v-if="imageList?.[index].src">
             <img class="uploadPreview" :src="imageList?.[index].src" />
           </template>
           <template v-else>
             <span style="font-size: 20px">文</span>
           </template>
-          <div class="clearBtn">
+          <div class="clearBtn" @click.stop="imageList[index] = { id: null } as any">
             <i-close size="12" />
           </div>
           <div class="source">
@@ -37,30 +37,13 @@
             </t-tag>
           </div>
         </div>
-
-        <i-plus size="24"></i-plus>
-        {{ item.label }}
-      </div>
-    </template>
-    <template v-else-if="Array.isArray(mode)">
-      <div class="uploadBtn c fc" v-for="item in imageList" :key="item.id">
-        <template v-if="item.src">
-          <img class="uploadPreview" :src="item.src" />
-        </template>
         <template v-else>
-          <span style="font-size: 20px">文</span>
+          <i-plus size="24"></i-plus>
+          {{ item.label }}
         </template>
-        <div class="clearBtn" @click="imageList = []">
-          <i-close size="12" />
-        </div>
-        <div class="source">
-          <t-tag size="small">
-            {{ item.sources == "storyboard" ? $t("workbench.generate.storyboard") : $t("workbench.generate.assets") }}
-          </t-tag>
-        </div>
       </div>
     </template>
-    <div class="uploadBtn c fc" v-if="isShowAddImage" @click="handleMixedAdd">
+    <div class="uploadBtn c fc" v-if="isShowAddImage" @click="handleMixedAdd()">
       <i-plus size="24"></i-plus>
       {{ $t("workbench.generate.addReference") }}
     </div>
@@ -74,7 +57,10 @@
       placement="center">
       <div class="storyboardGrid">
         <div class="storyboardItem" v-for="sb in storyboardList" :key="sb.id" @click="pickStoryboard(sb)">
-          <img :src="sb.src" />
+          <img v-if="sb.src" :src="sb.src" />
+          <div v-else class="textBox ac jc">
+            <span style="font-size: 20px">文</span>
+          </div>
         </div>
       </div>
     </t-dialog>
@@ -97,43 +83,24 @@ const imageList = defineModel<UploadItem[]>({
 const storyboardDialogVisible = ref(false);
 
 const buildLable = computed(() => {
-  if (props.mode == "startEndRequired") {
-    return [
-      {
-        label: "首帧",
-        value: "start",
-      },
-      {
-        label: "尾帧",
-        value: "end",
-      },
-    ];
-  }
-  if (props.mode == "endFrameOptional") {
-    return [
-      {
-        label: "首帧",
-        value: "start",
-      },
-      {
-        label: "尾帧(可选)",
-        value: "end",
-      },
-    ];
-  }
-  if (props.mode == "startFrameOptional") {
-    return [
-      {
-        label: "首帧(可选)",
-        value: "start",
-      },
-      {
-        label: "尾帧",
-        value: "end",
-      },
-    ];
-  }
+  const startOptional = props.mode === "startFrameOptional";
+  const endOptional = props.mode === "endFrameOptional";
+  return [
+    { label: startOptional ? "首帧(可选)" : "首帧", value: "start" },
+    { label: endOptional ? "尾帧(可选)" : "尾帧", value: "end" },
+  ];
 });
+/** 解析模式值（字符串或 JSON 数组） */
+function parseMode(value: string): VideoMode | null {
+  if (!value) return null;
+  try {
+    const parsed = JSON.parse(value);
+    if (Array.isArray(parsed)) return parsed as ReferenceType[];
+  } catch {
+    return value as Exclude<VideoMode, ReferenceType[]>;
+  }
+  return value as Exclude<VideoMode, ReferenceType[]>;
+}
 
 //判断是否显示添加参考图
 const isShowAddImage = computed(() => {
@@ -141,7 +108,7 @@ const isShowAddImage = computed(() => {
   if (mode == "singleImage" && imageList.value.length >= 1) {
     return false;
   }
-  if ((mode == "endFrameOptional" || mode == "startEndRequired" || mode == "startFrameOptional") && imageList.value.length >= 2) {
+  if (mode == "endFrameOptional" || mode == "startEndRequired" || mode == "startFrameOptional") {
     return false;
   }
   if (mode == "text") return false;
@@ -163,7 +130,10 @@ const mixedClipMediaTypes = computed<ClipMediaType[]>(() => {
   const map: Record<string, ClipMediaType> = { audioReference: "audio", imageReference: "image", videoReference: "video" };
   return mode.filter((m) => m in map).map((m) => map[m]);
 });
-function handleMixedAdd(label?: string) {
+let currentLocal = "";
+function handleMixedAdd(local: string = "") {
+  currentLocal = local ?? "";
+
   const multiple = Array.isArray(props.mode);
   const dlg = DialogPlugin.confirm({
     header: $t("workbench.generate.selectSource"),
@@ -184,7 +154,27 @@ function handleMixedAdd(label?: string) {
           prompt: asset.prompt,
         };
       });
-      imageList.value.push(...newItems);
+      if (local) {
+        if (imageList.value.length >= 2) {
+          const index = local == "start" ? 0 : 1;
+
+          imageList.value[index] = newItems[0];
+        } else if (imageList.value.length == 1) {
+          if (local == "start") {
+            imageList.value.unshift(newItems[0]);
+          } else {
+            imageList.value.push(newItems[0]);
+          }
+        } else {
+          if (local == "start") {
+            imageList.value.unshift(newItems[0]);
+          } else {
+            imageList.value.push(...[{ id: "" } as any, newItems[0]]);
+          }
+        }
+      } else {
+        imageList.value.push(...newItems);
+      }
     },
     onCancel: () => {
       dlg.destroy();
@@ -197,14 +187,39 @@ function handleMixedAdd(label?: string) {
 function pickStoryboard(sb: StoryboardItem) {
   storyboardDialogVisible.value = false;
   const fileType = "image";
-  imageList.value.push({
+  const newItem = {
     fileType,
     sources: "storyboard",
     src: sb.src,
     id: sb.id,
     prompt: sb.prompt ?? undefined,
     index: sb.index,
-  });
+  } as UploadItem;
+
+  if (currentLocal) {
+    if (imageList.value.length >= 2) {
+      const index = currentLocal == "start" ? 0 : 1;
+
+      imageList.value[index] = newItem;
+    } else if (imageList.value.length == 1) {
+      if (currentLocal == "start") {
+        imageList.value.unshift(newItem);
+      } else {
+        imageList.value.push(newItem);
+      }
+    } else {
+      if (currentLocal == "start") {
+        imageList.value.unshift(newItem);
+      } else {
+        imageList.value.push(...[{ id: "" } as any, newItem]);
+      }
+    }
+  } else {
+    imageList.value.push(newItem);
+  }
+}
+function splitImage(index: number) {
+  imageList.value.splice(index, 1);
 }
 </script>
 
@@ -264,6 +279,39 @@ function pickStoryboard(sb: StoryboardItem) {
     }
     &:hover .source {
       display: flex;
+    }
+  }
+  .storyboardGrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    max-height: 60vh;
+    overflow-y: auto;
+    padding: 4px;
+    .storyboardItem {
+      cursor: pointer;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 2px solid transparent;
+      transition:
+        border-color 0.2s,
+        box-shadow 0.2s;
+      &:hover {
+        border-color: var(--td-brand-color);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+      }
+      img {
+        width: 100%;
+        aspect-ratio: 16/9;
+        object-fit: cover;
+        display: block;
+      }
+      .textBox {
+        aspect-ratio: 16/9;
+        width: 100%;
+        text-align: center;
+        border: 1px solid #ccc;
+      }
     }
   }
 }

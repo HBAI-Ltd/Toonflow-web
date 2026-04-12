@@ -2,19 +2,19 @@
   <div class="modeMenu">
     <div class="left f ac">
       <div class="model">
-        <modelSelect v-model="selectModel" type="video" size="small" />
+        <modelSelect v-model="modelParmas.model" type="video" size="small" />
       </div>
-      <t-select size="small" class="mode" v-model="selectMode">
+      <t-select size="small" class="mode" v-model="modelParmas.mode" :onChange="changeModel">
         <t-option v-for="(item, index) in modeList" :key="index" :value="item.value" :label="item.label"></t-option>
       </t-select>
       <t-button
         size="small"
         variant="outline"
-        :theme="selectedAudio ? 'success' : 'danger'"
+        :theme="modelParmas.audio ? 'success' : 'danger'"
         class="audio"
-        @click="selectedAudio = !selectedAudio">
+        @click="modelParmas.audio = !modelParmas.audio">
         <template #icon>
-          <i-volume-notice v-if="selectedAudio" size="16" />
+          <i-volume-notice v-if="modelParmas.audio" size="16" />
           <i-volume-mute v-else size="16" />
         </template>
       </t-button>
@@ -24,7 +24,7 @@
           placement="top"
           overlay-class-name="resDurPickerPopup"
           :overlay-inner-style="{ padding: '16px', borderRadius: '8px' }">
-          <t-tag class="btn" variant="outline">{{ selectedResolution }}·{{ effectiveDuration }}s</t-tag>
+          <t-tag class="btn" variant="outline">{{ modelParmas.resolution }}·{{ effectiveDuration }}s</t-tag>
           <template #content>
             <div class="resolutionDurationPicker">
               <div
@@ -41,8 +41,8 @@
                     v-for="res in modeOptions.durationResolutionMap[0].resolution"
                     :key="res"
                     class="pickerOption"
-                    :class="{ active: selectedResolution === res }"
-                    @click="selectedResolution = res">
+                    :class="{ active: modelParmas.resolution == res }"
+                    @click="modelParmas.resolution = res">
                     {{ res }}
                   </div>
                 </div>
@@ -62,7 +62,7 @@
                     :key="dur"
                     class="pickerOption"
                     :class="{ active: effectiveDuration === dur }"
-                    @click="selectedDuration = dur">
+                    @click="modelParmas.duration = dur">
                     {{ dur }}s
                   </div>
                 </div>
@@ -83,12 +83,19 @@ const props = defineProps<{
   modeList: { value: string; label: string }[];
   effectiveDuration: number;
 }>();
-
-const selectModel = defineModel<string | undefined>("selectModel");
-const selectMode = defineModel<string | undefined>("selectMode");
-const selectedResolution = defineModel<string>("selectedResolution", { required: true });
-const selectedDuration = defineModel<number>("selectedDuration", { required: true });
-const selectedAudio = defineModel<boolean>("selectedAudio", { required: true });
+const modelParmas = defineModel<ModelSetting>({
+  default: {
+    mode: "",
+    model: "",
+    resolution: "480p",
+    duration: 8,
+    audio: false,
+  },
+});
+const emit = defineEmits(["modeChange"]);
+function changeModel() {
+  emit("modeChange");
+}
 </script>
 
 <style lang="scss" scoped>
@@ -98,7 +105,7 @@ const selectedAudio = defineModel<boolean>("selectedAudio", { required: true });
     flex: 1;
     gap: 8px;
     .mode {
-      width: 180px;
+      width: 280px;
     }
     .status {
       .btn {

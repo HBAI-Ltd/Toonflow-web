@@ -2,22 +2,19 @@
   <div class="index fc">
     <div class="referenceImage">
       <div class="uploadBtn">
-        <imageSelect :mode="modelOption.mode" v-model="imageList" :storyboard-list="storyboardList" />
+        <imageSelect :mode="modelParmas.mode as VideoMode" v-model="imageList" :storyboard-list="storyboardList" />
       </div>
     </div>
     <div class="modelSelect">
       <modeMenu
-        v-model:selectModel="selectModel"
-        v-model:selectMode="selectMode"
-        v-model:selectedResolution="selectedResolution"
-        v-model:selectedDuration="selectedDuration"
-        v-model:selectedAudio="selectedAudio"
+        v-model="modelParmas"
         :modeOptions="modeOptions"
         :modeList="modeList"
-        :effectiveDuration="effectiveDuration" />
+        :effectiveDuration="effectiveDuration"
+        @modeChange="modeChange" />
     </div>
     <div class="generate ac">
-      <div class="prompt">
+      <div class="prompt" v-if="currentTrack">
         <t-card :title="'#' + (activeTrackIndex + 1) + $t('workbench.generate.generateText')" header-bordered class="videoPrompt">
           <template #actions>
             <t-button size="small" class="genTextbtn" :loading="activeTrackGenTextLoading" @click="genText">
@@ -26,21 +23,30 @@
           </template>
           <div class="promptData">
             <div class="promptInput" @focusout="handlePromptBlur">
-              <promptEditor v-model="promptText" :references="references" :placeholder="$t('workbench.generate.promptPlaceholder')" />
+              <promptEditor v-model="currentTrack.prompt" :references="references" :placeholder="$t('workbench.generate.promptPlaceholder')" />
             </div>
           </div>
         </t-card>
       </div>
       <div class="video">
-        <t-card :title="'#' + (activeTrackIndex + 1) + $t('workbench.generate.videoMenu')" header-bordered>
-          <template #actions>
-            <t-button size="small">{{ $t("workbench.generate.generate") }}</t-button>
-          </template>
-        </t-card>
+        <videoCard
+          v-if="currentTrack"
+          :active-track-index="activeTrackIndex"
+          v-model:current-track="currentTrack"
+          @refresh="getGenerateData"
+          @generate="generateVideo" />
       </div>
     </div>
     <div class="track">
-      <newTrack v-model:activeTrackIndex="activeTrackIndex" />
+      <newTrack
+        v-model:activeTrackIndex="activeTrackIndex"
+        v-model:genTextLoadingMap="genTextLoadingMap"
+        v-model="trackList"
+        :image-list="imageList"
+        @change="trackChange"
+        :modelParmas="modelParmas"
+        :clampDuration="clampDuration"
+        @getData="getGenerateData" />
     </div>
   </div>
 </template>
@@ -50,6 +56,7 @@ import type { Ref } from "vue";
 import newTrack from "./components/track.vue";
 import imageSelect from "./components/imageSelect.vue";
 import modeMenu from "./components/modeMenu.vue";
+import videoCard from "./components/video.vue";
 import "@/views/production/components/workbench/type/type";
 import axios from "@/utils/axios";
 import projectStore from "@/stores/project";
@@ -58,32 +65,33 @@ import promptEditor from "@/components/promptEditor.vue";
 const { project } = storeToRefs(projectStore());
 const episodesId = inject<Ref<number>>("episodesId")!;
 const activeTrackIndex = ref(0);
-//生成提示词load
-const activeTrackGenTextLoading = ref(false);
-const promptText = ref("");
 
-const modeOptions = ref<VideoModel>({}); // 当前模型配置
-const modelOption = ref({
-  mode: "singleImage" as VideoMode,
-});
+const modeOptions = ref<VideoModel>({
+  name: "",
+  modelName: "",
+  durationResolutionMap: [],
+  audio: false,
+  type: "video",
+  mode: [],
+}); // 当前模型配置
 
 const trackList = ref<TrackItem[]>([]); // 轨道列表
-const selectedResolution = ref("480p"); // 当前分辨率
-const selectedDuration = ref(8); // 当前时长
-const selectedAudio = ref(false); // 是否启用音频
-const selectModel = ref<string>(); // 当前选中模型
-const selectMode = ref<string>(); // 当前选中模式
+
+const modelParmas = ref<ModelSetting>({
+  mode: "",
+  model: "",
+  resolution: "480p",
+  duration: 8,
+  audio: false,
+});
 
 const storyboardList = ref<StoryboardItem[]>([]); // 分镜列表
-const imageList = ref<UploadItem[]>([
-  {
-    id: 97,
-    sources: "assets",
-    fileType: "image",
-    src: "http://localhost:10588/oss/1775541314550/scene/14690396-e918-4fea-8488-404aa6727d07.jpg",
-  },
-]);
+const imageList = ref<UploadItem[]>([]);
 
+function modeChange() {
+  imageList.value.length = 0;
+  currentTrack.value.prompt = "";
+}
 const modeList = computed(() => {
   const modeLabelMap: Record<string, string> = {
     singleImage: "单图",
@@ -96,18 +104,38 @@ const modeList = computed(() => {
     audioReference: "音频",
     textReference: "文本",
   };
+  function parseRefLabel(m: string): string {
+    const match = m.match(/^(videoReference|imageReference|audioReference|textReference):(\d+)$/);
+    if (match) {
+      const base = modeLabelMap[match[1]] || match[1];
+      return `${base} ×${match[2]}`;
+    }
+    return modeLabelMap[m] || m;
+  }
   return modeOptions.value.mode
     ? modeOptions.value.mode.map((mode) =>
         Array.isArray(mode)
-          ? { value: JSON.stringify(mode), label: mode.map((m) => modeLabelMap[m] || m).join(" + ") + "参考" }
+          ? { value: JSON.stringify(mode), label: mode.map((m) => parseRefLabel(m)).join(" + ") + "参考" }
           : { value: mode, label: modeLabelMap[mode] || mode },
       )
     : [];
 });
-
+const currentTrack = computed({
+  get() {
+    return trackList.value[activeTrackIndex.value];
+  },
+  set(val) {
+    trackList.value[activeTrackIndex.value] = val;
+  },
+});
+/** 当前轨道是否正在生成提示词 */
+const activeTrackGenTextLoading = computed(() => {
+  const trackId = trackList.value[activeTrackIndex.value]?.id;
+  return trackId != null ? !!genTextLoadingMap.value[trackId] : false;
+});
 /** 将时长限制在模型支持的范围内 */
 function clampDuration(trackDuration: number): number {
-  const drMap = modeOptions.value.durationResolutionMap;
+  const drMap = modeOptions.value?.durationResolutionMap;
   if (Array.isArray(drMap) && drMap.length > 0 && drMap[0].duration?.length) {
     const durations = drMap[0].duration;
     return Math.max(Math.min(...durations), Math.min(trackDuration, Math.max(...durations)));
@@ -116,10 +144,35 @@ function clampDuration(trackDuration: number): number {
 }
 /** 实际生效时长：用户手动选择优先，否则取轨道时长并 clamp */
 const effectiveDuration = computed(() => {
-  const trackDuration = trackList.value[activeTrackIndex.value]?.duration || selectedDuration.value;
+  const trackDuration = trackList.value[activeTrackIndex.value]?.duration || modelParmas.value.duration;
   return clampDuration(trackDuration);
 });
-
+watch(
+  () => modelParmas.value.model,
+  (val) => {
+    if (!val) {
+      modeOptions.value = {
+        name: "",
+        modelName: "",
+        durationResolutionMap: [],
+        audio: false,
+        type: "video",
+        mode: [],
+      };
+      modelParmas.value.mode = "";
+      return;
+    }
+    axios.post("/modelSelect/getModelDetail", { modelId: val }).then(({ data }) => {
+      modeOptions.value = data;
+      modelParmas.value.audio = data.audio === true || data.audio === "true";
+      const drMap = data.durationResolutionMap;
+      if (Array.isArray(drMap) && drMap.length > 0) {
+        if (drMap[0].resolution?.length) modelParmas.value.resolution = drMap[0].resolution[0];
+        if (drMap[0].duration?.length) modelParmas.value.duration = drMap[0].duration[0];
+      }
+    });
+  },
+);
 /** uploadBox 作为 promptEditor 的引用预览 */
 const references = computed(() => {
   function getFileTypeByExt(src: string | undefined): "image" | "video" | "audio" {
@@ -128,6 +181,7 @@ const references = computed(() => {
     if (["mp3", "wav", "ogg", "aac", "flac", "m4a"].includes(ext)) return "audio";
     return "image";
   }
+
   return imageList.value
     .filter((item) => item.src)
     .map((item) => ({
@@ -141,33 +195,113 @@ async function getGenerateData() {
     projectId: project.value?.id,
     scriptId: episodesId.value ?? 0,
   });
-  console.log("%c Line:37 🥪 data", "background:#fca650", data);
+
+  storyboardList.value = data.storyboardList;
+  trackList.value = data.trackList;
+  data.trackList.length && (imageList.value = data.trackList[activeTrackIndex.value].medias);
 }
 /** 提示词失焦时保存到后端 */
 function handlePromptBlur() {
-  // const trackId = trackList.value[activeTrackIndex.value]?.id;
-  // if (trackId == null) return;
-  // axios.post("/production/workbench/updateVideoPrompt", { id: trackId, prompt: promptText.value });
+  const trackId = trackList.value[activeTrackIndex.value]?.id;
+  if (trackId == null) return;
+  axios.post("/production/workbench/updateVideoPrompt", { id: trackId, prompt: currentTrack.value?.prompt });
 }
+const genTextLoadingMap = ref<Record<number, boolean>>({}); // trackId -> 是否正在生成提示词
+
 /** 单个轨道生成提示词 */
 async function genText() {
-  console.log("%c Line:70 🍧", "background:#2eafb0", "生成视频提示词");
-  // try {
-  //   const { data } = await axios.post("/production/workbench/generateVideoPrompt", {
-  //     projectId: project.value?.id,
-  //     trackId,
-  //     info: info,
-  //     model: selectModel.value,
-  //   });
-  // } catch (e) {
-  //   window.$message.error((e as Error)?.message ?? "提示词生成失败");
-  // } finally {
-  // }
+  if (currentTrack.value.id == null || genTextLoadingMap.value[currentTrack.value.id]) return;
+  let info = [];
+  if (modelParmas.value.mode == "text") {
+    info = currentTrack.value?.medias.map(({ id, sources }) => ({ id, sources }));
+  } else {
+    info =
+      modelParmas.value.mode === "text"
+        ? []
+        : (() => {
+            const frameMode = ["startEndRequired", "endFrameOptional", "startFrameOptional"];
+            const preSliced = frameMode.includes(modelParmas.value.mode)
+              ? imageList.value.slice(0, 2)
+              : modelParmas.value.mode === "singleImage"
+                ? imageList.value.slice(0, 1)
+                : imageList.value;
+            const filtered = preSliced.filter((item) => Boolean(item.src) && item.id).map(({ id, sources }) => ({ id, sources }));
+            if (frameMode.includes(modelParmas.value.mode)) return filtered.slice(0, 2);
+            if (modelParmas.value.mode === "singleImage") return filtered.slice(0, 1);
+            return filtered;
+          })();
+  }
+  genTextLoadingMap.value[currentTrack.value.id] = true;
+  try {
+    const { data } = await axios.post("/production/workbench/generateVideoPrompt", {
+      projectId: project.value?.id,
+      trackId: currentTrack.value.id,
+      info: info,
+      model: modelParmas.value.model,
+    });
+    currentTrack.value.prompt = data;
+  } catch (e) {
+    window.$message.error((e as Error)?.message ?? "提示词生成失败");
+  } finally {
+    genTextLoadingMap.value[currentTrack.value.id] = false;
+  }
 }
-
+function trackChange() {
+  trackList.value.length && (imageList.value = trackList.value[activeTrackIndex.value].medias as UploadItem[]);
+}
 onMounted(() => {
+  modelParmas.value.model = project.value?.videoModel || "";
+  modelParmas.value.mode = project.value?.mode || "";
   getGenerateData();
 });
+/** 单个轨道生成视频 */
+async function generateVideo() {
+  const dlg = DialogPlugin.confirm({
+    header: $t("workbench.generate.generateConfirm"),
+    body: $t("workbench.generate.generateConfirmBody"),
+    onConfirm: async () => {
+      dlg.destroy();
+      try {
+        const { data } = await axios.post("/production/workbench/generateVideo", {
+          projectId: project.value?.id,
+          scriptId: episodesId.value,
+          uploadData:
+            modelParmas.value.mode === "text"
+              ? []
+              : (() => {
+                  const frameMode = ["startEndRequired", "endFrameOptional", "startFrameOptional"];
+                  const preSliced = frameMode.includes(modelParmas.value.mode)
+                    ? imageList.value.slice(0, 2)
+                    : modelParmas.value.mode === "singleImage"
+                      ? imageList.value.slice(0, 1)
+                      : imageList.value;
+                  const filtered = preSliced.filter((item) => Boolean(item.src) && item.id).map(({ id, sources }) => ({ id, sources }));
+                  if (frameMode.includes(modelParmas.value.mode)) return filtered.slice(0, 2);
+                  if (modelParmas.value.mode === "singleImage") return filtered.slice(0, 1);
+                  return filtered;
+                })(),
+          prompt: currentTrack.value.prompt,
+          model: modelParmas.value.model,
+          mode: modelParmas.value.mode,
+          resolution: modelParmas.value.resolution,
+          duration: modelParmas.value.duration,
+          audio: modelParmas.value.audio,
+          trackId: currentTrack.value.id,
+        });
+        window.$message.success($t("workbench.generate.generateStarted"));
+        currentTrack.value.videoList.push({
+          id: data,
+          state: "生成中",
+          src: "",
+        });
+      } catch (e) {
+        window.$message.error((e as any)?.message ?? "视频发起生成请求失败");
+      } finally {
+      }
+    },
+    onCancel: () => dlg.destroy(),
+  });
+}
 </script>
 
 <style lang="scss" scoped>
@@ -176,10 +310,8 @@ onMounted(() => {
   gap: 16px;
   overflow: hidden;
   .referenceImage {
-    border: 1px solid red;
   }
   .modelSelect {
-    border: 1px solid green;
   }
   .generate {
     flex: 1;
@@ -188,7 +320,6 @@ onMounted(() => {
     .prompt {
       width: 50%;
       height: 100%;
-      border: 1px solid #787878;
       .videoPrompt {
         width: 100%;
         height: 100%;
@@ -217,7 +348,6 @@ onMounted(() => {
     .video {
       width: 50%;
       height: 100%;
-      border: 1px solid #0625cf;
     }
   }
   .track {

@@ -1459,6 +1459,7 @@
       "generateSuccess": "视频生成成功",
       "selectVideoFailed": "视频选择失败",
       "selectVideoSuccess": "视频选择成功",
+      "previewVideo": "视频预览",
       "selectTrackFirst": "请先选择分镜",
       "noSelectedVideo": "没有选择的视频",
       "generateConfirm": "确认生成",
