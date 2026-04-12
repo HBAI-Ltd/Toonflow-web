@@ -1630,6 +1630,5 @@
   "settings.agent.ordinary": "Easy configuration",
   "settings.agent.temperature": "temperature",
   "settings.agent.maxOutputTokens": "Maximum output token",
-  "settings.agent.topP": "topP",
   "settings.agent.msg.notmodel": "No model selected"
 }

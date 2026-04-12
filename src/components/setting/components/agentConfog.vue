@@ -64,7 +64,6 @@
             <div class="skillCardBody jb">
               <div>{{ item.desc }}</div>
               <div>
-                <t-tag theme="primary" variant="light" size="small">topP：{{ item.topP }}</t-tag>
                 <t-tag theme="primary" variant="light" size="small" style="margin-left: 5px;">温度：{{ item.temperature }}</t-tag>
                 <t-tag theme="primary" variant="light" size="small"  style="margin-left: 5px;">最大输出Token：{{ item.maxOutputTokens }}</t-tag>
               </div>
@@ -86,9 +85,6 @@
         <t-form v-if="currentItem" label-align="top" :label-width="70">
           <t-form-item :label="$t('settings.agent.selectModel')">
             <modelSelect v-model="selectValue" v-model:label="selectLabel" type="text" />
-          </t-form-item>
-          <t-form-item :label="$t('settings.agent.topP')" v-if="type == '高级'">
-            <t-input-number v-model="currentItem.topP" style="width: 100%" />
           </t-form-item>
           <t-form-item :label="$t('settings.agent.temperature')" v-if="type == '高级'">
             <t-input-number v-model="currentItem.temperature" style="width: 100%" />
@@ -119,7 +115,6 @@ interface ModelType {
   desc: string;
   disabled?: boolean;
   type?: string;
-  topP?: number;
   temperature?: number;
   maxOutputTokens?: number;
 }
@@ -175,7 +170,6 @@ function confirmConfig() {
     modelName: currentItem.value?.modelName,
     vendorId: selectValue.value.split(/:(.+)/)[0],
     desc: currentItem.value?.desc,
-    topP: currentItem.value?.topP ?? 1,
     temperature: currentItem.value?.temperature ?? 1,
     maxOutputTokens: currentItem.value?.maxOutputTokens ?? 0,
   };

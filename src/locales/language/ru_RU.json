@@ -1494,6 +1494,5 @@
   "settings.agent.ordinary": "Простая настройка",
   "settings.agent.temperature": "температура",
   "settings.agent.maxOutputTokens": "Максимальный выходной токен",
-  "settings.agent.topP": "топП",
   "settings.agent.msg.notmodel": "Модель не выбрана"
 }

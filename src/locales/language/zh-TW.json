@@ -1483,6 +1483,5 @@
   "settings.agent.ordinary": "簡易配置",
   "settings.agent.temperature": "溫度",
   "settings.agent.maxOutputTokens": "最大輸出Token",
-  "settings.agent.topP": "topP",
   "settings.agent.msg.notmodel": "未選擇模型"
 }

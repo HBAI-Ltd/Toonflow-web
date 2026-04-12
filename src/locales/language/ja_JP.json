@@ -1494,6 +1494,5 @@
   "settings.agent.ordinary": "簡単な設定",
   "settings.agent.temperature": "温度",
   "settings.agent.maxOutputTokens": "最大出力トークン",
-  "settings.agent.topP": "トップP",
   "settings.agent.msg.notmodel": "モデルが選択されていません"
 }
