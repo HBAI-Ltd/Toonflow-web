@@ -64,6 +64,26 @@
                 </div>
               </template>
             </t-popup>
+            <t-popup trigger="click" placement="top" v-if="showThink">
+              <t-button size="small" variant="outline" :theme="['default', 'success', 'warning', 'danger'][thinkLevel] || 'default'">
+                <template #icon>
+                  <i-tips size="16" />
+                </template>
+                {{ thinkLevelOptions[thinkLevel]?.label }}
+              </t-button>
+              <template #content>
+                <div class="settingMenu">
+                  <div
+                    v-for="opt in thinkLevelOptions"
+                    :key="opt.value"
+                    class="settingMenuItem"
+                    :class="{ active: thinkLevel === opt.value }"
+                    @click="productionAgentStore().updateThinkConfig(opt.value)">
+                    <span>{{ opt.label }}</span>
+                  </div>
+                </div>
+              </template>
+            </t-popup>
           </div>
         </template>
       </t-chat-sender>
@@ -78,7 +98,13 @@ import axios from "@/utils/axios";
 import productionAgentStore from "@/stores/productionAgent";
 import projectStore from "@/stores/project";
 const { project } = storeToRefs(projectStore());
-const { connected, messages, status, episodesId, loadingHistory } = storeToRefs(productionAgentStore());
+const { connected, messages, status, episodesId, loadingHistory, thinkLevel } = storeToRefs(productionAgentStore());
+const thinkLevelOptions = [
+  { label: $t("workbench.scriptAgent.thinkLevel.off"), value: 0 },
+  { label: $t("workbench.scriptAgent.thinkLevel.light"), value: 1 },
+  { label: $t("workbench.scriptAgent.thinkLevel.deep"), value: 2 },
+  { label: $t("workbench.scriptAgent.thinkLevel.extreme"), value: 3 },
+];
 
 const props = defineProps({ title: String });
 
@@ -152,6 +178,14 @@ watchEffect(() => {
   if (pressed.value) {
     const maxWidth = window.innerWidth * 0.8;
     boxWidth.value = Math.min(maxWidth, Math.max(MIN_WIDTH, dragStartWidth.value + (dragStartX.value - x.value)));
+  }
+});
+
+const showThink = ref(false);
+onMounted(async () => {
+  const { data } = await axios.post(`/project/getModelDetails`, { key: "productionAgent" });
+  if (data && data.think) {
+    showThink.value = true;
   }
 });
 </script>

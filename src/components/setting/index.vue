@@ -122,4 +122,9 @@ const currentMenuItem = computed(() => menuItems.find((item) => item.key === act
   padding: 0;
   padding-right: 8px;
 }
+:deep(.t-is-active) {
+  .t-badge {
+    color: var(--td-brand-color) !important;
+  }
+}
 </style>

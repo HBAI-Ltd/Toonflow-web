@@ -14,10 +14,6 @@
               :handleActions="message.role === 'user' ? {} : handleActions"
               :status="message.status"
               allowContentSegmentCustom>
-              <!-- <template #actionbar> -->
-              <!-- <t-chat-actionbar :action-bar="['replay', 'copy']" /> -->
-              <!-- <t-chat-actionbar :action-bar="['replay', 'copy']" /> -->
-              <!-- </template> -->
             </t-chat-message>
           </t-chat-list>
           <t-chat-sender
@@ -56,6 +52,30 @@
                   </div>
                 </template>
               </t-popup>
+              <t-popup trigger="click" placement="top" v-if="showThink">
+                <t-button
+                  size="small"
+                  variant="outline"
+                  :theme="(['default', 'success', 'warning', 'danger'] as const)[thinkLevel] || 'default'"
+                  style="margin-left: 8px">
+                  <template #icon>
+                    <i-tips size="16" />
+                  </template>
+                  {{ thinkLevelOptions[thinkLevel]?.label }}
+                </t-button>
+                <template #content>
+                  <div class="settingMenu">
+                    <div
+                      v-for="opt in thinkLevelOptions"
+                      :key="opt.value"
+                      class="settingMenuItem"
+                      :class="{ active: thinkLevel === opt.value }"
+                      @click="scriptAgentStore().updateThinkConfig(opt.value)">
+                      <span>{{ opt.label }}</span>
+                    </div>
+                  </div>
+                </template>
+              </t-popup>
             </template>
           </t-chat-sender>
           <i-dot class="dot" theme="outline" :fill="connected ? 'green' : 'red'" />
@@ -87,13 +107,19 @@
             </t-tab-panel> -->
             <t-tab-panel :value="1" :label="$t('workbench.scriptAgent.storySkeleton')">
               <div class="panelContent">
-                <MdPreview v-if="planData.storySkeleton" :modelValue="planData.storySkeleton" :theme="themeSetting.mode" />
+                <MdPreview
+                  v-if="planData.storySkeleton"
+                  :modelValue="planData.storySkeleton"
+                  :theme="themeSetting.mode === 'auto' ? undefined : themeSetting.mode" />
                 <t-empty v-else :title="$t('workbench.scriptAgent.noContent')" />
               </div>
             </t-tab-panel>
             <t-tab-panel :value="2" :label="$t('workbench.scriptAgent.adaptationStrategy')">
               <div class="panelContent">
-                <MdPreview v-if="planData.adaptationStrategy" :modelValue="planData.adaptationStrategy" :theme="themeSetting.mode" />
+                <MdPreview
+                  v-if="planData.adaptationStrategy"
+                  :modelValue="planData.adaptationStrategy"
+                  :theme="themeSetting.mode === 'auto' ? undefined : themeSetting.mode" />
                 <t-empty v-else :title="$t('workbench.scriptAgent.noContent')" />
               </div>
             </t-tab-panel>
@@ -148,7 +174,7 @@
           <label>{{ $t("workbench.scriptAgent.content") }}</label>
           <MdEditor
             v-model="scriptEditData.content"
-            :theme="themeSetting.mode"
+            :theme="themeSetting.mode === 'auto' ? undefined : themeSetting.mode"
             :toolbars="toolbars"
             :footers="[]"
             style="height: 50vh"
@@ -173,7 +199,13 @@ import projectStore from "@/stores/project";
 const { project } = storeToRefs(projectStore());
 import editMdPreivew from "@/components/editMdPreivew.vue";
 import scriptAgentStore from "@/stores/scriptAgent";
-const { connected, messages, status, planData } = storeToRefs(scriptAgentStore());
+const { connected, messages, status, planData, thinkLevel } = storeToRefs(scriptAgentStore());
+const thinkLevelOptions = [
+  { label: $t("workbench.scriptAgent.thinkLevel.off"), value: 0 },
+  { label: $t("workbench.scriptAgent.thinkLevel.light"), value: 1 },
+  { label: $t("workbench.scriptAgent.thinkLevel.deep"), value: 2 },
+  { label: $t("workbench.scriptAgent.thinkLevel.extreme"), value: 3 },
+];
 import productionAgentStore from "@/stores/productionAgent";
 const currentTable = ref(1);
 const inputValue = ref("");
@@ -380,6 +412,14 @@ function onConfirm(value: string) {
       window.$message.success($t("workbench.scriptAgent.msg.error"));
     });
 }
+
+const showThink = ref(false);
+onMounted(async () => {
+  const { data } = await axios.post(`/project/getModelDetails`, { key: "scriptAgent" });
+  if (data && data.think) {
+    showThink.value = true;
+  }
+});
 </script>
 
 <style lang="scss" scoped>

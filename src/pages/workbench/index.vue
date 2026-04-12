@@ -33,7 +33,7 @@
         </t-tooltip>
         <t-tooltip :content="$t('workbench.menu.jumpGithub')" placement="right" destroyOnClose :showArrow="false">
           <div class="item c" @click="jumpGithub">
-            <i-github-one class="icon"  />
+            <i-github-one class="icon" />
           </div>
         </t-tooltip>
       </div>
@@ -71,13 +71,11 @@
   </div>
   <hello />
   <setting />
-  <migrateShow />
 </template>
 
 <script setup lang="ts">
 import axios from "@/utils/axios";
 import setting from "@/components/setting/index.vue";
-import migrateShow from "@/components/migrateShow.vue";
 import hello from "@/components/hello.vue";
 import projectStore from "@/stores/project";
 const { project } = storeToRefs(projectStore());

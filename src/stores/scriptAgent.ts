@@ -9,13 +9,8 @@ interface PlanData {
   script: { id?: number; name: string; content: string }[];
 }
 
-const storeMap = new Map<string, ReturnType<typeof defineStore>>();
-
-function createScriptAgentStore(projectId: string) {
-  if (!storeMap.has(projectId)) {
-    storeMap.set(
-      projectId,
-      defineStore(`scriptAgent-${projectId}`, () => {
+function makeScriptAgentStore(projectId: string) {
+  return defineStore(`scriptAgent-${projectId}`, () => {
         const planData = ref<PlanData>({
           storySkeleton: "",
           adaptationStrategy: "",
@@ -75,9 +70,24 @@ function createScriptAgentStore(projectId: string) {
           await axios.post("/scriptAgent/setPlanData", { projectId: projectId, agentType: "scriptAgent", data: planData.value });
         }
 
-        return { connected, messages, chat, stopGenerate, socket, status, planData, setPlanData, connect, disconnect };
-      }),
-    );
+        const thinkLevel = ref(0);
+
+        function updateThinkConfig(value: number) {
+          thinkLevel.value = value;
+          if (socket.value) {
+            socket.value.emit("updateThinkConfig", { think: value > 0, thinlLevel: value });
+          }
+        }
+
+        return { connected, messages, chat, stopGenerate, socket, status, planData, setPlanData, connect, disconnect, thinkLevel, updateThinkConfig };
+      });
+}
+
+const storeMap = new Map<string, ReturnType<typeof makeScriptAgentStore>>();
+
+function createScriptAgentStore(projectId: string) {
+  if (!storeMap.has(projectId)) {
+    storeMap.set(projectId, makeScriptAgentStore(projectId));
   }
   return storeMap.get(projectId)!;
 }

@@ -445,13 +445,57 @@
       "openFailed": "Failed to open folder"
     },
     "dev": {
+      "aiDevtool": "Toggle Desktop Mode",
+      "devtool": "Open Console",
+      "switchAiDevTool": "Enable/Disable {'@'}ai-sdk/devtools",
+      "localStorage": "Browser localStorage Manager",
+      "localStorageSearchPlaceholder": "Search by key or value",
+      "localStorageKey": "Key",
+      "localStorageValue": "Value",
+      "localStorageKeyPlaceholder": "Enter localStorage key",
+      "localStorageValuePlaceholder": "Enter localStorage value",
+      "actions": "Actions",
+      "refresh": "Refresh",
+      "add": "Add",
+      "update": "Update",
+      "clearAll": "Clear All",
+      "copyKey": "Copy Key",
+      "copyValue": "Copy Value",
+      "format": "Format JSON",
+      "localStorageCount": "Total {total}, showing {filtered}",
+      "creating": "Creating new item",
+      "editing": "Editing: {key}",
+      "edit": "Edit",
+      "delete": "Delete",
+      "save": "Save",
+      "reset": "Reset",
       "warning": "The following are developer tools, please operate with caution!",
       "openDevtool": "Open",
       "devtoolsDoc": "Document address",
       "devtoolsDesc": "After being turned on, a .devtools folder will be created in the Toonflow installation directory. Please ensure that Toonflow has write permissions (run as administrator).",
       "devtoolsDesc2": "Run npx {'@'}ai-sdk/devtools in this directory to enable telemetry debugging",
       "openDevtoolFailed": "Failed to open developer tools, please make sure Toonflow desktop is installed",
-      "notInElectron": "For WEB environment, please open the browser console manually"
+      "notInElectron": "For WEB environment, please open the browser console manually",
+      "msg": {
+        "localStorageKeyRequired": "Please enter a localStorage key",
+        "localStorageKeyExists": "This key already exists. Please use a different key",
+        "localStorageSaved": "localStorage item saved",
+        "localStorageDeleted": "localStorage item deleted",
+        "localStorageCleared": "localStorage cleared",
+        "localStorageKeyCopied": "Key copied",
+        "localStorageValueCopied": "Value copied",
+        "copyFailed": "Copy failed",
+        "localStorageValueEmpty": "Value is empty and cannot be formatted",
+        "localStorageFormatted": "JSON formatted",
+        "localStorageFormatFailed": "Format failed. Please check whether the value is valid JSON",
+        "deleteConfirmTitle": "Confirm deleting localStorage item",
+        "deleteConfirmBody": "Are you sure you want to delete key: {key}?",
+        "confirmDelete": "Delete",
+        "clearConfirmTitle": "Confirm clearing localStorage",
+        "clearConfirmBody": "This will remove all localStorage data for the current site and cannot be undone. Continue?",
+        "confirmClear": "Clear",
+        "cancel": "Cancel"
+      }
     }
   },
   "workbench": {
@@ -746,7 +790,14 @@
         "confirmDelete": "Confirm deletion",
         "scriptDeleted": "Script deleted"
       },
-      "reconnect": "Reconnect"
+      "reconnect": "Reconnect",
+      "deepThink": "Deep Think",
+      "thinkLevel": {
+        "off": "No Thinking",
+        "light": "Light Think",
+        "deep": "Deep Think",
+        "extreme": "Extreme Think"
+      }
     },
     "cornerScape": {
       "batchSettings": "Batch Gen Settings",

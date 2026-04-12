@@ -51,7 +51,7 @@
       <div class="dialogContent">
         <t-form label-align="left" :label-width="70">
           <t-form-item :label="$t('settings.agent.selectModel')">
-            <modelSelect v-model="selectValue" type="text" />
+            <modelSelect v-model="selectValue" v-model:label="selectLabel" type="text" />
           </t-form-item>
         </t-form>
       </div>
@@ -82,6 +82,7 @@ const modelData = ref<ModelType[]>([]);
 const modelDataShow = ref(false);
 const currentItem = ref<ModelType | null>(null);
 const selectValue = ref<string>("");
+const selectLabel = ref<string>("");
 
 
 
@@ -109,22 +110,24 @@ function getFallbackText(name: string) {
 function startConfig(item: ModelType) {
   if (item.disabled) return window.$message.warning($t("settings.agent.msg.notAvailable"));
   currentItem.value = item;
-  selectValue.value = item.modelName;
+  selectValue.value = item.modelName || "";
+  selectLabel.value = item.model || "";
   modelDataShow.value = true;
 }
 
 const currentVendorId = ref<number | null>(null);
 function confirmConfig() {
   if (currentItem.value) {
+    currentItem.value.model = selectLabel.value;
     currentItem.value.modelName = selectValue.value;
     currentItem.value.vendorId = currentVendorId.value;
   }
   const data = {
     id: currentItem.value?.id,
     name: currentItem.value?.name,
-    model: selectValue.value.split(":")[1] || currentItem.value?.model,
+    model: selectLabel.value || selectValue.value.split(/:(.+)/)[1] || currentItem.value?.model,
     modelName: currentItem.value?.modelName,
-    vendorId: selectValue.value.split(":")[0],
+    vendorId: selectValue.value.split(/:(.+)/)[0],
     desc: currentItem.value?.desc,
   };
   axios

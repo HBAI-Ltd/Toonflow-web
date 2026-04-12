@@ -55,6 +55,8 @@ const selectValue = defineModel({
   default: "",
 });
 
+const selectValueLabel = defineModel("label");
+
 const props = defineProps({
   type: {
     type: String as () => "text" | "image" | "all" | "video",
@@ -76,8 +78,9 @@ const emit = defineEmits<{
   change: [value: string, data?: any];
 }>();
 
-async function onChange(value: any) {
+async function onChange(value: any, { option }: any) {
   selectValue.value = value;
+  selectValueLabel.value = option.label;
   if (props.changeConfig) {
     const { data } = await axios.post("/modelSelect/getModelDetail", {
       modelId: value,
@@ -140,8 +143,6 @@ function handleModelChange() {
       console.error($t("components.modelSelect.msg.fetchModelFailed"), error);
     });
 }
-
-
 
 function getProviderLogoByModel(label?: string, value?: string) {
   const source = `${label || ""} ${value || ""}`.trim();

@@ -6,13 +6,8 @@ import type { FlowData, Storyboard } from "@/views/production/utils/flowBuilder"
 import type { ChatMessagesData } from "@tdesign-vue-next/chat";
 import { useThrottleFn } from "@vueuse/core";
 
-const storeMap = new Map<string, ReturnType<typeof defineStore>>();
-
-function createProductionAgentStore(projectId: string) {
-  if (!storeMap.has(projectId)) {
-    storeMap.set(
-      projectId,
-      defineStore(`productionAgent-${projectId}`, () => {
+function makeProductionAgentStore(projectId: string) {
+  return defineStore(`productionAgent-${projectId}`, () => {
         const defMsg: ChatMessagesData[] = [
           {
             id: "welcome",
@@ -469,6 +464,15 @@ function createProductionAgentStore(projectId: string) {
           loadingHistory.value = false;
         }
 
+        const thinkLevel = ref(0);
+
+        function updateThinkConfig(value: number) {
+          thinkLevel.value = value;
+          if (socket.value) {
+            socket.value.emit("updateThinkConfig", { think: value > 0, thinlLevel: value });
+          }
+        }
+
         return {
           connected,
           messages,
@@ -487,9 +491,17 @@ function createProductionAgentStore(projectId: string) {
           loadingHistory,
           batchGenerateStoryboard,
           reconnect,
+          thinkLevel,
+          updateThinkConfig,
         };
-      }),
-    );
+      });
+}
+
+const storeMap = new Map<string, ReturnType<typeof makeProductionAgentStore>>();
+
+function createProductionAgentStore(projectId: string) {
+  if (!storeMap.has(projectId)) {
+    storeMap.set(projectId, makeProductionAgentStore(projectId));
   }
   return storeMap.get(projectId)!;
 }
