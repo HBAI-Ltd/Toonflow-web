@@ -235,6 +235,15 @@
         "cancel": "ยกเลิก",
         "cleared": "ล้างหน่วยความจำแล้ว",
         "clearFailed": "ล้างหน่วยความจำล้มเหลว"
+      },
+      "modelMap": {
+        "name": "ชื่อรุ่น",
+        "model": "แบบอย่าง",
+        "type": "พิมพ์",
+        "editWord": "ผูกคำพร้อมท์",
+        "operation": "ดำเนินงาน",
+        "bindingSuccessful": "การผูกสำเร็จ",
+        "bindingFailed": "การเชื่อมโยงล้มเหลว"
       }
     },
     "login": {
@@ -1288,7 +1297,7 @@
     "generateText": "AI สร้างคำที่รวดเร็ว",
     "selectStoryboard": "เลือกกระดานเรื่องราว",
     "generate": {
-      "noVideo": "ยังไม่มีวิดีโอ",
+      "noVideo": "ยังไม่มีข้อมูล",
       "generateText": "AI สร้างคำที่รวดเร็ว",
       "selectStoryboard": "เลือกกระดานเรื่องราว",
       "generate": "สร้างวิดีโอ",
@@ -1329,7 +1338,10 @@
       "assets": "สินทรัพย์",
       "promptText": "สร้างข้อมูลคำพร้อมท์วิดีโอ",
       "videoMenu": "สร้างวิดีโอ",
-      "videoPreview": "ตัวอย่างวิดีโอ"
+      "videoPreview": "ตัวอย่างวิดีโอ",
+      "referenceImage": "รูปภาพอ้างอิง",
+      "generatePrompt": "สร้างคำพร้อมท์",
+      "generateVideo": "สร้างวิดีโอ"
     }
   },
   "login": {

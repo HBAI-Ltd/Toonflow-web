@@ -50,8 +50,8 @@
           <t-form-item>
             <div class="btnGap ac">
               <!-- <div class="ac jb"> -->
-                <t-button theme="primary" block @click="batchGenerationPrompt">{{ $t("workbench.cornerScape.batchGenerationPrompt") }}</t-button>
-                <!-- <t-button theme="primary" style="margin-left: 10px" block @click="batchSelectBindAudio">
+              <t-button theme="primary" block @click="batchGenerationPrompt">{{ $t("workbench.cornerScape.batchGenerationPrompt") }}</t-button>
+              <!-- <t-button theme="primary" style="margin-left: 10px" block @click="batchSelectBindAudio">
                   {{ $t("workbench.cornerScape.batchBingAudio") }}
                 </t-button>
               </div> -->
@@ -129,7 +129,7 @@
                     : $t("workbench.cornerScape.typeUnknown")
             }}{{ $t("workbench.cornerScape.descriptionSuffix") }}{{ item.describe }}
           </div>
-          <div v-if="item.relepedAudio.length" style="margin-top: 6px;">
+          <div v-if="item.relepedAudio.length" style="margin-top: 6px">
             <t-tag v-for="audio in item.relepedAudio" :key="audio.id" size="small" variant="outline" theme="primary">{{ audio.name }}</t-tag>
           </div>
         </div>
@@ -711,6 +711,7 @@ async function batchGenerationImage() {
         prompt: item.prompt,
       })),
     });
+    selectedIds.value = [];
   } catch (e: any) {
     if (e.name === "CanceledError" || e.code === "ERR_CANCELED") return;
     window.$message.error(e.message ?? $t("workbench.cornerScape.msg.batchFailed"));
@@ -1080,9 +1081,9 @@ async function selectAudio() {
   align-items: center;
   gap: 8px;
 }
-  .audioList{
-    margin-top: 8px;
-  }
+.audioList {
+  margin-top: 8px;
+}
 .drawerImageBox {
   width: 100%;
   min-height: 120px;

@@ -591,7 +591,7 @@ const selectedAudio = ref(false); // 是否启用音频
 const selectedResolution = ref("480p"); // 当前分辨率
 const selectedDuration = ref(8); // 当前时长
 const userSelectedDuration = ref(false); // 用户是否手动选过时长
-const modeOptions = ref<VideoModel>({} as VideoModel); // 当前模型配置
+const modeOptions = ref<any>({} as VideoModel); // 当前模型配置
 
 /** 将时长限制在模型支持的范围内 */
 function clampDuration(trackDuration: number): number {
@@ -747,14 +747,13 @@ function saveUploadBoxToCache() {
   if (trackId == null) return;
   if (isMixedMode.value) {
     // 混合模式：只保留有 src 的项（无位置概念）
-    track.medias = (uploadBox.value as UploadItem[])
-      .map((item) => ({
-        src: item.src!,
-        id: item.id,
-        prompt: item.prompt,
-        fileType: item.fileType,
-        sources: (item.sources ?? "storyboard") as string,
-      })) as TrackMedia[];
+    track.medias = (uploadBox.value as UploadItem[]).map((item) => ({
+      src: item.src!,
+      id: item.id,
+      prompt: item.prompt,
+      fileType: item.fileType,
+      sources: (item.sources ?? "storyboard") as string,
+    })) as TrackMedia[];
   } else {
     // 非混合模式：保留所有 slot（含空项），以 type 作为位置标识，避免切换轨道时错位
     track.medias = (uploadBox.value as UploadItem[]).map((item) => ({
@@ -945,7 +944,7 @@ function pickStoryboard(sb: StoryboardItem) {
       id: sb.id,
       prompt: sb.prompt ?? undefined,
       label: "",
-      index: sb.index,
+      index: sb.index!,
     });
     saveUploadBoxToCache();
     return;
@@ -969,9 +968,7 @@ watch(selectMode, (val) => {
     const result = [...existing];
     for (const item of incoming) {
       // 以 id 或 src 为唯一标识去重（无 src 的纯文本项也保留）
-      const isDup = item.src
-        ? result.some((r) => r.src === item.src)
-        : item.id != null && result.some((r) => r.id === item.id);
+      const isDup = item.src ? result.some((r) => r.src === item.src) : item.id != null && result.some((r) => r.id === item.id);
       if (!isDup) result.push({ ...item });
     }
     uploadBoxSnapshot.value = result;
@@ -981,17 +978,16 @@ watch(selectMode, (val) => {
     mergeIntoSnapshot(oldBox as UploadItem[]);
   } else if (activeTrack?.medias?.length && uploadBoxSnapshot.value.length === 0) {
     // 仅在快照为空时才从 track.medias 初始化（避免覆盖已有快照）
-    uploadBoxSnapshot.value = activeTrack.medias
-      .map((m: any) => ({
-        fileType: m.fileType,
-        type: (refTypeMap[m.fileType] ?? "imageReference") as Type,
-        sources: (m.sources ?? "storyboard") as "storyboard" | "assets",
-        src: m.src,
-        id: m.id,
-        prompt: m.prompt,
-        label: "",
-        ...(m.sources === "storyboard" ? { index: m.index } : {}),
-      })) as UploadItem[];
+    uploadBoxSnapshot.value = activeTrack.medias.map((m: any) => ({
+      fileType: m.fileType,
+      type: (refTypeMap[m.fileType] ?? "imageReference") as Type,
+      sources: (m.sources ?? "storyboard") as "storyboard" | "assets",
+      src: m.src,
+      id: m.id,
+      prompt: m.prompt,
+      label: "",
+      ...(m.sources === "storyboard" ? { index: m.index } : {}),
+    })) as UploadItem[];
   }
 
   const newBox = buildUploadBox(val);
@@ -1051,13 +1047,21 @@ const promptText = computed({
 });
 
 /** uploadBox 作为 promptEditor 的引用预览 */
-const references = computed(() =>
-  uploadBox.value
+const references = computed(() =>{
+  function getFileTypeByExt(src: string | undefined): "image" | "video" | "audio" {
+  const ext = src?.split(".").pop()?.toLowerCase() ?? "";
+  if (["mp4", "webm", "mov", "avi", "mkv"].includes(ext)) return "video";
+  if (["mp3", "wav", "ogg", "aac", "flac", "m4a"].includes(ext)) return "audio";
+  return "image";
+}
+ return uploadBox.value
     .filter((item) => item.src)
     .map((item) => ({
       type: getFileTypeByExt(item.src) as "image" | "video" | "audio" | "text",
       src: item.src ?? "",
     })),
+}
+
 );
 
 /** 提示词失焦时保存到后端 */
@@ -1096,6 +1100,8 @@ async function genText() {
     });
     const targetTrack = trackList.value.find((item) => item.id === trackId);
     if (targetTrack) targetTrack.prompt = data;
+  } catch (e) {
+    window.$message.error((e as Error)?.message ?? "提示词生成失败");
   } finally {
     genTextLoadingMap.value[trackId] = false;
   }

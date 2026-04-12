@@ -54,10 +54,38 @@
   },
   "settings": {
     "title": "ToonFlow设置",
+    "modelMap": {
+      "imageModel": "图像模型",
+      "videoModel": "视频模型",
+      "noModel": "暂无可用的图像或视频模型，请先在「模型服务」中添加",
+      "promptPlaceholder": "请输入该模式的提示词",
+      "save": "保存配置",
+      "col": {
+        "mode": "模式",
+        "prompt": "提示词"
+      },
+      "mode": {
+        "text": "文生图/文生视频",
+        "singleImage": "单图",
+        "multiReference": "多参考图",
+        "startEndRequired": "首尾帧（两张必填）",
+        "endFrameOptional": "首尾帧（尾帧可选）",
+        "startFrameOptional": "首尾帧（首帧可选）",
+        "videoReference": "视频参考",
+        "imageReference": "图片参考",
+        "audioReference": "音频参考",
+        "referenceSuffix": "参考"
+      },
+      "msg": {
+        "saveSuccess": "模型提示词映射已保存",
+        "saveFailed": "保存失败，请稍后重试"
+      }
+    },
     "menu": {
       "ui": "界面设置",
       "language": "语言设置",
       "vendorConfig": "模型服务",
+      "modelMap": "模型映射",
       "agentConfig": "Agent配置",
       "promptManage": "提示词管理",
       "skillManagement": "Skills技能管理",
@@ -248,6 +276,15 @@
         "cancel": "取消",
         "cleared": "记忆已清空",
         "clearFailed": "清空记忆失败"
+      },
+      "modelMap": {
+        "name": "模型名称",
+        "model": "模型",
+        "type": "类型",
+        "editWord": "绑定提示词",
+        "operation": "操作",
+        "bindingSuccessful": "绑定成功",
+        "bindingFailed": "绑定失败"
       }
     },
     "login": {
@@ -1491,7 +1528,10 @@
       "assets": "资产",
       "promptText": "生成视频提示词数据",
       "videoMenu": "生成视频",
-      "videoPreview": "视频预览"
+      "videoPreview": "视频预览",
+      "referenceImage": "参考图片",
+      "generatePrompt": "生成提示词",
+      "generateVideo": "生成视频"
     }
   },
   "login": {
@@ -1652,6 +1692,6 @@
   "workbench.assets.add.audioNamePh": "请输入音色",
   "workbench.assets.add.audioFile": "音频文件",
   "workbench.cornerScape.batchBingAudio": "一键绑定音频",
-  "workbench.cornerScape.msg.selectAtLeastBindOne": "请至少选择一个资产进行绑定"
+  "workbench.cornerScape.msg.selectAtLeastBindOne": "请至少选择一个资产进行绑定",
+  "settings.generate.delConfirmBtn": "确认删除"
 }
-

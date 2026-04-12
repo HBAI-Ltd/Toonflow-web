@@ -242,6 +242,15 @@
         "cancel": "取消",
         "cleared": "記憶已清除",
         "clearFailed": "清除記憶失敗"
+      },
+      "modelMap": {
+        "name": "模型名稱",
+        "model": "模型",
+        "type": "類型",
+        "editWord": "綁定提示詞",
+        "operation": "操作",
+        "bindingSuccessful": "綁定成功",
+        "bindingFailed": "綁定失敗"
       }
     },
     "login": {
@@ -1292,7 +1301,7 @@
     "generateText": "AI生成提示詞",
     "selectStoryboard": "選擇分鏡",
     "generate": {
-      "noVideo": "暫無影片",
+      "noVideo": "暫無數據",
       "generateText": "AI生成提示詞",
       "selectStoryboard": "選擇分鏡",
       "generate": "產生影片",
@@ -1333,7 +1342,10 @@
       "assets": "資產",
       "promptText": "產生影片提示詞數據",
       "videoMenu": "產生影片",
-      "videoPreview": "影片預覽"
+      "videoPreview": "影片預覽",
+      "referenceImage": "參考圖片",
+      "generatePrompt": "產生提示詞",
+      "generateVideo": "產生影片"
     }
   },
   "login": {

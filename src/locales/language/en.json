@@ -236,6 +236,15 @@
         "cancel": "Cancel",
         "cleared": "Memory cleared",
         "clearFailed": "Failed to clear memory"
+      },
+      "modelMap": {
+        "name": "Model name",
+        "model": "Model",
+        "type": "type",
+        "editWord": "Bind prompt word",
+        "operation": "operate",
+        "bindingSuccessful": "Binding successful",
+        "bindingFailed": "Binding failed"
       }
     },
     "login": {
@@ -1433,7 +1442,7 @@
     "generateText": "AI generated prompt words",
     "selectStoryboard": "Select storyboard",
     "generate": {
-      "noVideo": "No video yet",
+      "noVideo": "No data yet",
       "generateText": "AI generated prompt words",
       "selectStoryboard": "Select storyboard",
       "generate": "Generate video",
@@ -1473,7 +1482,10 @@
       "assets": "assets",
       "promptText": "Generate video prompt word data",
       "videoMenu": "Generate video",
-      "videoPreview": "Video preview"
+      "videoPreview": "Video preview",
+      "referenceImage": "Reference pictures",
+      "generatePrompt": "Generate prompt words",
+      "generateVideo": "Generate video"
     }
   },
   "login": {
