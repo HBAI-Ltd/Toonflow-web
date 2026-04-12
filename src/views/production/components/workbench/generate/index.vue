@@ -56,10 +56,12 @@ import "@/views/production/components/workbench/type/type";
 import axios from "@/utils/axios";
 import projectStore from "@/stores/project";
 import promptEditor from "@/components/promptEditor.vue";
+import { useImageListCache } from "./composables/useImageListCache";
 
 const { project } = storeToRefs(projectStore());
 const episodesId = inject<Ref<number>>("episodesId")!;
 const activeTrackIndex = ref(0);
+const { getCache, setCache, removeCache, initCacheFromTrackList } = useImageListCache();
 
 const modeOptions = ref<VideoModel>({
   name: "",
@@ -81,23 +83,62 @@ const modelParmas = ref<ModelSetting>({
 });
 
 const storyboardList = ref<StoryboardItem[]>([]); // 分镜列表
-const imageList = ref<UploadItem[]>([]);
+
+/** 排序优先级：assets有图=0，storyboard有图=1，无图=2 */
+function getImageItemPriority(item: UploadItem): number {
+  if (item.src) return item.sources === "assets" ? 0 : 1;
+  return 2;
+}
+
+const imageList = computed({
+  get(): UploadItem[] {
+    const trackId = currentTrack.value?.id;
+    const pid = project.value?.id;
+    const sid = episodesId.value;
+    // 优先从缓存读取
+    if (pid != null && sid != null && trackId != null) {
+      const cached = getCache(pid, sid, trackId);
+      if (cached?.length) {
+        cached.sort((a, b) => getImageItemPriority(a) - getImageItemPriority(b));
+        return cached;
+      }
+    }
+    const medias = currentTrack.value?.medias;
+    if (!medias?.length) return [];
+    // 原地排序，保持数组引用不变，使子组件 push/splice 等操作能直接生效
+    (medias as UploadItem[]).sort((a, b) => getImageItemPriority(a) - getImageItemPriority(b));
+    return medias as UploadItem[];
+  },
+  set(val: UploadItem[]) {
+    if (currentTrack.value) {
+      currentTrack.value.medias = val as any;
+      // 同步写入缓存
+      const pid = project.value?.id;
+      const sid = episodesId.value;
+      const trackId = currentTrack.value.id;
+      if (pid != null && sid != null && trackId != null) {
+        setCache(pid, sid, trackId, val);
+      }
+    }
+  },
+});
 
 function modeChange(newVal: string) {
-  if (imageList.value.length || currentTrack.value.prompt) {
+  if (newVal == modelParmas.value.mode) return;
+  if ((imageList.value.length || currentTrack.value?.prompt) && modelParmas.value.mode) {
     const dialog = DialogPlugin.confirm({
       header: $t("workbench.generate.modeChange"),
       body: $t("workbench.generate.modeChangeConfirm"),
       confirmBtn: $t("settings.generate.modelChnageSure"),
       cancelBtn: $t("settings.memory.msg.cancel"),
       onConfirm: async () => {
-        imageList.value.length = 0;
+        imageList.value = [];
         currentTrack.value.prompt = "";
         dialog.destroy();
         modelParmas.value.mode = newVal;
       },
     });
-  } else {
+  } else if (newVal) {
     modelParmas.value.mode = newVal;
   }
 }
@@ -174,9 +215,31 @@ watch(
         if (drMap[0].resolution?.length) modelParmas.value.resolution = drMap[0].resolution[0];
         if (drMap[0].duration?.length) modelParmas.value.duration = clampDuration(modelParmas.value.duration);
       }
+
+      const currentParsed = parseMode(modelParmas.value.mode);
+      const modeMatched = data.mode.some((m: VideoMode) => {
+        if (Array.isArray(m) && Array.isArray(currentParsed)) {
+          return JSON.stringify(m) === JSON.stringify(currentParsed);
+        }
+        return m == currentParsed;
+      });
+      if (!modeMatched) {
+        const newMode = Array.isArray(data.mode[0]) ? JSON.stringify(data.mode[0]) : data.mode[0];
+        modeChange(newMode);
+      }
     });
   },
 );
+function parseMode(value: string): VideoMode | null {
+  if (!value) return null;
+  try {
+    const parsed = JSON.parse(value);
+    if (Array.isArray(parsed)) return parsed as ReferenceType[];
+  } catch {
+    return value as Exclude<VideoMode, ReferenceType[]>;
+  }
+  return value as Exclude<VideoMode, ReferenceType[]>;
+}
 /** uploadBox 作为 promptEditor 的引用预览 */
 const references = computed(() => {
   function getFileTypeByExt(src: string | undefined): "image" | "video" | "audio" {
@@ -202,7 +265,21 @@ async function getGenerateData() {
 
   storyboardList.value = data.storyboardList;
   trackList.value = data.trackList;
-  data.trackList.length && (imageList.value = data.trackList[activeTrackIndex.value].medias);
+  // 优先使用本地缓存，没有缓存则用后端数据并写入缓存
+  const pid = project.value?.id;
+  const sid = episodesId.value;
+  if (pid != null && sid != null) {
+    // 先将没有缓存的轨道写入缓存（保留已有本地编辑）
+    initCacheFromTrackList(pid, sid, data.trackList);
+    // 将本地缓存回写到 trackList，确保优先使用缓存数据
+    trackList.value.forEach((track) => {
+      if (track.id == null) return;
+      const cached = getCache(pid, sid, track.id);
+      if (cached?.length) {
+        track.medias = JSON.parse(JSON.stringify(cached)) as TrackMedia[];
+      }
+    });
+  }
   console.log(
     "%c Line:203 🍖 data.trackList[activeTrackIndex.value].duration",
     "background:#4fff4B",
@@ -210,7 +287,6 @@ async function getGenerateData() {
   );
 
   modelParmas.value.duration = clampDuration(data.trackList[activeTrackIndex.value].duration);
-  console.log("%c Line:203 🍰 modelParmas.value.duration", "background:#33a5ff", modelParmas.value.duration);
 }
 /** 提示词失焦时保存到后端 */
 function handlePromptBlur() {
@@ -253,16 +329,52 @@ async function genText() {
     });
     currentTrack.value.prompt = data;
   } catch (e) {
-    console.log("%c Line:256 🥚 e", "background:#2eafb0", e);
     window.$message.error((e as Error)?.message ?? "提示词生成失败");
   } finally {
     genTextLoadingMap.value[currentTrack.value.id] = false;
   }
 }
-function trackChange() {
-  trackList.value.length && (imageList.value = trackList.value[activeTrackIndex.value].medias as UploadItem[]);
+function trackChange(prevIndex?: number) {
+  // 切换前：将旧轨道的 imageList 保存到缓存
+  if (prevIndex != null) {
+    const prevTrack = trackList.value[prevIndex];
+    const pid = project.value?.id;
+    const sid = episodesId.value;
+    if (pid != null && sid != null && prevTrack?.id != null) {
+      setCache(pid, sid, prevTrack.id, prevTrack.medias as unknown as UploadItem[]);
+    }
+  }
+  // 切换后：从缓存恢复当前轨道的 imageList
+  const pid = project.value?.id;
+  const sid = episodesId.value;
+  const curTrack = trackList.value[activeTrackIndex.value];
+  if (pid != null && sid != null && curTrack?.id != null) {
+    const cached = getCache(pid, sid, curTrack.id);
+    if (cached) {
+      curTrack.medias = cached as unknown as TrackMedia[];
+    }
+  }
+  // imageList 是基于 currentTrack.medias 的计算属性，切换轨道后自动切换数据
+  if (modelParmas.value.mode == "singleImage" && imageList.value.length > 1) {
+    imageList.value = imageList.value.slice(0, 1);
+  }
   modelParmas.value.duration = clampDuration(trackList.value[activeTrackIndex.value].duration);
 }
+/** 监听当前轨道的 medias 变化，实时同步到缓存 */
+watch(
+  () => currentTrack.value?.medias,
+  (medias) => {
+    if (!medias) return;
+    const pid = project.value?.id;
+    const sid = episodesId.value;
+    const trackId = currentTrack.value?.id;
+    if (pid != null && sid != null && trackId != null) {
+      setCache(pid, sid, trackId, medias as unknown as UploadItem[]);
+    }
+  },
+  { deep: true },
+);
+
 onMounted(() => {
   modelParmas.value.model = project.value?.videoModel || "";
   modelParmas.value.mode = project.value?.mode || "";

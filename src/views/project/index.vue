@@ -16,39 +16,35 @@
       </t-button>
     </div>
     <div class="list">
-      <t-row>
-        <t-col :xs="12" :sm="4" :md="4" :lg="4" :xl="4" v-for="project in allProject" :key="project.id">
-          <t-card hoverShadow class="card" @click="openProject(project.id)">
-            <div class="jb ac">
-              <div class="title">
-                {{ project.name }}
-              </div>
-              <div>
-                <t-tag shape="round">
-                  {{ project.projectType == "novel" ? $t(`workbench.project.type.novel`) : $t(`workbench.project.type.script`) }}
-                </t-tag>
-              </div>
+      <t-card hoverShadow class="card" v-for="project in allProject" :key="project.id" @click="openProject(project.id)">
+        <div class="jb ac">
+          <div class="title">
+            {{ project.name }}
+          </div>
+          <div>
+            <t-tag shape="round">
+              {{ project.projectType == "novel" ? $t(`workbench.project.type.novel`) : $t(`workbench.project.type.script`) }}
+            </t-tag>
+          </div>
+        </div>
+        <t-tag shape="round" v-if="project.artStyle" style="align-self: flex-start">{{ project.artStyle }}</t-tag>
+        <div class="intro">
+          {{ project.intro }}
+        </div>
+        <div class="bottomMenu f ac jb">
+          <div class="time">
+            <span>{{ dayjs(project?.createTime).format("YYYY-MM-DD HH:mm:ss") }}</span>
+          </div>
+          <div class="actionBtns f ac">
+            <div class="editBtn" @click.stop="openEdit(project)">
+              <i-edit :size="18" />
             </div>
-            <t-tag shape="round" v-if="project.artStyle" style="align-self: flex-start;">{{ project.artStyle }}</t-tag>
-            <div class="intro">
-              {{ project.intro }}
+            <div class="removeBtn" @click.stop="delProjcer(project.id)">
+              <i-delete :size="18" />
             </div>
-            <div class="bottomMenu f ac jb">
-              <div class="time">
-                <span>{{ dayjs(project?.createTime).format("YYYY-MM-DD HH:mm:ss") }}</span>
-              </div>
-              <div class="actionBtns f ac">
-                <div class="editBtn" @click.stop="openEdit(project)">
-                  <i-edit :size="18" />
-                </div>
-                <div class="removeBtn" @click.stop="delProjcer(project.id)">
-                  <i-delete :size="18" />
-                </div>
-              </div>
-            </div>
-          </t-card>
-        </t-col>
-      </t-row>
+          </div>
+        </div>
+      </t-card>
     </div>
   </div>
   <projectDialog v-model="dialogShow" :projectData="editProjectData" @add="addProjectFn" @edit="editProjectFn" />
@@ -232,18 +228,24 @@ function delProjcer(projectId: string | undefined) {
     }
   }
   .list {
+    display: grid;
+    grid-template-columns: repeat(3,1fr);
+    gap: 10px;
     .card {
+      width: 100%;
       height: 100%;
-      margin: 5px;
       cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
       .title {
         font-size: 20px;
         font-weight: bold;
         margin-bottom: 8px;
       }
       .intro {
-        margin-top: 8px;
-        margin-bottom: 8px;
+        height: 100%;
+        margin-top: 5px;
         display: -webkit-box;
         -webkit-line-clamp: 2;
         -webkit-box-orient: vertical;
@@ -274,18 +276,12 @@ function delProjcer(projectId: string | undefined) {
     }
   }
 }
-:deep(.t-col){
-  display: flex !important;
-  flex-direction: column !important;
+:deep(.t-col) {
+  height: auto !important;
 }
-:deep(.t-col > .t-card){
-  flex: 1 !important;
-  display: flex !important;
-  flex-direction: column !important;
-}
-:deep(.t-card__body){
-  flex: 1 !important;
-  display: flex !important;
-  flex-direction: column !important;
+:deep(.t-card__body) {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
 }
 </style>

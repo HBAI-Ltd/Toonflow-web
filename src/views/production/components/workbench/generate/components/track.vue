@@ -87,7 +87,11 @@ const trackList = defineModel<TrackItem[]>({
 const genTextLoadingMap = defineModel<Record<number, boolean>>("genTextLoadingMap", {
   default: () => {},
 });
-const emit = defineEmits(["getData", "change"]);
+const emit = defineEmits<{
+  getData: [];
+  change: [prevIndex: number];
+  saveImageList: [trackId: number];
+}>();
 const checkAll = ref(false); // 全选状态
 
 /** 视频封面缓存 src -> dataURL */
@@ -144,8 +148,9 @@ function captureVideoCover(src: string) {
 
 function changeIndex(index: number) {
   if (activeTrackIndex.value == index) return;
+  const prevIndex = activeTrackIndex.value;
   activeTrackIndex.value = index;
-  emit("change");
+  emit("change", prevIndex);
 }
 /** 删除轨道请求 */
 async function deleteTrack(index: number) {
@@ -219,6 +224,8 @@ async function batchDownloadVideo(): Promise<void> {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
+  checkedTrackIds.value = [];
+  checkAll.value = false;
 }
 function batchGenText() {
   trackList.value
@@ -242,6 +249,10 @@ function batchGenText() {
         });
         const targetTrack = trackList.value.find((item) => item.id === trackId);
         if (targetTrack) targetTrack.prompt = data;
+        checkedTrackIds.value = [];
+        checkAll.value = false;
+      } catch (e) {
+        window.$message.error((e as Error)?.message ?? "提示词生成失败");
       } finally {
         genTextLoadingMap.value[trackId] = false;
       }

@@ -28,7 +28,7 @@
           <template v-else>
             <span style="font-size: 20px">文</span>
           </template>
-          <div class="clearBtn" @click.stop="imageList[index] = { id: null } as any">
+          <div class="clearBtn" @click.stop="clearImage(index)">
             <i-close size="12" />
           </div>
           <div class="source">
@@ -133,8 +133,7 @@ const mixedClipMediaTypes = computed<ClipMediaType[]>(() => {
 let currentLocal = "";
 function handleMixedAdd(local: string = "") {
   currentLocal = local ?? "";
-
-  const multiple = Array.isArray(props.mode);
+  const multiple = Array.isArray(parseMode(props.mode as string));
   const dlg = DialogPlugin.confirm({
     header: $t("workbench.generate.selectSource"),
     confirmBtn: $t("workbench.generate.confirm"),
@@ -142,6 +141,7 @@ function handleMixedAdd(local: string = "") {
     onConfirm: async () => {
       dlg.destroy();
       const assets = await assetsCheck({ types: ["role", "tool", "scene", "clip"], clipMediaTypes: mixedClipMediaTypes.value, multiple });
+      console.log("%c Line:146 🍐 assets", "background:#fca650", assets);
       if (!assets.length) return;
 
       const newItems: UploadItem[] = assets.map((asset) => {
@@ -155,25 +155,26 @@ function handleMixedAdd(local: string = "") {
         };
       });
       if (local) {
-        if (imageList.value.length >= 2) {
+        const list = [...imageList.value];
+        if (list.length >= 2) {
           const index = local == "start" ? 0 : 1;
-
-          imageList.value[index] = newItems[0];
-        } else if (imageList.value.length == 1) {
+          list[index] = newItems[0];
+        } else if (list.length == 1) {
           if (local == "start") {
-            imageList.value.unshift(newItems[0]);
+            list.unshift(newItems[0]);
           } else {
-            imageList.value.push(newItems[0]);
+            list.push(newItems[0]);
           }
         } else {
           if (local == "start") {
-            imageList.value.unshift(newItems[0]);
+            list.unshift(newItems[0]);
           } else {
-            imageList.value.push(...[{ id: "" } as any, newItems[0]]);
+            list.push({ id: "" } as any, newItems[0]);
           }
         }
+        imageList.value = list;
       } else {
-        imageList.value.push(...newItems);
+        imageList.value = [...imageList.value, ...newItems];
       }
     },
     onCancel: () => {
@@ -182,7 +183,11 @@ function handleMixedAdd(local: string = "") {
     },
   });
 }
-
+function clearImage(index: number) {
+  const list = [...imageList.value];
+  list[index] = { id: null, src: "" } as any;
+  imageList.value = list;
+}
 /** 分镜弹窗选中回调 */
 function pickStoryboard(sb: StoryboardItem) {
   storyboardDialogVisible.value = false;
@@ -197,29 +202,32 @@ function pickStoryboard(sb: StoryboardItem) {
   } as UploadItem;
 
   if (currentLocal) {
-    if (imageList.value.length >= 2) {
+    const list = [...imageList.value];
+    if (list.length >= 2) {
       const index = currentLocal == "start" ? 0 : 1;
-
-      imageList.value[index] = newItem;
-    } else if (imageList.value.length == 1) {
+      list[index] = newItem;
+    } else if (list.length == 1) {
       if (currentLocal == "start") {
-        imageList.value.unshift(newItem);
+        list.unshift(newItem);
       } else {
-        imageList.value.push(newItem);
+        list.push(newItem);
       }
     } else {
       if (currentLocal == "start") {
-        imageList.value.unshift(newItem);
+        list.unshift(newItem);
       } else {
-        imageList.value.push(...[{ id: "" } as any, newItem]);
+        list.push({ id: "" } as any, newItem);
       }
     }
+    imageList.value = list;
   } else {
-    imageList.value.push(newItem);
+    imageList.value = [...imageList.value, newItem];
   }
 }
 function splitImage(index: number) {
-  imageList.value.splice(index, 1);
+  const list = [...imageList.value];
+  list.splice(index, 1);
+  imageList.value = list;
 }
 </script>
 
