@@ -13,12 +13,7 @@
               :variant="message.role === 'user' ? 'base' : 'outline'"
               :handleActions="message.role === 'user' ? {} : handleActions"
               :status="message.status"
-              allowContentSegmentCustom>
-              <!-- <template #actionbar> -->
-              <!-- <t-chat-actionbar :action-bar="['replay', 'copy']" /> -->
-              <!-- <t-chat-actionbar :action-bar="['replay', 'copy']" /> -->
-              <!-- </template> -->
-            </t-chat-message>
+              allowContentSegmentCustom></t-chat-message>
           </t-chat-list>
           <t-chat-sender
             class="inputBox"
@@ -56,6 +51,30 @@
                   </div>
                 </template>
               </t-popup>
+              <t-popup trigger="click" placement="top" v-if="showThink">
+                <t-button
+                  size="small"
+                  variant="outline"
+                  :theme="(['default', 'success', 'warning', 'danger'] as const)[thinkLevel] || 'default'"
+                  style="margin-left: 8px">
+                  <template #icon>
+                    <i-tips size="16" />
+                  </template>
+                  {{ thinkLevelOptions[thinkLevel]?.label }}
+                </t-button>
+                <template #content>
+                  <div class="settingMenu">
+                    <div
+                      v-for="opt in thinkLevelOptions"
+                      :key="opt.value"
+                      class="settingMenuItem"
+                      :class="{ active: thinkLevel === opt.value }"
+                      @click="scriptAgentStore().updateThinkConfig(opt.value)">
+                      <span>{{ opt.label }}</span>
+                    </div>
+                  </div>
+                </template>
+              </t-popup>
             </template>
           </t-chat-sender>
           <i-dot class="dot" theme="outline" :fill="connected ? 'green' : 'red'" />
@@ -87,13 +106,19 @@
             </t-tab-panel> -->
             <t-tab-panel :value="1" :label="$t('workbench.scriptAgent.storySkeleton')">
               <div class="panelContent">
-                <MdPreview v-if="planData.storySkeleton" :modelValue="planData.storySkeleton" :theme="themeSetting.mode" />
+                <MdPreview
+                  v-if="planData.storySkeleton"
+                  :modelValue="planData.storySkeleton"
+                  :theme="themeSetting.mode === 'auto' ? undefined : themeSetting.mode" />
                 <t-empty v-else :title="$t('workbench.scriptAgent.noContent')" />
               </div>
             </t-tab-panel>
             <t-tab-panel :value="2" :label="$t('workbench.scriptAgent.adaptationStrategy')">
               <div class="panelContent">
-                <MdPreview v-if="planData.adaptationStrategy" :modelValue="planData.adaptationStrategy" :theme="themeSetting.mode" />
+                <MdPreview
+                  v-if="planData.adaptationStrategy"
+                  :modelValue="planData.adaptationStrategy"
+                  :theme="themeSetting.mode === 'auto' ? undefined : themeSetting.mode" />
                 <t-empty v-else :title="$t('workbench.scriptAgent.noContent')" />
               </div>
             </t-tab-panel>
@@ -101,13 +126,23 @@
               <div class="panelContent">
                 <t-empty v-if="!planData.script?.length" :title="$t('workbench.scriptAgent.noContent')" />
                 <div v-else class="scriptList">
-                  <div v-for="(item, index) in planData.script" :key="index" class="scriptCard">
+                  <div
+                    v-for="(item, index) in planData.script"
+                    :key="getScriptCardKey(item, index)"
+                    class="scriptCard"
+                    :class="{ collapsed: isCardCollapsed(item, index) }">
                     <div class="scriptCardHeader">
                       <div class="scriptCardHeaderLeft">
                         <span class="scriptIndex">#{{ index + 1 }}</span>
                         <span class="scriptTitle">{{ item.name }}</span>
                       </div>
                       <div class="scriptCardActions">
+                        <t-button size="small" variant="outline" @click="toggleCardCollapse(item, index)">
+                          <template #icon>
+                            <i-down v-if="!isCardCollapsed(item, index)" size="14" />
+                            <i-right v-else size="14" />
+                          </template>
+                        </t-button>
                         <t-button size="small" @click="editScript(index)">
                           <template #icon><i-edit size="14" /></template>
                         </t-button>
@@ -116,11 +151,20 @@
                         </t-button>
                       </div>
                     </div>
-                    <div class="scriptCardBody">
+                    <div class="scriptCardBody" v-if="!isCardCollapsed(item, index)">
                       <pre v-if="item.content">{{ item.content }}</pre>
                       <span v-else class="emptyContent">{{ $t("workbench.scriptAgent.noContent") }}</span>
                     </div>
                   </div>
+                </div>
+                <!-- 悬浮折叠按钮 -->
+                <div class="floatCollapseBtn" v-if="planData.script?.length">
+                  <t-button shape="circle" size="large" theme="primary" @click="toggleAllCards">
+                    <template #icon>
+                      <i-right v-if="isAllCollapsed" title="" size="18" />
+                      <i-down v-else size="18" />
+                    </template>
+                  </t-button>
                 </div>
               </div>
             </t-tab-panel>
@@ -148,7 +192,7 @@
           <label>{{ $t("workbench.scriptAgent.content") }}</label>
           <MdEditor
             v-model="scriptEditData.content"
-            :theme="themeSetting.mode"
+            :theme="themeSetting.mode === 'auto' ? undefined : themeSetting.mode"
             :toolbars="toolbars"
             :footers="[]"
             style="height: 50vh"
@@ -173,7 +217,13 @@ import projectStore from "@/stores/project";
 const { project } = storeToRefs(projectStore());
 import editMdPreivew from "@/components/editMdPreivew.vue";
 import scriptAgentStore from "@/stores/scriptAgent";
-const { connected, messages, status, planData } = storeToRefs(scriptAgentStore());
+const { connected, messages, status, planData, thinkLevel } = storeToRefs(scriptAgentStore());
+const thinkLevelOptions = [
+  { label: $t("workbench.scriptAgent.thinkLevel.off"), value: 0 },
+  { label: $t("workbench.scriptAgent.thinkLevel.light"), value: 1 },
+  { label: $t("workbench.scriptAgent.thinkLevel.deep"), value: 2 },
+  { label: $t("workbench.scriptAgent.thinkLevel.extreme"), value: 3 },
+];
 import productionAgentStore from "@/stores/productionAgent";
 const currentTable = ref(1);
 const inputValue = ref("");
@@ -380,6 +430,78 @@ function onConfirm(value: string) {
       window.$message.success($t("workbench.scriptAgent.msg.error"));
     });
 }
+
+const showThink = ref(false);
+onMounted(async () => {
+  const { data } = await axios.post(`/project/getModelDetails`, { key: "scriptAgent" });
+  if (data && data.think) {
+    showThink.value = true;
+  }
+});
+
+type ScriptCardItem = {
+  id?: number;
+  name: string;
+  content: string;
+};
+
+// 剧本卡片折叠状态
+const collapsedCards = ref<Record<string, boolean>>({});
+const tempScriptCardKeys = new WeakMap<ScriptCardItem, string>();
+let tempScriptCardKeySeed = 0;
+
+function getScriptCardKey(item: ScriptCardItem, index: number) {
+  if (item.id !== undefined && item.id !== null) {
+    return `id:${item.id}`;
+  }
+  let tempKey = tempScriptCardKeys.get(item);
+  if (!tempKey) {
+    tempScriptCardKeySeed += 1;
+    tempKey = `temp:${tempScriptCardKeySeed}`;
+    tempScriptCardKeys.set(item, tempKey);
+  }
+  return tempKey;
+}
+
+function isCardCollapsed(item: ScriptCardItem, index: number) {
+  return Boolean(collapsedCards.value[getScriptCardKey(item, index)]);
+}
+
+watch(
+  () => planData.value.script?.map((item, index) => getScriptCardKey(item, index)) || [],
+  (keys) => {
+    const nextCollapsedCards: Record<string, boolean> = {};
+    keys.forEach((key) => {
+      if (collapsedCards.value[key]) {
+        nextCollapsedCards[key] = true;
+      }
+    });
+    collapsedCards.value = nextCollapsedCards;
+  },
+  { immediate: true },
+);
+
+// 是否全部折叠
+const isAllCollapsed = computed(() => {
+  if (!planData.value.script?.length) return false;
+  return planData.value.script.every((item, index) => isCardCollapsed(item, index));
+});
+
+// 切换单个卡片折叠状态
+function toggleCardCollapse(item: ScriptCardItem, index: number) {
+  const key = getScriptCardKey(item, index);
+  collapsedCards.value[key] = !collapsedCards.value[key];
+}
+
+// 一键折叠/展开所有卡片
+function toggleAllCards() {
+  const nextCollapsed = !isAllCollapsed.value;
+  const nextCollapsedCards = { ...collapsedCards.value };
+  planData.value.script?.forEach((item, index) => {
+    nextCollapsedCards[getScriptCardKey(item, index)] = nextCollapsed;
+  });
+  collapsedCards.value = nextCollapsedCards;
+}
 </script>
 
 <style lang="scss" scoped>
@@ -467,12 +589,22 @@ function onConfirm(value: string) {
   overflow-y: auto;
   padding: 12px 16px;
   box-sizing: border-box;
+  position: relative;
+
+  &::-webkit-scrollbar-thumb {
+    background-color: var(--td-border-level-2-color);
+    border-radius: 4px;
+  }
+  &::-webkit-scrollbar-track {
+    background-color: var(--td-bg-color-secondarycontainer);
+  }
 }
 
 .scriptList {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
+  align-items: start;
 }
 
 .scriptCard {
@@ -482,6 +614,7 @@ function onConfirm(value: string) {
   background: var(--td-bg-color-container);
   display: flex;
   flex-direction: column;
+  align-self: start;
   transition: box-shadow 0.2s ease;
   .scriptCardHeader {
     display: flex;
@@ -522,9 +655,15 @@ function onConfirm(value: string) {
     font-size: 13px;
     line-height: 1.7;
     padding: 10px 12px;
-    flex: 1;
     max-height: 300px;
     overflow-y: auto;
+    &::-webkit-scrollbar-thumb {
+      background-color: var(--td-border-level-2-color);
+      border-radius: 4px;
+    }
+    &::-webkit-scrollbar-track {
+      background-color: var(--td-bg-color-secondarycontainer);
+    }
     pre {
       margin: 0;
       white-space: pre-wrap;
@@ -655,5 +794,32 @@ function onConfirm(value: string) {
 }
 :deep(.t-tabs__btn--right) {
   display: none;
+}
+
+// 悬浮折叠按钮样式
+.floatCollapseBtn {
+  position: fixed;
+  right: 40px;
+  bottom: 40px;
+  z-index: 100;
+  .t-button {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transition:
+      transform 0.2s ease,
+      box-shadow 0.2s ease;
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+    }
+  }
+}
+
+// 折叠状态样式
+.scriptCard {
+  &.collapsed {
+    .scriptCardHeader {
+      border-bottom: none;
+    }
+  }
 }
 </style>
