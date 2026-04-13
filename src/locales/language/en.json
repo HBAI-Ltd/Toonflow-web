@@ -268,6 +268,22 @@
       "clearDbDesc": "Clear data in all tables while keeping table structures",
       "clearData": "Clear Data",
       "confirmAction": "Confirm Action",
+      "dbInfo": "Database Overview",
+      "dbInfoDesc": "View all table names and row counts",
+      "viewInfo": "View Info",
+      "tableName": "Table Name",
+      "rowCount": "Row Count",
+      "totalTables": "{count} tables in total",
+      "exportDb": "Export Database",
+      "exportDbDesc": "Export all data tables as a JSON backup file",
+      "exportData": "Export Data",
+      "importDb": "Import Database",
+      "importDbDesc": "Restore data from a JSON backup file (will overwrite current data)",
+      "importData": "Import Data",
+      "clearTable": "Clear Specific Table",
+      "clearTableDesc": "Select a data table and clear its data",
+      "clearTableBtn": "Clear Table",
+      "selectTable": "Select a table",
       "msg": {
         "clearDbTitle": "Clear Database",
         "firstConfirm": "Are you sure you want to clear all data tables? This cannot be recovered!",
@@ -277,7 +293,20 @@
         "pleaseInput": "Please type",
         "cleared": "All data tables have been cleared",
         "operationFailed": "Operation failed, please try again",
-        "cancelled": "Operation cancelled"
+        "cancelled": "Operation cancelled",
+        "exportSuccess": "Database exported successfully",
+        "exportFailed": "Export failed",
+        "importSuccess": "Database imported successfully, redirecting to login page",
+        "importFailed": "Import failed",
+        "invalidFile": "Invalid backup file",
+        "clearTableSuccess": "Table cleared",
+        "clearTableFailed": "Failed to clear table",
+        "clearTableConfirm": "Are you sure you want to clear table {name}? This cannot be undone!",
+        "importConfirm": "Import will overwrite all current data, are you sure?",
+        "importSecondConfirm": "Final confirmation: all current data will be replaced after import!",
+        "noTableSelected": "Please select a table first",
+        "loadingDbInfo": "Loading database info...",
+        "loadDbInfoFailed": "Failed to load database info"
       }
     },
     "skill": {
@@ -443,7 +472,9 @@
         "web": "data/web",
         "webDesc": "Web-related resources (e.g., frontend build artifacts).",
         "serve": "data/serve",
-        "serveDesc": "Backend service related files."
+        "serveDesc": "Backend service related files.",
+        "vendor": "data/vendor",
+        "vendorDesc": "Vendor directory."
       },
       "openFailed": "Failed to open folder"
     },

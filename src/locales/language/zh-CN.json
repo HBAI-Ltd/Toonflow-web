@@ -308,6 +308,22 @@
       "clearDbDesc": "清空所有数据表中的数据，保留表结构",
       "clearData": "清空数据",
       "confirmAction": "确认操作",
+      "dbInfo": "数据库概览",
+      "dbInfoDesc": "查看所有数据表名称和记录数",
+      "viewInfo": "查看信息",
+      "tableName": "表名",
+      "rowCount": "记录数",
+      "totalTables": "共 {count} 个表",
+      "exportDb": "导出数据库",
+      "exportDbDesc": "将所有数据表导出为 JSON 备份文件",
+      "exportData": "导出数据",
+      "importDb": "导入数据库",
+      "importDbDesc": "从 JSON 备份文件恢复数据（将覆盖当前数据）",
+      "importData": "导入数据",
+      "clearTable": "清空指定表",
+      "clearTableDesc": "选择一个数据表并清空其中的数据",
+      "clearTableBtn": "清空表",
+      "selectTable": "请选择表",
       "msg": {
         "clearDbTitle": "清空数据库",
         "firstConfirm": "确定要清空所有数据表吗？数据清空后无法恢复！",
@@ -317,7 +333,20 @@
         "pleaseInput": "请输入",
         "cleared": "所有数据表已清空",
         "operationFailed": "操作失败，请重试",
-        "cancelled": "操作已取消"
+        "cancelled": "操作已取消",
+        "exportSuccess": "数据库导出成功",
+        "exportFailed": "导出失败",
+        "importSuccess": "数据库导入成功，即将跳转到登录页",
+        "importFailed": "导入失败",
+        "invalidFile": "无效的备份文件",
+        "clearTableSuccess": "表已清空",
+        "clearTableFailed": "清空表失败",
+        "clearTableConfirm": "确定要清空表 {name} 吗？此操作不可恢复！",
+        "importConfirm": "导入将覆盖当前所有数据，确定要继续吗？",
+        "importSecondConfirm": "最后确认：导入后当前数据将全部被替换！",
+        "noTableSelected": "请先选择一个表",
+        "loadingDbInfo": "加载数据库信息中...",
+        "loadDbInfoFailed": "获取数据库信息失败"
       }
     },
     "skill": {
@@ -483,7 +512,9 @@
         "web": "data/web",
         "webDesc": "Web 相关资源，如前端构建产物等。",
         "serve": "data/serve",
-        "serveDesc": "后端服务相关文件。"
+        "serveDesc": "后端服务相关文件。",
+        "vendor": "data/vendor",
+        "vendorDesc": "供应商目录。"
       },
       "openFailed": "打开文件夹失败"
     },

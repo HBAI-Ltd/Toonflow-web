@@ -39,6 +39,7 @@ const folderList: QuickPathItem[] = [
   { label: "settings.file.folders.models", path: "models", desc: "settings.file.folders.modelsDesc" },
   { label: "settings.file.folders.web", path: "web", desc: "settings.file.folders.webDesc" },
   { label: "settings.file.folders.serve", path: "serve", desc: "settings.file.folders.serveDesc" },
+  { label: "settings.file.folders.vendor", path: "vendor", desc: "settings.file.folders.vendorDesc" },
 ];
 
 const handleOpenFolder = (path: string) => {
