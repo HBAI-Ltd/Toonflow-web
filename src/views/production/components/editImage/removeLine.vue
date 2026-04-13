@@ -15,7 +15,7 @@
 </template>
 <script setup>
 import { BaseEdge, EdgeLabelRenderer, getBezierPath, useVueFlow } from "@vue-flow/core";
-const { removeEdges } = useVueFlow("editImage");
+const { removeEdges } = useVueFlow({ id: "editImage" });
 
 const props = defineProps([
   "id",

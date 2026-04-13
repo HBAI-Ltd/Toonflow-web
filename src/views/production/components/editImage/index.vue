@@ -270,7 +270,7 @@ onMounted(async () => {
       id: props.flowData.flowId,
     });
     if (!data) return buildFlow();
-    edges.value = data.edges;
+    edges.value = data.edges.map((e: any) => ({ ...e, ...DEFAULT_EDGE_OPTIONS }));
     nodes.value = data.nodes;
   } catch (e) {
     window.$message.error((e as any).message || $t("workbench.production.editImage.fetchFailed"));
