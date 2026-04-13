@@ -68,9 +68,11 @@ import type { Ref } from "vue";
 import "@/views/production/components/workbench/type/type";
 import axios from "@/utils/axios";
 import projectStore from "@/stores/project";
+import imageListCacheStore from "@/stores/imageListCache";
 import JSZip from "jszip";
 
 const { project } = storeToRefs(projectStore());
+const { removeCache } = imageListCacheStore();
 const episodesId = inject<Ref<number>>("episodesId")!;
 const props = defineProps<{
   modelParmas: ModelSetting;
@@ -157,6 +159,12 @@ async function deleteTrack(index: number) {
   const track = trackList.value[index];
   if (!track) return;
   await axios.post("/production/workbench/deleteTrack", { id: track.id });
+  // 删除该轨道的图片缓存
+  const pid = project.value?.id;
+  const sid = episodesId.value;
+  if (pid != null && sid != null && track.id != null) {
+    removeCache(pid, sid, track.id);
+  }
   if (activeTrackIndex.value >= trackList.value.length) {
     activeTrackIndex.value = trackList.value.length - 1;
   }
@@ -337,12 +345,11 @@ function toggleCheck(trackId: number | undefined, val: boolean) {
   checkAll.value = allIds.length > 0 && allIds.every((id) => checkedTrackIds.value.includes(id));
 }
 
-// 轨道列表变化时，清理已失效的 id，并截取选中视频首帧
+// 轨道列表变化时，截取选中视频首帧（只监听 selectVideoId 和 videoList 变化，避免深度监听整个 trackList）
 watch(
-  trackList,
-  (list) => {
-    // 为有选中视频的轨道截取首帧
-    list.forEach((track) => {
+  () => trackList.value.map((t) => ({ selectVideoId: t.selectVideoId, videoList: t.videoList })),
+  () => {
+    trackList.value.forEach((track) => {
       const src = getSelectedVideoSrc(track);
       if (src) captureVideoCover(src);
     });
@@ -376,6 +383,7 @@ watch(
     display: flex;
     overflow-x: auto;
     gap: 10px;
+    padding-bottom: 6px;
     &::-webkit-scrollbar {
       height: 6px;
     }

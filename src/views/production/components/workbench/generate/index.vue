@@ -56,12 +56,14 @@ import "@/views/production/components/workbench/type/type";
 import axios from "@/utils/axios";
 import projectStore from "@/stores/project";
 import promptEditor from "@/components/promptEditor.vue";
-import { useImageListCache } from "./composables/useImageListCache";
+import imageListCacheStore from "@/stores/imageListCache";
 
 const { project } = storeToRefs(projectStore());
 const episodesId = inject<Ref<number>>("episodesId")!;
 const activeTrackIndex = ref(0);
-const { getCache, setCache, removeCache, initCacheFromTrackList } = useImageListCache();
+const cacheStore = imageListCacheStore();
+const { getCache, setCache, removeCache, initCacheFromTrackList, warmUpUrls } = cacheStore;
+const { urlMap } = storeToRefs(cacheStore);
 
 const modeOptions = ref<VideoModel>({
   name: "",
@@ -92,6 +94,10 @@ function getImageItemPriority(item: UploadItem): number {
 
 const imageList = computed({
   get(): UploadItem[] {
+    // 触发对 urlMap 的依赖追踪，当 warmUpUrls 更新 urlMap 后自动重新计算
+    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+    urlMap.value;
+
     const trackId = currentTrack.value?.id;
     const pid = project.value?.id;
     const sid = episodesId.value;
@@ -105,7 +111,6 @@ const imageList = computed({
     }
     const medias = currentTrack.value?.medias;
     if (!medias?.length) return [];
-    // 原地排序，保持数组引用不变，使子组件 push/splice 等操作能直接生效
     (medias as UploadItem[]).sort((a, b) => getImageItemPriority(a) - getImageItemPriority(b));
     return medias as UploadItem[];
   },
@@ -264,27 +269,25 @@ async function getGenerateData() {
   });
 
   storyboardList.value = data.storyboardList;
-  trackList.value = data.trackList;
   // 优先使用本地缓存，没有缓存则用后端数据并写入缓存
   const pid = project.value?.id;
   const sid = episodesId.value;
   if (pid != null && sid != null) {
     // 先将没有缓存的轨道写入缓存（保留已有本地编辑）
     initCacheFromTrackList(pid, sid, data.trackList);
-    // 将本地缓存回写到 trackList，确保优先使用缓存数据
-    trackList.value.forEach((track) => {
+    // 批量向后端请求文件路径对应的完整 URL
+    await warmUpUrls(pid, sid);
+    // 将本地缓存回写到 trackList，确保优先使用缓存数据（src 已解析为完整 URL）
+    data.trackList.forEach((track: TrackItem) => {
       if (track.id == null) return;
       const cached = getCache(pid, sid, track.id);
       if (cached?.length) {
-        track.medias = JSON.parse(JSON.stringify(cached)) as TrackMedia[];
+        track.medias = cached as unknown as TrackMedia[];
       }
     });
+    // 整体赋值触发响应式
+    trackList.value = [...data.trackList];
   }
-  console.log(
-    "%c Line:203 🍖 data.trackList[activeTrackIndex.value].duration",
-    "background:#4fff4B",
-    data.trackList[activeTrackIndex.value].duration,
-  );
 
   modelParmas.value.duration = clampDuration(data.trackList[activeTrackIndex.value].duration);
 }
@@ -434,7 +437,7 @@ async function generateVideo() {
 .index {
   height: calc(100vh - 120px);
   gap: 16px;
-  overflow: hidden;
+  overflow-y: auto;
   .referenceImage {
   }
   .modelSelect {

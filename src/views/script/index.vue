@@ -195,6 +195,8 @@ async function handleDeleteScript(scriptId: number) {
         window.$message.success($t("workbench.script.msg.deleteSuccess"));
         searchScripts();
         dialog.destroy();
+
+        selectedIds.value = selectedIds.value.filter((i) => i !== scriptId);
       } catch (error) {
         console.error("删除剧本失败:", error);
         window.$message.error($t("workbench.script.msg.deleteFailed"));
@@ -218,6 +220,7 @@ async function handleExtractAssets() {
       groupSize: otherSetting.value.assetsBatchGenereateSize,
     });
     searchScripts();
+    selectedIds.value = [];
   } catch (e) {
     window.$message.error((e as any)?.message || $t("workbench.script.msg.extractFailed"));
   } finally {

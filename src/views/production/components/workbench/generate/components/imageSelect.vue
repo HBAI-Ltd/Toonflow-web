@@ -141,7 +141,7 @@ function handleMixedAdd(local: string = "") {
     onConfirm: async () => {
       dlg.destroy();
       const assets = await assetsCheck({ types: ["role", "tool", "scene", "clip"], clipMediaTypes: mixedClipMediaTypes.value, multiple });
-      console.log("%c Line:146 🍐 assets", "background:#fca650", assets);
+
       if (!assets.length) return;
 
       const newItems: UploadItem[] = assets.map((asset) => {
@@ -234,9 +234,28 @@ function splitImage(index: number) {
 <style lang="scss" scoped>
 .imageUploadBox {
   gap: 8px;
+  overflow-x: auto;
+  flex-wrap: nowrap;
+  padding-bottom: 6px;
+  &::-webkit-scrollbar {
+    height: 6px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background-color: var(--td-scrollbar-color);
+    border-radius: 4px;
+    &:hover {
+      background-color: var(--td-scrollbar-hover-color);
+    }
+  }
+  &::-webkit-scrollbar-track {
+    background-color: var(--td-bg-color-secondarycontainer);
+    border-radius: 4px;
+  }
   .uploadBtn {
     width: 80px;
+    min-width: 80px;
     height: 80px;
+    flex-shrink: 0;
     position: relative;
     border: 1px dashed var(--td-component-border);
     border-radius: 8px;
