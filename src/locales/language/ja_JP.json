@@ -203,7 +203,8 @@
         "saveFailed": "保存に失敗しました：",
         "getAgentListFailed": "Agent設定リストの取得に失敗しました：",
         "toonflowNotFound": "トゥーンフロー公式乗換駅は存在しない"
-      }
+      },
+      "temperature": "温度"
     },
     "memory": {
       "warning": "以下の設定項目には推奨値がプリセットされています。各設定の意味と影響を明確に理解していない限り、現在の設定を維持することをお勧めします。",
@@ -243,7 +244,12 @@
         "editWord": "プロンプトワードをバインドする",
         "operation": "操作する",
         "bindingSuccessful": "バインド成功",
-        "bindingFailed": "バインドに失敗しました"
+        "bindingFailed": "バインドに失敗しました",
+        "currentBinding": "現在のバインディング",
+        "noBinding": "束縛されていない",
+        "bound": "バウンド",
+        "unbind": "バインドを解除する",
+        "filenName": "ファイル名"
       }
     },
     "login": {
@@ -1494,5 +1500,8 @@
   "settings.agent.ordinary": "簡単な設定",
   "settings.agent.temperature": "温度",
   "settings.agent.maxOutputTokens": "最大出力トークン",
+  "settings.agent.auto": "自動",
+  "settings.agent.manual": "手動",
+  "settings.agent.autoHint": "モデルが出力長を自動決定",
   "settings.agent.msg.notmodel": "モデルが選択されていません"
 }

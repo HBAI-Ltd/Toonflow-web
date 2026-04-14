@@ -210,7 +210,8 @@
         "enterKey": "請輸入 KEY",
         "saveFailed": "儲存失敗：",
         "getAgentListFailed": "取得 Agent 設定列表失敗："
-      }
+      },
+      "temperature": "溫度"
     },
     "memory": {
       "warning": "以下設定項目已預設為推薦值。除非您清楚了解各項設定的含義及影響，否則建議維持現有設定",
@@ -250,7 +251,12 @@
         "editWord": "綁定提示詞",
         "operation": "操作",
         "bindingSuccessful": "綁定成功",
-        "bindingFailed": "綁定失敗"
+        "bindingFailed": "綁定失敗",
+        "currentBinding": "目前綁定",
+        "noBinding": "未綁定",
+        "bound": "已綁定",
+        "unbind": "取消綁定",
+        "filenName": "文件名稱"
       }
     },
     "login": {
@@ -1483,5 +1489,8 @@
   "settings.agent.ordinary": "簡易配置",
   "settings.agent.temperature": "溫度",
   "settings.agent.maxOutputTokens": "最大輸出Token",
+  "settings.agent.auto": "自動",
+  "settings.agent.manual": "手動",
+  "settings.agent.autoHint": "由模型自動決定輸出長度",
   "settings.agent.msg.notmodel": "未選擇模型"
 }

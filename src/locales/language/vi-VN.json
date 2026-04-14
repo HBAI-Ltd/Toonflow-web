@@ -202,7 +202,8 @@
         "saveFailed": "Lưu thất bại:",
         "getAgentListFailed": "Lấy danh sách cấu hình Agent thất bại:",
         "toonflowNotFound": "Trạm trung chuyển chính thức của Toonflow không tồn tại"
-      }
+      },
+      "temperature": "nhiệt độ"
     },
     "memory": {
       "warning": "Các mục cấu hình dưới đây đã được đặt sẵn ở mức khuyến nghị. Trừ khi bạn hiểu rõ ý nghĩa và tác động của từng cấu hình, nếu không khuyên bạn nên giữ nguyên thiết lập hiện tại",
@@ -242,7 +243,12 @@
         "editWord": "Ràng buộc từ nhắc nhở",
         "operation": "vận hành",
         "bindingSuccessful": "Ràng buộc thành công",
-        "bindingFailed": "Ràng buộc không thành công"
+        "bindingFailed": "Ràng buộc không thành công",
+        "currentBinding": "ràng buộc hiện tại",
+        "noBinding": "Không bị ràng buộc",
+        "bound": "ràng buộc",
+        "unbind": "Hủy liên kết",
+        "filenName": "Tên tập tin"
       }
     },
     "login": {
@@ -1486,5 +1492,8 @@
   "settings.agent.ordinary": "Cấu hình dễ dàng",
   "settings.agent.temperature": "nhiệt độ",
   "settings.agent.maxOutputTokens": "Mã thông báo đầu ra tối đa",
+  "settings.agent.auto": "Tự động",
+  "settings.agent.manual": "Thủ công",
+  "settings.agent.autoHint": "Độ dài đầu ra do mô hình quyết định",
   "settings.agent.msg.notmodel": "Không có mô hình nào được chọn"
 }

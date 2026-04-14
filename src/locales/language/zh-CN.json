@@ -244,7 +244,8 @@
         "saveFailed": "保存失败：",
         "getAgentListFailed": "获取Agent配置列表失败：",
         "toonflowNotFound": "Toonflow官方中转站不存在"
-      }
+      },
+      "temperature": "温度"
     },
     "memory": {
       "warning": "以下配置项已预设为推荐值。除非您清楚了解各项配置的含义及影响，否则建议维持现有设置",
@@ -284,7 +285,12 @@
         "editWord": "绑定提示词",
         "operation": "操作",
         "bindingSuccessful": "绑定成功",
-        "bindingFailed": "绑定失败"
+        "bindingFailed": "绑定失败",
+        "currentBinding": "当前绑定",
+        "noBinding": "未绑定",
+        "bound": "已绑定",
+        "unbind": "取消绑定",
+        "filenName": "文件名称"
       }
     },
     "login": {
@@ -1711,5 +1717,8 @@
   "settings.agent.ordinary": "简易配置",
   "settings.agent.temperature": "温度",
   "settings.agent.maxOutputTokens": "最大输出Token",
+  "settings.agent.auto": "自动",
+  "settings.agent.manual": "手动",
+  "settings.agent.autoHint": "由模型自动决定输出长度",
   "settings.agent.msg.notmodel": "未选择模型"
 }

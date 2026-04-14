@@ -202,7 +202,8 @@
         "enterKey": "Пожалуйста, введите KEY",
         "saveFailed": "Ошибка сохранения: ",
         "getAgentListFailed": "Не удалось получить список конфигураций Agent: "
-      }
+      },
+      "temperature": "температура"
     },
     "memory": {
       "warning": "Следующие параметры предварительно настроены на рекомендуемые значения. Не изменяйте их, если не понимаете их значения и влияния.",
@@ -242,7 +243,12 @@
         "editWord": "Связать подсказку",
         "operation": "действовать",
         "bindingSuccessful": "Привязка прошла успешно",
-        "bindingFailed": "Привязка не удалась"
+        "bindingFailed": "Привязка не удалась",
+        "currentBinding": "текущая привязка",
+        "noBinding": "Не связан",
+        "bound": "Граница",
+        "unbind": "Отвязать",
+        "filenName": "Имя файла"
       }
     },
     "login": {
@@ -1494,5 +1500,8 @@
   "settings.agent.ordinary": "Простая настройка",
   "settings.agent.temperature": "температура",
   "settings.agent.maxOutputTokens": "Максимальный выходной токен",
+  "settings.agent.auto": "Авто",
+  "settings.agent.manual": "Вручную",
+  "settings.agent.autoHint": "Длина вывода определяется моделью",
   "settings.agent.msg.notmodel": "Модель не выбрана"
 }

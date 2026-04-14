@@ -13,7 +13,7 @@
     </div>
     <div class="show">
       <t-dialog v-model:visible="visible" :header="$t('workbench.project.dialog.prompt.title')" width="70%" :close-on-overlay-click="false" @confirm="onConfirm" top="9vh">
-        <MdEditor :theme="themeSetting.mode"
+        <MdEditor :theme="themeSetting.mode === 'auto' ? 'light' : themeSetting.mode"
           v-model="promptData.data"
           :toolbars="promptToolbars"
           :footers="[]"

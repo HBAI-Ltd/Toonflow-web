@@ -64,8 +64,10 @@
             <div class="skillCardBody jb">
               <div>{{ item.desc }}</div>
               <div>
-                <t-tag theme="primary" variant="light" size="small" style="margin-left: 5px;">温度：{{ item.temperature }}</t-tag>
-                <t-tag theme="primary" variant="light" size="small"  style="margin-left: 5px;">最大输出Token：{{ item.maxOutputTokens }}</t-tag>
+                <t-tag theme="primary" variant="light" size="small" style="margin-left: 5px;">{{$t('settings.agent.temperature')}}：{{ item.temperature }}</t-tag>
+                <t-tag :theme="item.maxOutputTokens === 0 ? 'success' : 'primary'" variant="light" size="small" style="margin-left: 5px;">
+                  {{ $t('settings.agent.maxOutputTokens') }}：{{ item.maxOutputTokens === 0 ? $t('settings.agent.auto') : item.maxOutputTokens }}
+                </t-tag>
               </div>
             </div>
           </t-card>
@@ -90,7 +92,20 @@
             <t-input-number v-model="currentItem.temperature" style="width: 100%" />
           </t-form-item>
           <t-form-item :label="$t('settings.agent.maxOutputTokens')" v-if="type == '高级'">
-            <t-input-number v-model="currentItem.maxOutputTokens" style="width: 100%" />
+            <div class="maxTokenRow">
+              <t-radio-group v-model="maxTokenMode" variant="default-filled" size="small">
+                <t-radio-button value="auto">{{ $t('settings.agent.auto') }}</t-radio-button>
+                <t-radio-button value="manual">{{ $t('settings.agent.manual') }}</t-radio-button>
+              </t-radio-group>
+              <t-input-number
+                v-if="maxTokenMode === 'manual'"
+                v-model="currentItem.maxOutputTokens"
+                :min="1"
+                theme="normal"
+                style="flex: 1; margin-left: 12px;"
+              />
+              <span v-else class="autoHint">{{ $t('settings.agent.autoHint') }}</span>
+            </div>
           </t-form-item>
         </t-form>
       </div>
@@ -146,11 +161,23 @@ function getFallbackText(name: string) {
   return name?.slice(0, 1) || "A";
 }
 const type = ref("");
+const maxTokenMode = ref<"auto" | "manual">("auto");
+
+watch(maxTokenMode, (val) => {
+  if (val === "auto" && currentItem.value) {
+    currentItem.value.maxOutputTokens = 0;
+  }
+  if (val === "manual" && currentItem.value && (currentItem.value.maxOutputTokens === 0 || currentItem.value.maxOutputTokens == null)) {
+    currentItem.value.maxOutputTokens = 8192;
+  }
+});
+
 function startConfig(item: ModelType, source: string) {
   if (item.disabled) return window.$message.warning($t("settings.agent.msg.notAvailable"));
   currentItem.value = item;
   selectValue.value = item.modelName || "";
   selectLabel.value = item.model || "";
+  maxTokenMode.value = (item.maxOutputTokens === 0 || item.maxOutputTokens == null) ? "auto" : "manual";
   modelDataShow.value = true;
   type.value = source;
 }
@@ -367,6 +394,19 @@ const advancedModelData = ref<ModelType[]>([]);
 
 .dialogContent {
   padding: 8px 0;
+}
+
+.maxTokenRow {
+  display: flex;
+  align-items: center;
+  width: 100%;
+
+  .autoHint {
+    flex: 1;
+    margin-left: 12px;
+    font-size: 13px;
+    color: var(--td-text-color-placeholder);
+  }
 }
 </style>
 <style lang="scss">

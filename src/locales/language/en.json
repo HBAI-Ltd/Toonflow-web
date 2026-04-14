@@ -204,7 +204,8 @@
         "saveFailed": "Save failed: ",
         "getAgentListFailed": "Failed to fetch Agent config list: ",
         "toonflowNotFound": "Toonflow official transfer station does not exist"
-      }
+      },
+      "temperature": "temperature"
     },
     "memory": {
       "warning": "The following settings are preset to recommended values. Unless you fully understand their implications, we recommend keeping the current settings.",
@@ -244,7 +245,12 @@
         "editWord": "Bind prompt word",
         "operation": "operate",
         "bindingSuccessful": "Binding successful",
-        "bindingFailed": "Binding failed"
+        "bindingFailed": "Binding failed",
+        "currentBinding": "current binding",
+        "noBinding": "Not Bound",
+        "bound": "Bound",
+        "unbind": "Unbind",
+        "filenName": "File name"
       }
     },
     "login": {
@@ -1630,5 +1636,8 @@
   "settings.agent.ordinary": "Easy configuration",
   "settings.agent.temperature": "temperature",
   "settings.agent.maxOutputTokens": "Maximum output token",
+  "settings.agent.auto": "Auto",
+  "settings.agent.manual": "Manual",
+  "settings.agent.autoHint": "Output length decided by the model",
   "settings.agent.msg.notmodel": "No model selected"
 }

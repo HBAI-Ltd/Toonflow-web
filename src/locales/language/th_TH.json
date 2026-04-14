@@ -203,7 +203,8 @@
         "saveFailed": "บันทึกล้มเหลว:",
         "getAgentListFailed": "ดึงรายการการตั้งค่า Agent ล้มเหลว:",
         "toonflowNotFound": "ไม่มีสถานีรับส่งอย่างเป็นทางการของ Toonflow"
-      }
+      },
+      "temperature": "อุณหภูมิ"
     },
     "memory": {
       "warning": "รายการการตั้งค่าต่อไปนี้ถูกกำหนดล่วงหน้าเป็นค่าที่แนะนำ เว้นแต่คุณจะเข้าใจความหมายและผลกระทบของการตั้งค่าแต่ละรายการอย่างชัดเจน ขอแนะนำให้คงการตั้งค่าปัจจุบันไว้",
@@ -243,7 +244,12 @@
         "editWord": "ผูกคำพร้อมท์",
         "operation": "ดำเนินงาน",
         "bindingSuccessful": "การผูกสำเร็จ",
-        "bindingFailed": "การเชื่อมโยงล้มเหลว"
+        "bindingFailed": "การเชื่อมโยงล้มเหลว",
+        "currentBinding": "การเชื่อมโยงปัจจุบัน",
+        "noBinding": "ไม่ผูกมัด",
+        "bound": "ผูกพัน",
+        "unbind": "เลิกผูก",
+        "filenName": "ชื่อไฟล์"
       }
     },
     "login": {
@@ -1482,5 +1488,8 @@
   "settings.agent.ordinary": "การกำหนดค่าง่าย",
   "settings.agent.temperature": "อุณหภูมิ",
   "settings.agent.maxOutputTokens": "โทเค็นเอาต์พุตสูงสุด",
+  "settings.agent.auto": "อัตโนมัติ",
+  "settings.agent.manual": "กำหนดเอง",
+  "settings.agent.autoHint": "ความยาวเอาต์พุตกำหนดโดยโมเดล",
   "settings.agent.msg.notmodel": "ไม่ได้เลือกรุ่น"
 }
