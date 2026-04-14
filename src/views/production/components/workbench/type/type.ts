@@ -41,6 +41,7 @@ interface StoryboardItem {
   scriptId?: number | null;
   state?: string | null;
   trackId?: number | null;
+  videoDesc?: string | null;
 }
 
 interface TrackItem {

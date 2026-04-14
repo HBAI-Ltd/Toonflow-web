@@ -7,7 +7,9 @@
           <img class="uploadPreview" :src="item.src" />
         </template>
         <template v-else>
-          <span style="font-size: 20px">文</span>
+          <t-tooltip theme="primary" :content="item?.prompt || ''">
+            <span style="font-size: 20px">文</span>
+          </t-tooltip>
         </template>
         <div class="clearBtn" @click="splitImage(index)">
           <i-close size="12" />
@@ -59,7 +61,9 @@
         <div class="storyboardItem" v-for="sb in storyboardList" :key="sb.id" @click="pickStoryboard(sb)">
           <img v-if="sb.src" :src="sb.src" />
           <div v-else class="textBox ac jc">
-            <span style="font-size: 20px">文</span>
+            <t-tooltip theme="primary" :content="sb?.videoDesc || ''">
+              <span style="font-size: 20px">文</span>
+            </t-tooltip>
           </div>
         </div>
       </div>

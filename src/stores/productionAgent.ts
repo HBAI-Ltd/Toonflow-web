@@ -439,7 +439,7 @@ function makeProductionAgentStore(projectId: string) {
       });
 
       flowData.value.storyboard.forEach((item) => {
-        const updated = data.find((d: Storyboard) => d.prompt == item.prompt && d.duration == item.duration);
+        const updated = data.find((d: Storyboard) => d.prompt == item.prompt && d.duration == item.duration && d.videoDesc == item.videoDesc);
         if (updated) {
           item.id = updated.id;
           item.trackId = updated.trackId;

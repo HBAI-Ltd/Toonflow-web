@@ -303,8 +303,10 @@ const genTextLoadingMap = ref<Record<number, boolean>>({}); // trackId -> 是否
 async function genText() {
   if (currentTrack.value.id == null || genTextLoadingMap.value[currentTrack.value.id]) return;
   let info = [];
+  const currentTrackId = currentTrack.value.id
+  const changeTrack = currentTrack.value
   if (modelParmas.value.mode == "text") {
-    info = currentTrack.value?.medias.map(({ id, sources }) => ({ id, sources }));
+    info = changeTrack?.medias.map(({ id, sources }) => ({ id, sources }));
   } else {
     info =
       modelParmas.value.mode === "text"
@@ -322,19 +324,19 @@ async function genText() {
             return filtered;
           })();
   }
-  genTextLoadingMap.value[currentTrack.value.id] = true;
+  genTextLoadingMap.value[currentTrackId] = true;
   try {
     const { data } = await axios.post("/production/workbench/generateVideoPrompt", {
       projectId: project.value?.id,
-      trackId: currentTrack.value.id,
+      trackId: currentTrackId,
       info: info,
       model: modelParmas.value.model,
     });
-    currentTrack.value.prompt = data;
+    changeTrack.prompt = data;
   } catch (e) {
     window.$message.error((e as Error)?.message ?? "提示词生成失败");
   } finally {
-    genTextLoadingMap.value[currentTrack.value.id] = false;
+    genTextLoadingMap.value[currentTrackId] = false;
   }
 }
 function trackChange(prevIndex?: number) {
