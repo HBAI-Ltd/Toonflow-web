@@ -267,12 +267,13 @@
       :maskClosable="false">
       <div class="data">
         <t-radio-group variant="default-filled" v-model="addMode">
-          <t-radio-button value="linkAdd">通过链接添加</t-radio-button>
-          <t-radio-button value="importAdd">通过文件导入</t-radio-button>
           <t-radio-button value="codeAdd">通过代码添加</t-radio-button>
+          <t-radio-button value="importAdd">通过文件导入</t-radio-button>
+          <t-radio-button value="linkAdd">通过链接添加</t-radio-button>
         </t-radio-group>
         <div class="linkAdd" v-if="addMode == 'linkAdd'">
           <t-alert theme="warning" style="margin-bottom: 20px">
+            请勿输入api地址！链接内容需为ts代码。
             请勿输入不可靠的地址！点击“确定”后，Toonflow
             将自动从该地址拉取代码并添加为供应商。如果地址存在安全隐患，可能导致引入存在风险的供应商代码。建议仅输入来自可信来源的地址。
           </t-alert>
@@ -645,10 +646,11 @@ watch(
 );
 const id = ref<string>();
 function handleAddVendor() {
-  addMode.value = "linkAdd";
+  addMode.value = "codeAdd";
   id.value = undefined;
   vendorCode.value = VENDOR_CODE_TEMPLATE;
   vendorDialogVisible.value = true;
+  codeDialogVisible.value = true
 }
 function handleConfirmVendor() {
   if (!id.value) {
@@ -1091,7 +1093,7 @@ function onChange(item: any, val: number) {
       item.enable = prevEnable;
     });
 }
-const addMode = ref("linkAdd");
+const addMode = ref("codeAdd");
 const link = ref("");
 const linkReading = ref(false);
 

@@ -103,6 +103,7 @@ const imageList = computed({
     // 优先从缓存读取
     if (pid != null && sid != null && trackId != null) {
       const cached = getCache(pid, sid, trackId);
+      console.log("%c Line:106 🌰 cached", "background:#ffdd4d", cached);
       if (cached?.length) {
         cached.sort((a, b) => getImageItemPriority(a) - getImageItemPriority(b));
         return cached;
@@ -111,6 +112,7 @@ const imageList = computed({
     const medias = currentTrack.value?.medias;
     if (!medias?.length) return [];
     (medias as UploadItem[]).sort((a, b) => getImageItemPriority(a) - getImageItemPriority(b));
+    console.log("%c Line:115 🥪 medias", "background:#42b983", medias);
     return medias as UploadItem[];
   },
   set(val: UploadItem[]) {

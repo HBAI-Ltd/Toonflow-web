@@ -70,15 +70,13 @@ export default defineStore(
          *   或 { data: { "1:storyboard": "http://...", ... } }
          */
         async function resolveUrls(items: ResolveUrlItem[]): Promise<Record<string, string>> {
-
             if (!items.length) return {};
             // 过滤掉已经解析过的、id 无效的项
             const needResolve = items.filter((item) => {
                 if (item.id == null) return false;
                 const key = makeUrlKey(item.id, item.sources);
-                return !urlMap.value[key];
+                return true
             });
-
             if (needResolve.length) {
                 try {
                     const { data } = await axios.post("/production/workbench/getFileUrl", {
