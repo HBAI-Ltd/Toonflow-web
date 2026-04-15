@@ -1,6 +1,6 @@
 <template>
   <div class="details">
-    <t-dialog v-model:visible="detailsShow" width="60vw" top="5vh" @confirm="onConfirm">
+    <t-dialog :footer="false" v-model:visible="detailsShow" width="60vw" top="5vh" @confirm="onConfirm">
       <template #header>
         <t-typography-title level="h4" style="margin: 0">{{ $t("workbench.script.edit.title") }}</t-typography-title>
       </template>
@@ -9,10 +9,13 @@
           <t-input v-model="props.item.name" :maxlength="10" :placeholder="$t('workbench.script.edit.scriptNamePh')" />
         </t-form-item>
         <t-form-item :label="$t('workbench.script.edit.scriptContent')" name="content">
-          <t-textarea
-            v-model="props.item.content"
-            :placeholder="$t('workbench.script.edit.scriptContentPh')"
-            :autosize="{ minRows: 20, maxRows: 20 }" />
+          <div class="fc" style="width: 100%">
+            <t-textarea
+              v-model="props.item.content"
+              :placeholder="$t('workbench.script.edit.scriptContentPh')"
+              :autosize="{ minRows: 20, maxRows: 20 }" />
+            <div class="scriptLen">{{ props.item.content.length }}/{{ otherSetting.scriptEpisodeLength }}</div>
+          </div>
         </t-form-item>
         <t-form-item :label="$t('workbench.script.edit.relatedAssets')" name="assets">
           <div class="assets-section">
@@ -31,6 +34,16 @@
           </div>
         </t-form-item>
       </t-form>
+      <div style="margin-top: 16px; text-align: right">
+        <t-button variant="outline" @click="detailsShow = false">{{ $t("workbench.novel.import.prevStep") }}</t-button>
+        <t-button
+          theme="primary"
+          style="margin-left: 10px"
+          :disabled="props.item.content.length > otherSetting.scriptEpisodeLength"
+          @click="onConfirm">
+          保存
+        </t-button>
+      </div>
     </t-dialog>
   </div>
 </template>
@@ -38,7 +51,8 @@
 <script setup lang="ts">
 import axios from "@/utils/axios";
 import openAssetsSelector from "@/utils/assetsCheck";
-
+import settingStore from "@/stores/setting";
+const { otherSetting } = storeToRefs(settingStore());
 interface ScriptAsset {
   id: number;
   name: string;
@@ -96,7 +110,7 @@ async function onConfirm() {
       assets: selectedAssets.value.map((a) => a.id),
     });
     emit("searchScripts");
-  detailsShow.value = false;
+    detailsShow.value = false;
 
     window.$message.success($t("workbench.script.edit.msg.updateSuccess"));
   } catch (error) {
@@ -110,7 +124,10 @@ async function onConfirm() {
 .details {
   .detailsForm {
     padding: 0 8px;
-
+    .scriptLen {
+      text-align: right;
+      color: #aaa;
+    }
     .assets-section {
       width: 100%;
       .assets-header {

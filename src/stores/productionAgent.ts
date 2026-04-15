@@ -66,6 +66,8 @@ function makeProductionAgentStore(projectId: string) {
           flowData.value.storyboardTable = value ?? "";
         } else if (tag === "storyboardItem") {
           if (status === "complete") {
+            console.log("%c Line:70 🍒 attrs", "background:#93c0a4", attrs);
+
             const prompt = attrs.prompt ?? "";
             const duration = Number(attrs.duration) || 0;
             const track = attrs.track || "";
@@ -74,6 +76,8 @@ function makeProductionAgentStore(projectId: string) {
                 String(attrs.shouldGenerateImage).toLowerCase() == "true"
                 ? 1
                 : 0;
+            console.log("%c Line:75 🥤 shouldGenerateImage", "background:#33a5ff", shouldGenerateImage);
+
             const videoDesc = attrs?.videoDesc ?? "";
             const existingIndex = flowData.value.storyboard.findIndex(
               (s) => s.prompt == prompt && s.duration == duration && videoDesc == s.videoDesc,

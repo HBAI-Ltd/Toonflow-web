@@ -39,6 +39,7 @@
             :placeholder="$t('workbench.script.add.scriptContentPh')"
             name="description"
             :autosize="{ minRows: 12, maxRows: 12 }" />
+          <div class="scriptLen">{{ scriptData.length }}/{{ otherSetting.scriptEpisodeLength }}</div>
         </div>
 
         <div class="section assets-section">
@@ -60,7 +61,9 @@
       <template #footer>
         <div class="dialog-footer">
           <t-button theme="default" @click="handleCancel">{{ $t("workbench.script.add.cancel") }}</t-button>
-          <t-button theme="primary" :loading="keepLoading" @click="handleConfirm">{{ $t("workbench.script.add.confirm") }}</t-button>
+          <t-button theme="primary" :loading="keepLoading" :disabled="scriptData.length > otherSetting.scriptEpisodeLength" @click="handleConfirm">
+            {{ $t("workbench.script.add.confirm") }}
+          </t-button>
         </div>
       </template>
     </t-dialog>
@@ -74,7 +77,8 @@ import type { UploadFile } from "tdesign-vue-next";
 import axios from "@/utils/axios";
 import projectStore from "@/stores/project";
 import openAssetsSelector from "@/utils/assetsCheck";
-
+import settingStore from "@/stores/setting";
+const { otherSetting } = storeToRefs(settingStore());
 const { project } = storeToRefs(projectStore());
 
 const addScriptShow = defineModel<boolean>({
@@ -202,6 +206,8 @@ async function handleConfirm(): Promise<void> {
   }
   keepLoading.value = true;
   try {
+    console.log("%c Line:209 🍊 scriptData.value", "background:#93c0a4", scriptData.value.length);
+
     await axios.post("/script/addScript", {
       name: scriptName.value,
       content: scriptData.value,
@@ -252,6 +258,10 @@ $line-height: 28px;
       display: flex;
       flex-direction: column;
       gap: 8px;
+      .scriptLen {
+        text-align: right;
+        color: #aaa;
+      }
     }
 
     .section-label {
