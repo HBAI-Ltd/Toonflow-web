@@ -2,21 +2,24 @@
   <div class="details">
     <t-dialog v-model:visible="detailsShow" width="60vw" top="5vh" @confirm="onConfirm">
       <template #header>
-        <t-typography-title level="h4" style="margin: 0">{{ $t('workbench.script.edit.title') }}</t-typography-title>
+        <t-typography-title level="h4" style="margin: 0">{{ $t("workbench.script.edit.title") }}</t-typography-title>
       </template>
       <t-form :data="props.item" label-align="top" class="detailsForm">
         <t-form-item :label="$t('workbench.script.edit.scriptName')" name="name">
           <t-input v-model="props.item.name" :maxlength="10" :placeholder="$t('workbench.script.edit.scriptNamePh')" />
         </t-form-item>
         <t-form-item :label="$t('workbench.script.edit.scriptContent')" name="content">
-          <t-textarea v-model="props.item.content" :placeholder="$t('workbench.script.edit.scriptContentPh')" :autosize="{ minRows: 20, maxRows: 20 }" />
+          <t-textarea
+            v-model="props.item.content"
+            :placeholder="$t('workbench.script.edit.scriptContentPh')"
+            :autosize="{ minRows: 20, maxRows: 20 }" />
         </t-form-item>
         <t-form-item :label="$t('workbench.script.edit.relatedAssets')" name="assets">
           <div class="assets-section">
             <div class="assets-header">
               <t-button size="small" theme="primary" variant="outline" @click="handleSelectAssets">
                 <template #icon><i-plus /></template>
-                {{ $t('workbench.script.edit.selectAssets') }}
+                {{ $t("workbench.script.edit.selectAssets") }}
               </t-button>
             </div>
             <div class="assets-list" v-if="selectedAssets.length">
@@ -24,7 +27,7 @@
                 {{ asset.name }}
               </t-tag>
             </div>
-            <div v-else class="assets-empty">{{ $t('workbench.script.edit.noAssets') }}</div>
+            <div v-else class="assets-empty">{{ $t("workbench.script.edit.noAssets") }}</div>
           </div>
         </t-form-item>
       </t-form>
@@ -67,7 +70,7 @@ watch(
 );
 
 async function handleSelectAssets() {
-  const assets = await openAssetsSelector({ title: $t('workbench.script.edit.msg.selectAssetsTitle'), types: ["role", "tool", "scene"] });
+  const assets = await openAssetsSelector({ title: $t("workbench.script.edit.msg.selectAssetsTitle"), types: ["role", "tool", "scene"] });
   if (assets.length) {
     const existing = new Set(selectedAssets.value.map((a) => a.id));
     for (const a of assets) {
@@ -92,13 +95,14 @@ async function onConfirm() {
       content: props.item.content,
       assets: selectedAssets.value.map((a) => a.id),
     });
-    window.$message.success($t('workbench.script.edit.msg.updateSuccess'));
-  } catch (error) {
-    window.$message.error($t('workbench.script.edit.msg.updateFailed'));
-  } finally {
     emit("searchScripts");
-  }
   detailsShow.value = false;
+
+    window.$message.success($t("workbench.script.edit.msg.updateSuccess"));
+  } catch (error) {
+    window.$message.error((error as any)?.message ?? $t("workbench.script.edit.msg.updateFailed"));
+  } finally {
+  }
 }
 </script>
 
