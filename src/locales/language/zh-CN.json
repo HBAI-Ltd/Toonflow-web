@@ -944,12 +944,15 @@
       "confirmReplace": "确认替换",
       "batchGenerationPrompt": "批量生成提示词",
       "generatingPrompt": "生成中",
+      "selectAll": "全选",
       "selectPromptEmpty": "全选提示词为空",
       "noEmptyPrompt": "没有提示词为空的资产",
       "selectedCount": "已选中{count}个资产",
       "cancelGeneration": "取消生成",
       "selectGenerating": "选择正在生成项",
-      "noGenerating": "没有正在生成的数据"
+      "noGenerating": "没有正在生成的数据",
+      "checkNumber": "选择数量",
+      "selectAll": "全选"
     },
     "script": {
       "searchPlaceholder": "搜索剧本名称...",

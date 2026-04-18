@@ -10,6 +10,10 @@ body,
   color: var(--td-text-color-primary);
 }
 
+img {
+  contentvisibility: "auto";
+}
+
 // 防止弹窗出现时滚动条消失导致页面宽度变化引起抖动
 html {
   scrollbar-gutter: stable;

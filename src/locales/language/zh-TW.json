@@ -766,12 +766,15 @@
       "confirmReplace": "確認替換",
       "batchGenerationPrompt": "大量生成提示詞",
       "generatingPrompt": "生成中",
+      "selectAll": "全選",
       "selectPromptEmpty": "全選提示詞為空",
       "noEmptyPrompt": "沒有提示詞為空的資產",
       "selectedCount": "已選取{count}個資產",
       "cancelGeneration": "取消生成",
       "selectGenerating": "選擇正在產生項",
-      "noGenerating": "沒有正在產生的數據"
+      "noGenerating": "沒有正在產生的數據",
+      "checkNumber": "選擇數量",
+      "selectAll": "全選"
     },
     "script": {
       "searchPlaceholder": "搜尋劇本名稱...",

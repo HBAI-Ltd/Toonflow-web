@@ -978,17 +978,12 @@ function handleEditModel(model: VendorModel) {
 }
 
 async function handleTestModel(item: (typeof vendorModels.value)[number]) {
-  if (!currentVendor.value?.inputValues?.apiKey) return window.$message.error($t("settings.vendor.msg.enterApiKey"));
-  if (!currentVendor.value?.inputValues?.baseUrl) return window.$message.error($t("settings.vendor.msg.enterApiUrl"));
-  if (testingModels[item.modelName]) return;
-
   testingModels[item.modelName] = true;
-
   try {
     const { data } = await axios.post(`/setting/vendorConfig/modelTest`, {
       type: item.type,
       modelName: item.modelName,
-      id: currentVendor.value.id,
+      id: currentVendor.value!.id,
     });
 
     if (item.type === "text") {

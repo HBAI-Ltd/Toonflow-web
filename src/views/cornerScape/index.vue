@@ -1,10 +1,15 @@
 <template>
   <div class="cornerScape f">
     <div class="left">
-      <t-card shadow :title="$t('workbench.cornerScape.batchSettings')" class="card">
+      <t-card shadow class="card">
+        <template #title>
+          {{ $t("workbench.cornerScape.batchSettings") }}
+          <t-tag size="small" theme="primary" variant="light" style="margin-left: 8px">{{ dataList.length }}</t-tag>
+        </template>
         <t-form labelAlign="top">
           <t-form-item :label="$t('workbench.cornerScape.quickActions')">
             <div class="quickActions">
+              <t-button theme="primary" variant="outline" @click="selectAll">{{ $t("workbench.cornerScape.selectAll") }}</t-button>
               <t-button theme="primary" variant="outline" @click="selectPromptEmpty()">{{ $t("workbench.cornerScape.selectPromptEmpty") }}</t-button>
               <t-button theme="primary" variant="outline" @click="selectByState('')">{{ $t("workbench.cornerScape.selectUngenerated") }}</t-button>
               <t-button theme="primary" variant="outline" @click="selectByState('已完成')">
@@ -49,13 +54,18 @@
           </t-form-item> -->
           <t-form-item>
             <div class="btnGap ac">
+              <div class="selectedInfo" v-if="selectedIds.length > 0">
+                <t-tag size="medium" theme="primary" variant="light">
+                  {{ $t("workbench.cornerScape.selectedCount", { count: selectedIds.length }) }}
+                </t-tag>
+              </div>
               <!-- <div class="ac jb"> -->
               <t-button theme="primary" block @click="batchGenerationPrompt">{{ $t("workbench.cornerScape.batchGenerationPrompt") }}</t-button>
               <!-- <t-button theme="primary" style="margin-left: 10px" block @click="batchSelectBindAudio">
                   {{ $t("workbench.cornerScape.batchBingAudio") }}
                 </t-button>
               </div> -->
-              <t-button theme="primary" block @click="batchGenerationImage" style="margin-left: 10px">
+              <t-button theme="primary" block @click="batchGenerationImage">
                 {{ $t("workbench.cornerScape.startBatch") }}
               </t-button>
             </div>
@@ -329,15 +339,22 @@ async function getFilteredData() {
       type: checkboxValue.value,
     });
     dataList.value = data;
+    syncSelectedIdsWithData();
   } catch (error) {
     console.error("加载资产数据失败:", error);
     dataList.value = [];
+    selectedIds.value = [];
   } finally {
     loading.value = false;
   }
 }
 
 const selectedIds = ref<number[]>([]);
+
+function syncSelectedIdsWithData() {
+  const visibleIds = new Set(dataList.value.map((item) => item.id));
+  selectedIds.value = Array.from(new Set(selectedIds.value)).filter((id) => visibleIds.has(id));
+}
 
 const previewImages = computed((): string[] => {
   const selectedImageList = dataList.value
@@ -371,6 +388,10 @@ function selectPromptEmpty() {
   }
   selectedIds.value = lite;
   window.$message.success($t("workbench.cornerScape.selectedCount", { count: selectedIds.value.length }));
+}
+
+function selectAll() {
+  selectedIds.value = dataList.value.map((item) => item.id);
 }
 
 function toggleSelectAll() {
@@ -900,6 +921,11 @@ async function selectAudio() {
     .btnGap {
       gap: 8px;
       width: 100%;
+      flex-wrap: wrap;
+    }
+    .selectedInfo {
+      width: 100%;
+      text-align: center;
     }
     .card {
       height: 100%;
