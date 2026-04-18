@@ -215,7 +215,7 @@ watch(
     }
     axios.post("/modelSelect/getModelDetail", { modelId: val }).then(({ data }) => {
       modeOptions.value = data;
-      modelParmas.value.audio = data.audio === true || data.audio === "true";
+      modelParmas.value.audio = data.audio === true || data.audio === "true" || data.audio == "optional";
       const drMap = data.durationResolutionMap;
       if (Array.isArray(drMap) && drMap.length > 0) {
         if (drMap[0].resolution?.length) modelParmas.value.resolution = drMap[0].resolution[0];

@@ -336,8 +336,6 @@ function handleCheckAll(val: boolean) {
 
 /** 单个勾选轨道 */
 function toggleCheck(trackId: number | undefined, val: boolean) {
-  console.log("%c Line:338 🍿 val", "background:#93c0a4", val);
-  console.log("%c Line:338 🍫 trackId", "background:#465975", trackId);
   if (trackId == null) return;
   if (val) {
     if (!checkedTrackIds.value.includes(trackId)) checkedTrackIds.value.push(trackId);

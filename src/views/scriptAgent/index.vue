@@ -13,8 +13,7 @@
               :variant="message.role === 'user' ? 'base' : 'outline'"
               :handleActions="message.role === 'user' ? {} : handleActions"
               :status="message.status"
-              allowContentSegmentCustom>
-            </t-chat-message>
+              allowContentSegmentCustom></t-chat-message>
           </t-chat-list>
           <t-chat-sender
             class="inputBox"
@@ -409,7 +408,7 @@ function onConfirm(value: string) {
       getPlanData();
     })
     .catch((err) => {
-      window.$message.success($t("workbench.scriptAgent.msg.error"));
+      window.$message.error(err?.message ?? $t("workbench.scriptAgent.msg.error"));
     });
 }
 

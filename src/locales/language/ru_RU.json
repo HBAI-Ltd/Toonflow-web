@@ -1535,5 +1535,6 @@
   "settings.agent.auto": "Авто",
   "settings.agent.manual": "Вручную",
   "settings.agent.autoHint": "Длина вывода определяется моделью",
-  "settings.agent.msg.notmodel": "Модель не выбрана"
+  "settings.agent.msg.notmodel": "Модель не выбрана",
+  "workbench.production.node.storyboard.generateImage": "Создание раскадровки"
 }

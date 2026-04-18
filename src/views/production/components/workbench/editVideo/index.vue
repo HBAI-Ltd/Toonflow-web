@@ -434,7 +434,7 @@ function initializeTracks() {
     });
   }
 
-  playbackStore.setDuration(30);
+  playbackStore.setDuration(60 * 5);
   playbackStore.seekTo(0);
   historyStore.initialize();
   loadInitialAudioWaveforms(tracksStore);

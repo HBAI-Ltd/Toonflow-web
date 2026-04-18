@@ -37,7 +37,7 @@
               <span style="font-size: 20px">文</span>
             </t-tooltip>
           </template>
-          <div class="imageToolsWrap" v-if="imageList?.[index]?.sources == 'storyboard' && imageList?.[index]?.index">
+          <div class="imageToolsWrap" v-if="imageList?.[index]?.sources == 'storyboard' && imageList?.[index]?.index != null">
             {{ `P${imageList[index]?.index + 1}` }}
           </div>
           <div class="clearBtn" @click.stop="clearImage(index)">

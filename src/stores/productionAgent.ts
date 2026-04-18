@@ -66,7 +66,6 @@ function makeProductionAgentStore(projectId: string) {
           flowData.value.storyboardTable = value ?? "";
         } else if (tag === "storyboardItem") {
           if (status === "complete") {
-
             const prompt = attrs.prompt ?? "";
             const duration = Number(attrs.duration) || 0;
             const track = attrs.track || "";
