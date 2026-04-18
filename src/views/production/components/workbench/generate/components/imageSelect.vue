@@ -69,6 +69,9 @@
       placement="center">
       <div class="storyboardGrid">
         <div class="storyboardItem" v-for="sb in storyboardList" :key="sb.id" @click="pickStoryboard(sb)">
+          <div class="imageToolsWrap" v-if="sb?.index != null">
+            {{ `P${sb?.index + 1}` }}
+          </div>
           <img v-if="sb.src" :src="sb.src" />
           <div v-else class="textBox ac jc">
             <t-tooltip theme="primary" :content="sb?.videoDesc || ''">
@@ -249,6 +252,21 @@ function splitImage(index: number) {
     background-color: var(--td-bg-color-secondarycontainer);
     border-radius: 4px;
   }
+  .imageToolsWrap {
+    z-index: 99999;
+    position: absolute;
+    left: 4px;
+    top: 4px;
+    padding: 0 5px;
+    font-size: 11px;
+    line-height: 18px;
+    background: rgba(0, 0, 0, 0.55);
+    color: #fff;
+    border-radius: 4px;
+    backdrop-filter: blur(4px);
+    user-select: none;
+    white-space: nowrap;
+  }
   .uploadBtn {
     width: 80px;
     min-width: 80px;
@@ -261,21 +279,7 @@ function splitImage(index: number) {
       border-color: var(--td-text-color);
       cursor: pointer;
     }
-    .imageToolsWrap {
-      z-index: 999999999999999;
-      position: absolute;
-      left: 4px;
-      top: 4px;
-      padding: 0 5px;
-      font-size: 11px;
-      line-height: 18px;
-      background: rgba(0, 0, 0, 0.55);
-      color: #fff;
-      border-radius: 4px;
-      backdrop-filter: blur(4px);
-      user-select: none;
-      white-space: nowrap;
-    }
+
     .uploadPreview {
       width: 100%;
       height: 100%;
@@ -331,6 +335,7 @@ function splitImage(index: number) {
     padding: 4px;
     .storyboardItem {
       cursor: pointer;
+      position: relative;
       border-radius: 8px;
       overflow: hidden;
       border: 2px solid transparent;
