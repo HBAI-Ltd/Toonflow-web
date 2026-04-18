@@ -1521,5 +1521,6 @@
   "settings.agent.auto": "自動",
   "settings.agent.manual": "手動",
   "settings.agent.autoHint": "由模型自動決定輸出長度",
-  "settings.agent.msg.notmodel": "未選擇模型"
+  "settings.agent.msg.notmodel": "未選擇模型",
+  "workbench.production.node.storyboard.generateImage": "生成分鏡圖"
 }

@@ -1120,7 +1120,10 @@
           "imageLoadFailed": "Failed to load image",
           "promptPlaceholder": "Please enter the prompt word",
           "prompt": "prompt word",
-          "editInfo": "Prompt word modification"
+          "editInfo": "Prompt word modification",
+          "selectedCount": "{count} selected",
+          "clearSelection": "Clear Selection",
+          "selectAll": "Select All"
         },
         "storyboardTable": {
           "title": "Storyboard Table",
@@ -1670,5 +1673,6 @@
   "settings.agent.auto": "Auto",
   "settings.agent.manual": "Manual",
   "settings.agent.autoHint": "Output length decided by the model",
-  "settings.agent.msg.notmodel": "No model selected"
+  "settings.agent.msg.notmodel": "No model selected",
+  "workbench.production.node.storyboard.generateImage": "Generate storyboards"
 }

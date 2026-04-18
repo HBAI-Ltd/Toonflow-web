@@ -1532,5 +1532,6 @@
   "settings.agent.auto": "自動",
   "settings.agent.manual": "手動",
   "settings.agent.autoHint": "モデルが出力長を自動決定",
-  "settings.agent.msg.notmodel": "モデルが選択されていません"
+  "settings.agent.msg.notmodel": "モデルが選択されていません",
+  "workbench.production.node.storyboard.generateImage": "ストーリーボードを生成する"
 }

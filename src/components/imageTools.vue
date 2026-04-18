@@ -8,7 +8,7 @@
       </t-button>
     </t-tooltip>
     <t-tooltip theme="primary" :content="$t('components.imageTools.preview')" :placement="placement">
-      <t-image-viewer v-model:visible="previewVisible" :images="[props.src]">
+      <t-image-viewer v-model:visible="previewVisible" :images="[previewSrc]">
         <template #trigger>
           <t-button variant="outline" size="small" shape="square" @click.stop="handlePreview">
             <template #icon>
@@ -29,6 +29,8 @@
 </template>
 
 <script setup lang="ts">
+import axios from "@/utils/axios";
+
 const props = defineProps<{
   src: string;
   placement?: string;
@@ -54,8 +56,13 @@ const positionStyle = computed<any>(function () {
 });
 
 const previewVisible = ref(false);
+const previewSrc = ref("");
 
-function handlePreview() {
+async function handlePreview() {
+  const { data } = await axios.post("/common/getBigImage", {
+    url: props.src,
+  });
+  previewSrc.value = data;
   previewVisible.value = true;
 }
 

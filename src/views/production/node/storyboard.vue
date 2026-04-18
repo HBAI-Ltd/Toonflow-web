@@ -7,78 +7,101 @@
     </div>
     <div class="content">
       <t-empty v-if="!storyboard.length" style="margin-top: 16px"></t-empty>
-      <div class="frameGrid">
-        <template v-for="(item, index) in storyboard" :key="item.id">
-          <div class="frameItem" @mouseenter="setHoveredFrame(index)" @mouseleave="setHoveredFrame(null)">
-            <div
-              class="addBetween addBetween--left"
-              :class="{ expanded: hoveredIndex === index }"
-              @click.stop="editStoryboaryImage(item, [index > 0 ? storyboard[index - 1]?.src || '' : '', item.src || ''], index - 1)">
-              <t-button theme="primary" variant="outline" shape="circle">
-                <template #icon><i-plus /></template>
-              </t-button>
-            </div>
-
-            <div class="frameCard">
+      <t-checkbox-group v-model="selectedIds">
+        <div class="frameGrid">
+          <template v-for="(item, index) in storyboard" :key="item.id">
+            <div class="frameItem" @mouseenter="setHoveredFrame(index)" @mouseleave="setHoveredFrame(null)">
               <div
-                class="frameImage"
-                :style="{
-                  width: `${200 * gridScale}px`,
-                  height: `${200 * gridScale}px`,
-                }">
-                <t-tag class="frameTypeTag" :style="{ backgroundColor: tagColors[index % tagColors.length], transform: `scale(${styleMaxSize})` }">
-                  S{{ String(index + 1).padStart(2, "0") }}
-                </t-tag>
-                <t-image
-                  v-if="item.src && item.state == '已完成'"
-                  :src="item.src"
-                  fit="contain"
-                  class="frameImg"
-                  @click="editStoryboaryImage(item, [item.src])">
-                  <template #overlayContent>
-                    <div class="imageToolsWrap show">
-                      <ImageTools :style="{ transform: `scale(${styleMaxSize})` }" :src="item.src" position="br" />
+                class="addBetween addBetween--left"
+                :class="{ expanded: hoveredIndex === index }"
+                @click.stop="editStoryboaryImage(item, [index > 0 ? storyboard[index - 1]?.src || '' : '', item.src || ''], index - 1)">
+                <t-button theme="primary" variant="outline" shape="circle">
+                  <template #icon><i-plus /></template>
+                </t-button>
+              </div>
+
+              <div class="frameCard">
+                <div
+                  class="frameImage"
+                  :style="{
+                    width: `${200 * gridScale}px`,
+                    height: `${200 * gridScale}px`,
+                  }">
+                  <t-checkbox
+                    class="frameCheckbox"
+                    :checked="selectedIds.includes(item.id!)"
+                    @click.stop
+                    :style="{ transform: `scale(${styleMaxSize})` }"
+                    :key="item?.id || index"
+                    :value="item.id" />
+                  <t-tag class="frameTypeTag" :style="{ backgroundColor: tagColors[index % tagColors.length], transform: `scale(${styleMaxSize})` }">
+                    S{{ String(index + 1).padStart(2, "0") }}
+                  </t-tag>
+                  <t-image
+                    v-if="item.src && item.state == '已完成'"
+                    :src="item.src"
+                    fit="contain"
+                    class="frameImg"
+                    @click="editStoryboaryImage(item, [item.src])">
+                    <template #overlayContent>
+                      <div class="imageToolsWrap show">
+                        <ImageTools :style="{ transform: `scale(${styleMaxSize})` }" :src="item.src" position="br" />
+                      </div>
+                    </template>
+                  </t-image>
+                  <div v-else class="generatingPlaceholder" @click="editStoryboaryImage(item, [])">
+                    <t-loading v-if="item.state === '生成中'" size="small" />
+                    <t-tooltip v-else-if="item.state == '生成失败'" :content="item?.reason">
+                      <span style="color: #ff4d4f">生成失败</span>
+                    </t-tooltip>
+                    <t-empty v-else size="small" :title="$t('workbench.production.node.storyboard.notGenerated')" />
+                  </div>
+                  <t-tooltip theme="primary" :content="$t('workbench.production.node.storyboard.deleteNode')">
+                    <div class="remove ac" :style="{ transform: `scale(${styleMaxSize})` }" @click.stop="removeFn(item.id!)">
+                      <i-delete theme="outline" size="18" fill="#fff" />
                     </div>
-                  </template>
-                </t-image>
-                <div v-else class="generatingPlaceholder" @click="editStoryboaryImage(item, [])">
-                  <t-loading v-if="item.state === '生成中'" size="small" />
-                  <t-tooltip v-else-if="item.state == '生成失败'" :content="item?.reason">
-                    <span style="color: #ff4d4f">生成失败</span>
                   </t-tooltip>
-                  <t-empty v-else size="small" :title="$t('workbench.production.node.storyboard.notGenerated')" />
+                  <t-tooltip theme="primary" :content="$t('workbench.production.node.storyboard.editNode')">
+                    <div class="editNode ac" :style="{ transform: `scale(${styleMaxSize})` }" @click.stop="editInfo(item)">
+                      <i-edit theme="outline" size="18" fill="#fff" />
+                    </div>
+                  </t-tooltip>
                 </div>
-                <t-tooltip theme="primary" :content="$t('workbench.production.node.storyboard.deleteNode')">
-                  <div class="remove ac" :style="{ transform: `scale(${styleMaxSize})` }" @click.stop="removeFn(item.id!)">
-                    <i-delete theme="outline" size="18" fill="#fff" />
-                  </div>
-                </t-tooltip>
-                <t-tooltip theme="primary" :content="$t('workbench.production.node.storyboard.editNode')">
-                  <div class="editNode ac" :style="{ transform: `scale(${styleMaxSize})` }" @click.stop="editInfo(item)">
-                    <i-edit theme="outline" size="18" fill="#fff" />
-                  </div>
-                </t-tooltip>
+              </div>
+              <div
+                class="addBetween addBetween--right"
+                :class="{ expanded: hoveredIndex === index }"
+                @click.stop="
+                  editStoryboaryImage(item, [item.src || '', index < (storyboard?.length ?? 0) - 1 ? storyboard[index + 1]?.src || '' : ''], index)
+                ">
+                <t-button theme="primary" variant="outline" shape="circle">
+                  <template #icon><i-plus /></template>
+                </t-button>
               </div>
             </div>
-            <div
-              class="addBetween addBetween--right"
-              :class="{ expanded: hoveredIndex === index }"
-              @click.stop="
-                editStoryboaryImage(item, [item.src || '', index < (storyboard?.length ?? 0) - 1 ? storyboard[index + 1]?.src || '' : ''], index)
-              ">
-              <t-button theme="primary" variant="outline" shape="circle">
-                <template #icon><i-plus /></template>
-              </t-button>
-            </div>
-          </div>
-        </template>
-      </div>
+          </template>
+        </div>
+      </t-checkbox-group>
+
       <div class="scaleControl">
         <span>{{ $t("workbench.production.node.storyboard.scaleRatio") }}</span>
         <t-input-number v-model="gridScale" :min="0.1" :max="3" :step="0.1" :decimal-places="1" size="small" style="width: 120px" />
       </div>
+      <div class="ac" style="gap: 6px; margin-bottom: 6px; flex-wrap: wrap">
+        <t-tag theme="primary" variant="light">{{ $t("workbench.production.node.storyboard.selectedCount", { count: selectedIds.length }) }}</t-tag>
+        <t-button size="small" :disabled="!storyboard.length" theme="default" variant="outline" @click="selectedIds = []">
+          {{ $t("workbench.production.node.storyboard.clearSelection") }}
+        </t-button>
+        <t-button size="small" :disabled="!storyboard.length" theme="default" variant="outline" @click="selectAll">
+          {{ $t("workbench.production.node.storyboard.selectAll") }}
+        </t-button>
+      </div>
       <div class="ac" style="gap: 10px">
         <t-button block @click="previewAll" :disabled="!storyboard.length">{{ $t("workbench.production.node.storyboard.gridPreview") }}</t-button>
+        <t-button block @click="batchGenerateImage" :disabled="!storyboard.length || !selectedIds.length" :loading="generateLoading">
+          {{ $t("workbench.production.node.storyboard.generateImage") }}
+        </t-button>
+
         <!-- <t-button block @click="batchGenerateImage" :disabled="!storyboard.length" :loading="generateLoading">
           {{ $t("workbench.production.node.storyboard.batchGenerateImage") }}
         </t-button> -->
@@ -123,9 +146,23 @@ const previewImages = ref<string[]>([]);
 const gridScale = useLocalStorage("storyboardGridScale", 1);
 
 const hoveredIndex = ref<number | null>(null);
+const selectedIds = ref<number[]>([]);
 
 function setHoveredFrame(index: number | null) {
   hoveredIndex.value = index;
+}
+
+function toggleSelect(id: number) {
+  const idx = selectedIds.value.indexOf(id);
+  if (idx === -1) {
+    selectedIds.value.push(id);
+  } else {
+    selectedIds.value.splice(idx, 1);
+  }
+}
+
+function selectAll() {
+  selectedIds.value = storyboard.value.map((s) => s.id!).filter(Boolean);
 }
 
 const currentRow = ref<{
@@ -201,27 +238,20 @@ const styleMaxSize = computed(() => {
   if (gridScale.value <= 1) return gridScale.value;
   else 1;
 });
-// async function batchGenerateImage() {
-// LoadingPlugin(true);
-// generateLoading.value = true;
-// try {
-//   await batchGenerateStoryboard();
-//   window.$message.success($t("workbench.production.node.storyboard.batchGenerateSuccess"));
-// } catch (e) {
-//   window.$message.error($t("workbench.production.node.storyboard.batchGenerateFailed"));
-// } finally {
-//   generateLoading.value = false;
-// }
-// const allIds = (storyboard.value ?? []).filter((s) => s.src).map((s) => s.id!);
-// if (!allIds.length) {
-//   window.$message.warning($t("workbench.production.node.storyboard.noPreviewImages"));
-//   LoadingPlugin(false);
-//   return;
-// }
-// axios.post("/production/storyboard/batchGenerateImage", {
-//   scriptId: allIds,
-// });
-// }
+const generateLoading = ref(false);
+async function batchGenerateImage() {
+  if (!selectedIds.value.length) return window.$message.warning("请先选择分镜面板");
+  generateLoading.value = true;
+  try {
+    await productionAgentStore().batchGenerateStoryboard(selectedIds.value);
+    window.$message.success($t("workbench.production.node.storyboard.batchGenerateSuccess"));
+    selectedIds.value = [];
+  } catch (e) {
+    window.$message.error($t("workbench.production.node.storyboard.batchGenerateFailed"));
+  } finally {
+    generateLoading.value = false;
+  }
+}
 function editStoryboaryImage(item: Storyboard, images: string[], insertAfterIndex: number | null = null) {
   currentRowStoryboardInfo.value = {
     id: insertAfterIndex == null ? item?.id! : null,
@@ -558,9 +588,16 @@ function editInfo(item: Storyboard) {
     }
   }
 
-  .frameTypeTag {
+  .frameCheckbox {
     position: absolute;
     left: 6px;
+    top: 6px;
+    z-index: 3;
+  }
+
+  .frameTypeTag {
+    position: absolute;
+    left: 28px;
     top: 6px;
     color: #fff;
     font-size: 10px;

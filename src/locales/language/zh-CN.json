@@ -1165,7 +1165,10 @@
           "imageLoadFailed": "图片加载失败",
           "promptPlaceholder": "请输入提示词",
           "prompt": "提示词",
-          "editInfo": "提示词修改"
+          "editInfo": "提示词修改",
+          "selectedCount": "已选 {count} 项",
+          "clearSelection": "取消选择",
+          "selectAll": "全选"
         },
         "storyboardTable": {
           "title": "分镜表",
@@ -1751,5 +1754,7 @@
   "settings.agent.auto": "自动",
   "settings.agent.manual": "手动",
   "settings.agent.autoHint": "由模型自动决定输出长度",
-  "settings.agent.msg.notmodel": "未选择模型"
+  "settings.agent.msg.notmodel": "未选择模型",
+  "workbench.production.node.storyboard.generateImage": "生成分镜图",
+  "workbench.assets.preew": "1"
 }

@@ -1520,5 +1520,6 @@
   "settings.agent.auto": "อัตโนมัติ",
   "settings.agent.manual": "กำหนดเอง",
   "settings.agent.autoHint": "ความยาวเอาต์พุตกำหนดโดยโมเดล",
-  "settings.agent.msg.notmodel": "ไม่ได้เลือกรุ่น"
+  "settings.agent.msg.notmodel": "ไม่ได้เลือกรุ่น",
+  "workbench.production.node.storyboard.generateImage": "สร้างสตอรี่บอร์ด"
 }

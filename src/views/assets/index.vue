@@ -94,7 +94,7 @@
                           </div>
                           <t-image-viewer v-else :images="[subRow.src]" :closeOnEscKeydown="true" :closeOnOverlay="true">
                             <template #trigger="{ open }">
-                              <div class="imageTrigger" @click="subRow.src && open()">
+                              <div class="imageTrigger" @click="subRow.src && getBigImageUrl(subRow, open())">
                                 <img v-if="subRow.src" :src="subRow.src" :alt="subRow.name" class="previewImage" />
                                 <div v-else class="noImage">
                                   <t-icon name="image" size="24px" />
@@ -143,7 +143,7 @@
                   <div class="previewCell">
                     <t-image-viewer :images="[row.src]" :closeOnEscKeydown="true" :closeOnOverlay="true">
                       <template #trigger="{ open }">
-                        <div class="imageTrigger" @click="row.src && open()">
+                        <div class="imageTrigger" @click="row.src && getBigImageUrl(row, open())">
                           <img v-if="row.src" :src="row.src" :alt="row.name" class="previewImage" />
                           <div v-else class="noImage">
                             <t-icon name="image" size="24px" />
@@ -171,7 +171,7 @@
                     </div>
                     <t-image-viewer v-else :images="[row.src]" :closeOnEscKeydown="true" :closeOnOverlay="true">
                       <template #trigger="{ open }">
-                        <div class="imageTrigger" @click="row.src && open()">
+                        <div class="imageTrigger" @click="row.src && getBigImageUrl(row, open())">
                           <img v-if="row.src" :src="row.src" :alt="row.name" class="previewImage" />
                           <div v-else class="noImage">
                             <t-icon name="image" size="24px" />
@@ -310,7 +310,7 @@
                       stripe
                       :select-on-row-click="false"
                       @select-change="handleSubSelectChange">
-                      <template #previewWithLoading="{ row: subRow }" >
+                      <template #previewWithLoading="{ row: subRow }">
                         <div class="previewCell">
                           <div class="mediaTrigger audioThumb" @click="openMediaPreview(subRow.src, subRow.name)">
                             <t-icon name="music" size="28px" />
@@ -1310,6 +1310,16 @@ watch(generatingData, (val) => {
     stopImagePolling();
   }
 });
+
+async function getBigImageUrl(row: Asset, fn: Function) {
+  const { data } = await axios.post("/common/getBigImage", {
+    url: row.src,
+  });
+  row.src = data;
+  nextTick(() => {
+    fn();
+  });
+}
 </script>
 
 <style lang="scss" scoped>

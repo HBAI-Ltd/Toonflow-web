@@ -1524,5 +1524,6 @@
   "settings.agent.auto": "Tự động",
   "settings.agent.manual": "Thủ công",
   "settings.agent.autoHint": "Độ dài đầu ra do mô hình quyết định",
-  "settings.agent.msg.notmodel": "Không có mô hình nào được chọn"
+  "settings.agent.msg.notmodel": "Không có mô hình nào được chọn",
+  "workbench.production.node.storyboard.generateImage": "Tạo bảng phân cảnh"
 }
