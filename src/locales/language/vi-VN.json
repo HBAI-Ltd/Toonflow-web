@@ -753,12 +753,15 @@
       "confirmReplace": "Xác nhận thay thế",
       "batchGenerationPrompt": "Tạo các từ nhắc nhở theo đợt",
       "generatingPrompt": "Đang tạo",
+      "selectAll": "Chọn tất cả",
       "selectPromptEmpty": "Chọn tất cả từ nhắc trống",
       "noEmptyPrompt": "Không có nội dung nào có từ nhắc trống",
       "selectedCount": "đã chọn {count} nội dung",
       "cancelGeneration": "Hủy tạo",
       "selectGenerating": "Chọn mục đang được tạo",
-      "noGenerating": "Không có dữ liệu nào được tạo"
+      "noGenerating": "Không có dữ liệu nào được tạo",
+      "checkNumber": "Chọn số lượng",
+      "selectAll": "Chọn tất cả"
     },
     "script": {
       "searchPlaceholder": "Tìm kiếm tên kịch bản...",

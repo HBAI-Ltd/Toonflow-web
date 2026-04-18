@@ -900,12 +900,15 @@
       "confirmReplace": "Confirm replacement",
       "batchGenerationPrompt": "Generate prompt words in batches",
       "generatingPrompt": "Generating",
+      "selectAll": "Select All",
       "selectPromptEmpty": "Select all prompt word is empty",
       "noEmptyPrompt": "There are no assets with empty prompt word",
       "selectedCount": "{count} assets selected",
       "cancelGeneration": "Cancel generation",
       "selectGenerating": "Select the item being generated",
-      "noGenerating": "No data being generated"
+      "noGenerating": "No data being generated",
+      "checkNumber": "Select quantity",
+      "selectAll": "Select all"
     },
     "script": {
       "searchPlaceholder": "Search script names...",
