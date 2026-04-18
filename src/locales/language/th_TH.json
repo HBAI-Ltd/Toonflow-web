@@ -770,8 +770,7 @@
       "cancelGeneration": "ยกเลิกการสร้าง",
       "selectGenerating": "เลือกรายการที่กำลังสร้าง",
       "noGenerating": "ไม่มีการสร้างข้อมูล",
-      "checkNumber": "เลือกปริมาณ",
-      "selectAll": "เลือกทั้งหมด"
+      "checkNumber": "เลือกปริมาณ"
     },
     "script": {
       "searchPlaceholder": "ค้นหาชื่อบทภาพยนตร์...",
@@ -1524,5 +1523,6 @@
   "settings.agent.manual": "กำหนดเอง",
   "settings.agent.autoHint": "ความยาวเอาต์พุตกำหนดโดยโมเดล",
   "settings.agent.msg.notmodel": "ไม่ได้เลือกรุ่น",
-  "workbench.production.node.storyboard.generateImage": "สร้างสตอรี่บอร์ด"
+  "workbench.production.node.storyboard.generateImage": "สร้างสตอรี่บอร์ด",
+  "workbench.generate.notSelectMode": "กรุณาเลือกรุ่นก่อน"
 }

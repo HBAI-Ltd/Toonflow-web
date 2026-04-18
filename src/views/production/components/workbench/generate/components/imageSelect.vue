@@ -170,6 +170,7 @@ const mixedClipMediaTypes = computed<ClipMediaType[]>(() => {
 });
 let currentSlot: "start" | "end" | "" = "";
 function handleMixedAdd(slot: "start" | "end" | "" = "") {
+  if (!props.mode) return window.$message.error($t("workbench.generate.notSelectMode"));
   currentSlot = slot;
   const multiple = Array.isArray(parseMode(props.mode as string));
   const dlg = DialogPlugin.confirm({

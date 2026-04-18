@@ -769,8 +769,7 @@
       "cancelGeneration": "生成をキャンセルする",
       "selectGenerating": "生成されるアイテムを選択します",
       "noGenerating": "データは生成されていません",
-      "checkNumber": "数量を選択してください",
-      "selectAll": "すべて選択"
+      "checkNumber": "数量を選択してください"
     },
     "script": {
       "searchPlaceholder": "シナリオ名を検索...",
@@ -1536,5 +1535,6 @@
   "settings.agent.manual": "手動",
   "settings.agent.autoHint": "モデルが出力長を自動決定",
   "settings.agent.msg.notmodel": "モデルが選択されていません",
-  "workbench.production.node.storyboard.generateImage": "ストーリーボードを生成する"
+  "workbench.production.node.storyboard.generateImage": "ストーリーボードを生成する",
+  "workbench.generate.notSelectMode": "最初にモデルを選択してください"
 }

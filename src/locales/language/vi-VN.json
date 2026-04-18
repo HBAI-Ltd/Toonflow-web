@@ -760,8 +760,7 @@
       "cancelGeneration": "Hủy tạo",
       "selectGenerating": "Chọn mục đang được tạo",
       "noGenerating": "Không có dữ liệu nào được tạo",
-      "checkNumber": "Chọn số lượng",
-      "selectAll": "Chọn tất cả"
+      "checkNumber": "Chọn số lượng"
     },
     "script": {
       "searchPlaceholder": "Tìm kiếm tên kịch bản...",
@@ -1528,5 +1527,6 @@
   "settings.agent.manual": "Thủ công",
   "settings.agent.autoHint": "Độ dài đầu ra do mô hình quyết định",
   "settings.agent.msg.notmodel": "Không có mô hình nào được chọn",
-  "workbench.production.node.storyboard.generateImage": "Tạo bảng phân cảnh"
+  "workbench.production.node.storyboard.generateImage": "Tạo bảng phân cảnh",
+  "workbench.generate.notSelectMode": "Vui lòng chọn một mẫu trước"
 }

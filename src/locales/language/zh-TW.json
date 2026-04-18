@@ -773,8 +773,7 @@
       "cancelGeneration": "取消生成",
       "selectGenerating": "選擇正在產生項",
       "noGenerating": "沒有正在產生的數據",
-      "checkNumber": "選擇數量",
-      "selectAll": "全選"
+      "checkNumber": "選擇數量"
     },
     "script": {
       "searchPlaceholder": "搜尋劇本名稱...",
@@ -1525,5 +1524,6 @@
   "settings.agent.manual": "手動",
   "settings.agent.autoHint": "由模型自動決定輸出長度",
   "settings.agent.msg.notmodel": "未選擇模型",
-  "workbench.production.node.storyboard.generateImage": "生成分鏡圖"
+  "workbench.production.node.storyboard.generateImage": "生成分鏡圖",
+  "workbench.generate.notSelectMode": "請先選擇模型"
 }

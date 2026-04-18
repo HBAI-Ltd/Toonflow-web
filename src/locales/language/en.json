@@ -900,15 +900,14 @@
       "confirmReplace": "Confirm replacement",
       "batchGenerationPrompt": "Generate prompt words in batches",
       "generatingPrompt": "Generating",
-      "selectAll": "Select All",
+      "selectAll": "Select all",
       "selectPromptEmpty": "Select all prompt word is empty",
       "noEmptyPrompt": "There are no assets with empty prompt word",
       "selectedCount": "{count} assets selected",
       "cancelGeneration": "Cancel generation",
       "selectGenerating": "Select the item being generated",
       "noGenerating": "No data being generated",
-      "checkNumber": "Select quantity",
-      "selectAll": "Select all"
+      "checkNumber": "Select quantity"
     },
     "script": {
       "searchPlaceholder": "Search script names...",
@@ -1677,5 +1676,6 @@
   "settings.agent.manual": "Manual",
   "settings.agent.autoHint": "Output length decided by the model",
   "settings.agent.msg.notmodel": "No model selected",
-  "workbench.production.node.storyboard.generateImage": "Generate storyboards"
+  "workbench.production.node.storyboard.generateImage": "Generate storyboards",
+  "workbench.generate.notSelectMode": "Please select a model first"
 }
