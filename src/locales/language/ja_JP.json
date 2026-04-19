@@ -762,12 +762,14 @@
       "confirmReplace": "交換の確認",
       "batchGenerationPrompt": "プロンプト単語をバッチで生成する",
       "generatingPrompt": "生成中",
+      "selectAll": "すべて選択",
       "selectPromptEmpty": "プロンプトの単語が空であることをすべて選択してください",
       "noEmptyPrompt": "空のプロンプトワードを含むアセットはありません",
       "selectedCount": "{count} 個のアセットが選択されました",
       "cancelGeneration": "生成をキャンセルする",
       "selectGenerating": "生成されるアイテムを選択します",
-      "noGenerating": "データは生成されていません"
+      "noGenerating": "データは生成されていません",
+      "checkNumber": "数量を選択してください"
     },
     "script": {
       "searchPlaceholder": "シナリオ名を検索...",
@@ -1532,5 +1534,7 @@
   "settings.agent.auto": "自動",
   "settings.agent.manual": "手動",
   "settings.agent.autoHint": "モデルが出力長を自動決定",
-  "settings.agent.msg.notmodel": "モデルが選択されていません"
+  "settings.agent.msg.notmodel": "モデルが選択されていません",
+  "workbench.production.node.storyboard.generateImage": "ストーリーボードを生成する",
+  "workbench.generate.notSelectMode": "最初にモデルを選択してください"
 }

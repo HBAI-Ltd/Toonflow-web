@@ -2,7 +2,7 @@
   <div class="imageUploadBox ac">
     <!-- 单图模式 -->
     <template v-if="mode == 'singleImage' || Array.isArray(parseMode(mode as string))">
-      <div class="uploadBtn c fc" v-for="(item, index) in imageList" :key="index">
+      <div class="uploadBtn c fc" v-for="(item, index) in (mode == 'singleImage' ? imageList.slice(0, 1) : imageList)" :key="index">
         <template v-if="item.src">
           <t-image :src="item.src" fit="contain" class="uploadPreview">
             <template #overlayContent></template>
@@ -13,7 +13,7 @@
             <span style="font-size: 20px">文</span>
           </t-tooltip>
         </template>
-        <div class="imageToolsWrap" v-if="item.sources == 'storyboard' && item.index">
+        <div class="imageToolsWrap" v-if="item.sources == 'storyboard' && item.index != null">
           {{ `P${item.index + 1}` }}
         </div>
         <div class="clearBtn" @click="splitImage(index)">
@@ -37,7 +37,7 @@
               <span style="font-size: 20px">文</span>
             </t-tooltip>
           </template>
-          <div class="imageToolsWrap" v-if="imageList?.[index]?.sources == 'storyboard' && imageList?.[index]?.index">
+          <div class="imageToolsWrap" v-if="imageList?.[index]?.sources == 'storyboard' && imageList?.[index]?.index != null">
             {{ `P${imageList[index]?.index + 1}` }}
           </div>
           <div class="clearBtn" @click.stop="clearImage(index)">
@@ -69,6 +69,9 @@
       placement="center">
       <div class="storyboardGrid">
         <div class="storyboardItem" v-for="sb in storyboardList" :key="sb.id" @click="pickStoryboard(sb)">
+          <div class="imageToolsWrap" v-if="sb?.index != null">
+            {{ `P${sb?.index + 1}` }}
+          </div>
           <img v-if="sb.src" :src="sb.src" />
           <div v-else class="textBox ac jc">
             <t-tooltip theme="primary" :content="sb?.videoDesc || ''">
@@ -167,6 +170,7 @@ const mixedClipMediaTypes = computed<ClipMediaType[]>(() => {
 });
 let currentSlot: "start" | "end" | "" = "";
 function handleMixedAdd(slot: "start" | "end" | "" = "") {
+  if (!props.mode) return window.$message.error($t("workbench.generate.notSelectMode"));
   currentSlot = slot;
   const multiple = Array.isArray(parseMode(props.mode as string));
   const dlg = DialogPlugin.confirm({
@@ -191,6 +195,8 @@ function handleMixedAdd(slot: "start" | "end" | "" = "") {
       });
       if (slot === "start" || slot === "end") {
         setFrameSlot(slot, newItems[0]);
+      } else if (props.mode === "singleImage") {
+        imageList.value = [newItems[0]];
       } else {
         imageList.value = [...imageList.value, ...newItems];
       }
@@ -249,6 +255,21 @@ function splitImage(index: number) {
     background-color: var(--td-bg-color-secondarycontainer);
     border-radius: 4px;
   }
+  .imageToolsWrap {
+    z-index: 99999;
+    position: absolute;
+    left: 4px;
+    top: 4px;
+    padding: 0 5px;
+    font-size: 11px;
+    line-height: 18px;
+    background: rgba(0, 0, 0, 0.55);
+    color: #fff;
+    border-radius: 4px;
+    backdrop-filter: blur(4px);
+    user-select: none;
+    white-space: nowrap;
+  }
   .uploadBtn {
     width: 80px;
     min-width: 80px;
@@ -261,20 +282,7 @@ function splitImage(index: number) {
       border-color: var(--td-text-color);
       cursor: pointer;
     }
-    .imageToolsWrap {
-      position: absolute;
-      left: 4px;
-      top: 4px;
-      padding: 0 5px;
-      font-size: 11px;
-      line-height: 18px;
-      background: rgba(0, 0, 0, 0.55);
-      color: #fff;
-      border-radius: 4px;
-      backdrop-filter: blur(4px);
-      user-select: none;
-      white-space: nowrap;
-    }
+
     .uploadPreview {
       width: 100%;
       height: 100%;
@@ -282,6 +290,7 @@ function splitImage(index: number) {
       border-radius: 8px;
     }
     .clearBtn {
+      z-index: 999999999999999;
       position: absolute;
       top: 2px;
       right: 2px;
@@ -329,6 +338,7 @@ function splitImage(index: number) {
     padding: 4px;
     .storyboardItem {
       cursor: pointer;
+      position: relative;
       border-radius: 8px;
       overflow: hidden;
       border: 2px solid transparent;

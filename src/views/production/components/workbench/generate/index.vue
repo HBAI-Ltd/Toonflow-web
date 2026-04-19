@@ -103,6 +103,7 @@ const imageList = computed({
     // 优先从缓存读取
     if (pid != null && sid != null && trackId != null) {
       const cached = getCache(pid, sid, trackId);
+
       if (cached?.length) {
         cached.sort((a, b) => getImageItemPriority(a) - getImageItemPriority(b));
         return cached;
@@ -111,6 +112,7 @@ const imageList = computed({
     const medias = currentTrack.value?.medias;
     if (!medias?.length) return [];
     (medias as UploadItem[]).sort((a, b) => getImageItemPriority(a) - getImageItemPriority(b));
+
     return medias as UploadItem[];
   },
   set(val: UploadItem[]) {
@@ -213,7 +215,7 @@ watch(
     }
     axios.post("/modelSelect/getModelDetail", { modelId: val }).then(({ data }) => {
       modeOptions.value = data;
-      modelParmas.value.audio = data.audio === true || data.audio === "true";
+      modelParmas.value.audio = data.audio === true || data.audio === "true" || data.audio == "optional";
       const drMap = data.durationResolutionMap;
       if (Array.isArray(drMap) && drMap.length > 0) {
         if (drMap[0].resolution?.length) modelParmas.value.resolution = drMap[0].resolution[0];
@@ -221,12 +223,14 @@ watch(
       }
 
       const currentParsed = parseMode(modelParmas.value.mode);
-      const modeMatched = data.mode.some((m: VideoMode) => {
-        if (Array.isArray(m) && Array.isArray(currentParsed)) {
-          return JSON.stringify(m) === JSON.stringify(currentParsed);
-        }
-        return m == currentParsed;
-      });
+      const modeMatched =
+        currentParsed !== null &&
+        data.mode.some((m: VideoMode) => {
+          if (Array.isArray(m) && Array.isArray(currentParsed)) {
+            return JSON.stringify(m) === JSON.stringify(currentParsed);
+          }
+          return m == currentParsed;
+        });
       if (!modeMatched) {
         const newMode = Array.isArray(data.mode[0]) ? JSON.stringify(data.mode[0]) : data.mode[0];
         modeChange(newMode);

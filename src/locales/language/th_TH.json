@@ -763,12 +763,14 @@
       "confirmReplace": "ยืนยันการเปลี่ยน",
       "batchGenerationPrompt": "สร้างคำพร้อมท์เป็นชุด",
       "generatingPrompt": "กำลังสร้าง",
+      "selectAll": "เลือกทั้งหมด",
       "selectPromptEmpty": "เลือกทั้งหมด คำที่แจ้งว่างเปล่า",
       "noEmptyPrompt": "ไม่มีเนื้อหาที่มีคำว่าง",
       "selectedCount": "เลือกเนื้อหาแล้ว {count} รายการ",
       "cancelGeneration": "ยกเลิกการสร้าง",
       "selectGenerating": "เลือกรายการที่กำลังสร้าง",
-      "noGenerating": "ไม่มีการสร้างข้อมูล"
+      "noGenerating": "ไม่มีการสร้างข้อมูล",
+      "checkNumber": "เลือกปริมาณ"
     },
     "script": {
       "searchPlaceholder": "ค้นหาชื่อบทภาพยนตร์...",
@@ -1520,5 +1522,7 @@
   "settings.agent.auto": "อัตโนมัติ",
   "settings.agent.manual": "กำหนดเอง",
   "settings.agent.autoHint": "ความยาวเอาต์พุตกำหนดโดยโมเดล",
-  "settings.agent.msg.notmodel": "ไม่ได้เลือกรุ่น"
+  "settings.agent.msg.notmodel": "ไม่ได้เลือกรุ่น",
+  "workbench.production.node.storyboard.generateImage": "สร้างสตอรี่บอร์ด",
+  "workbench.generate.notSelectMode": "กรุณาเลือกรุ่นก่อน"
 }

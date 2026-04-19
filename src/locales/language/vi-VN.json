@@ -753,12 +753,14 @@
       "confirmReplace": "Xác nhận thay thế",
       "batchGenerationPrompt": "Tạo các từ nhắc nhở theo đợt",
       "generatingPrompt": "Đang tạo",
+      "selectAll": "Chọn tất cả",
       "selectPromptEmpty": "Chọn tất cả từ nhắc trống",
       "noEmptyPrompt": "Không có nội dung nào có từ nhắc trống",
       "selectedCount": "đã chọn {count} nội dung",
       "cancelGeneration": "Hủy tạo",
       "selectGenerating": "Chọn mục đang được tạo",
-      "noGenerating": "Không có dữ liệu nào được tạo"
+      "noGenerating": "Không có dữ liệu nào được tạo",
+      "checkNumber": "Chọn số lượng"
     },
     "script": {
       "searchPlaceholder": "Tìm kiếm tên kịch bản...",
@@ -1524,5 +1526,7 @@
   "settings.agent.auto": "Tự động",
   "settings.agent.manual": "Thủ công",
   "settings.agent.autoHint": "Độ dài đầu ra do mô hình quyết định",
-  "settings.agent.msg.notmodel": "Không có mô hình nào được chọn"
+  "settings.agent.msg.notmodel": "Không có mô hình nào được chọn",
+  "workbench.production.node.storyboard.generateImage": "Tạo bảng phân cảnh",
+  "workbench.generate.notSelectMode": "Vui lòng chọn một mẫu trước"
 }

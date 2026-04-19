@@ -74,6 +74,7 @@ function makeProductionAgentStore(projectId: string) {
                 String(attrs.shouldGenerateImage).toLowerCase() == "true"
                 ? 1
                 : 0;
+
             const videoDesc = attrs?.videoDesc ?? "";
             const existingIndex = flowData.value.storyboard.findIndex(
               (s) => s.prompt == prompt && s.duration == duration && videoDesc == s.videoDesc,

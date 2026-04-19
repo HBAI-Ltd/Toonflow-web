@@ -900,12 +900,14 @@
       "confirmReplace": "Confirm replacement",
       "batchGenerationPrompt": "Generate prompt words in batches",
       "generatingPrompt": "Generating",
+      "selectAll": "Select all",
       "selectPromptEmpty": "Select all prompt word is empty",
       "noEmptyPrompt": "There are no assets with empty prompt word",
       "selectedCount": "{count} assets selected",
       "cancelGeneration": "Cancel generation",
       "selectGenerating": "Select the item being generated",
-      "noGenerating": "No data being generated"
+      "noGenerating": "No data being generated",
+      "checkNumber": "Select quantity"
     },
     "script": {
       "searchPlaceholder": "Search script names...",
@@ -1120,7 +1122,10 @@
           "imageLoadFailed": "Failed to load image",
           "promptPlaceholder": "Please enter the prompt word",
           "prompt": "prompt word",
-          "editInfo": "Prompt word modification"
+          "editInfo": "Prompt word modification",
+          "selectedCount": "{count} selected",
+          "clearSelection": "Clear Selection",
+          "selectAll": "Select All"
         },
         "storyboardTable": {
           "title": "Storyboard Table",
@@ -1670,5 +1675,7 @@
   "settings.agent.auto": "Auto",
   "settings.agent.manual": "Manual",
   "settings.agent.autoHint": "Output length decided by the model",
-  "settings.agent.msg.notmodel": "No model selected"
+  "settings.agent.msg.notmodel": "No model selected",
+  "workbench.production.node.storyboard.generateImage": "Generate storyboards",
+  "workbench.generate.notSelectMode": "Please select a model first"
 }

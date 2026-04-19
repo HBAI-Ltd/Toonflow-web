@@ -81,6 +81,7 @@
       </transition>
     </div>
     <t-guide v-model="current" :steps="steps" @finish="() => (current = -1)" />
+    <t-tag variant="outline" class="fps" v-if="!openShowVisible">{{ fps }}</t-tag>
   </VueFlow>
 </template>
 
@@ -470,6 +471,30 @@ const steps = [
     placement: "right",
   },
 ] as any;
+
+const fps = ref(0);
+let lastFrameTime = performance.now();
+let frameCount = 0;
+function animate() {
+  const now = performance.now();
+  frameCount++;
+  const elapsed = now - lastFrameTime;
+  if (elapsed >= 500) {
+    fps.value = Math.round((frameCount * 1000) / elapsed);
+    frameCount = 0;
+    lastFrameTime = now;
+  }
+  if (!openShowVisible.value) {
+    requestAnimationFrame(animate);
+  }
+}
+
+watch(openShowVisible, (val) => {
+  console.log("%c Line:489 🍔 val", "background:#ffdd4d", val);
+  if (!val) {
+    animate();
+  }
+});
 </script>
 <style lang="scss" scoped>
 .flowMain {
@@ -566,5 +591,13 @@ $handelSize: 12px;
     cursor: move;
     backdrop-filter: brightness(0.95);
   }
+}
+.fps {
+  position: absolute;
+  bottom: 10px;
+  right: 0px;
+  padding: 2px 6px;
+  font-size: 12px;
+  border-radius: 4px;
 }
 </style>

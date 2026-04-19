@@ -20,7 +20,10 @@ import "splitpanes/dist/splitpanes.css";
 
 import "./assets/main.scss";
 
+import { imageOptimizer } from '@/utils/imageOptimizer'
+
 const app = createApp(App);
+app.use(imageOptimizer)
 install(app, "i");
 app.use(createPinia().use(piniaPluginPersistedstate));
 app.use(router);

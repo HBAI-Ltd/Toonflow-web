@@ -762,12 +762,14 @@
       "confirmReplace": "Подтвердить замену",
       "batchGenerationPrompt": "Генерируйте подсказки в пакетном режиме",
       "generatingPrompt": "Создание",
+      "selectAll": "Выбрать все",
       "selectPromptEmpty": "Выбрать все подсказки. Слово пусто.",
       "noEmptyPrompt": "Нет ресурсов с пустым словом-подсказкой.",
       "selectedCount": "Выбрано {count} объектов",
       "cancelGeneration": "Отменить генерацию",
       "selectGenerating": "Выберите создаваемый элемент",
-      "noGenerating": "Данные не генерируются"
+      "noGenerating": "Данные не генерируются",
+      "checkNumber": "Выберите количество"
     },
     "script": {
       "searchPlaceholder": "Поиск по названию сценария...",
@@ -1532,5 +1534,7 @@
   "settings.agent.auto": "Авто",
   "settings.agent.manual": "Вручную",
   "settings.agent.autoHint": "Длина вывода определяется моделью",
-  "settings.agent.msg.notmodel": "Модель не выбрана"
+  "settings.agent.msg.notmodel": "Модель не выбрана",
+  "workbench.production.node.storyboard.generateImage": "Создание раскадровки",
+  "workbench.generate.notSelectMode": "Пожалуйста, сначала выберите модель"
 }
