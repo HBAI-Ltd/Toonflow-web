@@ -447,20 +447,12 @@ type ScriptCardItem = {
 
 // 剧本卡片折叠状态
 const collapsedCards = ref<Record<string, boolean>>({});
-const tempScriptCardKeys = new WeakMap<ScriptCardItem, string>();
-let tempScriptCardKeySeed = 0;
 
 function getScriptCardKey(item: ScriptCardItem, index: number) {
   if (item.id !== undefined && item.id !== null) {
     return `id:${item.id}`;
   }
-  let tempKey = tempScriptCardKeys.get(item);
-  if (!tempKey) {
-    tempScriptCardKeySeed += 1;
-    tempKey = `temp:${tempScriptCardKeySeed}`;
-    tempScriptCardKeys.set(item, tempKey);
-  }
-  return tempKey;
+  return `index:${index}`;
 }
 
 function isCardCollapsed(item: ScriptCardItem, index: number) {
