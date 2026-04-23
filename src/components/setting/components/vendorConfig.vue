@@ -917,6 +917,7 @@ function handleEditModel(model: VendorModel) {
       think: model.think,
       mode: [],
       mixedMode: [],
+      mixedModeCount: {},
       audio: "optional",
       durationResolutionMap: [{ duration: [], resolution: [] }],
     };
@@ -930,6 +931,7 @@ function handleEditModel(model: VendorModel) {
       think: false,
       mode: [...model.mode],
       mixedMode: [],
+      mixedModeCount: {},
       audio: "optional",
       durationResolutionMap: [{ duration: [], resolution: [] }],
     };
