@@ -55,7 +55,12 @@ function handleSubmit() {
 }
 
 function handleReset() {
-  formData.value.baseUrl = "http://localhost:10588";
+  // Reset to same-origin in the browser; fall back to the dev port when
+  // running in non-http context (e.g. electron file://).
+  formData.value.baseUrl =
+    typeof window !== "undefined" && window.location?.protocol?.startsWith("http")
+      ? `${window.location.origin}/api`
+      : "http://localhost:10588";
   baseUrl.value = formData.value.baseUrl;
   window.$message.success($t("settings.request.msg.reset"));
 }

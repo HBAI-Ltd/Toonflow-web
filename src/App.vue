@@ -75,7 +75,20 @@ async function getPort() {
       baseUrl.value = data.url;
       isElectron.value = true;
     }
-  } catch (error) {}
+  } catch (error) {
+    // Browser mode (toonflow:// scheme not registered). If the persisted
+    // baseUrl still points at the dev default localhost:10588, override
+    // to the current page origin so the app actually reaches its backend
+    // when accessed remotely (e.g. http://vm:9090). Users who set a
+    // custom baseUrl in Settings keep theirs.
+    if (
+      typeof window !== "undefined" &&
+      window.location?.protocol?.startsWith("http") &&
+      /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?\/api\/?$/.test(baseUrl.value)
+    ) {
+      baseUrl.value = `${window.location.origin}/api`;
+    }
+  }
 
   config({
     markdownItConfig(md) {

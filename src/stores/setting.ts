@@ -6,7 +6,15 @@ export default defineStore(
     const canvasWheelEvent = ref("zoom");
     const activeMenu = ref("ui");
 
-    const baseUrl = ref<string>("http://localhost:10588/api");
+    // Default API base. When loaded in a browser we want same-origin so the
+    // app works behind any host (vm public IP, reverse proxy, etc) without
+    // hard-coding the dev port. Electron overrides this via toonflow://getAppUrl
+    // (see App.vue getPort).
+    const baseUrl = ref<string>(
+      typeof window !== "undefined" && window.location?.protocol?.startsWith("http")
+        ? `${window.location.origin}/api`
+        : "http://localhost:10588/api"
+    );
 
     const needUpdate = ref(false);
 
