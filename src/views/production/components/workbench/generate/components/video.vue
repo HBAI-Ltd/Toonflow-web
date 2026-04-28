@@ -207,8 +207,6 @@ function handlePlayerClose() {
 function previewVideo(v: HistoryVideoItem) {
   if (v.state === "生成中" || v.state === "生成失败") return;
 }
-
-
 </script>
 
 <style lang="scss" scoped>
@@ -223,9 +221,10 @@ function previewVideo(v: HistoryVideoItem) {
     }
   }
   .historyItemBox {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 10px;
+    height: 100%;
     .historyItem {
       position: relative;
       width: 130px;
@@ -329,5 +328,9 @@ function previewVideo(v: HistoryVideoItem) {
     max-height: 450px;
     outline: none;
   }
+}
+:deep(.t-card__body) {
+  overflow: auto;
+  height: calc(100% - 48px);
 }
 </style>
