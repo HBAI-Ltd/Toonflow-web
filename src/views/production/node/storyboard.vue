@@ -92,7 +92,7 @@
         <t-button size="small" :disabled="!storyboard.length" theme="default" variant="outline" @click="selectAll">
           {{ $t("workbench.production.node.storyboard.selectAll") }}
         </t-button>
-        <t-button theme="danger" size="small"  :disabled="!storyboard.length || !selectedIds.length" @click="handleDeleteSelected">批量删除</t-button>
+        <t-button theme="danger" size="small" :disabled="!storyboard.length || !selectedIds.length" @click="handleDeleteSelected">批量删除</t-button>
       </div>
       <div class="ac" style="gap: 10px">
         <t-button block @click="previewAll" :disabled="!storyboard.length">{{ $t("workbench.production.node.storyboard.gridPreview") }}</t-button>
@@ -163,11 +163,32 @@ function selectAll() {
   selectedIds.value = storyboard.value.map((s) => s.id!).filter(Boolean);
 }
 function handleDeleteSelected() {
-  axios.post("/production/storyboard/batchGenerateImage", {
-    ids: selectedIds.value,
-    projectId: project.value?.id,
+  const dialog = DialogPlugin.confirm({
+    header: $t("workbench.assets.confirmDeleteHeader"),
+    body: $t("workbench.production.node.storyboard.confirmBatchDeleteBody", { index: selectedIds.value.length }),
+    confirmBtn: $t("workbench.assets.deleteBtn"),
+    cancelBtn: $t("workbench.assets.cancelBtn"),
+    theme: "warning",
+    onConfirm: async () => {
+      try {
+        if (!selectedIds.value.length) {
+          dialog.destroy();
+          return window.$message.error($t("workbench.production.node.storyboard.pleaseSelectImage"));
+        }
+        axios.post("/production/storyboard/batchDelete", {
+          ids: selectedIds.value,
+          projectId: project.value?.id,
+        });
+        storyboard.value = storyboard.value.filter((i) => !selectedIds.value.includes(i.id!));
+        selectedIds.value = [];
+        window.$message.success($t("workbench.production.node.storyboard.deleteSuccess"));
+      } catch (e) {
+        window.$message.error((e as any)?.message || $t("workbench.production.node.storyboard.removeFailed"));
+      } finally {
+        dialog.destroy();
+      }
+    },
   });
-  selectedIds.value = storyboard.value.map((s) => s.id!).filter(Boolean);
 }
 const currentRow = ref<{
   flowId?: number | null;

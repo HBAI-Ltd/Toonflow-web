@@ -10,7 +10,7 @@ interface Asset {
   describe: string;
   remark: string;
   src: string;
-  type: "role" | "tool" | "scene" | "clip";
+  type: "role" | "tool" | "scene" | "clip" | "audio";
   imageId: number | null;
   state: "未生成" | "生成中" | "已完成" | "生成失败";
   sonAssets?: Asset[];
@@ -28,10 +28,11 @@ export interface AssetsSelectOptions {
   multiple?: boolean;
   /** 弹窗标题 */
   title?: string;
+  selectorMode?: boolean;
 }
 
 export default function openAssetsSelector(options: AssetsSelectOptions = {}): Promise<Asset[]> {
-  const { types, clipMediaTypes, multiple = true, title = window.$t("common.selectAssets") } = options;
+  const { types, clipMediaTypes, multiple = true, title = window.$t("common.selectAssets"), selectorMode = false } = options;
   return new Promise((resolve) => {
     const container = document.createElement("div");
     document.body.appendChild(container);
@@ -88,7 +89,7 @@ export default function openAssetsSelector(options: AssetsSelectOptions = {}): P
             h("div", { style: "height: 72vh; overflow: auto;" }, [
               h(AssetsView, {
                 ref: assetsRef,
-                selectorMode: true,
+                selectorMode: selectorMode,
                 allowedTypes: types,
                 clipMediaTypes,
                 multiple,

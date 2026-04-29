@@ -1528,5 +1528,9 @@
   "settings.agent.autoHint": "Độ dài đầu ra do mô hình quyết định",
   "settings.agent.msg.notmodel": "Không có mô hình nào được chọn",
   "workbench.production.node.storyboard.generateImage": "Tạo bảng phân cảnh",
-  "workbench.generate.notSelectMode": "Vui lòng chọn một mẫu trước"
+  "workbench.generate.notSelectMode": "Vui lòng chọn một mẫu trước",
+  "workbench.production.node.storyboard.deleteSuccess": "Đã xóa bảng phân cảnh thành công",
+  "workbench.production.node.storyboard.pleaseSelectImage": "Vui lòng chọn bảng phân cảnh trước",
+  "workbench.cornerScape.audioState": "Ràng buộc",
+  "workbench.generate.generateError": "Không thể bắt đầu yêu cầu xây dựng"
 }

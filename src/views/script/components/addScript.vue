@@ -206,8 +206,6 @@ async function handleConfirm(): Promise<void> {
   }
   keepLoading.value = true;
   try {
-    console.log("%c Line:209 🍊 scriptData.value", "background:#93c0a4", scriptData.value.length);
-
     await axios.post("/script/addScript", {
       name: scriptName.value,
       content: scriptData.value,

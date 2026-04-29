@@ -1525,5 +1525,9 @@
   "settings.agent.autoHint": "由模型自動決定輸出長度",
   "settings.agent.msg.notmodel": "未選擇模型",
   "workbench.production.node.storyboard.generateImage": "生成分鏡圖",
-  "workbench.generate.notSelectMode": "請先選擇模型"
+  "workbench.generate.notSelectMode": "請先選擇模型",
+  "workbench.production.node.storyboard.deleteSuccess": "分鏡刪除成功",
+  "workbench.production.node.storyboard.pleaseSelectImage": "請先選擇分鏡",
+  "workbench.cornerScape.audioState": "綁定中",
+  "workbench.generate.generateError": "發起產生請求失敗"
 }

@@ -1524,5 +1524,9 @@
   "settings.agent.autoHint": "ความยาวเอาต์พุตกำหนดโดยโมเดล",
   "settings.agent.msg.notmodel": "ไม่ได้เลือกรุ่น",
   "workbench.production.node.storyboard.generateImage": "สร้างสตอรี่บอร์ด",
-  "workbench.generate.notSelectMode": "กรุณาเลือกรุ่นก่อน"
+  "workbench.generate.notSelectMode": "กรุณาเลือกรุ่นก่อน",
+  "workbench.production.node.storyboard.deleteSuccess": "ลบสตอรี่บอร์ดเรียบร้อยแล้ว",
+  "workbench.production.node.storyboard.pleaseSelectImage": "โปรดเลือกกระดานเรื่องราวก่อน",
+  "workbench.cornerScape.audioState": "ผูกพัน",
+  "workbench.generate.generateError": "ไม่สามารถเริ่มต้นคำขอสร้างได้"
 }

@@ -490,7 +490,6 @@ function animate() {
 }
 
 watch(openShowVisible, (val) => {
-  console.log("%c Line:489 🍔 val", "background:#ffdd4d", val);
   if (!val) {
     animate();
   }

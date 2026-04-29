@@ -55,6 +55,9 @@ import projectDialog from "./components/projectDialog.vue";
 import dayjs from "dayjs";
 import axios from "@/utils/axios";
 import projectStore from "@/stores/project";
+import imageListCacheStore from "@/stores/imageListCache";
+
+const { clearProjectCache } = imageListCacheStore();
 const { allProject, project } = storeToRefs(projectStore());
 
 const dialogShow = ref(false);
@@ -195,6 +198,7 @@ function delProjcer(projectId: string | undefined) {
       axios
         .post("/project/delProject", { id: projectId })
         .then(() => {
+          clearProjectCache(projectId!);
           window.$message.success($t("workbench.project.msg.deleteSuccess"));
           getAllProject();
         })
@@ -229,7 +233,7 @@ function delProjcer(projectId: string | undefined) {
   }
   .list {
     display: grid;
-    grid-template-columns: repeat(3,1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 10px;
     .card {
       width: 100%;

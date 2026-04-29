@@ -1759,5 +1759,11 @@
   "settings.agent.msg.notmodel": "未选择模型",
   "workbench.production.node.storyboard.generateImage": "生成分镜图",
   "workbench.assets.preew": "1",
-  "workbench.generate.notSelectMode": "请先选择模型"
+  "workbench.generate.notSelectMode": "请先选择模型",
+  "workbench.production.node.storyboard.confirmBatchDeleteBody": "确认是否删除当前选中的{index}个分镜",
+  "workbench.production.node.storyboard.deleteSuccess": "分镜删除成功",
+  "workbench.production.node.storyboard.pleaseSelectImage": "请先选择分镜",
+  "workbench.production.editImage.reference": "图片{index}",
+  "workbench.cornerScape.audioState": "绑定中",
+  "workbench.generate.generateError": "发起生成请求失败"
 }

@@ -2,14 +2,23 @@
   <div class="imageUploadBox ac">
     <!-- 单图模式 -->
     <template v-if="mode == 'singleImage' || Array.isArray(parseMode(mode as string))">
-      <div class="uploadBtn c fc" v-for="(item, index) in (mode == 'singleImage' ? imageList.slice(0, 1) : imageList)" :key="index">
+      <div class="uploadBtn c fc" v-for="(item, index) in mode == 'singleImage' ? imageList.slice(0, 1) : imageList" :key="index">
         <template v-if="item.src">
-          <t-image :src="item.src" fit="contain" class="uploadPreview">
+          <t-image v-if="item.fileType == 'image'" :src="item.src" fit="contain" class="uploadPreview">
             <template #overlayContent></template>
           </t-image>
+          <t-tooltip theme="primary" v-else-if="item.fileType == 'audio'" :content="item?.prompt || ''">
+            <div class="mediaPreview audioPreview">
+              <i-acoustic size="20" />
+              <span class="mediaLabel">音频</span>
+            </div>
+          </t-tooltip>
+          <div v-else-if="item.fileType == 'video'" class="mediaPreview videoPreview">
+            <video class="uploadPreview" :src="item.src" preload="metadata" muted />
+          </div>
         </template>
         <template v-else>
-          <t-tooltip theme="primary" :content="item?.prompt || ''">
+          <t-tooltip theme="primary" :content="item?.prompt ? '音频内容：' + item.prompt : ''">
             <span style="font-size: 20px">文</span>
           </t-tooltip>
         </template>
@@ -28,9 +37,18 @@
     </template>
     <template v-else-if="mode == 'endFrameOptional' || mode == 'startFrameOptional' || mode == 'startEndRequired'">
       <div class="uploadBtn c fc" v-for="(item, index) in buildLabel" :key="item.value" @click="handleMixedAdd(item.value as 'start' | 'end')">
-        <div v-if="!isEmptySlot(imageList?.[index])" style="flex: 1" class="ac">
+        <div v-if="!isEmptySlot(imageList?.[index])" style="flex: 1; width: 100%" class="ac">
           <template v-if="imageList?.[index]?.src">
-            <img class="uploadPreview" :src="imageList?.[index].src" />
+            <t-image v-if="imageList?.[index]?.fileType == 'image'" :src="imageList?.[index]!.src" fit="contain" class="uploadPreview">
+              <template #overlayContent></template>
+            </t-image>
+            <div v-else-if="imageList?.[index]?.fileType == 'audio'" class="mediaPreview audioPreview">
+              <i-acoustic size="20" />
+              <span class="mediaLabel">音频</span>
+            </div>
+            <div v-else-if="imageList?.[index]?.fileType == 'video'" class="mediaPreview videoPreview">
+              <video class="uploadPreview" :src="imageList?.[index]!.src" preload="metadata" muted />
+            </div>
           </template>
           <template v-else>
             <t-tooltip theme="primary" :content="imageList?.[index]?.prompt || ''">
@@ -179,19 +197,33 @@ function handleMixedAdd(slot: "start" | "end" | "" = "") {
     cancelBtn: $t("workbench.generate.cancel"),
     onConfirm: async () => {
       dlg.destroy();
-      const assets = await assetsCheck({ types: ["role", "tool", "scene", "clip"], clipMediaTypes: mixedClipMediaTypes.value, multiple });
+      const assets = await assetsCheck({ types: ["role", "tool", "scene", "clip", "audio"], clipMediaTypes: mixedClipMediaTypes.value, multiple });
 
       if (!assets.length) return;
 
-      const newItems: UploadItem[] = assets.map((asset) => {
+      const newItems: UploadItem[] = assets.flatMap((asset) => {
+        if (asset.type === "audio" && asset?.sonAssets?.length) {
+          return asset.sonAssets.map((sub: any) => {
+            const fileType = getFileTypeByExt(sub.src);
+            return {
+              fileType,
+              sources: "assets",
+              src: sub.src,
+              id: sub.id,
+              prompt: sub.prompt,
+            } as UploadItem;
+          });
+        }
         const fileType = getFileTypeByExt(asset.src);
-        return {
-          fileType,
-          sources: "assets",
-          src: asset.src,
-          id: asset.id,
-          prompt: asset.prompt,
-        };
+        return [
+          {
+            fileType,
+            sources: "assets",
+            src: asset.src,
+            id: asset.id,
+            prompt: asset.prompt,
+          } as UploadItem,
+        ];
       });
       if (slot === "start" || slot === "end") {
         setFrameSlot(slot, newItems[0]);
@@ -288,6 +320,28 @@ function splitImage(index: number) {
       height: 100%;
       object-fit: cover;
       border-radius: 8px;
+    }
+    .mediaPreview {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      gap: 4px;
+      .mediaLabel {
+        font-size: 11px;
+        color: var(--td-text-color-secondary);
+      }
+      &.audioPreview {
+        background: var(--td-bg-color-secondarycontainer);
+        color: var(--td-brand-color);
+      }
+      &.videoPreview {
+        background: #000;
+        overflow: hidden;
+      }
     }
     .clearBtn {
       z-index: 999999999999999;

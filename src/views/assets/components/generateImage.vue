@@ -340,7 +340,6 @@ function selectImage(index: number) {
 
 //删除图片
 function deleteImage(id: string | number, index: number) {
-  console.log("%c Line:343 🍩 id", "background:#4fff4B", id);
   const dialog = DialogPlugin.confirm({
     header: $t("workbench.assets.confirmDeleteHeader"),
     body: $t("workbench.assets.confirmDeleteBody"),

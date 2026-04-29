@@ -1536,5 +1536,8 @@
   "settings.agent.autoHint": "Длина вывода определяется моделью",
   "settings.agent.msg.notmodel": "Модель не выбрана",
   "workbench.production.node.storyboard.generateImage": "Создание раскадровки",
-  "workbench.generate.notSelectMode": "Пожалуйста, сначала выберите модель"
+  "workbench.generate.notSelectMode": "Пожалуйста, сначала выберите модель",
+  "workbench.production.node.storyboard.pleaseSelectImage": "Пожалуйста, сначала выберите раскадровку",
+  "workbench.cornerScape.audioState": "Связывание",
+  "workbench.generate.generateError": "Не удалось инициировать запрос на сборку."
 }

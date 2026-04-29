@@ -383,7 +383,7 @@
       @getFilteredData="getFilteredData(assetOptions)" />
     <generateImage v-model="generateImageShow" @update="loadCurrentTabData" :formData="currentAssetData" />
 
-    <addAudioAssets v-model="addAudioShow" :formData="audioFormData" @getFilteredData="getFilteredData(assetOptions)" />
+    <addAudioAssets v-model="addAudioShow" v-if="addAudioShow" :formData="audioFormData" @getFilteredData="getFilteredData(assetOptions)" />
     <t-dialog
       v-model:visible="mediaPreviewShow"
       :header="mediaPreviewName || $t('workbench.assets.mediaPreview')"
@@ -449,7 +449,7 @@ const props = withDefaults(
     /** 是否作为选择器弹窗使用 */
     selectorMode?: boolean;
     /** 限制显示的资产类型 */
-    allowedTypes?: ("role" | "tool" | "scene" | "clip")[];
+    allowedTypes?: ("role" | "tool" | "scene" | "clip" | "audio")[];
     /** 当类型为 clip 时，限制媒体子类型 */
     clipMediaTypes?: ("image" | "video" | "audio")[];
     /** 是否多选 */
@@ -984,7 +984,7 @@ const clipColumns: TableProps["columns"] = [
   },
 ];
 const audioColumns: TableProps["columns"] = [
-  { colKey: "row-select", type: "multiple", width: 50, align: "center", fixed: "left" },
+  { colKey: "row-select", type: selectType, width: 50, align: "center", fixed: "left" },
   {
     colKey: "name",
     title: $t("workbench.assets.audioName"),

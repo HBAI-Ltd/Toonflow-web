@@ -101,9 +101,12 @@ async function handleCopy() {
 }
 
 async function handleDownload() {
+  const { data } = await axios.post("/common/getBigImage", {
+    url: props.src,
+  });
   let objectUrl = "";
   try {
-    const response = await fetch(props.src, { mode: "cors" });
+    const response = await fetch(data, { mode: "cors" });
     if (!response.ok) {
       throw new Error($t("components.imageTools.msg.downloadFailed"));
     }
@@ -111,15 +114,15 @@ async function handleDownload() {
     objectUrl = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = objectUrl;
-    a.download = props.src.split("/").pop() || "image";
+    a.download = data.split("/").pop() || "image";
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     window.$message.success($t("components.imageTools.msg.downloadStarted"));
   } catch {
     const a = document.createElement("a");
-    a.href = props.src;
-    a.download = props.src.split("/").pop() || "image";
+    a.href = data;
+    a.download = data.split("/").pop() || "image";
     a.target = "_blank";
     a.rel = "noopener noreferrer";
     document.body.appendChild(a);

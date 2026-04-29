@@ -61,7 +61,7 @@ const menuItems = [
   { key: "ui", label: "settings.menu.ui", icon: "i-theme" },
   { key: "language", label: "settings.menu.language", icon: "i-translate" },
   { key: "vendorConfig", label: "settings.menu.vendorConfig", icon: "i-computer" },
-  // { key: "modelMap", label: "settings.menu.modelMap", icon: "i-computer" },
+  { key: "modelMap", label: "settings.menu.modelMap", icon: "i-computer" },
   { key: "agentConfog", label: "settings.menu.agentConfig", icon: "i-color-filter" },
   { key: "promptManage", label: "settings.menu.promptManage", icon: "i-tips" },
   { key: "skillManagement", label: "settings.menu.skillsSkillsManagement", icon: "i-ring" },

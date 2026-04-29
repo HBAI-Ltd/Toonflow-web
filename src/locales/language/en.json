@@ -1677,5 +1677,9 @@
   "settings.agent.autoHint": "Output length decided by the model",
   "settings.agent.msg.notmodel": "No model selected",
   "workbench.production.node.storyboard.generateImage": "Generate storyboards",
-  "workbench.generate.notSelectMode": "Please select a model first"
+  "workbench.generate.notSelectMode": "Please select a model first",
+  "workbench.production.node.storyboard.deleteSuccess": "Storyboard deleted successfully",
+  "workbench.production.node.storyboard.pleaseSelectImage": "Please select the storyboard first",
+  "workbench.cornerScape.audioState": "Binding",
+  "workbench.generate.generateError": "Failed to initiate build request"
 }

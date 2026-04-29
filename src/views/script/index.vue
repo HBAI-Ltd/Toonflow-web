@@ -80,6 +80,10 @@ import addScript from "./components/addScript.vue";
 import batchAddScript from "./components/batchAddScript.vue";
 import projectStore from "@/stores/project";
 import settingStore from "@/stores/setting";
+import imageListCacheStore from "@/stores/imageListCache";
+
+const { clearScriptCache } = imageListCacheStore();
+
 const { otherSetting } = storeToRefs(settingStore());
 const { project } = storeToRefs(projectStore());
 interface ScriptAsset {
@@ -193,6 +197,7 @@ async function handleDeleteScript(scriptId: number) {
       try {
         await axios.post("/script/delScript", { ids: [scriptId] });
         window.$message.success($t("workbench.script.msg.deleteSuccess"));
+        clearScriptCache(project.value!.id, scriptId);
         searchScripts();
         dialog.destroy();
 
@@ -248,6 +253,9 @@ async function handleBatchDelete() {
       try {
         await axios.post("/script/delScript", { ids: selectedIds.value });
         window.$message.success($t("workbench.script.msg.batchDeleteSuccess"));
+        for (const item of selectedIds.value) {
+          clearScriptCache(project.value!.id, item);
+        }
         searchScripts();
         dialog.destroy();
       } catch (error) {
