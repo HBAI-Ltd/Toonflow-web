@@ -122,13 +122,13 @@
           </div>
         </div>
         <div class="versionTime" v-if="formattedUpdateTime">
-          <span class="versionTimeLabel">更新时间</span>
+          <span class="versionTimeLabel">{{ $t('settings.about.updateTime') }}</span>
           <span class="versionTimeValue">{{ formattedUpdateTime }}</span>
         </div>
 
         <!-- 自定义URL输入 -->
         <div class="customUrl" v-if="showCustomUrl">
-          <t-input v-model="customUpdateUrl" placeholder="输入自定义更新地址" clearable style="margin-bottom: 12px" />
+          <t-input v-model="customUpdateUrl" :placeholder="$t('settings.about.customUrlPlaceholder')" clearable style="margin-bottom: 12px" />
         </div>
 
         <!-- 更新源选择 -->
@@ -203,7 +203,7 @@ function onLogoClick() {
     if (logoClickTimer) clearTimeout(logoClickTimer);
     if (showCustomUrl.value) return;
     showCustomUrl.value = true;
-    MessagePlugin.info("已开启自定义更新地址");
+    MessagePlugin.info(t('settings.about.customUrlEnabled'));
   }
 }
 
@@ -367,11 +367,11 @@ async function doConfirmUpdate() {
 }
 
 function confirmUpdate() {
-  const reinstallWarning = updateInfo.value.reinstall ? "\n\n检测到该版本需要重新安装更新，安装过程中可能会替换现有安装，请先保存当前工作。" : "";
+  const reinstallWarning = updateInfo.value.reinstall ? "\n\n" + t('settings.about.reinstallWarning') : "";
 
   const dialog = DialogPlugin.confirm({
-    header: "确认更新",
-    body: `将通过 ${getUpdateSourceLabel(updateSource.value)} 更新到 v${updateInfo.value.latestVersion}，确认继续吗？${reinstallWarning}`,
+    header: t('settings.about.confirmUpdateHeader'),
+    body: `${t("settings.about.updateConfirmBody", { source: getUpdateSourceLabel(updateSource.value), version: updateInfo.value.latestVersion })}${reinstallWarning}`,
     confirmBtn: {
       content: t("settings.about.confirmUpdate"),
       theme: "primary",

@@ -49,7 +49,7 @@
                   <div v-else class="generatingPlaceholder" @click="editStoryboaryImage(item, [])">
                     <t-loading v-if="item.state === '生成中'" size="small" />
                     <t-tooltip v-else-if="item.state == '生成失败'" :content="item?.reason">
-                      <span style="color: #ff4d4f">生成失败</span>
+                      <span style="color: #ff4d4f">{{ $t("workbench.production.node.storyboard.batchGenerateFailed") }}</span>
                     </t-tooltip>
                     <t-empty v-else size="small" :title="$t('workbench.production.node.storyboard.notGenerated')" />
                   </div>
@@ -92,7 +92,7 @@
         <t-button size="small" :disabled="!storyboard.length" theme="default" variant="outline" @click="selectAll">
           {{ $t("workbench.production.node.storyboard.selectAll") }}
         </t-button>
-        <t-button theme="danger" size="small" :disabled="!storyboard.length || !selectedIds.length" @click="handleDeleteSelected">批量删除</t-button>
+        <t-button theme="danger" size="small" :disabled="!storyboard.length || !selectedIds.length" @click="handleDeleteSelected">{{ $t("workbench.production.node.storyboard.batchDelete") }}</t-button>
       </div>
       <div class="ac" style="gap: 10px">
         <t-button block @click="previewAll" :disabled="!storyboard.length">{{ $t("workbench.production.node.storyboard.gridPreview") }}</t-button>
@@ -265,7 +265,7 @@ const styleMaxSize = computed(() => {
 });
 const generateLoading = ref(false);
 async function batchGenerateImage() {
-  if (!selectedIds.value.length) return window.$message.warning("请先选择分镜面板");
+  if (!selectedIds.value.length) return window.$message.warning($t("workbench.production.node.storyboard.pleaseSelectStoryboard"));
   generateLoading.value = true;
   try {
     await productionAgentStore().batchGenerateStoryboard(selectedIds.value, true);

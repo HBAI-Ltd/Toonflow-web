@@ -142,7 +142,7 @@ async function downloadVideo(value: HistoryVideoItem) {
   const blob = await response.blob();
   const link = document.createElement("a");
   link.href = URL.createObjectURL(blob);
-  link.download = "视频.mp4";
+  link.download = "video.mp4";
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);

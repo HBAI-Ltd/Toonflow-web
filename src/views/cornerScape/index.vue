@@ -101,8 +101,8 @@
         <div class="infoBox">
           <div class="title ac jb">
             {{ item.name }}
-            <t-tag size="small" variant="outline" theme="success" v-if="item.prompt">已生成提示词</t-tag>
-            <t-tag size="small" variant="outline" theme="danger" v-else>未生成提示词</t-tag>
+            <t-tag size="small" variant="outline" theme="success" v-if="item.prompt">{{ $t('workbench.cornerScape.promptGenerated') }}</t-tag>
+            <t-tag size="small" variant="outline" theme="danger" v-else>{{ $t('workbench.cornerScape.promptNotGenerated') }}</t-tag>
           </div>
           <div class="meta">
             <t-tag size="small" variant="light-outline" theme="warning" class="typeTag">

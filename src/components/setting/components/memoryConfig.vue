@@ -6,7 +6,7 @@
       <t-card :title="$t('settings.memory.vectorModelConfig')" :bordered="true" style="margin-top: 16px">
         <t-form-item :label="$t('settings.memory.modelFilePath')" name="modelOnnxFile">
           <t-tag-input v-model="formData.modelOnnxFile" clearable />
-          <template #help>向量模型文件路径：/data/models/{{ formData.modelOnnxFile ? formData.modelOnnxFile.join("/") : "" }}</template>
+          <template #help>{{ $t('settings.memory.modelFilePath') }}/data/models/{{ formData.modelOnnxFile ? formData.modelOnnxFile.join("/") : "" }}</template>
         </t-form-item>
         <t-form-item :label="$t('settings.memory.quantizationType')" name="modelDtype">
           <t-select v-model="formData.modelDtype" :placeholder="$t('settings.memory.quantizationPlaceholder')">

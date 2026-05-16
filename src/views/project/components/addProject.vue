@@ -2,13 +2,13 @@
   <div class="addProject">
     <t-dialog
       v-model:visible="addProjectShow"
-      header="新建项目"
+      :header="$t('project.addProject.title')"
       width="30%"
       @confirm="handleOk"
       @close-btn-click="handleCancel"
       @cancel="handleCancel"
-      confirm-btn="确定"
-      cancel-btn="取消">
+      :confirm-btn="$t('common.confirm')"
+      :cancel-btn="$t('common.cancel')">
       <div class="data">
         <t-form :data="formState" label-align="left">
           <!-- <t-form-item label="项目类型">
@@ -17,19 +17,19 @@
               <t-option key="基于剧本" label="基于剧本" value="基于剧本" />
             </t-select>
           </t-form-item> -->
-          <t-form-item label="项目名称">
+          <t-form-item :label="$t('project.addProject.name')">
             <t-input v-model="formState.name" />
           </t-form-item>
-          <t-form-item label="小说类型">
-            <t-input v-model="formState.type" placeholder="例如:玄幻、科幻、言情" />
+          <t-form-item :label="$t('project.addProject.novelType')">
+            <t-input v-model="formState.type" :placeholder="$t('project.addProject.novelTypePh')" />
           </t-form-item>
-          <t-form-item label="影片画风">
-            <t-input v-model="formState.artStyle" style="cursor: pointer" readonly @click="selectArtStyle" placeholder="点击选择影片画风" />
+          <t-form-item :label="$t('project.addProject.artStyle')">
+            <t-input v-model="formState.artStyle" style="cursor: pointer" readonly @click="selectArtStyle" :placeholder="$t('project.addProject.artStylePh')" />
           </t-form-item>
-          <t-form-item label="影片比例">
+          <t-form-item :label="$t('project.addProject.videoRatio')">
             <t-select v-model="formState.videoRatio" :options="options" />
           </t-form-item>
-          <t-form-item label="小说简介">
+          <t-form-item :label="$t('project.addProject.intro')">
             <t-textarea v-model="formState.intro" :autosize="{ minRows: 3, maxRows: 10 }"></t-textarea>
           </t-form-item>
         </t-form>
@@ -100,19 +100,19 @@ function handleOk() {
   axios
     .post("/project/addProject", {
       projectType: formState.value.projectType ? formState.value.projectType : "基于小说原文",
-      name: formState.value.name ? formState.value.name : "名称",
-      intro: formState.value.intro ? formState.value.intro : "这个是一条小说简介",
-      type: formState.value.type ? formState.value.type : "玄幻",
-      artStyle: formState.value.artStyle ? formState.value.artStyle : "动漫",
+      name: formState.value.name ? formState.value.name : "New Project",
+      intro: formState.value.intro ? formState.value.intro : "",
+      type: formState.value.type ? formState.value.type : "",
+      artStyle: formState.value.artStyle ? formState.value.artStyle : "",
       videoRatio: formState.value.videoRatio ? formState.value.videoRatio : "16:9",
     })
     .then(({ data }) => {
-      MessagePlugin.success("新增项目成功");
+      MessagePlugin.success(t("project.addProject.successMsg"));
       emit("getProjects");
       resetForm();
     })
     .catch(() => {
-      MessagePlugin.error("新增项目失败");
+      MessagePlugin.error(t("project.addProject.errorMsg"));
     })
     .finally(() => {
       addProjectShow.value = false;

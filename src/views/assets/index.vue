@@ -432,6 +432,8 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 import dayjs from "dayjs";
 import modelSelect from "@/components/modelSelect.vue";
 import { useFileDialog } from "@vueuse/core";
@@ -589,15 +591,15 @@ async function getFilteredData(type: string) {
 async function loadCurrentTabData() {
   let type = "";
   if (assetOptions.value === "role") {
-    type = "角色";
+    type = t('assets.type.character');
   } else if (assetOptions.value === "tool") {
-    type = "道具";
+    type = t('assets.type.prop');
   } else if (assetOptions.value === "scene") {
-    type = "场景";
+    type = t('assets.type.scene');
   } else if (assetOptions.value === "clip") {
-    type = "素材";
+    type = t('assets.type.material');
   } else if (assetOptions.value === "audio") {
-    type = "音频";
+    type = t('assets.type.audio');
   }
   await getFilteredData(assetOptions.value);
 }

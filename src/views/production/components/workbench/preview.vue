@@ -425,7 +425,7 @@ async function exportImage() {
       if (!shot.filePath) return;
       const response = await fetch(shot.filePath);
       const blob = await response.blob();
-      zip.file(`分镜${shot.id}.${getFileExtension(shot.filePath)}`, blob);
+      zip.file(`storyboard_${shot.id}.${getFileExtension(shot.filePath)}`, blob);
     } catch (error) {
       console.error(`图片下载失败: ${shot.filePath}`, error);
     }
@@ -436,7 +436,7 @@ async function exportImage() {
   zip.generateAsync({ type: "blob" }).then((content) => {
     const link = document.createElement("a");
     link.href = URL.createObjectURL(content);
-    link.download = "分镜压缩包.zip";
+    link.download = "storyboards.zip";
     link.click();
     setTimeout(() => URL.revokeObjectURL(link.href), 5000);
   });

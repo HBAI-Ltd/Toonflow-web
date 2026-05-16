@@ -3,7 +3,7 @@
     v-model:visible="addAssetsShow"
     :closable="false"
     width="40vw"
-    :header="props.formData.id ? '编辑' : '新增'"
+    :header="props.formData.id ? $t('common.edit') : $t('common.add')"
     :maskClosable="false"
     @close-btn-click="handleCancel"
     @confirm="onConfirm"
@@ -31,11 +31,11 @@
                   <template v-else-if="item.src">
                     <i-volume-notice size="16" fill="var(--td-success-color)" />
                     <span class="audio-filename audio-filename--existing">{{ item.name }}</span>
-                    <t-tag size="small" theme="success" variant="light" style="margin-left: auto; flex-shrink: 0">已上传</t-tag>
+                    <t-tag size="small" theme="success" variant="light" style="margin-left: auto; flex-shrink: 0">{{ $t('common.uploaded') }}</t-tag>
                   </template>
                   <template v-else>
                     <i-upload-one size="16" fill="var(--td-brand-color)" />
-                    <span class="audio-upload-hint">点击或拖拽上传音频</span>
+                    <span class="audio-upload-hint">{{ $t('settings.vendor.test.uploadAudio') }}</span>
                   </template>
                   <input
                     :ref="(el) => (fileInputRefs[index] = el as HTMLInputElement)"
@@ -48,8 +48,8 @@
                   <template #icon><i-close size="12" /></template>
                 </t-button>
               </div>
-              <t-input v-model="item.text" placeholder="请输入该音频对应的文本内容" class="audio-text-input" />
-              <t-input v-model="item.describe" placeholder="请输入该音频的描述" class="audio-text-input" />
+              <t-input v-model="item.text" :placeholder="$t('assets.audio.textContent')" class="audio-text-input" />
+              <t-input v-model="item.describe" :placeholder="$t('assets.audio.description')" class="audio-text-input" />
             </div>
             <t-button theme="primary" variant="outline" size="small" @click="addAudioItem">
               <template #icon><i-plus /></template>

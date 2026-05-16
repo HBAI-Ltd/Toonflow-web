@@ -3,7 +3,7 @@
     <div class="mediaLibraryHeader">
       <div class="headerTitle jb ac">
         <h3 class="mediaLibraryTitle">{{ $t("workbench.production.editVideo.clipMaterials") }}</h3>
-        <span style="font-size: 12px">视频素材名字按照分镜台组#号数字命名</span>
+        <span style="font-size: 12px">{{ $t('workbench.mediaLibrary.namingHint') }}</span>
       </div>
       <div class="mediaLibraryTabs">
         <t-button

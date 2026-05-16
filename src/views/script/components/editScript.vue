@@ -41,7 +41,7 @@
           style="margin-left: 10px"
           :disabled="props.item.content.length > otherSetting.scriptEpisodeLength"
           @click="onConfirm">
-          保存
+          {{ $t('common.save') }}
         </t-button>
       </div>
     </t-dialog>

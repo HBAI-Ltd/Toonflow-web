@@ -29,8 +29,8 @@
           </div>
           <template #content>
             <div class="fc ac" style="gap: 6px">
-              <t-button variant="outline" @click="uploadFn">资产图片</t-button>
-              <t-button variant="outline" @click="getStoryboardImage">分镜图片</t-button>
+              <t-button variant="outline" @click="uploadFn">{{ $t('workbench.uploadNode.assetImage') }}</t-button>
+              <t-button variant="outline" @click="getStoryboardImage">{{ $t('workbench.uploadNode.storyboardImage') }}</t-button>
             </div>
           </template>
         </t-dropdown>

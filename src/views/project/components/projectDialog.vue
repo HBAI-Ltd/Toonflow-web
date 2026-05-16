@@ -282,10 +282,12 @@
 
 <script setup lang="ts">
 import { ref, watch, computed } from "vue";
+import { useI18n } from "vue-i18n";
 import axios from "@/utils/axios";
 import { MdEditor } from "md-editor-v3";
 import settingStore from "@/stores/setting";
 const { themeSetting } = storeToRefs(settingStore());
+const { t } = useI18n();
 import type { ToolbarNames } from "md-editor-v3";
 import modelSelect from "@/components/modelSelect.vue";
 import type { TabValue } from "tdesign-vue-next";
@@ -367,17 +369,17 @@ function handlePreview(src: string | undefined) {
 
 const DEFAULT_TAB_DATA: () => Data[] = () => [
   { label: "README", value: "README", data: "" },
-  { label: "前缀", value: "prefix", data: "" },
-  { label: "角色", value: "art_character", data: "" },
-  { label: "角色衍生", value: "art_character_derivative", data: "" },
-  { label: "道具", value: "art_prop", data: "" },
-  { label: "道具衍生", value: "art_prop_derivative", data: "" },
-  { label: "场景", value: "art_scene", data: "" },
-  { label: "场景衍生", value: "art_scene_derivative", data: "" },
-  { label: "分镜", value: "director_storyboard", data: "" },
-  { label: "分镜视频", value: "art_storyboard_video", data: "" },
-  { label: "技法-导演规划", value: "director_planning_style", data: "" },
-  { label: "技法-分镜表设计", value: "director_storyboard_table_style", data: "" },
+  { label: t('project.dialog.prefix'), value: "prefix", data: "" },
+  { label: t('project.dialog.character'), value: "art_character", data: "" },
+  { label: t('project.dialog.characterDerivative'), value: "art_character_derivative", data: "" },
+  { label: t('project.dialog.prop'), value: "art_prop", data: "" },
+  { label: t('project.dialog.propDerivative'), value: "art_prop_derivative", data: "" },
+  { label: t('project.dialog.scene'), value: "art_scene", data: "" },
+  { label: t('project.dialog.sceneDerivative'), value: "art_scene_derivative", data: "" },
+  { label: t('project.dialog.storyboard'), value: "director_storyboard", data: "" },
+  { label: t("project.dialog.storyboardVideo"), value: "art_storyboard_video", data: "" },
+  { label: t("project.dialog.directorPlanningStyle"), value: "director_planning_style", data: "" },
+  { label: t("project.dialog.storyboardTableStyle"), value: "director_storyboard_table_style", data: "" },
 ];
 
 const isEdit = computed(() => !!props.projectData);
@@ -709,8 +711,8 @@ interface DirectorManualItem {
 }
 const DIRECTOR_DEFAULT_TAB_DATA: () => Data[] = () => [
   { label: "README", value: "README", data: "" },
-  { label: "导演规划", value: "director_planning_narrative", data: "" },
-  { label: "分镜表", value: "director_storyboard_table_narrative", data: "" },
+  { label: t("project.dialog.directorPlanning"), value: "director_planning_narrative", data: "" },
+  { label: t("project.dialog.storyboardTable"), value: "director_storyboard_table_narrative", data: "" },
 ];
 const directorManualForm = ref({ name: "", images: [] as string[], directorManual: "" });
 const directorManualLoading = ref(false);

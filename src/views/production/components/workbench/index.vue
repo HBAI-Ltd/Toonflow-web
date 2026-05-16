@@ -61,6 +61,9 @@ import editVideo from "./editVideo/index.vue";
 import { generateId, type Track } from "vue-clip-track";
 import type { MediaItem, AudioItem } from "./editVideo/utils/mediaData";
 import projectStore from "@/stores/project";
+import { useI18n } from "vue-i18n";
+
+const { t } = useI18n();
 const { project } = storeToRefs(projectStore());
 
 const visible = defineModel("visible", {
@@ -197,10 +200,10 @@ function createDemoTracks(): Track[] {
     ...(isMain && { isMain }),
   });
   return [
-    createTrack("video", "主轨道", 0, true),
-    createTrack("audio", "音频", 2),
-    createTrack("subtitle", "字幕", 3),
-    createTrack("filter", "滤镜", 4),
+    createTrack("video", t("workbench.track.main"), 0, true),
+    createTrack("audio", t("workbench.track.audio"), 2),
+    createTrack("subtitle", t("workbench.track.subtitle"), 3),
+    createTrack("filter", t("workbench.track.filter"), 4),
   ];
 }
 

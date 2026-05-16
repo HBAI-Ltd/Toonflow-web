@@ -37,6 +37,9 @@
 import { h, render } from "vue";
 import { Popup } from "tdesign-vue-next";
 import { Video, VolumeMute } from "@icon-park/vue-next";
+import { useI18n } from "vue-i18n";
+
+const { t } = useI18n();
 
 const props = defineProps<{
   references?: { type: "image" | "video" | "audio" | "text"; src: string }[];
@@ -73,7 +76,7 @@ function createRefTag(index: number): HTMLSpanElement {
       });
     }
     if (refType === "text") {
-      return h("span", { style: { padding: "8px", display: "block", fontSize: "14px" } }, "文本参考");
+      return h("span", { style: { padding: "8px", display: "block", fontSize: "14px" } }, t("workbench.promptEditor.textRef"));
     }
     return h("span", { style: { padding: "8px", display: "block" } }, refSrc);
   };

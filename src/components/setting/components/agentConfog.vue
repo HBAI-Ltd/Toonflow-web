@@ -28,7 +28,7 @@
     </div>
 
     <div v-if="agentUseModeVal === '0'" class="cardGrid">
-      <t-card hoverShadow v-for="(item, index) in modelData" :key="index" class="skillCard f" @click="startConfig(item, '普通')">
+      <t-card hoverShadow v-for="(item, index) in modelData" :key="index" class="skillCard f" @click="startConfig(item, 'normal')">
         <div class="skillCardHeader">
           <div class="headerLeft">
             <t-avatar v-if="getDisplayLogo(item)" :image="getDisplayLogo(item)!" shape="round" />

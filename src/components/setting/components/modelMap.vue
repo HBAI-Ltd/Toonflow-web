@@ -5,7 +5,7 @@
         <t-table row-key="key" :data="item.promptList" :columns="columns">
           <template #type="{ row: subRow }">
             <div class="type">
-              <span>{{ subRow.type == "text" ? "文本" : subRow.type == "video" ? "视频" : "图片" }}</span>
+              <span>{{ subRow.type == "text" ? $t('common.text') : subRow.type == "video" ? $t('common.video') : $t('common.image') }}</span>
             </div>
           </template>
           <template #operation="{ row }">

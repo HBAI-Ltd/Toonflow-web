@@ -80,7 +80,7 @@
                   :disabled="selectedTextLength > otherSetting.scriptEpisodeLength"
                   :loading="nextLoading"
                   @click="keep">
-                  保存
+                  {{ $t('common.save') }}
                 </t-button>
               </div>
             </div>

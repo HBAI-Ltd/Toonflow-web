@@ -222,7 +222,14 @@
       "code": "code",
       "linkAddPlaceholder": "Enter link to add",
       "noFileSelected": "File imported successfully",
-      "linkAdd": "confirm"
+      "linkAdd": "confirm",
+      "importByFile": "Import from File",
+      "addByLink": "Add by Link",
+      "addByCode": "Add by Code",
+      "codeAddDesc": "Enter the link to a TypeScript code file (.ts). Do not enter an API URL or other unrelated links. Toonflow will automatically load the code after confirmation. Make sure the link source is trusted.",
+      "linkNotTsError": "The link returned a webpage. Adding a vendor requires a TypeScript file. Please verify the link is correct.",
+      "noProxyUrlBody": "Do not enter a proxy/relay URL. If you need to use a relay, modify the baseUrl in the OpenAI standard interface instead.",
+      "linkContentError": "The link returned incorrect content. Adding a vendor requires a TypeScript file. Please verify the link."
     },
     "agent": {
       "bannerDesc": "Use the official Toonflow relay site for one-click configuration. Ready out-of-the-box, no manual setup needed.",
@@ -254,7 +261,7 @@
     "memory": {
       "warning": "The following settings are preset to recommended values. Unless you fully understand their implications, we recommend keeping the current settings.",
       "vectorModelConfig": "Vector Model Config",
-      "modelFilePath": "Model File Path",
+      "modelFilePath": "Vector model file path:",
       "quantizationType": "Quantization Type",
       "quantizationPlaceholder": "Please enter quantization type",
       "memoryParams": "Memory Parameters",
@@ -505,7 +512,13 @@
       "noUpdate": "You are already on the latest version",
       "upToDate": "New version detected",
       "confirmReinstall": "Copy link",
-      "reinstallRequired": "The browser will automatically open and download. If it does not open, please open it manually."
+      "reinstallRequired": "The browser will automatically open and download. If it does not open, please open it manually.",
+      "updateTime": "Update Time",
+      "customUrlPlaceholder": "Enter custom update URL",
+      "confirmUpdateHeader": "Confirm Update",
+      "reinstallWarning": "This version requires a fresh installation. The update may replace your current installation. Please save your work first.",
+      "customUrlEnabled": "Custom update URL enabled",
+      "updateConfirmBody": "Update to v{version} via {source}. Continue?"
     },
     "logout": {
       "warning": "After logging out, you will need to log in again to access the system.",
@@ -624,6 +637,21 @@
       "promptPlaceholder": "Enter prompt for this mode",
       "save": "Save Config",
       "videoModel": "Video Model"
+    },
+    "ui": {
+      "colorMode": "Color Mode",
+      "auto": "Auto",
+      "light": "Light",
+      "dark": "Dark",
+      "themeColor": "Theme Color",
+      "fontSize": "Font Size",
+      "fontSizeXS": "XS",
+      "fontSizeSM": "SM",
+      "fontSizeS": "S",
+      "fontSizeDefault": "Default",
+      "fontSizeLG": "LG",
+      "fontSizeXL": "XL",
+      "fontSizeXXL": "XXL"
     }
   },
   "workbench": {
@@ -1004,7 +1032,9 @@
       "noAudio": "No audio reference available",
       "selectAudio": "Select Audio",
       "textPromptInput": "Prompt Append Instructions",
-      "textPromptPh": "Enter additional prompt instructions (optional)"
+      "textPromptPh": "Enter additional prompt instructions (optional)",
+      "promptGenerated": "Prompt generated",
+      "promptNotGenerated": "Prompt not generated"
     },
     "script": {
       "searchPlaceholder": "Search script names...",
@@ -1236,7 +1266,7 @@
           "selectedCount": "{count} selected",
           "clearSelection": "Clear Selection",
           "selectAll": "Select All",
-          "batchGenerateFailed": "Generation failed",
+          "batchGenerateFailed": "Generation Failed",
           "batchGenerateImage": "Regenerate",
           "batchGenerateSuccess": "Storyboard generation started",
           "confirmBatchDeleteBody": "Confirm delete {index} selected storyboards?",
@@ -1245,7 +1275,9 @@
           "editNode": "Edit",
           "removeFailed": "Failed to delete storyboard",
           "videoDesc": "Video Description",
-          "videoDescPlaceholder": "Enter video description"
+          "videoDescPlaceholder": "Enter video description",
+          "batchDelete": "Batch Delete",
+          "pleaseSelectStoryboard": "Please select a storyboard panel first"
         },
         "storyboardTable": {
           "title": "Storyboard Table",
@@ -1661,8 +1693,39 @@
       "modeChange": "Clear Content",
       "modeChangeConfirm": "Switching mode will clear the currently selected images and prompts",
       "prompt": "Video Prompt",
-      "promptEmpty": "Some selected items have empty prompts. Continue generating?"
-    }
+      "promptEmpty": "Some selected items have empty prompts. Continue generating?",
+      "modeSingleImageLabel": "Single Image",
+      "modeStartEndLabel": "Start/End Frame",
+      "referenceSuffix": " Reference",
+      "promptGenFailed": "Failed to generate prompt"
+    },
+    "track": {
+      "main": "Main Track",
+      "audio": "Audio",
+      "subtitle": "Subtitle",
+      "filter": "Filter",
+      "selected": "Selected",
+      "promptGenFailed": "Segment {index} prompt generation failed",
+      "startGenPrompt": "Starting prompt generation"
+    },
+    "promptEditor": {
+      "textRef": "Text Reference"
+    },
+    "imageSelect": {
+      "audioContent": "Audio content: ",
+      "startFrame": "Start Frame",
+      "startFrameOptional": "Start Frame (Optional)",
+      "endFrame": "End Frame",
+      "endFrameOptional": "End Frame (Optional)"
+    },
+    "uploadNode": {
+      "assetImage": "Asset Image",
+      "storyboardImage": "Storyboard Image"
+    },
+    "mediaLibrary": {
+      "namingHint": "Video asset names follow storyboard group # numbering"
+    },
+    "storyboard": "Storyboard"
   },
   "login": {
     "slogan": "Intelligent Short Drama Creation Platform",
@@ -1826,6 +1889,73 @@
     "selectAssets": "Select Assets",
     "sessionExpired": "Session expired, please log in again",
     "submit": "Submit",
-    "submitting": "Submitting"
+    "submitting": "Submitting",
+    "search": "Search",
+    "text": "Text",
+    "video": "Video",
+    "image": "Image",
+    "audio": "Audio",
+    "all": "All",
+    "edit": "Edit",
+    "add": "Add",
+    "uploaded": "Uploaded"
+  },
+  "project": {
+    "addProject": {
+      "title": "New Project",
+      "name": "Project Name",
+      "novelType": "Novel Genre",
+      "novelTypePh": "e.g. Fantasy, Sci-Fi, Romance",
+      "artStyle": "Art Style",
+      "artStylePh": "Click to select art style",
+      "videoRatio": "Video Ratio",
+      "intro": "Novel Synopsis",
+      "successMsg": "Project created successfully",
+      "errorMsg": "Failed to create project"
+    },
+    "dialog": {
+      "prefix": "Prefix",
+      "character": "Character",
+      "characterDerivative": "Character Derivative",
+      "prop": "Prop",
+      "propDerivative": "Prop Derivative",
+      "scene": "Scene",
+      "sceneDerivative": "Scene Derivative",
+      "storyboard": "Storyboard",
+      "storyboardVideo": "Storyboard Video",
+      "directorPlanningStyle": "Technique - Director Planning",
+      "storyboardTableStyle": "Technique - Storyboard Design",
+      "directorPlanning": "Director Planning",
+      "storyboardTable": "Storyboard Table"
+    }
+  },
+  "task": {
+    "myTasks": "My Tasks",
+    "category": "Category",
+    "status": "Status",
+    "running": "Running",
+    "completed": "Completed",
+    "relatedObject": "Related Object",
+    "model": "Model",
+    "description": "Description",
+    "time": "Time"
+  },
+  "error": {
+    "notFound": "Page not found",
+    "backHome": "Back to Home"
+  },
+  "assets": {
+    "type": {
+      "character": "Character",
+      "prop": "Prop",
+      "scene": "Scene",
+      "material": "Material",
+      "audio": "Audio"
+    },
+    "audio": {
+      "textContent": "Enter the text content for this audio",
+      "description": "Enter a description for this audio",
+      "addAudio": "Add Audio"
+    }
   }
 }

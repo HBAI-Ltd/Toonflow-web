@@ -57,7 +57,9 @@ import axios from "@/utils/axios";
 import projectStore from "@/stores/project";
 import promptEditor from "@/components/promptEditor.vue";
 import imageListCacheStore from "@/stores/imageListCache";
+import { useI18n } from "vue-i18n";
 
+const { t } = useI18n();
 const { project } = storeToRefs(projectStore());
 const episodesId = inject<Ref<number>>("episodesId")!;
 const activeTrackIndex = ref(0);
@@ -150,15 +152,15 @@ function modeChange(newVal: string) {
 }
 const modeList = computed(() => {
   const modeLabelMap: Record<string, string> = {
-    singleImage: "单图",
-    startEndRequired: "首尾帧",
-    endFrameOptional: "尾帧可选",
-    startFrameOptional: "首帧可选",
-    text: "文本生视频",
-    videoReference: "视频",
-    imageReference: "图片",
-    audioReference: "音频",
-    textReference: "文本",
+    singleImage: t("workbench.generate.modeSingleImageLabel"),
+    startEndRequired: t("workbench.generate.modeStartEndLabel"),
+    endFrameOptional: t("settings.vendor.test.endFrameOptional"),
+    startFrameOptional: t("settings.vendor.test.startFrameOptional"),
+    text: t("settings.vendor.test.textToVideo"),
+    videoReference: t("settings.vendor.test.video"),
+    imageReference: t("settings.vendor.test.image"),
+    audioReference: t("settings.vendor.test.audio"),
+    textReference: t("settings.vendor.test.textTitle"),
   };
   function parseRefLabel(m: string): string {
     const match = m.match(/^(videoReference|imageReference|audioReference|textReference):(\d+)$/);
@@ -171,7 +173,7 @@ const modeList = computed(() => {
   return modeOptions.value.mode
     ? modeOptions.value.mode.map((mode) =>
         Array.isArray(mode)
-          ? { value: JSON.stringify(mode), label: mode.map((m) => parseRefLabel(m)).join(" + ") + "参考" }
+          ? { value: JSON.stringify(mode), label: mode.map((m) => parseRefLabel(m)).join(" + ") + t("workbench.generate.referenceSuffix") }
           : { value: mode, label: modeLabelMap[mode] || mode },
       )
     : [];
@@ -338,7 +340,7 @@ async function genText() {
     });
     changeTrack.prompt = data;
   } catch (e) {
-    window.$message.error((e as Error)?.message ?? "提示词生成失败");
+    window.$message.error((e as Error)?.message ?? $t("workbench.generate.promptGenFailed"));
   } finally {
     genTextLoadingMap.value[currentTrackId] = false;
   }
@@ -433,7 +435,7 @@ async function generateVideo() {
           src: "",
         });
       } catch (e) {
-        window.$message.error((e as any)?.message ?? "视频发起生成请求失败");
+        window.$message.error((e as any)?.message ?? $t("workbench.generate.generateError"));
       } finally {
       }
     },

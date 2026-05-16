@@ -30,7 +30,7 @@
             @click.stop
             @change="(val: boolean) => toggleCheck(track.id, val)" />
           <t-tag class="indexTag" size="small">#{{ index + 1 }}</t-tag>
-          <t-tag class="selectTag" theme="success" size="small" v-if="track.selectVideoId">已选择</t-tag>
+          <t-tag class="selectTag" theme="success" size="small" v-if="track.selectVideoId">{{ $t('workbench.track.selected') }}</t-tag>
           <!-- 优先展示选中视频的首帧 -->
           <div class="thumbGroup" v-if="track.selectVideoId && getSelectedVideoSrc(track)">
             <img
@@ -68,6 +68,8 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 import type { Ref } from "vue";
 import "@/views/production/components/workbench/type/type";
 import axios from "@/utils/axios";
@@ -221,7 +223,7 @@ async function batchDownloadVideo(): Promise<void> {
     .map((track) => {
       const video = track.videoList.find((v) => v.id === track.selectVideoId);
       if (!video?.src) return null;
-      const filename = `分镜${track.id}.${getFileExtension(video.src)}`;
+      const filename = `storyboard_${track.id}.${getFileExtension(video.src)}`;
       return fetch(video.src)
         .then((res) => res.blob())
         .then((blob) => zip.file(filename, blob))
@@ -233,7 +235,7 @@ async function batchDownloadVideo(): Promise<void> {
   const url = URL.createObjectURL(zipBlob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `视频批量下载_${Date.now()}.zip`;
+  a.download = `videos_${Date.now()}.zip`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
@@ -268,13 +270,13 @@ function batchGenText() {
         if (targetTrack) targetTrack.prompt = data;
       })
       .catch((e) => {
-        window.$message.error(`第${index + 1}段 提示词生成失败,${(e as Error)?.message ?? "提示词生成失败"}`);
+        window.$message.error(t('workbench.track.promptGenFailed', { index: index + 1 }) + ',' + ((e as Error)?.message ?? t('workbench.track.promptGenFailed', { index: index + 1 })));
       })
       .finally(() => {
         genTextLoadingMap.value[trackId] = false;
       });
   });
-  window.$message.success("开始生成提示词");
+  window.$message.success(t('workbench.track.startGenPrompt'));
   generateTextLoad.value = false;
   checkedTrackIds.value = [];
   checkAll.value = false;
