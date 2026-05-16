@@ -256,7 +256,41 @@
         "getAgentListFailed": "Failed to fetch Agent config list: ",
         "toonflowNotFound": "Toonflow official transfer station does not exist"
       },
-      "temperature": "temperature"
+      "temperature": "Temperature",
+      "maxOutputTokens": "Max Output Tokens",
+      "auto": "Auto",
+      "manual": "Manual",
+      "autoHint": "Output length is decided by the model"
+    },
+    "agentData": {
+      "scriptAgent": {
+        "name": "Script Agent",
+        "desc": "Reads source text to generate the story skeleton and adaptation strategy. Use a model with strong text understanding and generation."
+      },
+      "productionAgent": {
+        "name": "Production Agent",
+        "desc": "Schedules and manages the workflow. Use a model with strong reasoning and task-management capabilities."
+      },
+      "universalAi": {
+        "name": "General AI",
+        "desc": "Handles supporting tasks such as novel event extraction, asset prompt generation, and dialogue extraction."
+      },
+      "ttsDubbing": {
+        "name": "TTS Dubbing",
+        "desc": "Generates character voiceovers from script content, with support for multiple voice styles and emotions."
+      }
+    },
+    "agentAdvancedData": {
+      "scriptAgent:decisionAgent": { "name": "Script Agent: Decision", "desc": "Decision layer" },
+      "scriptAgent:supervisionAgent": { "name": "Script Agent: Supervision", "desc": "Supervision layer" },
+      "scriptAgent:storySkeletonAgent": { "name": "Script Agent: Story Skeleton", "desc": "Generates the story skeleton" },
+      "scriptAgent:adaptationStrategyAgent": { "name": "Script Agent: Adaptation Strategy", "desc": "Generates the adaptation strategy" },
+      "scriptAgent:scriptAgent": { "name": "Script Agent: Script Generation", "desc": "Generates scripts" },
+      "scriptAgent:scriptDoctorAgent": { "name": "Script Agent: Script Doctor", "desc": "Reviews and improves scripts" },
+      "productionAgent:directorAgent": { "name": "Production Agent: Director", "desc": "Plans shots and production flow" },
+      "productionAgent:visualAgent": { "name": "Production Agent: Visual", "desc": "Handles visual planning and prompts" },
+      "productionAgent:assetAgent": { "name": "Production Agent: Asset", "desc": "Handles asset extraction and generation" },
+      "productionAgent:videoAgent": { "name": "Production Agent: Video", "desc": "Handles video generation prompts and assembly" }
     },
     "memory": {
       "warning": "The following settings are preset to recommended values. Unless you fully understand their implications, we recommend keeping the current settings.",
@@ -1751,7 +1785,25 @@
   "components.storyboardImageCheck.createTime": "Created Time",
   "workbench.script.extractAssets": "Extract Assets",
   "promptManage": {
-    "prompt": "prompt word"
+    "prompt": "Prompt",
+    "data": {
+      "eventExtraction": {
+        "name": "Event Extraction",
+        "preview": "Extract structured event information from each source chapter, including characters, core events, mainline relevance, density, estimated duration, and emotional intensity."
+      },
+      "scriptAssetExtraction": {
+        "name": "Script Asset Extraction",
+        "preview": "Extract characters, scenes, props, and other reusable assets from script content, then output structured asset data for production."
+      },
+      "videoPromptGeneration": {
+        "name": "Video Prompt Generation",
+        "preview": "Generate model-specific video prompts from storyboard, visual, duration, dialogue, motion, and asset-reference data."
+      },
+      "audioBindPrompt": {
+        "name": "Voice Binding",
+        "preview": "Match each character asset with the most suitable voice from candidate audio options based on gender, age, personality, and voice style."
+      }
+    }
   },
   "hello": {
     "welcomeTitle": "Welcome to ToonFlow",

@@ -4,10 +4,10 @@
       <t-card bordered>
         <div class="data">
           <div class="jb">
-            <div class="name">{{ value.name }}</div>
+            <div class="name">{{ getPromptName(value) }}</div>
             <div class="type">{{ value.type }}</div>
           </div>
-          <div class="data">{{ value.data }}</div>
+          <div class="data">{{ getPromptPreview(value) }}</div>
         </div>
       </t-card>
     </div>
@@ -50,6 +50,17 @@ const promptToolbars: ToolbarNames[] = [
 ];
 const visible = ref(false);
 const data = ref<{ id: number; name: string; type: string; data: string }[]>([]);
+
+function getPromptName(value: { name: string; type: string }) {
+  const translated = $t(`promptManage.data.${value.type}.name`);
+  return translated === `promptManage.data.${value.type}.name` ? value.name : translated;
+}
+
+function getPromptPreview(value: { data: string; type: string }) {
+  const translated = $t(`promptManage.data.${value.type}.preview`);
+  return translated === `promptManage.data.${value.type}.preview` ? value.data : translated;
+}
+
 function getPrompt() {
   axios.post("/setting/promptManage/getPrompt").then((res) => {
     data.value = res.data.map((item: { id: number; name: string; type: string; data: string }) => {

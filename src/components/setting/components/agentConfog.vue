@@ -35,7 +35,7 @@
             <t-avatar v-else shape="round" class="fallbackAvatar">
               {{ getFallbackText(item.name) }}
             </t-avatar>
-            <span class="skillName">{{ item.name }}</span>
+            <span class="skillName">{{ getAgentName(item) }}</span>
           </div>
           <t-tag v-if="item.model && !item.disabled" theme="primary" variant="light" size="small">{{ item.model }}</t-tag>
           <t-tag v-else-if="item.disabled" variant="light" size="small">{{ $t("settings.agent.notOpen") }}</t-tag>
@@ -43,12 +43,12 @@
             {{ $t("settings.agent.notConfigured") }}
           </t-tag>
         </div>
-        <div class="skillCardBody">{{ item.desc }}</div>
+        <div class="skillCardBody">{{ getAgentDescription(item) }}</div>
       </t-card>
     </div>
 
     <div v-else class="cardGrid">
-      <t-card hoverShadow v-for="(item, index) in advancedModelData" :key="index" class="skillCard f" @click="startConfig(item, '高级')">
+      <t-card hoverShadow v-for="(item, index) in advancedModelData" :key="index" class="skillCard f" @click="startConfig(item, 'advanced')">
         <div class="skillCardHeader">
           <div class="headerLeft">
             <t-avatar v-if="getDisplayLogo(item)" :image="getDisplayLogo(item)!" shape="round" />
@@ -56,7 +56,7 @@
               {{ getFallbackText(item.name) }}
             </t-avatar>
             <div>
-              <div class="skillName">{{ item.name }}</div>
+              <div class="skillName">{{ getAgentName(item) }}</div>
             </div>
           </div>
           <t-tag v-if="item.model && !item.disabled" theme="primary" variant="light" size="small">{{ item.model }}</t-tag>
@@ -66,7 +66,7 @@
           </t-tag>
         </div>
         <div class="skillCardBody jb">
-          <div>{{ item.desc }}</div>
+          <div>{{ getAgentDescription(item) }}</div>
           <div>
             <t-tag theme="primary" variant="light" size="small" style="margin-left: 5px">
               {{ $t("settings.agent.temperature") }}：{{ item.temperature }}
@@ -82,7 +82,7 @@
     <!-- 模型配置弹窗 -->
     <t-dialog
       v-model:visible="modelDataShow"
-      :header="currentItem?.name + ' ' + $t('settings.agent.modelConfig')"
+      :header="(currentItem ? getAgentName(currentItem) : '') + ' ' + $t('settings.agent.modelConfig')"
       width="480px"
       :on-confirm="confirmConfig"
       :confirm-btn="$t('settings.agent.confirm')"
@@ -92,10 +92,10 @@
           <t-form-item :label="$t('settings.agent.selectModel')">
             <modelSelect v-model="selectValue" v-model:label="selectLabel" type="text" />
           </t-form-item>
-          <t-form-item :label="$t('settings.agent.temperature')" v-if="type == '高级'">
+          <t-form-item :label="$t('settings.agent.temperature')" v-if="type == 'advanced'">
             <t-input-number v-model="currentItem.temperature" style="width: 100%" />
           </t-form-item>
-          <t-form-item :label="$t('settings.agent.maxOutputTokens')" v-if="type == '高级'">
+          <t-form-item :label="$t('settings.agent.maxOutputTokens')" v-if="type == 'advanced'">
             <div class="maxTokenRow">
               <t-radio-group v-model="maxTokenMode" variant="default-filled" size="small">
                 <t-radio-button value="auto">{{ $t("settings.agent.auto") }}</t-radio-button>
@@ -128,6 +128,7 @@ interface ModelType {
   model: string;
   modelName: string;
   vendorId: number | null;
+  key: string;
   name: string;
   icon: string;
   desc: string;
@@ -163,6 +164,19 @@ function getDisplayLogo(item: ModelType) {
 function getFallbackText(name: string) {
   return name?.slice(0, 1) || "A";
 }
+
+function getAgentName(item: ModelType) {
+  const keyPrefix = item.key.includes(":") ? "settings.agentAdvancedData" : "settings.agentData";
+  const translated = $t(`${keyPrefix}.${item.key}.name`);
+  return translated === `${keyPrefix}.${item.key}.name` ? item.name : translated;
+}
+
+function getAgentDescription(item: ModelType) {
+  const keyPrefix = item.key.includes(":") ? "settings.agentAdvancedData" : "settings.agentData";
+  const translated = $t(`${keyPrefix}.${item.key}.desc`);
+  return translated === `${keyPrefix}.${item.key}.desc` ? item.desc : translated;
+}
+
 const type = ref("");
 const maxTokenMode = ref<"auto" | "manual">("auto");
 
