@@ -58,7 +58,10 @@
       "requestConfig": "Request URL",
       "about": "Check for Updates",
       "logoutConfig": "Logout",
-      "skillsSkillsManagement": "SkillsSkills Management"
+      "skillsSkillsManagement": "SkillsSkills Management",
+      "devConfig": "Developer Options",
+      "modelMap": "Model Mapping",
+      "ui": "UI Settings"
     },
     "language": {
       "desc": "Select the interface display language",
@@ -73,7 +76,48 @@
       "optionalSection": "Optional",
       "modelSettings": "Model Settings",
       "addManually": "Add Manually",
-      "test": "Test",
+      "test": {
+        "assistant": "Assistant",
+        "audio": "Audio",
+        "cancel": "Cancel",
+        "clearHistory": "Clear History",
+        "endFrame": "End Frame (Required)",
+        "endFrameOptional": "End Frame (Optional)",
+        "endFrameOptionalDesc": "Start frame required, end frame optional",
+        "image": "Image",
+        "imageTitle": "Image Generation Test",
+        "imageToImage": "Image-to-Image",
+        "multiRef": "Multi-Reference",
+        "multiRefDesc": "Multi-reference mode",
+        "optional": "Optional",
+        "prompt": "Prompt",
+        "promptPlaceholder": "Enter prompt",
+        "referenceImage": "Reference Image",
+        "result": "Result",
+        "selectMode": "Select Test Mode",
+        "send": "Send",
+        "singleImageDesc": "Generate video based on a single reference image",
+        "singleImageMode": "Single Image Reference",
+        "startEndRequiredDesc": "Both start and end frame images are required",
+        "startFrame": "Start Frame (Required)",
+        "startFrameOptional": "Start Frame (Optional)",
+        "startFrameOptionalDesc": "End frame required, start frame optional",
+        "startTest": "Start Test",
+        "supportFormat": "Supports JPG / PNG / WEBP",
+        "textEmptyHint": "Send a message to start testing",
+        "textInputPlaceholder": "Type a message, Ctrl+Enter to send",
+        "textTitle": "Text Chat Test",
+        "textToImage": "Text-to-Image",
+        "textToVideo": "Text-to-Video",
+        "textToVideoDesc": "Generate video from text description only",
+        "uploadAudio": "Click or drag to upload audio",
+        "uploadImage": "Click or drag to upload image",
+        "uploadVideo": "Click or drag to upload video",
+        "video": "Video",
+        "videoPromptPlaceholder": "Enter video description (optional)",
+        "videoTitle": "Video Generation Test",
+        "you": "You"
+      },
       "edit": "Edit",
       "delete": "Delete",
       "deleteVendor": "Delete Provider",
@@ -250,7 +294,18 @@
         "noBinding": "Not Bound",
         "bound": "Bound",
         "unbind": "Unbind",
-        "filenName": "File name"
+        "filenName": "File name",
+        "addPrompt": "Add Prompt",
+        "addPromptTitle": "Add Prompt",
+        "editPrompt": "Edit",
+        "editPromptTitle": "Edit Prompt",
+        "promptNamePlaceholder": "Enter prompt name",
+        "promptNameRequired": "Please enter prompt name",
+        "promptSaveSuccess": "Saved successfully",
+        "promptTypePlaceholder": "Select type",
+        "typeImage": "Image",
+        "typeText": "Text",
+        "typeVideo": "Video"
       }
     },
     "login": {
@@ -403,7 +458,8 @@
       "closeIsInteracting": "closure",
       "scriptEpisodeLength": "Script Episode Length Limit",
       "chars": "chars",
-      "inputChars": "Please enter character count"
+      "inputChars": "Please enter character count",
+      "openIsInteracting": "Enable"
     },
     "request": {
       "warning": "Do not modify unless absolutely necessary",
@@ -418,7 +474,8 @@
         "reset": "Reset to default URL",
         "refreshFailed": "Refresh failed",
         "refreshSuccess": "Refresh successful"
-      }
+      },
+      "refresh": "Refresh"
     },
     "about": {
       "slogan": "Open-source AI-driven Comic / Storyboard creation tool",
@@ -536,6 +593,37 @@
         "confirmClear": "Clear",
         "cancel": "Cancel"
       }
+    },
+    "generate": {
+      "delConfirmBtn": "Confirm Delete",
+      "modelChnageSure": "Confirm Clear"
+    },
+    "modelMap": {
+      "col": {
+        "mode": "Mode",
+        "prompt": "Prompt"
+      },
+      "imageModel": "Image Model",
+      "mode": {
+        "audioReference": "Audio Reference",
+        "endFrameOptional": "Start/End Frame (End Optional)",
+        "imageReference": "Image Reference",
+        "multiReference": "Multi-Reference",
+        "referenceSuffix": "Reference",
+        "singleImage": "Single Image",
+        "startEndRequired": "Start/End Frame (Both Required)",
+        "startFrameOptional": "Start/End Frame (Start Optional)",
+        "text": "Text-to-Image / Text-to-Video",
+        "videoReference": "Video Reference"
+      },
+      "msg": {
+        "saveFailed": "Save failed, please try again later",
+        "saveSuccess": "Model prompt mapping saved"
+      },
+      "noModel": "No image or video models available. Please add one in Model Services first.",
+      "promptPlaceholder": "Enter prompt for this mode",
+      "save": "Save Config",
+      "videoModel": "Video Model"
     }
   },
   "workbench": {
@@ -657,7 +745,8 @@
         "directorManualUpdated": "Director's Manual updated",
         "directorManualAdded": "Director's Manual added",
         "directorManual": "Please select Project Director's Manual",
-        "modelProviderDisabled": "The video model or picture model supplier is not enabled or there is no model supplier, please configure it first"
+        "modelProviderDisabled": "The video model or picture model supplier is not enabled or there is no model supplier, please configure it first",
+        "enterProjectQuality": "Please select image quality"
       },
       "type": {
         "novel": "Based on the original novel",
@@ -894,7 +983,9 @@
         "replaceSuccess": "Replacement successful",
         "promptGenFail": "Prompt word generation failed",
         "saveSuccess": "Modification of prompt word successful",
-        "saveFailed": "Prompt word modification failed"
+        "saveFailed": "Prompt word modification failed",
+        "emptyPrompt": "Selected items {emptyPromptNames} have empty prompts, please generate prompts first",
+        "selectAtLeastBindOne": "Please select at least one asset to bind"
       },
       "history": "historical pictures",
       "confirmReplace": "Confirm replacement",
@@ -907,7 +998,13 @@
       "cancelGeneration": "Cancel generation",
       "selectGenerating": "Select the item being generated",
       "noGenerating": "No data being generated",
-      "checkNumber": "Select quantity"
+      "checkNumber": "Select quantity",
+      "assetsAudioLabel": "Audio Reference",
+      "batchBingAudio": "Batch Bind Audio",
+      "noAudio": "No audio reference available",
+      "selectAudio": "Select Audio",
+      "textPromptInput": "Prompt Append Instructions",
+      "textPromptPh": "Enter additional prompt instructions (optional)"
     },
     "script": {
       "searchPlaceholder": "Search script names...",
@@ -933,7 +1030,10 @@
         "batchDeleteSuccess": "Batch deletion successful",
         "extractingInProgress": "Extracting",
         "projectNotFound": "Item not found",
-        "selectsExport": "Please choose to export the script"
+        "selectsExport": "Please choose to export the script",
+        "extractFailed": "Asset extraction failed",
+        "extracting": "Extracting assets",
+        "waitExtract": "Waiting to extract"
       },
       "add": {
         "title": "Add Script",
@@ -981,7 +1081,11 @@
       "deleteScript": "Delete scripts in batches",
       "extractAssets": "",
       "import": {
-        "episodeRegexPh": "Customize the script splitting rule, leave it blank to use the default splitting rule (the default is to split according to the Episode X format)"
+        "episodeRegexPh": "Customize the script splitting rule, leave it blank to use the default splitting rule (the default is to split according to the Episode X format)",
+        "col": {
+          "chapter": "Episode"
+        },
+        "getAiRegex": "AI Parse Regex"
       }
     },
     "assets": {
@@ -1046,7 +1150,11 @@
         "describeRequired": "Please enter details",
         "remarkRequired": "Please enter remarks",
         "updateSuccess": "Asset updated successfully",
-        "addSuccess": "Asset added successfully"
+        "addSuccess": "Asset added successfully",
+        "audioFile": "Audio File",
+        "audioName": "Voice",
+        "audioNamePh": "Enter voice name",
+        "pleaseUploadAudio": "Please upload an audio file"
       },
       "gen": {
         "header": "Image Generation",
@@ -1099,7 +1207,9 @@
       },
       "confirmCancellation": "Confirm cancellation",
       "confirmAgain": "Confirm cancellation? \nAfter cancellation, the backend AI will continue to call for deductions.",
-      "sure": "Sure"
+      "sure": "Sure",
+      "audioName": "Voice",
+      "preew": "Preview"
     },
     "production": {
       "selectPlaceholder": "Please select an episode",
@@ -1125,7 +1235,17 @@
           "editInfo": "Prompt word modification",
           "selectedCount": "{count} selected",
           "clearSelection": "Clear Selection",
-          "selectAll": "Select All"
+          "selectAll": "Select All",
+          "batchGenerateFailed": "Generation failed",
+          "batchGenerateImage": "Regenerate",
+          "batchGenerateSuccess": "Storyboard generation started",
+          "confirmBatchDeleteBody": "Confirm delete {index} selected storyboards?",
+          "confirmDeleteBody": "Confirm delete this storyboard?",
+          "deleteNode": "Delete",
+          "editNode": "Edit",
+          "removeFailed": "Failed to delete storyboard",
+          "videoDesc": "Video Description",
+          "videoDescPlaceholder": "Enter video description"
         },
         "storyboardTable": {
           "title": "Storyboard Table",
@@ -1301,7 +1421,9 @@
         "promptEmpty": "Please enter a video prompt first",
         "modelEmpty": "Please select a video generation model first",
         "batchPromptEmpty": "Storyboard {name} is available for video prompts. \nPlease create or fill in the prompt first",
-        "batchModelEmpty": "Storyboard {names} has no model configured. Please select a model first"
+        "batchModelEmpty": "Storyboard {names} has no model configured. Please select a model first",
+        "statePending": "Pending",
+        "stateSuccess": "Generated"
       },
       "editVideo": {
         "reset": "Reset",
@@ -1534,7 +1656,12 @@
       "videoPreview": "Video preview",
       "referenceImage": "Reference pictures",
       "generatePrompt": "Generate prompt words",
-      "generateVideo": "Generate video"
+      "generateVideo": "Generate video",
+      "generateSuccess": "Video generated successfully",
+      "modeChange": "Clear Content",
+      "modeChangeConfirm": "Switching mode will clear the currently selected images and prompts",
+      "prompt": "Video Prompt",
+      "promptEmpty": "Some selected items have empty prompts. Continue generating?"
     }
   },
   "login": {
@@ -1609,7 +1736,8 @@
     "state": {
       "unused": "Not generated"
     },
-    "saveSuccess": "Added successfully"
+    "saveSuccess": "Added successfully",
+    "assetsNotExists": "Asset does not exist"
   },
   "productionAgent": {
     "generating": "Generating"
@@ -1685,5 +1813,19 @@
   "settings.vendor.videoGenerating": "Video generation is slow, please wait patiently",
   "settings.memory.modelMap.editRefeshWord": "rebind",
   "settings.memory.modelMap.delPrompt": "delete",
-  "settings.vendor.testModel": "test"
+  "settings.vendor.testModel": "test",
+  "common": {
+    "cancel": "Cancel",
+    "cancelled": "Generation cancelled",
+    "confirm": "Confirm",
+    "defaultReel": "Main Volume",
+    "editFailed": "Edit failed",
+    "editSuccess": "Edit successful",
+    "openSettings": "Open Settings",
+    "save": "Save",
+    "selectAssets": "Select Assets",
+    "sessionExpired": "Session expired, please log in again",
+    "submit": "Submit",
+    "submitting": "Submitting"
+  }
 }

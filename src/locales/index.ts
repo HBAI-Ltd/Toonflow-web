@@ -18,7 +18,7 @@ const languageList = [
   { label: "Русский", tips: "Russian", value: "ru-RU" },
 ];
 
-const cachedLocale = useLocalStorage("locale", "zh-CN");
+const cachedLocale = useLocalStorage("locale", "en");
 
 const i18n = createI18n({
   legacy: false,
