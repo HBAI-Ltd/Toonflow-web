@@ -1079,7 +1079,7 @@
         }
       },
       "deleteScript": "Delete scripts in batches",
-      "extractAssets": "",
+      "extractAssets": "Extract Assets",
       "import": {
         "episodeRegexPh": "Customize the script splitting rule, leave it blank to use the default splitting rule (the default is to split according to the Episode X format)",
         "col": {
@@ -1770,7 +1770,7 @@
   "selectSource": "Select source",
   "confirm": "Select from assets",
   "cancel": "Select from storyboard",
-  "workbench.script.msg.selectExport": "",
+  "workbench.script.msg.selectExport": "Please select a script to export",
   "workbench.script.msg.exportFailed": "Export failed",
   "workbench.production.node.assets.confirmDeleteBody": "Confirm whether to delete the asset",
   "workbench.production.node.assets.removeFailed": "Failed to delete asset",
