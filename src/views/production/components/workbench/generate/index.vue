@@ -22,13 +22,46 @@
             </div>
           </div>
         </t-card>
+        <div class="manualAssist" v-if="isManualMode">
+          <div class="manualHeader f ac jb">
+            <span class="manualTitle">{{ manualModeTitle }}</span>
+            <t-button size="small" variant="outline" @click="copyCurrentPrompt">复制提示词</t-button>
+          </div>
+          <div class="manualHint">
+            {{
+              isSmartManualMode
+                ? "按当前顺序复制帧图到即梦智能多帧，逐段复制帧间过渡提示词。"
+                : "复制或下载参考素材到即梦全能参考，官网生成后上传视频回填当前轨道。"
+            }}
+          </div>
+          <div class="frameWorkspace" v-if="isSmartManualMode">
+            <div class="frameItem" v-for="(frame, index) in smartFrameItems" :key="`${frame.sources}-${frame.id}-${index}`">
+              <div class="frameThumb">
+                <img v-if="frame.src" :src="frame.src" />
+                <span v-else>无图</span>
+              </div>
+              <div class="frameMeta f ac jb">
+                <span>第 {{ index + 1 }} 帧</span>
+                <small>{{ getFrameSourceLabel(frame, index) }}</small>
+              </div>
+              <t-button size="small" variant="text" block @click="copyFrameImage(frame)">复制帧图</t-button>
+              <template v-if="index < smartFrameItems.length - 1">
+                <div class="transitionText">{{ buildSmartFrameTransitionText(index) }}</div>
+                <t-button size="small" variant="text" block @click="copyText(buildSmartFrameTransitionText(index))">复制过渡提示词</t-button>
+              </template>
+            </div>
+            <div class="emptyFrameHint" v-if="smartFrameItems.length < 2">智能多帧建议至少选择 2 张图片帧。</div>
+          </div>
+        </div>
       </div>
       <div class="video">
         <videoCard
           v-if="currentTrack"
           :active-track-index="activeTrackIndex"
+          :manual-mode="isManualMode"
           v-model:current-track="currentTrack"
           @refresh="getGenerateData"
+          @copyPrompt="copyCurrentPrompt"
           @generate="generateVideo" />
       </div>
     </div>
@@ -56,6 +89,16 @@ import axios from "@/utils/axios";
 import projectStore from "@/stores/project";
 import promptEditor from "@/components/promptEditor.vue";
 import imageListCacheStore from "@/stores/imageListCache";
+import {
+  appendManualVideoModeOptions,
+  buildSmartFrameTransitionText,
+  getPromptGenerationMode,
+  isJimengOrSeedanceModel,
+  isManualSmartMultiFrameMode,
+  isManualVideoMode,
+  MANUAL_OMNI_REFERENCE_MODE,
+  MANUAL_SMART_MULTI_FRAME_MODE,
+} from "@/utils/manualVideoModes";
 
 const { project } = storeToRefs(projectStore());
 const episodesId = inject<Ref<number>>("episodesId")!;
@@ -104,12 +147,14 @@ const imageList = computed({
       const cached = getCache(pid, sid, trackId);
 
       if (cached?.length) {
-        return [...cached].sort((a, b) => getImageItemPriority(a) - getImageItemPriority(b));
+        const list = [...cached];
+        return isSmartManualMode.value ? list : list.sort((a, b) => getImageItemPriority(a) - getImageItemPriority(b));
       }
     }
     const medias = currentTrack.value?.medias;
     if (!medias?.length) return [];
-    return [...(medias as UploadItem[])].sort((a, b) => getImageItemPriority(a) - getImageItemPriority(b));
+    const list = [...(medias as UploadItem[])];
+    return isSmartManualMode.value ? list : list.sort((a, b) => getImageItemPriority(a) - getImageItemPriority(b));
   },
   set(val: UploadItem[]) {
     if (currentTrack.value) {
@@ -164,14 +209,24 @@ const modeList = computed(() => {
     }
     return modeLabelMap[m] || m;
   }
-  return modeOptions.value.mode
+  const options = modeOptions.value.mode
     ? modeOptions.value.mode.map((mode) =>
         Array.isArray(mode)
           ? { value: JSON.stringify(mode), label: mode.map((m) => parseRefLabel(m)).join(" + ") + "参考" }
           : { value: mode, label: modeLabelMap[mode] || mode },
       )
     : [];
+  return appendManualVideoModeOptions(options, manualModeModelKey.value);
 });
+const manualModeModelKey = computed(() => `${modelParmas.value.model} ${modeOptions.value.name} ${modeOptions.value.modelName}`);
+const isManualMode = computed(() => isManualVideoMode(modelParmas.value.mode));
+const isSmartManualMode = computed(() => isManualSmartMultiFrameMode(modelParmas.value.mode));
+const manualModeTitle = computed(() => {
+  if (modelParmas.value.mode === MANUAL_SMART_MULTI_FRAME_MODE) return "即梦智能多帧官网辅助";
+  if (modelParmas.value.mode === MANUAL_OMNI_REFERENCE_MODE) return "即梦全能参考官网辅助";
+  return "即梦官网辅助";
+});
+const smartFrameItems = computed(() => imageList.value.filter((item) => item.fileType === "image" && item.src));
 const currentTrack = computed({
   get() {
     return trackList.value[activeTrackIndex.value];
@@ -216,13 +271,14 @@ watch(
 
       const currentParsed = parseMode(modelParmas.value.mode);
       const modeMatched =
-        currentParsed !== null &&
-        data.mode.some((m: VideoMode) => {
-          if (Array.isArray(m) && Array.isArray(currentParsed)) {
-            return JSON.stringify(m) === JSON.stringify(currentParsed);
-          }
-          return m == currentParsed;
-        });
+        (isManualVideoMode(currentParsed) && isJimengOrSeedanceModel(`${val} ${data.name} ${data.modelName}`)) ||
+        (currentParsed !== null &&
+          data.mode.some((m: VideoMode) => {
+            if (Array.isArray(m) && Array.isArray(currentParsed)) {
+              return JSON.stringify(m) === JSON.stringify(currentParsed);
+            }
+            return m == currentParsed;
+          }));
       if (!modeMatched) {
         const newMode = Array.isArray(data.mode[0]) ? JSON.stringify(data.mode[0]) : data.mode[0];
         modeChange(newMode);
@@ -325,7 +381,7 @@ async function genText() {
       trackId: currentTrackId,
       info: info,
       model: modelParmas.value.model,
-      mode: modelParmas.value.mode,
+      mode: getPromptGenerationMode(modelParmas.value.mode),
     });
     track.prompt = data;
     track.state = "已完成";
@@ -333,6 +389,39 @@ async function genText() {
     track.state = "生成失败";
     window.$message.error((e as Error)?.message ?? "提示词生成失败");
   }
+}
+async function copyText(text: string) {
+  if (!text) return window.$message.warning("没有可复制内容");
+  try {
+    await navigator.clipboard.writeText(text);
+    window.$message.success("已复制");
+  } catch {
+    window.$message.error("复制失败");
+  }
+}
+function copyCurrentPrompt() {
+  return copyText(currentTrack.value?.prompt ?? "");
+}
+async function copyFrameImage(item: UploadItem) {
+  if (!item.src) return window.$message.warning("没有可复制图片");
+  try {
+    const response = await fetch(item.src);
+    const blob = await response.blob();
+    if (!navigator.clipboard?.write || typeof ClipboardItem === "undefined") throw new Error("clipboard image unsupported");
+    await navigator.clipboard.write([new ClipboardItem({ [blob.type || "image/png"]: blob })]);
+    window.$message.success("已复制图片");
+  } catch {
+    try {
+      await navigator.clipboard.writeText(item.src);
+      window.$message.warning("图片复制受限，已复制图片链接");
+    } catch {
+      window.$message.error("复制失败");
+    }
+  }
+}
+function getFrameSourceLabel(item: UploadItem, index: number) {
+  if (item.sources === "storyboard") return `分镜 P${(item.index ?? index) + 1}`;
+  return "资产参考";
 }
 function trackChange(prevIndex?: number) {
   // 切换前：将旧轨道的 imageList 保存到缓存
@@ -385,6 +474,11 @@ onMounted(() => {
 });
 /** 单个轨道生成视频 */
 async function generateVideo() {
+  if (isManualMode.value) {
+    window.$message.info("手动官网模式不会调用自动生成，请复制提示词到即梦官网生成后再上传结果。");
+    copyCurrentPrompt();
+    return;
+  }
   const dlg = DialogPlugin.confirm({
     header: $t("workbench.generate.generateConfirm"),
     body: $t("workbench.generate.generateConfirmBody"),
@@ -554,9 +648,13 @@ onUnmounted(() => {
       width: 50%;
       height: 100%;
       min-height: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
       .videoPrompt {
         width: 100%;
-        height: 100%;
+        flex: 1;
+        min-height: 0;
         overflow: hidden;
         display: flex;
         flex-direction: column;
@@ -578,6 +676,79 @@ onUnmounted(() => {
             min-height: 0;
             overflow-y: auto;
           }
+        }
+      }
+      .manualAssist {
+        flex-shrink: 0;
+        padding: 10px;
+        border: 1px solid var(--td-component-border);
+        border-radius: 8px;
+        background: var(--td-bg-color-container);
+        .manualHeader {
+          gap: 8px;
+          margin-bottom: 6px;
+        }
+        .manualTitle {
+          font-size: 13px;
+          font-weight: 600;
+          color: var(--td-text-color-primary);
+        }
+        .manualHint,
+        .emptyFrameHint {
+          font-size: 12px;
+          line-height: 1.5;
+          color: var(--td-text-color-secondary);
+        }
+        .frameWorkspace {
+          margin-top: 8px;
+          display: flex;
+          gap: 8px;
+          overflow-x: auto;
+          padding-bottom: 4px;
+        }
+        .frameItem {
+          width: 178px;
+          flex-shrink: 0;
+          border: 1px solid var(--td-component-border);
+          border-radius: 8px;
+          padding: 6px;
+          background: var(--td-bg-color-secondarycontainer);
+        }
+        .frameThumb {
+          width: 100%;
+          aspect-ratio: 16 / 9;
+          border-radius: 6px;
+          overflow: hidden;
+          background: var(--td-bg-color-container);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: var(--td-text-color-placeholder);
+          img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+          }
+        }
+        .frameMeta {
+          margin-top: 6px;
+          gap: 6px;
+          font-size: 12px;
+          small {
+            color: var(--td-text-color-secondary);
+            white-space: nowrap;
+          }
+        }
+        .transitionText {
+          margin-top: 6px;
+          min-height: 36px;
+          font-size: 12px;
+          line-height: 1.45;
+          color: var(--td-text-color-secondary);
+        }
+        .emptyFrameHint {
+          align-self: center;
+          white-space: nowrap;
         }
       }
     }

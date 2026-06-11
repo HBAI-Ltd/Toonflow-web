@@ -75,6 +75,7 @@ import projectStore from "@/stores/project";
 import imageListCacheStore from "@/stores/imageListCache";
 import JSZip from "jszip";
 import settingStore from "@/stores/setting";
+import { getPromptGenerationMode, isManualVideoMode } from "@/utils/manualVideoModes";
 
 const { otherSetting } = storeToRefs(settingStore());
 const { project } = storeToRefs(projectStore());
@@ -264,7 +265,7 @@ function batchGenText() {
       projectId: project.value?.id,
       trackData,
       model: props.modelParmas.model,
-      mode: props.modelParmas.mode,
+      mode: getPromptGenerationMode(props.modelParmas.mode),
       concurrentCount: otherSetting.value.assetsBatchGenereateSize,
     })
     .then(({ data }) => {
@@ -302,6 +303,10 @@ function getTrackUploadInfo(track: TrackItem, filterEmpty = false) {
 const generateVideoLoad = ref(false);
 /** 批量为已勾选轨道生成视频 */
 function batchGenVideo() {
+  if (isManualVideoMode(props.modelParmas.mode)) {
+    window.$message.info("手动官网模式不支持批量自动生成，请逐条复制提示词并上传官网生成结果。");
+    return;
+  }
   const dlg = DialogPlugin.confirm({
     header: $t("workbench.generate.generateConfirm"),
     body: $t("workbench.generate.generateVideosInBatches"),

@@ -1,6 +1,8 @@
-type ReferenceType = "videoReference" | "imageReference" | "audioReference" | "textReference";
+type ReferenceTypeBase = "videoReference" | "imageReference" | "audioReference" | "textReference";
+type ReferenceType = ReferenceTypeBase | `${ReferenceTypeBase}:${number}`;
 type Type = "imageReference" | "startImage" | "endImage" | "videoReference" | "audioReference";
-type VideoMode = "singleImage" | "startEndRequired" | "endFrameOptional" | "startFrameOptional" | "text" | ReferenceType[];
+type ManualVideoMode = "jimengOmniReferenceManual" | "jimengSmartMultiFrameManual";
+type VideoMode = "singleImage" | "startEndRequired" | "endFrameOptional" | "startFrameOptional" | "text" | ManualVideoMode | ReferenceType[];
 
 interface UploadItemBase {
   fileType: "image" | "video" | "audio";
@@ -60,6 +62,7 @@ interface VideoItem {
   src: string;
   state: "未生成" | "生成中" | "已完成" | "生成失败";
   errorReason?: string | null;
+  duration?: number | string | null;
 }
 interface TrackMediaBase {
   src: string;

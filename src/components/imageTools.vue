@@ -48,7 +48,7 @@ const props = withDefaults(
 const placement = computed<any>(() => props.placement);
 
 const bigSrc = computed(() => {
-  return `${props.src.split("?") ?   props.src.split("?")[0] : props.src}`;
+  return props.src.split("?")[0] || props.src;
 });
 
 const positionStyle = computed<any>(() => {
@@ -111,7 +111,12 @@ async function handleCopy() {
     await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
     window.$message.success($t("components.imageTools.msg.copied"));
   } catch {
-    window.$message.error($t("components.imageTools.msg.copyFailed"));
+    try {
+      await navigator.clipboard.writeText(props.src);
+      window.$message.warning("图片复制受限，已复制图片链接");
+    } catch {
+      window.$message.error($t("components.imageTools.msg.copyFailed"));
+    }
   }
 }
 

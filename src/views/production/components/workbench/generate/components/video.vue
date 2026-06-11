@@ -1,7 +1,14 @@
 <template>
   <t-card :title="'#' + (activeTrackIndex + 1) + $t('workbench.generate.videoMenu')" header-bordered style="height: 100%">
     <template #actions>
-      <t-button size="small" :loading="generating" @click="emit('generate')">{{ $t("workbench.generate.generate") }}</t-button>
+      <div class="cardActions f ac">
+        <t-button size="small" variant="outline" :loading="uploadingVideo" @click="uploadVideo">
+          <template #icon><i-upload-one size="14" /></template>
+          上传视频
+        </t-button>
+        <t-button v-if="manualMode" size="small" @click="emit('copyPrompt')">复制提示词</t-button>
+        <t-button v-else size="small" :loading="generating" @click="emit('generate')">{{ $t("workbench.generate.generate") }}</t-button>
+      </div>
     </template>
     <div class="history">
       <div class="titleBox f ac">
@@ -79,12 +86,14 @@
 
 <script setup lang="ts">
 import type { Ref } from "vue";
+import { useFileDialog } from "@vueuse/core";
 import axios from "@/utils/axios";
 import projectStore from "@/stores/project";
 
 const props = defineProps<{
   activeTrackIndex: number;
   generating?: boolean;
+  manualMode?: boolean;
 }>();
 const currentTrack = defineModel<TrackItem>("currentTrack", {
   default: () => {},
@@ -92,6 +101,7 @@ const currentTrack = defineModel<TrackItem>("currentTrack", {
 const emit = defineEmits<{
   generate: [];
   refresh: [];
+  copyPrompt: [];
 }>();
 
 const { project } = storeToRefs(projectStore());
@@ -101,6 +111,72 @@ const selectVideoId = ref();
 const videoCoverMap = ref<Record<string, string>>({});
 const videoPlayerVisible = ref(false);
 const playingVideoSrc = ref<string>();
+const uploadingVideo = ref(false);
+const { open: openVideoFileDialog, onChange: onVideoFileChange } = useFileDialog({
+  multiple: false,
+  reset: true,
+  accept: ".mp4,.webm,.mov,.avi,.mkv",
+});
+
+function readVideoFileAsDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
+}
+
+function isVideoFile(file: File): boolean {
+  return file.type.startsWith("video/") || /\.(mp4|webm|mov|avi|mkv)$/i.test(file.name);
+}
+
+function normalizeUploadedVideo(data: any): VideoItem {
+  const item = data?.video ?? data;
+  return {
+    id: item.id,
+    src: item.src ?? item.filePath ?? item.url ?? "",
+    state: (item.state ?? "已完成") as VideoItem["state"],
+    errorReason: item.errorReason ?? null,
+    duration: item.duration ?? null,
+  };
+}
+
+function uploadVideo() {
+  if (!currentTrack.value?.id) {
+    window.$message.error("请先选择轨道");
+    return;
+  }
+  openVideoFileDialog();
+}
+
+onVideoFileChange(async (files) => {
+  if (!files?.length) return;
+  if (!currentTrack.value?.id) return;
+  const file = files[0];
+  if (!isVideoFile(file)) {
+    window.$message.error("仅支持上传 .mp4/.webm/.mov/.avi/.mkv 视频文件");
+    return;
+  }
+  uploadingVideo.value = true;
+  try {
+    const base64Data = await readVideoFileAsDataUrl(file);
+    const { data } = await axios.post("/production/workbench/uploadVideo", {
+      projectId: project.value?.id,
+      scriptId: episodesId.value,
+      trackId: currentTrack.value.id,
+      name: file.name,
+      base64Data,
+    });
+    currentTrack.value.videoList.unshift(normalizeUploadedVideo(data));
+    window.$message.success("视频已上传");
+    emit("refresh");
+  } catch (e) {
+    window.$message.error((e as any)?.message ?? "视频上传失败");
+  } finally {
+    uploadingVideo.value = false;
+  }
+});
 
 /** 选中历史视频并同步到后端 */
 async function selectVideo(v: HistoryVideoItem) {
@@ -337,6 +413,9 @@ function previewVideo(v: HistoryVideoItem) {
       }
     }
   }
+}
+.cardActions {
+  gap: 8px;
 }
 
 .videoPlayerBox {

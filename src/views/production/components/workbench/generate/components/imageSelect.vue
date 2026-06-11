@@ -1,7 +1,7 @@
 <template>
   <div class="imageUploadBox ac">
     <!-- 单图模式 -->
-    <template v-if="mode == 'singleImage' || Array.isArray(parseMode(mode as string))">
+    <template v-if="mode == 'singleImage' || Array.isArray(parseMode(mode as string)) || isManualReferenceMode">
       <div class="uploadBtn c fc" v-for="(item, index) in mode == 'singleImage' ? imageList.slice(0, 1) : imageList" :key="index">
         <template v-if="item.src">
           <t-image v-if="item.fileType == 'image'" :src="item.src" fit="contain" class="uploadPreview">
@@ -115,6 +115,7 @@ import { ref } from "vue";
 import "@/views/production/components/workbench/type/type";
 import assetsCheck, { type AssetType, type ClipMediaType } from "@/utils/assetsCheck";
 import axios from "@/utils/axios";
+import { isManualOmniReferenceMode, isManualSmartMultiFrameMode } from "@/utils/manualVideoModes";
 
 const props = defineProps<{
   mode: VideoMode;
@@ -125,6 +126,7 @@ const imageList = defineModel<UploadItem[]>({
 });
 //分镜选择弹窗
 const storyboardDialogVisible = ref(false);
+const isManualReferenceMode = computed(() => isManualOmniReferenceMode(props.mode) || isManualSmartMultiFrameMode(props.mode));
 
 /** 空占位项，用于首尾帧模式中未设置的槽位 */
 const EMPTY_SLOT: UploadItem = { fileType: "image", id: null, src: "" } as any;
@@ -190,16 +192,21 @@ function getFileTypeByExt(src: string | undefined): "image" | "video" | "audio" 
 }
 /** 根据混合模式推导当前允许的 clip 媒体类型 */
 const mixedClipMediaTypes = computed<ClipMediaType[]>(() => {
-  const mode = props.mode;
+  const mode = parseMode(props.mode as string);
+  if (isManualSmartMultiFrameMode(props.mode)) return ["image"];
+  if (isManualOmniReferenceMode(props.mode)) return ["image", "video", "audio"];
   if (!Array.isArray(mode)) return [];
   const map: Record<string, ClipMediaType> = { audioReference: "audio", imageReference: "image", videoReference: "video" };
-  return mode.filter((m) => m in map).map((m) => map[m]);
+  return mode
+    .map((m) => String(m).split(":")[0])
+    .filter((m) => m in map)
+    .map((m) => map[m]);
 });
 let currentSlot: "start" | "end" | "" = "";
 function handleMixedAdd(slot: "start" | "end" | "" = "") {
   if (!props.mode) return window.$message.error($t("workbench.generate.notSelectMode"));
   currentSlot = slot;
-  const multiple = Array.isArray(parseMode(props.mode as string));
+  const multiple = Array.isArray(parseMode(props.mode as string)) || isManualReferenceMode.value;
   const dlg = DialogPlugin.confirm({
     header: $t("workbench.generate.selectSource"),
     confirmBtn: $t("workbench.generate.confirm"),
