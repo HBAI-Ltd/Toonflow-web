@@ -111,9 +111,9 @@ function onPaste(e: ClipboardEvent) {
 
 <style lang="scss" scoped>
 .storyboardTable {
-  max-width: 100vw;
-  width: fit-content;
-  min-width: 100px;
+  max-width: 720px;
+  width: 720px;
+  min-width: 200px;
   user-select: text;
   cursor: default;
 
@@ -138,6 +138,9 @@ function onPaste(e: ClipboardEvent) {
     display: flex;
     flex-direction: column;
     margin-top: 8px;
+    max-height: 600px;
+    overflow-y: auto;
+    overflow-x: auto;
 
     :deep(.md-editor) {
       border: none;
@@ -146,6 +149,16 @@ function onPaste(e: ClipboardEvent) {
 
     :deep(.md-editor-preview-wrapper) {
       padding: 0;
+    }
+
+    :deep(table) {
+      display: block;
+      max-width: 100%;
+      overflow-x: auto;
+    }
+
+    :deep(img) {
+      max-width: 100%;
     }
   }
 

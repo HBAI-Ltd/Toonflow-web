@@ -540,23 +540,25 @@ function regenerateItem() {
   const controller = createAbortController();
   axios
     .post(
-      "/assetsGenerate/generateAssets",
+      "/assetsGenerate/batchGenerateImageAssets",
       {
-        type: item.type ?? "props",
         projectId: project.value?.id,
-        name: item.name ?? $t("workbench.cornerScape.unnamed"),
-        base64: "",
-        prompt: editForm.prompt,
         model: selectValue.value,
-        id: item.id,
         resolution: editForm.resolution,
         concurrentCount: 1,
+        items: [
+          {
+            id: item.id,
+            type: item.type ?? "props",
+            name: item.name ?? $t("workbench.cornerScape.unnamed"),
+            prompt: editForm.prompt,
+          },
+        ],
       },
       { signal: controller.signal },
     )
     .then(async () => {
       window.$message.success($t("workbench.cornerScape.msg.genSuccess", { name: item.name }));
-      await getFilteredData();
     })
     .catch((e: any) => {
       if (e.name === "CanceledError" || e.code === "ERR_CANCELED") return;

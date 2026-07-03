@@ -255,7 +255,7 @@ const currentRowStoryboardInfo = ref<{ id: number | null; insertAfterIndex: numb
 });
 const styleMaxSize = computed(() => {
   if (gridScale.value <= 1) return gridScale.value;
-  else 1;
+  else return 1;
 });
 const generateLoading = ref(false);
 async function batchGenerateImage() {
@@ -456,7 +456,7 @@ function editInfo(item: Storyboard) {
 
 <style lang="scss" scoped>
 .storyboard {
-  min-width: 500px;
+  width: 500px;
   max-width: 100vw;
   user-select: text;
   cursor: default;
