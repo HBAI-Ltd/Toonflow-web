@@ -1,82 +1,130 @@
 <template>
-  <div class="cornerScape f">
-    <div class="left">
-      <t-card shadow class="card">
-        <template #title>
-          {{ $t("workbench.cornerScape.batchSettings") }}
-          <t-tag size="small" theme="primary" variant="light" style="margin-left: 8px">{{ dataList.length }}</t-tag>
-        </template>
-        <t-form labelAlign="top">
+  <div class="cornerScape">
+    <aside class="left">
+      <section class="panel">
+        <div class="panelHeader">
+          <div>
+            <div class="eyebrow">{{ $t("workbench.cornerScape.batchSettings") }}</div>
+            <h2>资产批处理</h2>
+          </div>
+          <t-tag size="small" theme="primary" variant="light">{{ dataList.length }}</t-tag>
+        </div>
+
+        <div class="selectionSummary" :class="{ active: selectedIds.length > 0 }">
+          <div>
+            <span class="summaryValue">{{ selectedIds.length }}</span>
+            <span class="summaryLabel">已选资产</span>
+          </div>
+          <t-button size="small" variant="text" :disabled="selectedIds.length === 0" @click="clearSelection">
+            {{ $t("workbench.cornerScape.clearSelection") }}
+          </t-button>
+        </div>
+
+        <t-form labelAlign="top" class="batchForm">
           <t-form-item :label="$t('workbench.cornerScape.quickActions')">
             <div class="quickActions">
-              <t-button theme="primary" variant="outline" @click="selectAll">{{ $t("workbench.cornerScape.selectAll") }}</t-button>
-              <t-button theme="primary" variant="outline" @click="selectPromptEmpty()">{{ $t("workbench.cornerScape.selectPromptEmpty") }}</t-button>
-              <t-button theme="primary" variant="outline" @click="selectByState('')">{{ $t("workbench.cornerScape.selectUngenerated") }}</t-button>
-              <t-button theme="primary" variant="outline" @click="selectByState('已完成')">
-                {{ $t("workbench.cornerScape.selectGenerated") }}
-              </t-button>
-              <t-button theme="primary" variant="outline" @click="selectByState('生成失败')">{{ $t("workbench.cornerScape.selectFailed") }}</t-button>
-              <t-button theme="primary" variant="outline" @click="toggleSelectAll">{{ $t("workbench.cornerScape.invertSelection") }}</t-button>
-              <t-button theme="primary" variant="outline" @click="clearSelection">{{ $t("workbench.cornerScape.clearSelection") }}</t-button>
-              <t-image-viewer :images="previewImages" :closeOnEscKeydown="true" :closeOnOverlay="true">
-                <template #trigger="{ open }">
-                  <t-button theme="primary" variant="outline" :disabled="!hasPreviewImages" @click="hasPreviewImages && open()">
-                    {{ $t("workbench.cornerScape.batchPreview") }}
-                  </t-button>
-                </template>
-              </t-image-viewer>
+              <t-button variant="outline" @click="selectAll">{{ $t("workbench.cornerScape.selectAll") }}</t-button>
+              <t-button variant="outline" @click="selectPromptEmpty()">{{ $t("workbench.cornerScape.selectPromptEmpty") }}</t-button>
+              <t-button variant="outline" @click="selectByState('')">{{ $t("workbench.cornerScape.selectUngenerated") }}</t-button>
+              <t-button variant="outline" @click="selectByState('已完成')">{{ $t("workbench.cornerScape.selectGenerated") }}</t-button>
+              <t-button variant="outline" @click="selectByState('生成失败')">{{ $t("workbench.cornerScape.selectFailed") }}</t-button>
+              <t-button variant="outline" @click="toggleSelectAll">{{ $t("workbench.cornerScape.invertSelection") }}</t-button>
             </div>
           </t-form-item>
+
           <t-form-item :label="$t('workbench.cornerScape.assetTypeFilter')">
             <t-checkbox-group @change="onChangeFn" v-model="checkboxValue" :options="translatedOptions" class="filterGroup" />
           </t-form-item>
 
-          <t-form-item :label="$t('workbench.cornerScape.genModel')">
-            <modelSelect v-model="selectValue" :type="`image`" />
-          </t-form-item>
-          <t-form-item :label="$t('workbench.cornerScape.resolution')">
-            <t-select
-              v-model="resolution"
-              :placeholder="$t('workbench.cornerScape.resolutionPh')"
-              :options="[
-                { label: '1K', value: '1K' },
-                { label: '2K', value: '2K' },
-                { label: '4K', value: '4K' },
-              ]"></t-select>
-          </t-form-item>
+          <div class="formGrid">
+            <t-form-item :label="$t('workbench.cornerScape.genModel')">
+              <modelSelect v-model="selectValue" :type="`image`" />
+            </t-form-item>
+            <t-form-item :label="$t('workbench.cornerScape.resolution')">
+              <t-select v-model="resolution" :placeholder="$t('workbench.cornerScape.resolutionPh')" :options="resolutionOptions" />
+            </t-form-item>
+          </div>
+
+          <div class="primaryActions">
+            <t-button theme="primary" variant="outline" @click="batchGenerationPrompt">
+              {{ $t("workbench.cornerScape.batchGenerationPrompt") }}
+            </t-button>
+            <t-button theme="primary" variant="outline" @click="batchSelectBindAudio">
+              {{ $t("workbench.cornerScape.batchBingAudio") }}
+            </t-button>
+            <t-button theme="primary" size="large" @click="batchGenerationImage">
+              <template #icon><t-icon name="play-circle" /></template>
+              {{ $t("workbench.cornerScape.startBatch") }}
+            </t-button>
+          </div>
+
           <t-form-item :label="$t('workbench.cornerScape.textPromptInput')">
-            <t-textarea v-model="otherTextPrompt" :placeholder="$t('workbench.cornerScape.textPromptPh')"></t-textarea>
+            <t-textarea v-model="otherTextPrompt" :placeholder="$t('workbench.cornerScape.textPromptPh')" :autosize="{ minRows: 3, maxRows: 6 }" />
           </t-form-item>
-          <t-form-item>
-            <div class="btnGap ac">
-              <div class="selectedInfo" v-if="selectedIds.length > 0">
-                <t-tag size="medium" theme="primary" variant="light">
-                  {{ $t("workbench.cornerScape.selectedCount", { count: selectedIds.length }) }}
-                </t-tag>
-              </div>
-              <div class="ac jb" style="width: 100%">
-                <t-button theme="primary" block @click="batchGenerationPrompt">{{ $t("workbench.cornerScape.batchGenerationPrompt") }}</t-button>
-                <t-button theme="primary" style="margin-left: 10px" block @click="batchSelectBindAudio">
-                  {{ $t("workbench.cornerScape.batchBingAudio") }}
+
+          <div class="secondaryActions">
+            <t-image-viewer :images="previewImages" :closeOnEscKeydown="true" :closeOnOverlay="true">
+              <template #trigger="{ open }">
+                <t-button variant="outline" :disabled="!hasPreviewImages" @click="hasPreviewImages && open()">
+                  <template #icon><t-icon name="image" /></template>
+                  {{ $t("workbench.cornerScape.batchPreview") }}
                 </t-button>
-              </div>
-              <t-button theme="primary" block @click="batchGenerationImage">
-                {{ $t("workbench.cornerScape.startBatch") }}
-              </t-button>
-            </div>
-          </t-form-item>
+              </template>
+            </t-image-viewer>
+            <t-button theme="danger" variant="outline" :disabled="selectedIds.length === 0" @click="deleteSelectedAssets">
+              <template #icon><i-delete /></template>
+              删除选中
+            </t-button>
+          </div>
         </t-form>
-      </t-card>
-    </div>
-    <div class="content">
-      <t-card v-show="dataList.length > 0" shadow class="card" v-for="item in dataList" :key="item.id" @click="openDrawer(item)">
+      </section>
+    </aside>
+
+    <main class="workspace">
+      <header class="workspaceHeader">
+        <div>
+          <div class="eyebrow">Characters & Scenes</div>
+          <h1>{{ $t("workbench.menu.cornerScape") }}</h1>
+        </div>
+        <div class="statsRow">
+          <div class="statItem">
+            <span>{{ dataList.length }}</span>
+            <small>全部</small>
+          </div>
+          <div class="statItem">
+            <span>{{ completedCount }}</span>
+            <small>已完成</small>
+          </div>
+          <div class="statItem">
+            <span>{{ generatingCount }}</span>
+            <small>进行中</small>
+          </div>
+          <div class="statItem">
+            <span>{{ failedCount }}</span>
+            <small>失败</small>
+          </div>
+        </div>
+      </header>
+
+      <section class="content" :class="{ emptyContent: dataList.length === 0 }">
+        <t-card v-show="dataList.length > 0" shadow class="card" v-for="item in dataList" :key="item.id" @click="openDrawer(item)">
         <div class="imageBox">
-          <t-checkbox class="selectBox" :checked="selectedIds.includes(item.id)" @click.stop @change="toggleSelect(item.id)" />
+          <t-checkbox
+            class="selectBox"
+            :class="{ selected: selectedIds.includes(item.id) }"
+            :checked="selectedIds.includes(item.id)"
+            @click.stop
+            @change="toggleSelect(item.id)" />
           <div class="cancelGeneration" @click.stop="cancelGenerationFn(item)" v-if="item.state === '生成中'">
             <t-tag theme="danger" size="small">
               {{ $t("workbench.cornerScape.cancelGeneration") }}
             </t-tag>
           </div>
+          <t-tooltip theme="primary" content="删除资产">
+            <t-button class="deleteAssetBtn" theme="danger" variant="outline" shape="square" size="small" @click.stop="deleteAssets([item.id])">
+              <template #icon><i-delete /></template>
+            </t-button>
+          </t-tooltip>
           <t-empty v-if="!item.state && item.promptState !== '生成中'" type="maintenance" :title="$t('workbench.cornerScape.waitingGen')" />
           <div v-else-if="item.state === '生成中' || item.promptState === '生成中' || item.audioBindState == '生成中'" class="generatingBox">
             <t-loading />
@@ -138,8 +186,13 @@
             <t-tag v-for="audio in item.relepedAudio" :key="audio.id" size="small" variant="outline" theme="primary">{{ audio.name }}</t-tag>
           </div>
         </div>
-      </t-card>
-      <t-empty v-if="dataList.length === 0" type="empty" :title="$t('workbench.cornerScape.operateScriptFirst')" />
+        </t-card>
+        <div v-if="dataList.length === 0" class="emptyState">
+          <t-empty type="empty" :title="$t('workbench.cornerScape.operateScriptFirst')" />
+          <p>完成剧本拆解后，这里会集中管理人物、场景和道具素材。</p>
+        </div>
+      </section>
+
       <t-drawer :closeBtn="true" closeOnEscKeydown :showOverlay="false" :footer="false" v-model:visible="drawerVisible" size="480px">
         <template #header>
           <div class="drawerHeader">
@@ -240,7 +293,7 @@
           </t-form-item>
         </t-form>
       </t-drawer>
-    </div>
+    </main>
   </div>
 </template>
 
@@ -299,6 +352,14 @@ const translatedOptions = computed(() =>
 );
 const dataList = ref<DataItem[]>([]);
 const loading = ref(false);
+const completedCount = computed(() => dataList.value.filter((item) => item.state === "已完成").length);
+const generatingCount = computed(
+  () =>
+    dataList.value.filter(
+      (item) => item.state === "生成中" || item.promptState === "生成中" || item.audioBindState === "生成中",
+    ).length,
+);
+const failedCount = computed(() => dataList.value.filter((item) => item.state === "生成失败").length);
 
 // 用于取消进行中的生成请求
 let abortController: AbortController | null = null;
@@ -401,6 +462,56 @@ function toggleSelectAll() {
 }
 function clearSelection() {
   selectedIds.value = [];
+}
+
+function hasRunningTask(ids: number[]) {
+  return dataList.value.some(
+    (item) =>
+      ids.includes(item.id) && (item.state === "生成中" || item.promptState === "生成中" || item.audioBindState === "生成中"),
+  );
+}
+
+function deleteSelectedAssets() {
+  deleteAssets([...selectedIds.value]);
+}
+
+function deleteAssets(ids: number[]) {
+  if (!ids.length) {
+    window.$message.warning("请选择需要删除的资产");
+    return;
+  }
+  if (hasRunningTask(ids)) {
+    window.$message.warning("生成中的资产请先取消或等待完成后再删除");
+    return;
+  }
+  const dialog = DialogPlugin.confirm({
+    header: "删除资产",
+    body: `确定删除选中的 ${ids.length} 个资产吗？相关图片、历史图片、剧本/分镜关联和音色绑定会一并清理。`,
+    confirmBtn: "删除",
+    cancelBtn: $t("workbench.assets.cancelBtn"),
+    theme: "danger",
+    onConfirm: async () => {
+      try {
+        await axios.post("/cornerScape/deleteAssets", {
+          projectId: project.value?.id,
+          ids,
+        });
+        selectedIds.value = selectedIds.value.filter((id) => !ids.includes(id));
+        if (currentItem.value && ids.includes(currentItem.value.id)) {
+          drawerVisible.value = false;
+          currentItem.value = null;
+        }
+        await getFilteredData();
+        window.$message.success("删除资产成功");
+      } catch (e: any) {
+        window.$message.error(e?.message || "删除资产失败");
+      } finally {
+        dialog.destroy();
+      }
+    },
+    onCancel: () => dialog.destroy(),
+    onClose: () => dialog.destroy(),
+  });
 }
 //取消生成
 async function cancelGenerationFn(item: DataItem) {
@@ -520,7 +631,7 @@ function setItemState(id: number, state: string) {
   if (currentItem.value?.id === id) currentItem.value.state = state;
 }
 
-function regenerateItem() {
+async function regenerateItem() {
   if (!currentItem.value) return;
   if (!selectValue.value) {
     window.$message.warning($t("workbench.cornerScape.msg.selectModel"));
@@ -538,33 +649,44 @@ function regenerateItem() {
   setItemState(item.id, "生成中");
   drawerVisible.value = false;
   const controller = createAbortController();
-  axios
-    .post(
-      "/assetsGenerate/batchGenerateImageAssets",
+  try {
+    const { data } = await axios.post(
+      "/assetsGenerate/generateAssets",
       {
         projectId: project.value?.id,
         model: selectValue.value,
         resolution: editForm.resolution,
-        concurrentCount: 1,
-        items: [
-          {
-            id: item.id,
-            type: item.type ?? "props",
-            name: item.name ?? $t("workbench.cornerScape.unnamed"),
-            prompt: editForm.prompt,
-          },
-        ],
+        id: item.id,
+        type: item.type ?? "tool",
+        name: item.name ?? $t("workbench.cornerScape.unnamed"),
+        prompt: editForm.prompt,
       },
       { signal: controller.signal },
-    )
-    .then(async () => {
-      window.$message.success($t("workbench.cornerScape.msg.genSuccess", { name: item.name }));
-    })
-    .catch((e: any) => {
-      if (e.name === "CanceledError" || e.code === "ERR_CANCELED") return;
-      window.$message.error(e.message ?? $t("workbench.cornerScape.msg.genFailed", { name: item.name }));
-      setItemState(item.id, "生成失败");
-    });
+    );
+    const target = dataList.value.find((row) => row.id === item.id);
+    if (target) {
+      target.state = "已完成";
+      target.filePath = data.path;
+      target.imageId = data.imageId ?? target.imageId;
+      target.model = selectValue.value.split(/:(.+)/)[1] ?? selectValue.value;
+      target.resolution = editForm.resolution;
+      target.prompt = editForm.prompt;
+    }
+    if (currentItem.value?.id === item.id) {
+      currentItem.value.state = "已完成";
+      currentItem.value.filePath = data.path;
+      currentItem.value.imageId = data.imageId ?? currentItem.value.imageId;
+      currentItem.value.model = selectValue.value.split(/:(.+)/)[1] ?? selectValue.value;
+      currentItem.value.resolution = editForm.resolution;
+      currentItem.value.prompt = editForm.prompt;
+    }
+    await getFilteredData();
+    window.$message.success($t("workbench.cornerScape.msg.genSuccess", { name: item.name }));
+  } catch (e: any) {
+    if (e.name === "CanceledError" || e.code === "ERR_CANCELED") return;
+    window.$message.error(e.message ?? $t("workbench.cornerScape.msg.genFailed", { name: item.name }));
+    setItemState(item.id, "生成失败");
+  }
 }
 
 // 提示词失焦保存
@@ -981,216 +1103,455 @@ async function selectAudio() {
   width: 100%;
   height: 100%;
   min-height: 0;
-  align-items: flex-start;
-  .left {
-    width: clamp(240px, 22vw, 320px);
-    height: 100%;
-    min-height: 0;
-    flex-shrink: 0;
-    margin-right: 16px;
+  display: grid;
+  grid-template-columns: clamp(300px, 25vw, 380px) minmax(0, 1fr);
+  gap: 16px;
+  padding: 16px;
+  background: #f4f6f8;
+}
+
+.eyebrow {
+  color: var(--td-text-color-placeholder);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.left,
+.workspace {
+  min-height: 0;
+}
+
+.panel,
+.workspace {
+  background: var(--td-bg-color-container);
+  border: 1px solid var(--td-component-border);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(20, 30, 45, 0.06);
+}
+
+.panel {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.panelHeader,
+.workspaceHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px;
+  border-bottom: 1px solid var(--td-component-border);
+
+  h1,
+  h2 {
+    margin: 3px 0 0;
+    color: var(--td-text-color-primary);
+    letter-spacing: 0;
+  }
+
+  h1 {
+    font-size: 22px;
+    line-height: 1.2;
+  }
+
+  h2 {
+    font-size: 18px;
+  }
+}
+
+.selectionSummary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 14px 18px 0;
+  padding: 12px;
+  border: 1px solid var(--td-component-border);
+  border-radius: 8px;
+  background: #f8fafc;
+
+  &.active {
+    border-color: var(--td-brand-color);
+    background: var(--td-brand-color-light);
+  }
+}
+
+.summaryValue {
+  display: block;
+  color: var(--td-text-color-primary);
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.summaryLabel {
+  color: var(--td-text-color-secondary);
+  font-size: 12px;
+}
+
+.batchForm {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 16px 18px 18px;
+
+  :deep(.t-form__item) {
     margin-bottom: 16px;
+  }
+
+  :deep(.t-form__label) {
+    color: var(--td-text-color-secondary);
+    font-weight: 600;
+  }
+}
+
+.quickActions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+
+  :deep(.t-button) {
+    min-width: 0;
+  }
+}
+
+.filterGroup {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 96px;
+  gap: 10px;
+}
+
+.secondaryActions,
+.primaryActions {
+  display: grid;
+  gap: 10px;
+}
+
+.secondaryActions {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-bottom: 10px;
+}
+
+.primaryActions {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+
+  :deep(.t-button:last-child) {
+    grid-column: 1 / -1;
+  }
+}
+
+.workspace {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.statsRow {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(74px, 1fr));
+  gap: 8px;
+}
+
+.statItem {
+  padding: 8px 10px;
+  border: 1px solid var(--td-component-border);
+  border-radius: 8px;
+  background: #f8fafc;
+  text-align: right;
+
+  span,
+  small {
+    display: block;
+  }
+
+  span {
+    color: var(--td-text-color-primary);
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.1;
+  }
+
+  small {
+    margin-top: 3px;
+    color: var(--td-text-color-placeholder);
+    font-size: 12px;
+  }
+}
+
+.content {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 18px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  align-items: start;
+  align-content: start;
+  gap: 14px;
+
+  &.emptyContent {
     display: flex;
-    flex-direction: column;
-    .btnGap {
-      gap: 8px;
-      width: 100%;
-      flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .card {
+    width: 100%;
+    height: 354px;
+    border: 0;
+    overflow: hidden;
+    border-radius: 8px;
+    cursor: pointer;
+    transition:
+      transform 0.18s ease,
+      box-shadow 0.18s ease,
+      border-color 0.18s ease;
+
+    &:hover {
+      transform: translateY(-2px);
+      border-color: var(--td-brand-color);
+      box-shadow: 0 14px 30px rgba(20, 30, 45, 0.12);
+
+      .imageToolsWrap,
+      .cancelGeneration,
+      .deleteAssetBtn,
+      .selectBox {
+        opacity: 1;
+        pointer-events: auto;
+      }
     }
-    .selectedInfo {
-      width: 100%;
-      text-align: center;
-    }
-    .card {
+
+    :deep(.t-card__body) {
+      display: flex;
+      flex-direction: column;
       height: 100%;
       min-height: 0;
-      display: flex;
-      flex-direction: column;
-      overflow: auto;
-      :deep(.t-card__body) {
-        flex: 1;
-        min-height: 0;
-        overflow: auto;
-      }
-    }
-    :deep(.t-form) {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    :deep(.t-form__item) {
-      margin-bottom: 0;
-    }
-    .quickActions {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      width: 100%;
-      :deep(.t-button) {
-        width: 100%;
-      }
-    }
-    .filterGroup {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
+      padding: 0;
     }
   }
-  .content {
-    overflow: auto;
-    height: 100%;
+
+  :deep(.t-card--bordered.card) {
+    border: 0;
+  }
+}
+
+.imageBox {
+  position: relative;
+  width: 100%;
+  height: 210px;
+  flex: 0 0 210px;
+  background: #eef2f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .selectBox {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 10;
+    width: 18px;
+    height: 18px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    box-shadow: 0 4px 12px rgba(20, 30, 45, 0.18);
+    opacity: 0;
+    pointer-events: none;
+    transition:
+      opacity 0.18s ease,
+      transform 0.18s ease;
+
+    &:hover {
+      transform: translateY(-1px);
+    }
+
+    &.t-is-checked,
+    &.selected {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    :deep(.t-checkbox__input) {
+      margin: 0;
+    }
+
+    :deep(.t-checkbox__label) {
+      display: none;
+    }
+
+    :deep(.t-checkbox__input .t-checkbox__inner) {
+      display: block;
+      width: 18px;
+      height: 18px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.96);
+      border-color: rgba(140, 150, 165, 0.9);
+    }
+
+    :deep(.t-checkbox__input.t-is-checked .t-checkbox__inner),
+    &.t-is-checked :deep(.t-checkbox__inner) {
+      background: var(--td-brand-color);
+      border-color: var(--td-brand-color);
+    }
+
+    :deep(.t-checkbox__input.t-is-checked .t-checkbox__inner::after),
+    &.t-is-checked :deep(.t-checkbox__inner::after) {
+      border-color: #fff;
+    }
+  }
+
+  .cancelGeneration {
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+    z-index: 10;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+
+  .deleteAssetBtn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 12;
+    opacity: 0;
+    pointer-events: none;
+    background: rgba(255, 255, 255, 0.92);
+    transition: opacity 0.2s ease;
+  }
+
+  .generatingBox {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
     width: 100%;
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
-    align-items: start;
-    align-content: start;
-    gap: 16px;
-    .card {
-      cursor: pointer;
+    height: 100%;
+    background: #edf5ff;
+  }
+
+  .generatingText {
+    color: var(--td-brand-color);
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .image {
+    width: 100%;
+    height: 100%;
+
+    :deep(.t-image__img) {
       width: 100%;
       height: 100%;
-      display: flex;
-      flex-direction: column;
-      :deep(.t-card__body) {
-        flex: 1;
-        min-height: 0;
-        display: flex;
-        flex-direction: column;
-      }
-      .imageBox {
-        position: relative;
-        width: 100%;
-        height: 160px;
-        background-color: #f5f7fa;
-        flex-shrink: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        .selectBox {
-          position: absolute;
-          top: 8px;
-          left: 8px;
-          z-index: 10;
-        }
-        .cancelGeneration {
-          position: absolute;
-          top: 8px;
-          right: 8px;
-          z-index: 10;
-          opacity: 0;
-          pointer-events: none;
-          transition: opacity 0.3s;
-          cursor: pointer;
-          font-size: 12px;
-        }
-        .generatingBox {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          gap: 12px;
-          width: 100%;
-          height: 100%;
-          background: linear-gradient(135deg, #f0f4ff 0%, #e8f0fe 100%);
-          .generatingText {
-            font-size: 13px;
-            color: var(--td-brand-color);
-            letter-spacing: 0.05em;
-          }
-        }
-        .image {
-          width: 100%;
-          height: 100%;
-          :deep(.t-image__img) {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-          }
-        }
-        .imageToolsWrap {
-          opacity: 0;
-          pointer-events: none;
-          transition: opacity 0.2s ease;
-        }
-        :deep(.t-empty) {
-          width: 100%;
-        }
-      }
-      &:hover {
-        .imageToolsWrap {
-          opacity: 1;
-          pointer-events: auto;
-        }
-        .cancelGeneration {
-          opacity: 1;
-          pointer-events: auto;
-        }
-      }
-      .infoBox {
-        flex: 1;
-        padding: 8px 0;
-        overflow: hidden;
-        cursor: pointer;
-        .title {
-          font-size: 14px;
-          font-weight: 600;
-          line-height: 1.5;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .meta {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 6px;
-          margin-top: 4px;
-          .typeTag {
-            flex-shrink: 0;
-          }
-          .stateTag {
-            flex-shrink: 0;
-          }
-          .modelTag {
-            min-width: 0;
-            max-width: 100%;
-            overflow: hidden;
-            :deep(.t-tag__text) {
-              overflow: hidden;
-              text-overflow: ellipsis;
-              white-space: nowrap;
-            }
-          }
-        }
-        .prompt {
-          margin-top: 4px;
-          font-size: 12px;
-          color: var(--td-text-color-secondary);
-          line-height: 1.5;
-          overflow: hidden;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          line-clamp: 2;
-          -webkit-box-orient: vertical;
-        }
-      }
+      object-fit: contain;
     }
+  }
+
+  .imageToolsWrap {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+
+  :deep(.t-empty) {
+    width: 100%;
+  }
+}
+
+.infoBox {
+  height: 144px;
+  min-height: 0;
+  flex: 0 0 144px;
+  padding: 12px;
+  overflow: hidden;
+}
+
+.title {
+  min-width: 0;
+  color: var(--td-text-color-primary);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.35;
+  gap: 8px;
+  overflow: hidden;
+
+  > :first-child,
+  & {
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.prompt {
+  margin-top: 8px;
+  color: var(--td-text-color-secondary);
+  font-size: 12px;
+  line-height: 1.55;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.emptyState {
+  width: min(460px, 100%);
+  padding: 30px;
+  border: 1px dashed var(--td-component-border);
+  border-radius: 8px;
+  background: #fbfcfd;
+  text-align: center;
+
+  p {
+    margin: 8px 0 0;
+    color: var(--td-text-color-secondary);
+    font-size: 13px;
   }
 }
 
 .drawerHeader {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+
+  span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 }
-.audioList {
-  margin-top: 8px;
-}
+
 .drawerImageBox {
   width: 100%;
-  min-height: 120px;
-  max-height: 400px;
-  background-color: #f5f7fa;
-  border-radius: 6px;
-  margin-bottom: 16px;
+  min-height: 180px;
+  max-height: 420px;
+  margin-bottom: 18px;
+  border: 1px solid var(--td-component-border);
+  border-radius: 8px;
+  background: #eef2f6;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1200,21 +1561,26 @@ async function selectAudio() {
   .image {
     width: 100%;
     height: auto;
+
     :deep(.t-image__img) {
-      max-height: 400px;
+      max-height: 420px;
       object-fit: contain;
     }
   }
+
   .generatingBox {
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 12px;
-    .generatingText {
-      font-size: 13px;
-      color: var(--td-brand-color);
-    }
   }
+
+  .generatingText {
+    color: var(--td-brand-color);
+    font-size: 13px;
+    font-weight: 600;
+  }
+
   .imageToolsWrap {
     opacity: 1;
     pointer-events: auto;
@@ -1234,37 +1600,126 @@ async function selectAudio() {
   &::-webkit-scrollbar {
     height: 6px;
   }
+
   &::-webkit-scrollbar-thumb {
-    background: #c1c1c1;
+    background: #c1c7d0;
     border-radius: 4px;
   }
+
   &::-webkit-scrollbar-track {
     background: transparent;
   }
 }
 
 .historyImageItem {
-  border-radius: 4px;
-  border: 3px solid transparent;
+  border: 2px solid transparent;
+  border-radius: 8px;
   cursor: pointer;
-  transition: border-color 0.2s;
   flex-shrink: 0;
   overflow: hidden;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
 
   &:hover {
     border-color: var(--td-brand-color-light);
   }
+
   &.selected {
     border-color: var(--td-brand-color);
+    box-shadow: 0 0 0 2px var(--td-brand-color-light);
   }
+}
+
+.audioList {
+  margin-top: 10px;
+  gap: 8px;
+}
+
+.assets-empty {
+  margin-top: 8px;
+  color: var(--td-text-color-placeholder);
+  font-size: 13px;
 }
 
 .drawerActions {
   display: flex;
-  gap: 8px;
+  gap: 10px;
   width: 100%;
+
   :deep(.t-button) {
     flex: 1;
+  }
+}
+
+@media (max-width: 1080px) {
+  .cornerScape {
+    grid-template-columns: 1fr;
+    height: auto;
+    min-height: 100%;
+    overflow: auto;
+  }
+
+  .panel {
+    height: auto;
+    min-height: auto;
+  }
+
+  .workspace {
+    min-height: 520px;
+  }
+
+  .batchForm {
+    overflow: visible;
+  }
+}
+
+@media (max-width: 720px) {
+  .cornerScape {
+    padding: 10px;
+    gap: 10px;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+  }
+
+  .panel,
+  .workspace {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .workspace {
+    min-height: 460px;
+  }
+
+  .workspaceHeader,
+  .panelHeader {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .statsRow {
+    width: 100%;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .formGrid,
+  .secondaryActions,
+  .primaryActions,
+  .quickActions,
+  .filterGroup {
+    grid-template-columns: 1fr;
+  }
+
+  .quickActions,
+  .primaryActions,
+  .secondaryActions {
+    :deep(.t-button) {
+      min-width: 0;
+      height: auto;
+      white-space: normal;
+    }
   }
 }
 </style>

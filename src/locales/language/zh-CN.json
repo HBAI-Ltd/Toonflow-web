@@ -1226,7 +1226,11 @@
         },
         "storyboardTable": {
           "title": "分镜表",
-          "editDialog": "编辑分镜表"
+          "editDialog": "编辑分镜表",
+          "version": "版本 {n}",
+          "currentVersion": "当前编辑版本",
+          "apply": "应用",
+          "editLatestOnly": "仅可编辑当前激活版本（版本 {n}）"
         },
         "assets": {
           "title": "衍生资产",
@@ -1766,6 +1770,7 @@
   "workbench.production.node.storyboard.videoDescPlaceholder": "请输入视频描述",
   "workbench.production.node.storyboard.videoDesc": "视频描述",
   "workbench.production.node.assets.confirmDeleteBody": "确认是否删除该资产",
+  "workbench.production.node.assets.confirmDeleteAssetBody": "删除该资产将同时删除其全部衍生资产、关联分镜、图片与音色绑定，且无法撤销，是否继续？",
   "workbench.production.node.assets.removeFailed": "删除资产失败",
   "version": {
     "newVersion": "有新版本，是否更新？"

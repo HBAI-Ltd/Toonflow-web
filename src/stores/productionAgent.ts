@@ -29,7 +29,7 @@ function makeProductionAgentStore(projectId: string) {
     const flowData = ref<FlowData>({
       script: "", // 剧本
       scriptPlan: "", //导演计划
-      storyboardTable: "", //分镜表
+      storyboardTable: [] as string[], //分镜表（多版本）
       assets: [], // 衍生资产
       storyboard: [], //分镜面板
       workbench: {
@@ -38,6 +38,9 @@ function makeProductionAgentStore(projectId: string) {
     });
 
     const episodesId = ref<number>();
+
+    // 分镜表流式状态标志（用于区分新一次生成 vs 续传）
+    const isStoryboardTableStreaming = ref(false);
 
     const { connected, messages, chat, stopGenerate, socket, status, reconnect, connect, disconnect } = useChat({
       url: `${settingStore().baseUrl}/socket/productionAgent`,
@@ -61,7 +64,27 @@ function makeProductionAgentStore(projectId: string) {
         } else if (tag === "scriptPlan") {
           flowData.value.scriptPlan = value ?? "";
         } else if (tag === "storyboardTable") {
-          flowData.value.storyboardTable = value ?? "";
+          // 多版本累积：流式开始时追加新版本，流式中更新最后版本，完成时定稿
+          const arr = flowData.value.storyboardTable;
+          const isStreaming = status === "streaming" || status === "pending";
+          if (isStoryboardTableStreaming.value) {
+            // 流式中：更新最后一个版本
+            if (arr.length === 0) {
+              arr.push(value ?? "");
+            } else {
+              arr[arr.length - 1] = value ?? "";
+            }
+          } else if (isStreaming) {
+            // 新一次生成开始：追加新版本
+            arr.push(value ?? "");
+            isStoryboardTableStreaming.value = true;
+          } else if (status === "complete" || status === "error" || status === "stop") {
+            // 直接到达终态（理论上不会发生，兜底）
+            if (arr.length === 0 || arr[arr.length - 1] !== (value ?? "")) {
+              arr.push(value ?? "");
+            }
+            isStoryboardTableStreaming.value = false;
+          }
         }
         // else if (tag === "storyboardItem") {
         //   if (status === "complete") {
@@ -107,7 +130,9 @@ function makeProductionAgentStore(projectId: string) {
         //     }
         //   }
         // }
-        if (status == "complete") {
+        if (status == "complete" || status == "error" || status == "stop") {
+          // 流式结束，重置分镜表流式标志
+          isStoryboardTableStreaming.value = false;
           throttledFn();
         }
       },
@@ -229,6 +254,13 @@ function makeProductionAgentStore(projectId: string) {
         projectId: projectId,
         episodesId: episodesId.value,
       });
+      // 向后兼容：旧数据 storyboardTable 是字符串，转为数组
+      const sbt = (data as any)?.storyboardTable;
+      if (typeof sbt === "string") {
+        (data as any).storyboardTable = sbt ? [sbt] : [];
+      } else if (!Array.isArray(sbt)) {
+        (data as any).storyboardTable = [];
+      }
       flowData.value = data;
     }
     async function batchGenerateStoryboard(allIds: number[], compulsory: boolean = false) {
@@ -276,7 +308,8 @@ function makeProductionAgentStore(projectId: string) {
           scriptId: episodesId.value,
           concurrentCount: settingStore().otherSetting.assetsBatchGenereateSize,
         });
-        if (data) {
+        // 后端返回字符串 "开始生成资产图片"，实际生成状态由轮询 pollAssetsImages 更新
+        if (Array.isArray(data)) {
           data.forEach((record: { id: number; state: "未生成" | "生成中" | "已完成" | "生成失败"; src: string }) => {
             flowData.value.assets.forEach((asset) => {
               if (asset.derive) {
@@ -291,7 +324,9 @@ function makeProductionAgentStore(projectId: string) {
           });
         }
         return data;
-      } catch (e) {}
+      } catch (e) {
+        console.error("[batchGenerateAssets] error", e);
+      }
     }
     const assetsNotStateImageIds = computed(() => {
       const ids: number[] = [];

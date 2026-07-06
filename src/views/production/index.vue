@@ -124,6 +124,8 @@ import projectStore from "@/stores/project";
 const { project } = storeToRefs(projectStore());
 import settingStore from "@/stores/setting";
 const { canvasWheelEvent, otherSetting } = storeToRefs(settingStore());
+const route = useRoute();
+const router = useRouter();
 const openShowVisible = ref(true);
 const {
   toObject,
@@ -290,6 +292,13 @@ function handleEpisodesChange(value: unknown) {
     if (!(await confirmEpisodesSwitch())) return;
 
     episodesId.value = nextEpisodesId;
+    router.replace({
+      path: "/production",
+      query: {
+        ...route.query,
+        episodesId: String(nextEpisodesId),
+      },
+    });
     await productionAgentStore().getFlowData();
   })();
 }
@@ -305,7 +314,11 @@ async function getScriptData() {
     value: ep.id,
   }));
   if (episodesOptions.value.length) {
-    episodesId.value = episodesOptions.value[0].value;
+    const routeEpisodesId = Number(route.query.episodesId);
+    const targetEpisode = episodesOptions.value.find((option) => option.value === routeEpisodesId) ?? episodesOptions.value[0];
+    const previousEpisodesId = episodesId.value;
+    episodesId.value = targetEpisode.value;
+    if (previousEpisodesId !== episodesId.value) return;
   }
   if (status.value !== "pending" && status.value !== "streaming") {
     episodesId.value && (await productionAgentStore().getFlowData());

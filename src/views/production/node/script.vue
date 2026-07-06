@@ -5,7 +5,7 @@
       <t-button size="small" variant="text" @click="openEdit">{{ $t("workbench.production.edit") }}</t-button>
       <Handle :id="props.handleIds.source" type="source" :position="Position.Right" style="right: calc(-1 * var(--td-comp-paddingLR-xl))" />
     </div>
-    <div class="content">
+    <div class="content nowheel">
       <MdPreview v-model="script" :theme="themeSetting.mode" />
     </div>
     <Handle :id="props.handleIds.assets" type="source" :position="Position.Bottom" />

@@ -25,6 +25,7 @@
         </template>
       </t-button>
     </t-tooltip>
+    <slot></slot>
   </div>
 </template>
 

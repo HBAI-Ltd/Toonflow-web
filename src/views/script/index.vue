@@ -39,7 +39,7 @@
         <t-empty />
       </div>
       <div v-else class="scriptsList f w">
-        <div v-for="(item, index) in scripts" :key="index" @click="handleScriptClick(item)" class="scriptCard">
+        <div v-for="(item, index) in scripts" :key="index" @click="handleScriptCardClick(item)" class="scriptCard">
           <t-card shadow hover-shadow :style="{ width: '400px', cursor: 'pointer' }">
             <template #header>
               <div class="cardHeader">
@@ -60,7 +60,8 @@
               </t-tag>
             </div>
 
-            <div class="del">
+            <div class="cardActions">
+              <i-edit theme="outline" size="18" @click.stop="handleScriptClick(item)" style="cursor: pointer" />
               <i-delete theme="outline" size="18" @click.stop="handleDeleteScript(item.id)" style="cursor: pointer" />
             </div>
           </t-card>
@@ -108,6 +109,7 @@ const addScriptShow = ref(false);
 const selectedIds = ref<number[]>([]);
 const scriptLoad = ref(false);
 const batchScriptShow = ref(false);
+const router = useRouter();
 const isAllSelected = computed(() => scripts.value.length > 0 && selectedIds.value.length === scripts.value.length);
 function toggleSelect(id: number) {
   const idx = selectedIds.value.indexOf(id);
@@ -179,6 +181,57 @@ const selectedScript = ref<Script>({
   content: "",
 });
 const detailsShow = ref(false);
+function goProduction(item: Script) {
+  router.push({
+    path: "/production",
+    query: {
+      episodesId: String(item.id),
+    },
+  });
+}
+
+function handleScriptCardClick(item: Script) {
+  if (item.extractState === 1) {
+    goProduction(item);
+    return;
+  }
+  if (item.extractState === 0 || item.extractState === 2) {
+    window.$message.warning($t("workbench.script.msg.extractingInProgress"));
+    return;
+  }
+  confirmExtractScriptAssets(item);
+}
+
+function confirmExtractScriptAssets(item: Script) {
+  const dialog = DialogPlugin.confirm({
+    header: "提取资产",
+    body: `「${item.name}」还没有提取资产，是否现在提取？`,
+    confirmBtn: $t("workbench.script.extractAssets"),
+    cancelBtn: $t("workbench.script.msg.cancel"),
+    theme: "warning",
+    onConfirm: async () => {
+      try {
+        dialog.destroy();
+        item.extractState = 2;
+        await axios.post("/script/extractAssets", {
+          scriptIds: [item.id],
+          projectId: project.value!.id,
+          groupSize: otherSetting.value.assetsBatchGenereateSize,
+        });
+        window.$message.success("已开始提取资产");
+        await searchScripts();
+      } catch (e) {
+        window.$message.error((e as any)?.message || $t("workbench.script.msg.extractFailed"));
+      }
+    },
+    onCancel: () => {
+      dialog.destroy();
+    },
+    onClose: () => {
+      dialog.destroy();
+    },
+  });
+}
 // 点击剧本卡片
 function handleScriptClick(item: Script) {
   selectedScript.value = { ...item };
@@ -379,12 +432,14 @@ onUnmounted(() => {
         gap: 6px;
         margin-top: 8px;
       }
-      .del {
-        text-align: right;
+      .cardActions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
         opacity: 0.6;
         transition: opacity 0.2s;
       }
-      .del:hover {
+      .cardActions:hover {
         opacity: 1;
       }
     }

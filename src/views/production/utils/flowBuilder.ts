@@ -26,6 +26,7 @@ export interface DeriveAsset {
   state: "未生成" | "生成中" | "已完成" | "生成失败";
   type: "role" | "tool" | "scene" | "clip";
   errorReason?: string;
+  libraryAssetId?: number;
 }
 
 export interface AssetItem {
@@ -67,7 +68,7 @@ export interface FlowData {
   script: string;
   scriptPlan: string;
   assets: AssetItem[];
-  storyboardTable: string;
+  storyboardTable: string[];
   storyboard: Storyboard[];
   workbench: {
     videoList: VideoList[];

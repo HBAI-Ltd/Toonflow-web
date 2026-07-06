@@ -6,7 +6,7 @@
       <Handle :id="props.handleIds.target" type="target" :position="Position.Left" style="left: calc(-1 * var(--td-comp-paddingLR-xl))" />
       <Handle :id="props.handleIds.source" type="source" :position="Position.Right" style="right: calc(-1 * var(--td-comp-paddingLR-xl))" />
     </div>
-    <div class="content">
+    <div class="content nowheel">
       <t-empty v-if="!scriptPlan" style="margin-top: 16px"></t-empty>
       <MdPreview v-else v-model="scriptPlan" :theme="themeSetting.mode" />
     </div>

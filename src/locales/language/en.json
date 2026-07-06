@@ -1129,7 +1129,11 @@
         },
         "storyboardTable": {
           "title": "Storyboard Table",
-          "editDialog": "Edit Storyboard Table"
+          "editDialog": "Edit Storyboard Table",
+          "version": "Version {n}",
+          "currentVersion": "Current editing version",
+          "apply": "Apply",
+          "editLatestOnly": "Only the active version can be edited (Version {n})"
         },
         "assets": {
           "title": "Derived Assets",
@@ -1645,6 +1649,7 @@
   "workbench.script.msg.selectExport": "",
   "workbench.script.msg.exportFailed": "Export failed",
   "workbench.production.node.assets.confirmDeleteBody": "Confirm whether to delete the asset",
+  "workbench.production.node.assets.confirmDeleteAssetBody": "Deleting this asset will also remove all its derivatives, related storyboards, images and audio bindings. This cannot be undone. Continue?",
   "workbench.production.node.assets.removeFailed": "Failed to delete asset",
   "version": {
     "newVersion": "There is a new version, do you want to update it?"
