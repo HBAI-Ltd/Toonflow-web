@@ -1386,7 +1386,7 @@
   },
   "login": {
     "slogan": "ショードラ制作支援ツール",
-    "tips": "デフォルトアカウント：admin / admin123",
+    "tips": "",
     "settings": "サーバー設定",
     "requestAddress": "リクエストアドレス",
     "username": "ユーザー名",

@@ -1391,7 +1391,7 @@
   },
   "login": {
     "slogan": "智慧短劇創作平台",
-    "tips": "預設帳號：admin / admin123",
+    "tips": "",
     "settings": "伺服器設定",
     "requestAddress": "請求網址",
     "username": "使用者名稱",

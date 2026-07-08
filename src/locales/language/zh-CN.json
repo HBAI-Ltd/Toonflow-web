@@ -1647,7 +1647,7 @@
   },
   "login": {
     "slogan": "智能短剧创作平台",
-    "tips": "默认账号：admin / admin123",
+    "tips": "",
     "settings": "服务器设置",
     "requestAddress": "请求地址",
     "username": "用户名",

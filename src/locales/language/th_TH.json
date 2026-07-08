@@ -1387,7 +1387,7 @@
   },
   "login": {
     "slogan": "แพลตฟอร์มสร้างละครสั้นอัจฉริยะ",
-    "tips": "บัญชีผู้ใช้เริ่มต้น: admin / admin123",
+    "tips": "",
     "settings": "การตั้งค่าเซิร์ฟเวอร์",
     "requestAddress": "ที่อยู่คำขอ (Request Address)",
     "username": "ชื่อผู้ใช้",

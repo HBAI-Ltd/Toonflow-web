@@ -1543,7 +1543,7 @@
   },
   "login": {
     "slogan": "Intelligent Short Drama Creation Platform",
-    "tips": "Default Account: admin / admin123",
+    "tips": "",
     "settings": "Server Settings",
     "requestAddress": "Request URL",
     "username": "Username",

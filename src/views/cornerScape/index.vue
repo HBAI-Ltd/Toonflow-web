@@ -197,17 +197,34 @@
         <template #header>
           <div class="drawerHeader">
             <span>{{ currentItem?.name }} - {{ $t("workbench.cornerScape.individualConfig") }}</span>
-            <t-tag size="medium" variant="light-outline" theme="warning">
-              {{
-                currentItem?.type === "role"
-                  ? $t("workbench.cornerScape.typeRole")
-                  : currentItem?.type === "scene"
-                    ? $t("workbench.cornerScape.typeScene")
-                    : currentItem?.type === "tool"
-                      ? $t("workbench.cornerScape.typeTool")
-                      : $t("workbench.cornerScape.typeUnknown")
-              }}
-            </t-tag>
+            <div class="drawerHeaderActions">
+              <t-upload
+                v-model="directUploadFileList"
+                action=""
+                theme="custom"
+                accept="image/*"
+                :autoUpload="false"
+                :max="1"
+                :disabled="directUploading || currentItem?.state === '生成中'"
+                :showImageFileName="false"
+                @change="handleDirectImageUpload">
+                <t-button size="small" variant="outline" :loading="directUploading" :disabled="currentItem?.state === '生成中'">
+                  <template #icon><i-upload-one /></template>
+                  上传图片
+                </t-button>
+              </t-upload>
+              <t-tag size="medium" variant="light-outline" theme="warning">
+                {{
+                  currentItem?.type === "role"
+                    ? $t("workbench.cornerScape.typeRole")
+                    : currentItem?.type === "scene"
+                      ? $t("workbench.cornerScape.typeScene")
+                      : currentItem?.type === "tool"
+                        ? $t("workbench.cornerScape.typeTool")
+                        : $t("workbench.cornerScape.typeUnknown")
+                }}
+              </t-tag>
+            </div>
           </div>
         </template>
         <div v-if="currentItem" class="drawerImageBox">
@@ -247,6 +264,26 @@
           </t-form-item>
           <t-form-item :label="$t('workbench.cornerScape.resolution')">
             <t-select v-model="editForm.resolution" :placeholder="$t('workbench.cornerScape.resolutionPh')" :options="resolutionOptions" />
+          </t-form-item>
+          <t-form-item>
+            <template #label>
+              <div class="referenceUploadLabel">
+                <span>{{ $t("workbench.assets.gen.uploadRef") }}</span>
+                <t-tag size="small" variant="light-outline">{{ $t("workbench.assets.gen.optional") }}</t-tag>
+              </div>
+            </template>
+            <t-upload
+              v-model="referenceFileList"
+              class="drawerReferenceUpload"
+              action=""
+              theme="image"
+              accept="image/*"
+              draggable
+              :autoUpload="false"
+              :max="1"
+              :disabled="currentItem.state === '生成中'"
+              :showImageFileName="false"
+              :abridgeName="[10, 8]" />
           </t-form-item>
           <t-form-item :label="$t('workbench.cornerScape.promptLabel')">
             <t-loading style="width: 100%" :loading="currentItem.promptState == '生成中'">
@@ -550,6 +587,24 @@ async function cancelGenerationFn(item: DataItem) {
 const drawerVisible = ref(false);
 const currentItem = ref<DataItem | null>(null);
 const selectedHistoryId = ref<number | null>(null);
+const referenceFileList = ref<any[]>([]);
+const directUploadFileList = ref<any[]>([]);
+const directUploading = ref(false);
+
+function fileToDataUrl(file: File) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (event) => resolve(event.target?.result as string);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
+}
+
+async function getReferenceImageBase64() {
+  const file = referenceFileList.value[0]?.raw || referenceFileList.value[0];
+  if (!(file instanceof File)) return "";
+  return fileToDataUrl(file);
+}
 
 async function toggleHistorySelect(id: number) {
   selectedHistoryId.value = selectedHistoryId.value === id ? null : id;
@@ -576,6 +631,51 @@ async function toggleHistorySelect(id: number) {
   }
 }
 
+async function handleDirectImageUpload(files: any[]) {
+  if (!currentItem.value) return;
+  const file = files[0]?.raw || files[0];
+  if (!(file instanceof File)) return;
+  directUploading.value = true;
+  try {
+    const base64 = await fileToDataUrl(file);
+    const { data } = await axios.post("/assets/saveAssets", {
+      id: currentItem.value.id,
+      type: currentItem.value.type,
+      projectId: project.value?.id,
+      prompt: editForm.prompt,
+      base64,
+    });
+    const imageId = data.imageId;
+    const path = data.path;
+    if (imageId && path) {
+      const uploadedImage = { id: imageId, filePath: path };
+      currentItem.value.historyImages = [...currentItem.value.historyImages.filter((img) => img.id !== imageId), uploadedImage];
+      currentItem.value.imageId = imageId;
+      currentItem.value.filePath = path;
+      currentItem.value.state = "已完成";
+      currentItem.value.prompt = editForm.prompt;
+      selectedHistoryId.value = imageId;
+
+      const target = dataList.value.find((row) => row.id === currentItem.value!.id);
+      if (target) {
+        target.historyImages = [...target.historyImages.filter((img) => img.id !== imageId), uploadedImage];
+        target.imageId = imageId;
+        target.filePath = path;
+        target.state = "已完成";
+        target.prompt = editForm.prompt;
+      }
+    } else {
+      await getFilteredData();
+    }
+    window.$message.success("上传图片成功");
+  } catch (e: any) {
+    window.$message.error(e?.message || "上传图片失败");
+  } finally {
+    directUploading.value = false;
+    directUploadFileList.value = [];
+  }
+}
+
 const editForm = reactive({
   assetsId: 0,
   model: "",
@@ -591,6 +691,8 @@ const editForm = reactive({
 async function openDrawer(item: DataItem) {
   if (item.state == "生成中") return;
   selectedHistoryId.value = null;
+  referenceFileList.value = [];
+  directUploadFileList.value = [];
   // 先用当前数据打开抽屉
   editForm.assetsId = item.id;
   editForm.name = item.name || "";
@@ -650,6 +752,7 @@ async function regenerateItem() {
   drawerVisible.value = false;
   const controller = createAbortController();
   try {
+    const referenceImageBase64 = await getReferenceImageBase64();
     const { data } = await axios.post(
       "/assetsGenerate/generateAssets",
       {
@@ -660,6 +763,7 @@ async function regenerateItem() {
         type: item.type ?? "tool",
         name: item.name ?? $t("workbench.cornerScape.unnamed"),
         prompt: editForm.prompt,
+        base64: referenceImageBase64,
       },
       { signal: controller.signal },
     );
@@ -1541,6 +1645,27 @@ async function selectAudio() {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+}
+
+.drawerHeaderActions {
+  display: flex;
+  align-items: center;
+  flex: none;
+  gap: 8px;
+}
+
+.referenceUploadLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.drawerReferenceUpload {
+  width: 100%;
+
+  :deep(.t-upload__dragger) {
+    width: 100%;
   }
 }
 
