@@ -9,14 +9,17 @@ import postcsspxtoviewport from "postcss-px-to-viewport";
 
 export default defineConfig({
   base: "./",
-  build: {
-    assetsInlineLimit: Infinity,
-    rollupOptions: {
-      output: {
-        inlineDynamicImports: true,
-      },
-    },
-  },
+  build:
+    process.env.TOONFLOW_SINGLEFILE === "1"
+      ? {
+          assetsInlineLimit: Infinity,
+          rollupOptions: {
+            output: {
+              inlineDynamicImports: true,
+            },
+          },
+        }
+      : {},
   plugins: [
     vue(),
     AutoImport({
@@ -42,7 +45,7 @@ export default defineConfig({
         }),
       ],
     }),
-    viteSingleFile(),
+    ...(process.env.TOONFLOW_SINGLEFILE === "1" ? [viteSingleFile()] : []),
   ],
   resolve: {
     alias: {
