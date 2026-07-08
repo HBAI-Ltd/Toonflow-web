@@ -1387,6 +1387,7 @@
     "passwordRequired": "Vui lòng nhập mật khẩu",
     "enterUsernameAndPassword": "Vui lòng nhập tên người dùng hoặc mật khẩu",
     "loginSuccess": "Đăng nhập thành công",
+    "rememberAccount": "Ghi nhớ tài khoản",
     "settingsSaved": "Đã lưu cài đặt"
   },
   "common": {

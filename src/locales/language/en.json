@@ -1553,6 +1553,7 @@
     "passwordRequired": "Please enter password",
     "enterUsernameAndPassword": "Please enter username or password",
     "loginSuccess": "Login successful",
+    "rememberAccount": "Remember account",
     "settingsSaved": "Settings saved"
   },
   "components.storyboardImageCheck.camera": "Camera",

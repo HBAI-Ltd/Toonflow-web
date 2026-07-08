@@ -1396,6 +1396,7 @@
     "passwordRequired": "Пожалуйста, введите пароль",
     "enterUsernameAndPassword": "Пожалуйста, введите имя пользователя или пароль",
     "loginSuccess": "Успешный вход",
+    "rememberAccount": "Запомнить аккаунт",
     "settingsSaved": "Настройки сохранены"
   },
   "common": {

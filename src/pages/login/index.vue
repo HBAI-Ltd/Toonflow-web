@@ -10,8 +10,23 @@
       </div>
       <div class="login-form">
         <t-input v-model="state.user.username" :placeholder="$t('login.username')" autocomplete="username" size="large"></t-input>
-        <t-input v-model="state.user.password" type="password" :placeholder="$t('login.password')" size="large"></t-input>
-        <t-button class="loginBtn" theme="primary" size="large" :loading="state.loginLoading" @click="handleLogin" block>
+        <t-input
+          v-model="state.user.password"
+          type="password"
+          :placeholder="$t('login.password')"
+          autocomplete="current-password"
+          size="large"></t-input>
+        <div class="login-options">
+          <t-checkbox v-model="rememberAccount">{{ $t("login.rememberAccount") }}</t-checkbox>
+        </div>
+        <t-button
+          class="loginBtn"
+          theme="primary"
+          size="large"
+          :loading="state.loginLoading"
+          :disabled="state.loginLoading"
+          @click="handleLogin"
+          block>
           {{ $t("login.login") }}
         </t-button>
       </div>
@@ -50,6 +65,9 @@ const handleChangeLang = (data) => {
 
 const store = settingStore();
 const { isElectron } = storeToRefs(store);
+const REMEMBER_ACCOUNT_KEY = "toonflow:remember-account";
+const REMEMBER_ACCOUNT_ENABLED_KEY = "toonflow:remember-account-enabled";
+const rememberAccount = ref(localStorage.getItem(REMEMBER_ACCOUNT_ENABLED_KEY) === "1");
 const state = ref({
   show: true,
   loginLoading: false,
@@ -63,7 +81,31 @@ const state = ref({
   },
 });
 
+if (rememberAccount.value) {
+  state.value.user.username = localStorage.getItem(REMEMBER_ACCOUNT_KEY) || "";
+}
+
+watch(rememberAccount, (value) => {
+  if (value) {
+    localStorage.setItem(REMEMBER_ACCOUNT_ENABLED_KEY, "1");
+    localStorage.setItem(REMEMBER_ACCOUNT_KEY, state.value.user.username);
+  } else {
+    localStorage.removeItem(REMEMBER_ACCOUNT_ENABLED_KEY);
+    localStorage.removeItem(REMEMBER_ACCOUNT_KEY);
+  }
+});
+
+watch(
+  () => state.value.user.username,
+  (username) => {
+    if (rememberAccount.value) {
+      localStorage.setItem(REMEMBER_ACCOUNT_KEY, username);
+    }
+  },
+);
+
 const handleLogin = () => {
+  if (state.value.loginLoading) return;
   if (!state.value.user.username || !state.value.user.password) {
     window.$message.warning($t("login.enterUsernameAndPassword"));
     return;
@@ -71,8 +113,11 @@ const handleLogin = () => {
   state.value.loginLoading = true;
   const obj = { ...state.value.user };
   axios
-    .post("/login/login", obj)
+    .post("/login", obj)
     .then(({ data }) => {
+      if (rememberAccount.value) {
+        localStorage.setItem(REMEMBER_ACCOUNT_KEY, state.value.user.username);
+      }
       localStorage.setItem("token", data.token);
       localStorage.setItem("userId", data.id);
       Router.push("/project");
@@ -141,6 +186,17 @@ const handleLogin = () => {
 
       :deep(.t-input) {
         border-radius: 8px;
+      }
+
+      .login-options {
+        display: flex;
+        align-items: center;
+        min-height: 22px;
+        margin-top: -8px;
+
+        :deep(.t-checkbox__label) {
+          font-size: 13px;
+        }
       }
     }
   }

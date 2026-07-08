@@ -1396,6 +1396,7 @@
     "passwordRequired": "パスワードを入力してください",
     "enterUsernameAndPassword": "ユーザー名またはパスワードを入力してください",
     "loginSuccess": "ログインに成功しました",
+    "rememberAccount": "アカウントを記憶",
     "settingsSaved": "設定を保存しました"
   },
   "common": {

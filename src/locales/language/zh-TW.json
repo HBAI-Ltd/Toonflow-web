@@ -1401,6 +1401,7 @@
     "passwordRequired": "請輸入密碼",
     "enterUsernameAndPassword": "請輸入使用者名稱或密碼",
     "loginSuccess": "登入成功",
+    "rememberAccount": "記住帳號",
     "settingsSaved": "設定已儲存"
   },
   "promptManage": {

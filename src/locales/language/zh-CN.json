@@ -1657,6 +1657,7 @@
     "passwordRequired": "请输入密码",
     "enterUsernameAndPassword": "请输入用户名或密码",
     "loginSuccess": "登录成功",
+    "rememberAccount": "记住账号",
     "settingsSaved": "设置已保存"
   },
   "common": {

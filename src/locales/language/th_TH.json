@@ -1397,6 +1397,7 @@
     "passwordRequired": "โปรดกรอกรหัสผ่าน",
     "enterUsernameAndPassword": "โปรดกรอกชื่อผู้ใช้หรือรหัสผ่าน",
     "loginSuccess": "เข้าสู่ระบบสำเร็จ",
+    "rememberAccount": "จดจำบัญชี",
     "settingsSaved": "บันทึกการตั้งค่าแล้ว"
   },
   "components.storyboardImageCheck.camera": "กล้อง",
