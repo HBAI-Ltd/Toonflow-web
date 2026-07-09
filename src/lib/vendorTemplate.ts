@@ -156,7 +156,97 @@ const textRequest = (model: TextModel) => {
 };
 
 const imageRequest = async (config: ImageConfig, model: ImageModel): Promise<string> => {
-  return "";
+  if (!vendor.inputValues.apiKey) throw new Error("缺少API Key");
+  if (!vendor.inputValues.baseUrl) throw new Error("缺少请求地址");
+
+  const apiKey = vendor.inputValues.apiKey.replace(/^Bearer\s+/i, "");
+  const baseUrl = vendor.inputValues.baseUrl.replace(/\/+$/, "");
+  const imageBase64List = (config.referenceList ?? []).map((r) => r.base64).filter(Boolean);
+  const sizeMap: Record<string, Record<string, string>> = {
+    "16:9": { "1K": "1024x576", "2K": "2048x1152", "4K": "4096x2304" },
+    "9:16": { "1K": "576x1024", "2K": "1152x2048", "4K": "2304x4096" },
+    "1:1": { "1K": "1024x1024", "2K": "2048x2048", "4K": "4096x4096" },
+    "4:3": { "1K": "1024x768", "2K": "2048x1536", "4K": "4096x3072" },
+    "3:4": { "1K": "768x1024", "2K": "1536x2048", "4K": "3072x4096" },
+  };
+  const preferredSize = sizeMap[config.aspectRatio]?.[config.size] ?? "1024x1024";
+
+  const normalizeImageResult = async (data: any, responseText: string): Promise<string> => {
+    const candidates: any[] = [];
+    const push = (value: any) => {
+      if (value === undefined || value === null || value === "") return;
+      if (Array.isArray(value)) {
+        value.forEach(push);
+        return;
+      }
+      candidates.push(value);
+    };
+
+    push(data?.data);
+    push(data?.output);
+    push(data?.result);
+    push(data?.images);
+    push(data?.image);
+    push(data);
+
+    for (const item of candidates) {
+      if (typeof item === "string") {
+        if (/^https?:\/\//i.test(item)) return await urlToBase64(item);
+        if (/^data:image\//i.test(item)) return item;
+        if (item.length > 100 && /^[A-Za-z0-9+/=\r\n]+$/.test(item)) return `data:image/png;base64,${item}`;
+        continue;
+      }
+
+      const b64 = item?.b64_json ?? item?.base64 ?? item?.image_base64 ?? item?.image?.base64 ?? item?.content?.b64_json;
+      if (typeof b64 === "string" && b64.trim()) {
+        return b64.startsWith("data:") ? b64 : `data:image/png;base64,${b64}`;
+      }
+
+      const url = item?.url ?? item?.image_url ?? item?.image?.url ?? item?.content?.image_url ?? item?.content?.url;
+      if (typeof url === "string" && url.trim()) return await urlToBase64(url);
+    }
+
+    const errorMessage = data?.error?.message ?? data?.message ?? data?.msg;
+    if (errorMessage) throw new Error(`图片生成失败：${errorMessage}`);
+    throw new Error(`图片生成失败：响应中未找到图片数据 ${responseText.slice(0, 800)}`);
+  };
+
+  const requestBodies: Record<string, any>[] = [
+    { model: model.modelName, prompt: config.prompt, n: 1, size: preferredSize, response_format: "b64_json", ...(imageBase64List.length && { images: imageBase64List }) },
+    { model: model.modelName, prompt: config.prompt, n: 1, size: preferredSize, ...(imageBase64List.length && { images: imageBase64List }) },
+    { model: model.modelName, prompt: config.prompt, n: 1, size: config.size, ...(imageBase64List.length && { images: imageBase64List }) },
+    { model: model.modelName, prompt: config.prompt, n: 1, size: "auto", ...(imageBase64List.length && { images: imageBase64List }) },
+    { model: model.modelName, prompt: config.prompt, n: 1, size: "1024x1024", ...(imageBase64List.length && { images: imageBase64List }) },
+    { model: model.modelName, prompt: config.prompt, n: 1, ...(imageBase64List.length && { images: imageBase64List }) },
+  ];
+
+  let lastErrorText = "";
+  for (const body of requestBodies) {
+    logger(`[imageRequest] POST ${baseUrl}/images/generations, model=${model.modelName}, size=${body.size ?? "default"}`);
+    const response = await fetch(`${baseUrl}/images/generations`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const responseText = await response.text();
+
+    if (!response.ok) {
+      lastErrorText = `状态码 ${response.status}: ${responseText}`;
+      if (response.status === 400 || response.status === 422) continue;
+      throw new Error(`图片生成请求失败，${lastErrorText}`);
+    }
+
+    let data: any;
+    try {
+      data = JSON.parse(responseText);
+    } catch {
+      throw new Error(`图片生成响应不是JSON: ${responseText.slice(0, 800)}`);
+    }
+
+    return await normalizeImageResult(data, responseText);
+  }
+
+  throw new Error(`图片生成请求失败，已尝试 OpenAI 兼容生图参数，最后错误：${lastErrorText}`);
 };
 
 const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<string> => {
