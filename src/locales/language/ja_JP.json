@@ -756,7 +756,10 @@
         "replaceSuccess": "交換に成功しました",
         "promptGenFail": "プロンプト単語の生成に失敗しました",
         "saveSuccess": "プロンプトワードの変更が成功しました",
-        "saveFailed": "プロンプトワードの変更に失敗しました"
+        "saveFailed": "プロンプトワードの変更に失敗しました",
+        "imageTooLarge": "画像サイズは10MB以下にしてください",
+        "uploadSuccess": "アップロード成功",
+        "uploadFailed": "アップロード失敗"
       },
       "history": "歴史的な写真",
       "confirmReplace": "交換の確認",
@@ -769,7 +772,12 @@
       "cancelGeneration": "生成をキャンセルする",
       "selectGenerating": "生成されるアイテムを選択します",
       "noGenerating": "データは生成されていません",
-      "checkNumber": "数量を選択してください"
+      "checkNumber": "数量を選択してください",
+      "assetsReferenceImageLabel": "参考画像",
+      "uploadReferenceImage": "参考画像をアップロード",
+      "referenceImageHint": "ローカル画像と履歴画像が再生成の参考になります",
+      "noReferenceImage": "参考画像が未設定です",
+      "useAsReference": "参考として設定"
     },
     "script": {
       "searchPlaceholder": "シナリオ名を検索...",

@@ -990,7 +990,10 @@
         "emptyPrompt": "勾选的数据{emptyPromptNames}提示词为空,请先生成提示词",
         "promptGenFail": "提示词生成失败",
         "saveSuccess": "修改提示词成功",
-        "saveFailed": "提示词修改失败"
+        "saveFailed": "提示词修改失败",
+        "imageTooLarge": "图片大小不能超过 10MB",
+        "uploadSuccess": "上传成功",
+        "uploadFailed": "上传失败"
       },
       "history": "历史图片",
       "confirmReplace": "确认替换",
@@ -1003,7 +1006,12 @@
       "cancelGeneration": "取消生成",
       "selectGenerating": "选择正在生成项",
       "noGenerating": "没有正在生成的数据",
-      "checkNumber": "选择数量"
+      "checkNumber": "选择数量",
+      "assetsReferenceImageLabel": "关联参考图片",
+      "uploadReferenceImage": "上传参考图片",
+      "referenceImageHint": "本地图片 + 历史图片均会作为重新生成的参考图",
+      "noReferenceImage": "暂未关联参考图片",
+      "useAsReference": "设为参考图"
     },
     "script": {
       "searchPlaceholder": "搜索剧本名称...",

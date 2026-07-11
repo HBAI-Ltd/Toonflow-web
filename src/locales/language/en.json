@@ -894,7 +894,10 @@
         "replaceSuccess": "Replacement successful",
         "promptGenFail": "Prompt word generation failed",
         "saveSuccess": "Modification of prompt word successful",
-        "saveFailed": "Prompt word modification failed"
+        "saveFailed": "Prompt word modification failed",
+        "imageTooLarge": "Image size cannot exceed 10MB",
+        "uploadSuccess": "Upload successful",
+        "uploadFailed": "Upload failed"
       },
       "history": "historical pictures",
       "confirmReplace": "Confirm replacement",
@@ -907,7 +910,12 @@
       "cancelGeneration": "Cancel generation",
       "selectGenerating": "Select the item being generated",
       "noGenerating": "No data being generated",
-      "checkNumber": "Select quantity"
+      "checkNumber": "Select quantity",
+      "assetsReferenceImageLabel": "Reference Images",
+      "uploadReferenceImage": "Upload Reference Image",
+      "referenceImageHint": "Local images + history images will be used as references for regeneration",
+      "noReferenceImage": "No reference images attached",
+      "useAsReference": "Set as Reference"
     },
     "script": {
       "searchPlaceholder": "Search script names...",

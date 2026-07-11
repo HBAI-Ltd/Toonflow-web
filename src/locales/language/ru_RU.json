@@ -756,7 +756,10 @@
         "replaceSuccess": "Замена прошла успешно",
         "promptGenFail": "Не удалось создать быстрое слово.",
         "saveSuccess": "Изменение слова подсказки успешно выполнено",
-        "saveFailed": "Изменение слова подсказки не удалось"
+        "saveFailed": "Изменение слова подсказки не удалось",
+        "imageTooLarge": "Image size cannot exceed 10MB",
+        "uploadSuccess": "Upload successful",
+        "uploadFailed": "Upload failed"
       },
       "history": "исторические фотографии",
       "confirmReplace": "Подтвердить замену",
@@ -769,7 +772,12 @@
       "cancelGeneration": "Отменить генерацию",
       "selectGenerating": "Выберите создаваемый элемент",
       "noGenerating": "Данные не генерируются",
-      "checkNumber": "Выберите количество"
+      "checkNumber": "Выберите количество",
+      "assetsReferenceImageLabel": "Reference Images",
+      "uploadReferenceImage": "Upload Reference Image",
+      "referenceImageHint": "Local images + history images will be used as references for regeneration",
+      "noReferenceImage": "No reference images attached",
+      "useAsReference": "Set as Reference"
     },
     "script": {
       "searchPlaceholder": "Поиск по названию сценария...",

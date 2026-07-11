@@ -760,7 +760,10 @@
         "replaceSuccess": "替換成功",
         "promptGenFail": "提示詞生成失敗",
         "saveSuccess": "修改提示詞成功",
-        "saveFailed": "提示詞修改失敗"
+        "saveFailed": "提示詞修改失敗",
+        "imageTooLarge": "圖片大小不能超過 10MB",
+        "uploadSuccess": "上傳成功",
+        "uploadFailed": "上傳失敗"
       },
       "history": "歷史圖片",
       "confirmReplace": "確認替換",
@@ -773,7 +776,12 @@
       "cancelGeneration": "取消生成",
       "selectGenerating": "選擇正在產生項",
       "noGenerating": "沒有正在產生的數據",
-      "checkNumber": "選擇數量"
+      "checkNumber": "選擇數量",
+      "assetsReferenceImageLabel": "關聯參考圖片",
+      "uploadReferenceImage": "上傳參考圖片",
+      "referenceImageHint": "本地圖片 + 歷史圖片均會作為重新生成的參考圖",
+      "noReferenceImage": "暫未關聯參考圖片",
+      "useAsReference": "設為參考圖"
     },
     "script": {
       "searchPlaceholder": "搜尋劇本名稱...",

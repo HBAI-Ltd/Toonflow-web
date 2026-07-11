@@ -757,7 +757,10 @@
         "replaceSuccess": "การเปลี่ยนสำเร็จ",
         "promptGenFail": "การสร้างคำพร้อมท์ล้มเหลว",
         "saveSuccess": "การแก้ไขคำพร้อมท์สำเร็จ",
-        "saveFailed": "การแก้ไขคำพร้อมท์ล้มเหลว"
+        "saveFailed": "การแก้ไขคำพร้อมท์ล้มเหลว",
+        "imageTooLarge": "Image size cannot exceed 10MB",
+        "uploadSuccess": "Upload successful",
+        "uploadFailed": "Upload failed"
       },
       "history": "ภาพประวัติศาสตร์",
       "confirmReplace": "ยืนยันการเปลี่ยน",
@@ -770,7 +773,12 @@
       "cancelGeneration": "ยกเลิกการสร้าง",
       "selectGenerating": "เลือกรายการที่กำลังสร้าง",
       "noGenerating": "ไม่มีการสร้างข้อมูล",
-      "checkNumber": "เลือกปริมาณ"
+      "checkNumber": "เลือกปริมาณ",
+      "assetsReferenceImageLabel": "Reference Images",
+      "uploadReferenceImage": "Upload Reference Image",
+      "referenceImageHint": "Local images + history images will be used as references for regeneration",
+      "noReferenceImage": "No reference images attached",
+      "useAsReference": "Set as Reference"
     },
     "script": {
       "searchPlaceholder": "ค้นหาชื่อบทภาพยนตร์...",

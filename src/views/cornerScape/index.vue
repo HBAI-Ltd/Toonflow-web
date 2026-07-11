@@ -183,10 +183,15 @@
                 v-for="item in currentItem.historyImages"
                 :key="item.id"
                 class="historyImageItem"
-                :class="{ selected: selectedHistoryId === item.id }"
+                :class="{ selected: selectedHistoryId === item.id, inReference: editForm.relepedImage.some((i) => i.id === item.id) }"
                 @click.stop="toggleHistorySelect(item.id)">
                 <t-image :src="item.filePath" :style="{ width: '100px', minWidth: '100px', height: '100px' }" :lazy="true" fit="contain" />
               </div>
+            </div>
+            <div class="historyActions" v-if="currentItem.historyImages.length">
+              <t-button size="small" theme="default" variant="outline" :disabled="!selectedHistoryId" @click.stop="addHistoryImageToReferences(selectedHistoryId)">
+                {{ $t("workbench.cornerScape.useAsReference") }}
+              </t-button>
             </div>
           </t-form-item>
           <t-form-item :label="$t('workbench.cornerScape.genModel')">
@@ -219,6 +224,24 @@
                 </t-tag>
               </div>
               <div v-else class="assets-empty">{{ $t("workbench.cornerScape.noAudio") }}</div>
+            </div>
+          </t-form-item>
+          <t-form-item :label="$t('workbench.cornerScape.assetsReferenceImageLabel')">
+            <div class="referenceImageBox">
+              <div class="referenceImageActions">
+                <t-button size="small" theme="primary" variant="outline" @click="uploadReferenceImage">
+                  <template #icon><i-upload-one /></template>
+                  {{ $t("workbench.cornerScape.uploadReferenceImage") }}
+                </t-button>
+                <span class="referenceImageHint">{{ $t("workbench.cornerScape.referenceImageHint") }}</span>
+              </div>
+              <div class="referenceImageList" v-if="editForm.relepedImage.length">
+                <div v-for="img in editForm.relepedImage" :key="img.id" class="referenceImageItem">
+                  <t-image :src="img.filePath" :style="{ width: '60px', height: '60px' }" fit="cover" />
+                  <i-close size="14" class="referenceImageRemove" @click.stop="removeReferenceImage(img.id)" />
+                </div>
+              </div>
+              <div v-else class="assets-empty">{{ $t("workbench.cornerScape.noReferenceImage") }}</div>
             </div>
           </t-form-item>
           <t-form-item>
@@ -475,6 +498,7 @@ const editForm = reactive({
   describe: "",
   promptState: "",
   relepedAudio: [] as { id: number; name: string }[],
+  relepedImage: [] as { id: number; filePath: string }[],
 });
 
 async function openDrawer(item: DataItem) {
@@ -491,6 +515,7 @@ async function openDrawer(item: DataItem) {
   editForm.describe = item.describe || "";
   editForm.promptState = item.promptState;
   editForm.relepedAudio = item?.relepedAudio ?? [];
+  editForm.relepedImage = item?.relepedImage ?? [];
 
   drawerVisible.value = true;
   // 重新获取最新数据（含历史图片）
@@ -546,6 +571,7 @@ function regenerateItem() {
         projectId: project.value?.id,
         name: item.name ?? $t("workbench.cornerScape.unnamed"),
         base64: "",
+        imageIds: editForm.relepedImage.map((i) => i.id),
         prompt: editForm.prompt,
         model: selectValue.value,
         id: item.id,
@@ -971,6 +997,66 @@ async function selectAudio() {
       audioIds: editForm.relepedAudio.map((i) => i.id),
     });
   }
+}
+
+// 打开文件选择器让用户上传本地图片
+function uploadReferenceImage() {
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = "image/png,image/jpeg,image/jpg,image/webp";
+  input.onchange = async (e: any) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      window.$message.warning($t("workbench.cornerScape.msg.imageTooLarge"));
+      return;
+    }
+    try {
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      const { data } = await axios.post("/cornerScape/uploadReferenceImage", {
+        projectId: project.value?.id,
+        assetsId: editForm.assetsId,
+        base64Data: base64,
+      });
+      // 添加到本地列表并立即保存绑定
+      const newImg = { id: data.imageId, filePath: data.url };
+      editForm.relepedImage = [...editForm.relepedImage, newImg];
+      await axios.post("/cornerScape/updateAssetsImage", {
+        assetsId: editForm.assetsId,
+        imageIds: editForm.relepedImage.map((i) => i.id),
+      });
+      window.$message.success($t("workbench.cornerScape.msg.uploadSuccess"));
+    } catch (err: any) {
+      window.$message.error(err?.message ?? $t("workbench.cornerScape.msg.uploadFailed"));
+    }
+  };
+  input.click();
+}
+
+// 从历史图片勾选加入关联参考图
+async function addHistoryImageToReferences(imgId: number) {
+  if (editForm.relepedImage.some((i) => i.id === imgId)) return;
+  const target = currentItem.value?.historyImages?.find((h) => h.id === imgId);
+  if (!target) return;
+  editForm.relepedImage = [...editForm.relepedImage, { id: target.id, filePath: target.filePath }];
+  await axios.post("/cornerScape/updateAssetsImage", {
+    assetsId: editForm.assetsId,
+    imageIds: editForm.relepedImage.map((i) => i.id),
+  });
+}
+
+// 移除关联参考图
+async function removeReferenceImage(id: number) {
+  editForm.relepedImage = editForm.relepedImage.filter((i) => i.id !== id);
+  await axios.post("/cornerScape/updateAssetsImage", {
+    assetsId: editForm.assetsId,
+    imageIds: editForm.relepedImage.map((i) => i.id),
+  });
 }
 </script>
 
