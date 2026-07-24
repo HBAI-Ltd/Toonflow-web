@@ -1,5 +1,15 @@
 <template>
   <div class="scriptAgent">
+    <SourcePackageSelector
+      v-if="isXianxia"
+      :projectId="project?.id ?? ''"
+      :selectedPackageId="sourcePackageId"
+      @select="onSelectorSelect" />
+    <t-alert
+      v-if="reconfirmActive"
+      class="reconfirmBanner"
+      theme="warning"
+      :message="$t('workbench.scriptAgent.sourceReconfirm')" />
     <Splitpanes class="default-theme data f">
       <Pane :size="30" :min-size="15" class="operate">
         <div class="box pr">
@@ -17,7 +27,7 @@
           </t-chat-list>
           <t-chat-sender
             class="inputBox"
-            :disabled="status === 'pending' || status === 'streaming'"
+            :disabled="inputDisabled"
             v-model="inputValue"
             :loading="status === 'pending' || status === 'streaming'"
             placeholder="$t('workbench.scriptAgent.inputPlaceholder')"
@@ -69,7 +79,7 @@
                       :key="opt.value"
                       class="settingMenuItem"
                       :class="{ active: thinkLevel === opt.value }"
-                      @click="scriptAgentStore().updateThinkConfig(opt.value)">
+                      @click="activeStore?.updateThinkConfig(opt.value)">
                       <span>{{ opt.label }}</span>
                     </div>
                   </div>
@@ -217,7 +227,39 @@ import projectStore from "@/stores/project";
 const { project } = storeToRefs(projectStore());
 import editMdPreivew from "@/components/editMdPreivew.vue";
 import scriptAgentStore from "@/stores/scriptAgent";
-const { connected, messages, status, planData, thinkLevel } = storeToRefs(scriptAgentStore());
+import SourcePackageSelector from "./components/SourcePackageSelector.vue";
+import { sourceFoundationApi } from "@/api/sourceFoundation";
+
+const isXianxia = computed(() => project.value?.pipelineMode === "xianxia");
+const sourcePackageId = ref<string | null>(
+  isXianxia.value ? sessionStorage.getItem(`sourcePackage:${project.value?.id ?? ""}`) : null,
+);
+const activeStore = shallowRef<ReturnType<typeof scriptAgentStore> | null>(null);
+const reconfirmActive = ref(false);
+
+const connected = computed(() => activeStore.value?.connected ?? false);
+const status = computed(() => activeStore.value?.status ?? "default");
+const thinkLevel = computed({
+  get: () => activeStore.value?.thinkLevel ?? 0,
+  set: (v: number) => {
+    if (activeStore.value) activeStore.value.thinkLevel = v;
+  },
+});
+const messages = computed({
+  get: () => activeStore.value?.messages ?? [],
+  set: (v) => {
+    if (activeStore.value) activeStore.value.messages = v;
+  },
+});
+const planData = computed(() => activeStore.value?.planData ?? EMPTY_PLAN_DATA);
+
+const inputDisabled = computed(
+  () =>
+    status.value === "pending" ||
+    status.value === "streaming" ||
+    (isXianxia.value && !sourcePackageId.value) ||
+    reconfirmActive.value,
+);
 const thinkLevelOptions = [
   { label: $t("workbench.scriptAgent.thinkLevel.off"), value: 0 },
   { label: $t("workbench.scriptAgent.thinkLevel.light"), value: 1 },
@@ -265,36 +307,92 @@ const defMsg: ChatMessagesData[] = [
   },
 ];
 
-onMounted(() => {
-  if (messages.value.length <= 0) messages.value = [...defMsg, ...messages.value];
-  getPlanData();
-  getNovel();
-  scriptAgentStore().connect();
+const EMPTY_PLAN_DATA = {
+  storySkeleton: "",
+  adaptationStrategy: "",
+  script: [] as { id?: number; name: string; content: string }[],
+};
 
+const agentWorkDataId = ref<number>();
+
+async function selectSourcePackage(nextPackageId: string | null) {
+  activeStore.value?.disconnect();
+  sourcePackageId.value = nextPackageId;
+  const storageKey = `sourcePackage:${project.value?.id ?? ""}`;
+  if (nextPackageId) sessionStorage.setItem(storageKey, nextPackageId);
+  else sessionStorage.removeItem(storageKey);
+  reconfirmActive.value = false;
+  if (isXianxia.value && !nextPackageId) {
+    activeStore.value = null;
+    return;
+  }
+  const nextStore = scriptAgentStore(nextPackageId);
+  activeStore.value = nextStore;
+  await getPlanData();
+  nextStore.connect();
+}
+
+function onSelectorSelect(packageId: string) {
+  void selectSourcePackage(packageId || null);
+}
+
+onMounted(async () => {
+  await selectSourcePackage(isXianxia.value ? sourcePackageId.value : null);
+  if (!activeStore.value) return;
+  if (messages.value.length <= 0) messages.value = [...defMsg, ...messages.value];
+  getNovel();
   if (messages.value.length <= 1) getHistory();
 });
-const agentWorkDataId = ref<number>();
+
 async function getPlanData() {
-  const { data } = await axios.post("/scriptAgent/getPlanData", { projectId: project.value?.id, agentType: "scriptAgent" });
-  planData.value.storySkeleton = data.data.storySkeleton;
-  planData.value.adaptationStrategy = data.data.adaptationStrategy;
-  planData.value.script = data.data.script || [];
+  if (!activeStore.value) return;
+  const { data } = await axios.post("/scriptAgent/getPlanData", {
+    projectId: project.value?.id,
+    sourcePackageId: sourcePackageId.value ?? undefined,
+    agentType: "scriptAgent",
+  });
+  activeStore.value.planData.storySkeleton = data.data.storySkeleton;
+  activeStore.value.planData.adaptationStrategy = data.data.adaptationStrategy;
+  activeStore.value.planData.script = data.data.script || [];
   agentWorkDataId.value = data.id;
+  // For xianxia: check script source binding reconfirm status.
+  void checkReconfirm();
+}
+
+async function checkReconfirm() {
+  if (!isXianxia.value || !project.value?.id || !activeStore.value) {
+    reconfirmActive.value = false;
+    return;
+  }
+  const scripts = activeStore.value.planData.script ?? [];
+  const withId = scripts.filter((s) => s.id !== undefined && s.id !== null);
+  if (!withId.length) {
+    reconfirmActive.value = false;
+    return;
+  }
+  try {
+    const results = await Promise.all(
+      withId.map((s) => sourceFoundationApi.scriptSourceBinding(Number(s.id), Number(project.value!.id))),
+    );
+    reconfirmActive.value = results.some((r) => r?.status === "reconfirm");
+  } catch {
+    reconfirmActive.value = false;
+  }
 }
 
 //快捷发送
 const handleActions = {
   suggestion: (data?: any) => {
-    scriptAgentStore().chat(data?.content?.prompt);
+    activeStore.value?.chat(data?.content?.prompt);
   },
 };
 
 function handleSend(text: string) {
-  scriptAgentStore().chat(text);
+  activeStore.value?.chat(text);
   inputValue.value = "";
 }
 function handleStop() {
-  scriptAgentStore().stopGenerate();
+  activeStore.value?.stopGenerate();
 }
 
 const memoryTypeLabel: Record<string, string> = {
@@ -385,7 +483,7 @@ function editScript(index: number) {
 async function saveScript() {
   if (scriptEditIndex.value < 0) return;
   planData.value.script[scriptEditIndex.value] = { ...scriptEditData.value };
-  await scriptAgentStore().setPlanData();
+  await activeStore.value?.setPlanData();
   await getPlanData();
   window.$message.success($t("workbench.scriptAgent.msg.scriptUpdated"));
   scriptEditVisible.value = false;
@@ -405,7 +503,7 @@ async function delScript(index: number) {
       } else {
         planData.value.script.splice(index, 1);
       }
-      await scriptAgentStore().setPlanData();
+      await activeStore.value?.setPlanData();
       await getPlanData();
       window.$message.success($t("workbench.scriptAgent.msg.scriptDeleted"));
       dialog.destroy();
@@ -502,6 +600,10 @@ function toggleAllCards() {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  .reconfirmBanner {
+    margin: 0 0 8px;
+    flex-shrink: 0;
+  }
   :deep(.splitpanes__pane) {
     background-color: transparent !important;
   }

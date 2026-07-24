@@ -15,6 +15,7 @@ import type {
   PagedSemanticObjects,
   PagedSourceChapters,
   PagedSourceIssues,
+  ScriptSourceBinding,
   SemanticObjectDetail,
   SourceFoundationOverview,
 } from "@/types/sourceFoundation";
@@ -184,4 +185,12 @@ export const sourceFoundationApi = {
   ) => request<PackageLockResult>({ method: "POST", url: `/sourceFoundation/packages/${packageId}/lock`, data }),
   listLockedPackages: (params: { projectId: number; page: number; pageSize: number }) =>
     request<PagedLockedPackages>({ method: "GET", url: "/sourceFoundation/packages/locked", params }),
+
+  // ---- Script ↔ Package binding (Stage 2) ----
+  scriptSourceBinding: (scriptId: number, projectId: number) =>
+    request<ScriptSourceBinding | null>({
+      method: "GET",
+      url: `/sourceFoundation/scripts/${scriptId}/source-binding`,
+      params: { projectId },
+    }),
 };

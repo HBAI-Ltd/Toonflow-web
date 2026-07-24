@@ -1123,6 +1123,12 @@
         "light": "轻度思考",
         "deep": "深度思考",
         "extreme": "极致思考"
+      },
+      "sourceReconfirm": "原著包已更新，请重新选择已锁定的源包并确认重新绑定后继续。",
+      "sourcePackageSelector": {
+        "title": "选择已锁定源包",
+        "reload": "刷新",
+        "empty": "暂无已锁定源包"
       }
     },
     "cornerScape": {

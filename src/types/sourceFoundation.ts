@@ -439,3 +439,18 @@ export interface PackageDetail {
   // Optional: populated when backend exposes audit findings on GET.
   auditFindings?: AuditFinding[];
 }
+
+// Mirrors ScriptBindingService.ScriptSourceBinding.
+export type ScriptSourceBindingStatus = "active" | "reconfirm";
+
+export interface ScriptSourceBinding {
+  id: string;
+  projectId: number;
+  scriptId: number;
+  packageId: string;
+  packageVersion: number;
+  packageHash: string;
+  status: string;
+  boundAt: number;
+  confirmedAt: number | null;
+}
