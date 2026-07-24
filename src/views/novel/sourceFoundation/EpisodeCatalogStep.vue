@@ -93,10 +93,10 @@
           <t-input-number v-model="editForm.endOrderIndex" :min="1" theme="normal" />
         </t-form-item>
         <t-form-item :label="$t('workbench.sourceFoundation.catalog.targetDurationSec')">
-          <t-input-number v-model="editForm.targetDurationSec" :min="1" theme="normal" />
+          <t-input-number v-model="targetDurationSecProxy" :min="1" theme="normal" />
         </t-form-item>
         <t-form-item :label="$t('workbench.sourceFoundation.catalog.note')">
-          <t-textarea v-model="editForm.note" :autosize="{ minRows: 2, maxRows: 4 }" />
+          <t-textarea v-model="noteProxy" :autosize="{ minRows: 2, maxRows: 4 }" />
         </t-form-item>
       </t-form>
       <div class="edit-footer">
@@ -217,6 +217,19 @@ const editForm = reactive({
   endOrderIndex: 1 as number,
   targetDurationSec: null as number | null,
   note: null as string | null,
+});
+
+const targetDurationSecProxy = computed<number | undefined>({
+  get: () => editForm.targetDurationSec ?? undefined,
+  set: (v) => {
+    editForm.targetDurationSec = v ?? null;
+  },
+});
+const noteProxy = computed<string | undefined>({
+  get: () => editForm.note ?? undefined,
+  set: (v) => {
+    editForm.note = v ?? null;
+  },
 });
 
 function resetEditForm() {

@@ -45,6 +45,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
 import { sourceFoundationApi } from "@/api/sourceFoundation";
+import type { PageInfo } from "tdesign-vue-next";
 import type { PackageListItem } from "@/types/sourceFoundation";
 
 const props = defineProps<{
@@ -90,8 +91,8 @@ function reload() {
   load();
 }
 
-function onPageChange(current: number) {
-  page.value = current;
+function onPageChange(pageInfo: PageInfo) {
+  page.value = pageInfo.current;
   load();
 }
 

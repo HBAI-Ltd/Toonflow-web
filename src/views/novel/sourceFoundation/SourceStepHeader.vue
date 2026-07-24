@@ -21,8 +21,8 @@ const emit = defineEmits<{
   (e: "update:modelValue", v: number): void;
 }>();
 
-function onChange(current: number) {
-  emit("update:modelValue", current);
+function onChange(current: string | number) {
+  emit("update:modelValue", Number(current));
 }
 </script>
 

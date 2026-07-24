@@ -166,7 +166,7 @@
 </template>
 
 <script setup lang="ts">
-import { MessagePlugin, type PrimaryTableCol, type TableRowData } from "tdesign-vue-next";
+import { MessagePlugin, type PrimaryTableCol, type RowEventContext, type TableRowData } from "tdesign-vue-next";
 import projectStore from "@/stores/project";
 import { sourceFoundationApi } from "@/api/sourceFoundation";
 import type {
@@ -220,10 +220,11 @@ async function loadChapterFacts() {
 
 watch([factPage, factPageSize], loadChapterFacts);
 
-function onSelectChapter(context: { row: ChapterFactListItem }) {
-  selectedChapterId.value = context.row.novelId;
-  store.selectedChapterId = context.row.novelId;
-  if (context.row.factVersionId) loadFactDetail(context.row.factVersionId);
+function onSelectChapter(context: RowEventContext<TableRowData>) {
+  const row = context.row as ChapterFactListItem;
+  selectedChapterId.value = row.novelId;
+  store.selectedChapterId = row.novelId;
+  if (row.factVersionId) loadFactDetail(row.factVersionId);
   else selectedFact.value = null;
 }
 
@@ -325,9 +326,10 @@ async function loadSemanticObjects() {
   }
 }
 
-async function onSelectSemantic(context: { row: SemanticObjectListItem }) {
+async function onSelectSemantic(context: RowEventContext<TableRowData>) {
+  const row = context.row as SemanticObjectListItem;
   try {
-    selectedSemantic.value = await sourceFoundationApi.semanticDetail(context.row.semanticObjectId, projectId);
+    selectedSemantic.value = await sourceFoundationApi.semanticDetail(row.semanticObjectId, projectId);
     bindingReason.value = {};
   } catch (e) {
     window.$message.error((e as Error)?.message ?? "加载详情失败");
