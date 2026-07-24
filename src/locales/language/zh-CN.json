@@ -708,7 +708,10 @@
         "directorManualName": "导演手册名称",
         "directorManualNamePh": "输入导演手册名称",
         "directorFile": "导演手册文件",
-        "directorManualCover": "导演手册封面"
+        "directorManualCover": "导演手册封面",
+        "pipelineMode": "制作流水线",
+        "pipelineLegacy": "经典模式",
+        "pipelineXianxia": "仙侠源基模式"
       },
       "msg": {
         "fetchFailed": "获取项目列表失败",
@@ -870,6 +873,14 @@
         "startAnalysis": "开始分析",
         "chapterHeader": "第{index}章 - {name}",
         "analyzing": "事件分析中"
+      }
+    },
+    "sourceFoundation": {
+      "steps": {
+        "source": "原文批次",
+        "facts": "事实/实体",
+        "catalog": "分集目录",
+        "package": "源数据包"
       }
     },
     "scriptAgent": {

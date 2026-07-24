@@ -34,6 +34,7 @@ interface Project {
   createTime?: number;
   updatedAt?: number;
   projectType: string | null;
+  pipelineMode: "legacy" | "xianxia";
 }
 interface GlobalSetting {
   aspectRatio: string; // 影片比例，例如 "16:9"

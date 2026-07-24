@@ -19,6 +19,12 @@
                 <t-option key="基于剧本" :label="$t('workbench.project.dialog.basedOnScript')" value="script" />
               </t-select>
             </t-form-item>
+            <t-form-item :label="$t('workbench.project.dialog.pipelineMode')">
+              <t-select v-model="formState.pipelineMode" :disabled="isEdit">
+                <t-option value="legacy" :label="$t('workbench.project.dialog.pipelineLegacy')" />
+                <t-option v-if="formState.projectType === 'novel'" value="xianxia" :label="$t('workbench.project.dialog.pipelineXianxia')" />
+              </t-select>
+            </t-form-item>
             <t-form-item :label="$t('workbench.project.dialog.projectName')">
               <t-input v-model="formState.name" :placeholder="$t('workbench.project.dialog.projectNamePh')" />
             </t-form-item>
@@ -331,6 +337,7 @@ interface ProjectData {
   imageQuality: "1K" | "2K" | "4K" | "";
   visualManual?: string;
   mode: string;
+  pipelineMode: "legacy" | "xianxia";
 }
 
 interface ProjectFormData {
@@ -345,6 +352,7 @@ interface ProjectFormData {
   videoModel: string;
   imageQuality: "1K" | "2K" | "4K" | "";
   mode: string;
+  pipelineMode: "legacy" | "xianxia";
 }
 interface VisualManualItem {
   name: string;
@@ -404,10 +412,18 @@ const DEFAULT_FORM: () => ProjectFormData & { id: number; era: string; createTim
   imageQuality: "",
   mode: "",
   directorManual: "",
+  pipelineMode: "legacy",
 });
 
 // ===== 表单 =====
 const formState = ref(DEFAULT_FORM());
+
+watch(
+  () => formState.value.projectType,
+  (projectType) => {
+    if (projectType !== "novel") formState.value.pipelineMode = "legacy";
+  },
+);
 
 function resetForm() {
   formState.value = DEFAULT_FORM();
@@ -457,6 +473,7 @@ function handleOk() {
       imageQuality: formState.value.imageQuality,
       directorManual: formState.value.directorManual,
       mode: formState.value.mode,
+      pipelineMode: formState.value.pipelineMode,
     });
   }
   resetForm();
@@ -496,6 +513,7 @@ watch(addProjectShow, async (visible) => {
         projectType: props.projectData.projectType || "novel",
         mode: props.projectData.mode || "text",
         directorManual: props.projectData.directorManual || "",
+        pipelineMode: props.projectData.pipelineMode || "legacy",
       };
       // 编辑模式下主动获取视频模型详情，填充 mode 列表以回显 label
       if (props.projectData.videoModel) {
