@@ -492,7 +492,10 @@
         "directorManualPrompt": "導演手冊提示詞",
         "directorManualName": "導演手冊名稱",
         "directorFile": "導演手冊文件",
-        "directorManualCover": "導演手冊封面"
+        "directorManualCover": "導演手冊封面",
+        "pipelineMode": "製作流水線",
+        "pipelineLegacy": "經典模式",
+        "pipelineXianxia": "仙俠源基模式"
       },
       "msg": {
         "fetchFailed": "取得專案列表失敗",
@@ -656,6 +659,194 @@
         "analyzing": "事件分析中"
       }
     },
+    "sourceFoundation": {
+      "steps": {
+        "source": "原文批次",
+        "facts": "事實/實體",
+        "catalog": "分集目錄",
+        "package": "源資料包"
+      },
+      "conflictRefresh": "資料已被其他操作更新，已為您重新整理",
+      "revisionHistory": {
+        "title": "章節版本歷史",
+        "useAsBase": "作為修訂基準"
+      },
+      "source": {
+        "batchTitle": "原文批次",
+        "chapterTitle": "章節列表",
+        "import": "匯入原著",
+        "createBatch": "建立批次",
+        "start": "開始",
+        "resume": "復原",
+        "retry": "重試失敗",
+        "cancel": "取消",
+        "range": "章節範圍",
+        "pending": "待處理",
+        "running": "進行中",
+        "succeeded": "成功",
+        "failed": "失敗",
+        "startChapterIndex": "起始章節號",
+        "endChapterIndex": "結束章節號",
+        "status": {
+          "draft": "草稿",
+          "running": "執行中",
+          "completed": "已完成",
+          "partial_failed": "部分失敗",
+          "canceling": "取消中",
+          "canceled": "已取消",
+          "interrupted": "已中斷",
+          "archived": "已封存"
+        },
+        "rangeTooLarge": "單批次章節不能超過 50",
+        "batchCreated": "批次已建立",
+        "importTitle": "匯入原著章節",
+        "dragUpload": "點擊或拖曳檔案上傳",
+        "uploadHint": "支援 txt / docx，最大 10MB",
+        "or": "或",
+        "pastePlaceholder": "貼上小說正文…",
+        "parsedChapters": "已解析 {count} 章",
+        "submitImport": "提交匯入",
+        "docNotSupported": "暫不支援 .doc，請轉換為 .docx",
+        "unsupportedType": "不支援的檔案類型",
+        "fileTooLarge": "檔案過大（>10MB）",
+        "parseFailed": "檔案解析失敗",
+        "importSuccess": "匯入成功",
+        "history": "版本歷史",
+        "edit": "編輯",
+        "editTitle": "修訂章節正文",
+        "noCurrentVersion": "該章節尚無版本",
+        "impactConfirm": "確認修訂（將使下游失效）",
+        "revisionSaved": "修訂已儲存",
+        "conflictRefresh": "資料已被其他操作更新，已為您重新整理"
+      },
+      "facts": {
+        "chapterFacts": "章節事實",
+        "timeline": "事實時間線",
+        "selectChapterHint": "請在左側選擇章節查看事實",
+        "history": "版本歷史",
+        "sourceRevision": "來源修訂元資料",
+        "sourceVersion": "來源版本",
+        "payload": "事實承載 (JSON)",
+        "revise": "人工修訂",
+        "reviseTitle": "修訂事實",
+        "invalidPayload": "JSON 格式錯誤",
+        "revisionSaved": "事實修訂已儲存",
+        "semantic": "語意對象",
+        "bindings": "提及綁定",
+        "noBindings": "暫無待處理提及",
+        "reasonPlaceholder": "請填寫決定原因",
+        "confirm": "確認",
+        "reject": "駁回",
+        "decisionRecorded": "決定已記錄"
+      },
+      "issues": {
+        "title": "問題清單",
+        "open": "問題",
+        "empty": "暫無問題",
+        "reasonPlaceholder": "請填寫決定原因（必填）",
+        "severity": {
+          "blocker": "阻塞",
+          "confirm": "需確認",
+          "warning": "提醒"
+        },
+        "decision": {
+          "resolved": "已解決",
+          "accepted": "接受",
+          "dismissed": "忽略"
+        }
+      },
+      "catalog": {
+        "title": "標題",
+        "create": "建立目錄",
+        "validate": "校驗目錄",
+        "addItem": "新增條目",
+        "edit": "編輯",
+        "delete": "刪除",
+        "cancel": "取消",
+        "save": "儲存",
+        "version": "版本",
+        "itemsCount": "條目數",
+        "lockedCount": "已鎖定數",
+        "validationIssues": "校驗問題",
+        "empty": "暫無目錄",
+        "createFailed": "建立目錄失敗",
+        "loadFailed": "載入目錄失敗",
+        "validateFailed": "校驗失敗",
+        "saveFailed": "儲存失敗",
+        "deleteFailed": "刪除失敗",
+        "created": "目錄已建立",
+        "deleted": "條目已刪除",
+        "saved": "條目已儲存",
+        "valid": "校驗通過",
+        "invalid": "校驗未通過，請修正問題",
+        "editTitle": "編輯條目",
+        "addTitle": "新增條目",
+        "episodeNumber": "集號",
+        "startOrderIndex": "起始章號",
+        "endOrderIndex": "結束章號",
+        "targetDurationSec": "目標時長(秒)",
+        "note": "備註",
+        "lockedHint": "已鎖定，不可修改",
+        "status": {
+          "draft": "草稿",
+          "valid": "有效",
+          "partially_locked": "部分鎖定",
+          "locked": "已鎖定"
+        },
+        "itemStatus": {
+          "draft": "草稿",
+          "valid": "有效",
+          "locked": "已鎖定",
+          "reconfirm": "需復核"
+        },
+        "rule": {
+          "CATALOG_RANGE_INVALID": "章節範圍無效",
+          "CATALOG_OUT_OF_BOUNDS": "超出批次範圍",
+          "CATALOG_OVERLAP": "章節範圍重疊",
+          "LOCKED_RANGE_OVERLAP": "與鎖定條目範圍重疊",
+          "DUPLICATE_EPISODE_NUMBER": "集號重複"
+        },
+        "titleField": "標題"
+      },
+      "package": {
+        "title": "分集源資料包",
+        "noCatalog": "請先建立分集目錄",
+        "noItems": "目錄為空",
+        "noPackage": "未建構",
+        "build": "建構源資料包",
+        "review": "查看詳情",
+        "lock": "鎖定",
+        "enterStage2": "進入第二階段",
+        "buildStarted": "建構已啟動",
+        "buildFailed": "建構啟動失敗",
+        "loadFailed": "載入詳情失敗",
+        "lockFailed": "鎖定失敗",
+        "locked": "源資料包已鎖定",
+        "blockersOpen": "存在未解決的阻塞問題，無法鎖定",
+        "detailTitle": "源資料包詳情",
+        "episode": "分集",
+        "range": "章節範圍",
+        "navigationSummary": "導航摘要",
+        "findings": "稽核發現",
+        "status": {
+          "building": "建構中",
+          "build_failed": "建構失敗",
+          "review_required": "待審核",
+          "blocked": "已阻斷",
+          "locked_valid": "已鎖定",
+          "rebuild_required": "需重建",
+          "superseded": "已廢棄"
+        },
+        "tabs": {
+          "summary": "概要",
+          "facts": "事實",
+          "semantics": "語意",
+          "relations": "關係",
+          "risks": "已接受風險",
+          "manifest": "依賴清單"
+        }
+      }
+    },
     "scriptAgent": {
       "inputPlaceholder": "請輸入內容",
       "chapterEvents": "章節事件",
@@ -703,7 +894,13 @@
         "confirmDelete": "確認刪除",
         "scriptDeleted": "腳本已刪除"
       },
-      "reconnect": "重新連接"
+      "reconnect": "重新連接",
+      "sourceReconfirm": "原著包已更新，請重新選擇已鎖定的源包並確認重新綁定後繼續。",
+      "sourcePackageSelector": {
+        "title": "選擇已鎖定源包",
+        "reload": "重新整理",
+        "empty": "暫無已鎖定源包"
+      }
     },
     "cornerScape": {
       "batchSettings": "批次生成設定",

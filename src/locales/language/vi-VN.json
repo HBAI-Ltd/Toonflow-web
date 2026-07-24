@@ -480,7 +480,10 @@
         "directorManualName": "Tên sổ tay giám đốc",
         "directorManualNamePh": "Nhập tên Sổ tay Giám đốc",
         "directorFile": "Tài liệu hướng dẫn của Giám đốc",
-        "directorManualCover": "Bìa sách hướng dẫn của giám đốc"
+        "directorManualCover": "Bìa sách hướng dẫn của giám đốc",
+        "pipelineMode": "Pipeline",
+        "pipelineLegacy": "Cổ điển",
+        "pipelineXianxia": "Tiên Hiệp: Nền tảng nguồn"
       },
       "msg": {
         "fetchFailed": "Lấy danh sách dự án thất bại",
@@ -643,6 +646,194 @@
         "analyzing": "Đang phân tích sự kiện"
       }
     },
+    "sourceFoundation": {
+      "steps": {
+        "source": "Nguồn & Lô",
+        "facts": "Sự kiện & Thực thể",
+        "catalog": "Danh mục tập",
+        "package": "Gói nguồn"
+      },
+      "conflictRefresh": "Dữ liệu đã được cập nhật bởi thao tác khác và đã làm mới cho bạn",
+      "revisionHistory": {
+        "title": "Lịch sử phiên bản chương",
+        "useAsBase": "Dùng làm cơ sở sửa đổi"
+      },
+      "source": {
+        "batchTitle": "Lô nguồn",
+        "chapterTitle": "Danh sách chương",
+        "import": "Nhập nguồn",
+        "createBatch": "Tạo lô",
+        "start": "Bắt đầu",
+        "resume": "Tiếp tục",
+        "retry": "Thử lại lỗi",
+        "cancel": "Hủy",
+        "range": "Phạm vi chương",
+        "pending": "Đang chờ",
+        "running": "Đang chạy",
+        "succeeded": "Thành công",
+        "failed": "Thất bại",
+        "startChapterIndex": "Số chương bắt đầu",
+        "endChapterIndex": "Số chương kết thúc",
+        "status": {
+          "draft": "Bản nháp",
+          "running": "Đang chạy",
+          "completed": "Hoàn thành",
+          "partial_failed": "Thất bại một phần",
+          "canceling": "Đang hủy",
+          "canceled": "Đã hủy",
+          "interrupted": "Bị gián đoạn",
+          "archived": "Đã lưu trữ"
+        },
+        "rangeTooLarge": "Một lô không được vượt quá 50 chương",
+        "batchCreated": "Đã tạo lô",
+        "importTitle": "Nhập chương nguồn",
+        "dragUpload": "Nhấp hoặc kéo tệp để tải lên",
+        "uploadHint": "Hỗ trợ txt / docx, tối đa 10MB",
+        "or": "hoặc",
+        "pastePlaceholder": "Dán nội dung tiểu thuyết vào đây…",
+        "parsedChapters": "Đã phân tích {count} chương",
+        "submitImport": "Gửi nhập",
+        "docNotSupported": "Không hỗ trợ .doc, hãy chuyển sang .docx",
+        "unsupportedType": "Loại tệp không được hỗ trợ",
+        "fileTooLarge": "Tệp quá lớn (>10MB)",
+        "parseFailed": "Phân tích tệp thất bại",
+        "importSuccess": "Nhập thành công",
+        "history": "Lịch sử phiên bản",
+        "edit": "Sửa",
+        "editTitle": "Sửa nội dung chương",
+        "noCurrentVersion": "Chương này chưa có phiên bản",
+        "impactConfirm": "Xác nhận sửa đổi (sẽ làm mất hiệu lực downstream)",
+        "revisionSaved": "Đã lưu sửa đổi",
+        "conflictRefresh": "Dữ liệu đã được cập nhật bởi thao tác khác và đã làm mới cho bạn"
+      },
+      "facts": {
+        "chapterFacts": "Sự kiện chương",
+        "timeline": "Dòng thời gian sự kiện",
+        "selectChapterHint": "Chọn chương bên trái để xem sự kiện",
+        "history": "Lịch sử phiên bản",
+        "sourceRevision": "Siêu dữ liệu sửa đổi nguồn",
+        "sourceVersion": "Phiên bản nguồn",
+        "payload": "Payload sự kiện (JSON)",
+        "revise": "Sửa thủ công",
+        "reviseTitle": "Sửa sự kiện",
+        "invalidPayload": "Sai định dạng JSON",
+        "revisionSaved": "Đã lưu sửa đổi sự kiện",
+        "semantic": "Đối tượng ngữ nghĩa",
+        "bindings": "Liên kết nhắc đến",
+        "noBindings": "Không có nhắc đến nào đang chờ",
+        "reasonPlaceholder": "Vui lòng nhập lý do quyết định",
+        "confirm": "Xác nhận",
+        "reject": "Từ chối",
+        "decisionRecorded": "Đã ghi nhận quyết định"
+      },
+      "issues": {
+        "title": "Danh sách vấn đề",
+        "open": "Mở",
+        "empty": "Không có vấn đề",
+        "reasonPlaceholder": "Vui lòng nhập lý do quyết định (bắt buộc)",
+        "severity": {
+          "blocker": "Chặn",
+          "confirm": "Cần xác nhận",
+          "warning": "Cảnh báo"
+        },
+        "decision": {
+          "resolved": "Đã giải quyết",
+          "accepted": "Chấp nhận",
+          "dismissed": "Bỏ qua"
+        }
+      },
+      "catalog": {
+        "title": "Tiêu đề",
+        "create": "Tạo danh mục",
+        "validate": "Kiểm tra danh mục",
+        "addItem": "Thêm mục",
+        "edit": "Sửa",
+        "delete": "Xóa",
+        "cancel": "Hủy",
+        "save": "Lưu",
+        "version": "Phiên bản",
+        "itemsCount": "Số mục",
+        "lockedCount": "Đã khóa",
+        "validationIssues": "Vấn đề kiểm tra",
+        "empty": "Chưa có danh mục",
+        "createFailed": "Tạo danh mục thất bại",
+        "loadFailed": "Tải danh mục thất bại",
+        "validateFailed": "Kiểm tra thất bại",
+        "saveFailed": "Lưu thất bại",
+        "deleteFailed": "Xóa thất bại",
+        "created": "Đã tạo danh mục",
+        "deleted": "Đã xóa mục",
+        "saved": "Đã lưu mục",
+        "valid": "Kiểm tra đạt",
+        "invalid": "Kiểm tra không đạt; vui lòng sửa các vấn đề",
+        "editTitle": "Sửa mục",
+        "addTitle": "Thêm mục",
+        "episodeNumber": "Số tập",
+        "startOrderIndex": "Số chương bắt đầu",
+        "endOrderIndex": "Số chương kết thúc",
+        "targetDurationSec": "Thời lượng mục tiêu (giây)",
+        "note": "Ghi chú",
+        "lockedHint": "Đã khóa, không thể sửa đổi",
+        "status": {
+          "draft": "Bản nháp",
+          "valid": "Hợp lệ",
+          "partially_locked": "Khóa một phần",
+          "locked": "Đã khóa"
+        },
+        "itemStatus": {
+          "draft": "Bản nháp",
+          "valid": "Hợp lệ",
+          "locked": "Đã khóa",
+          "reconfirm": "Cần xem lại"
+        },
+        "rule": {
+          "CATALOG_RANGE_INVALID": "Phạm vi chương không hợp lệ",
+          "CATALOG_OUT_OF_BOUNDS": "Vượt phạm vi lô",
+          "CATALOG_OVERLAP": "Phạm vi chương chồng lấn",
+          "LOCKED_RANGE_OVERLAP": "Chồng lấn phạm vi mục đã khóa",
+          "DUPLICATE_EPISODE_NUMBER": "Trùng số tập"
+        },
+        "titleField": "Tiêu đề"
+      },
+      "package": {
+        "title": "Gói nguồn cho từng tập",
+        "noCatalog": "Vui lòng tạo danh mục tập trước",
+        "noItems": "Danh mục trống",
+        "noPackage": "Chưa build",
+        "build": "Build gói nguồn",
+        "review": "Xem chi tiết",
+        "lock": "Khóa",
+        "enterStage2": "Vào giai đoạn 2",
+        "buildStarted": "Đã bắt đầu build",
+        "buildFailed": "Khởi động build thất bại",
+        "loadFailed": "Tải chi tiết thất bại",
+        "lockFailed": "Khóa thất bại",
+        "locked": "Đã khóa gói nguồn",
+        "blockersOpen": "Còn vấn đề chặn chưa giải quyết, không thể khóa",
+        "detailTitle": "Chi tiết gói nguồn",
+        "episode": "Tập",
+        "range": "Phạm vi chương",
+        "navigationSummary": "Tóm tắt điều hướng",
+        "findings": "Kết quả kiểm toán",
+        "status": {
+          "building": "Đang build",
+          "build_failed": "Build thất bại",
+          "review_required": "Cần xem xét",
+          "blocked": "Bị chặn",
+          "locked_valid": "Đã khóa",
+          "rebuild_required": "Cần build lại",
+          "superseded": "Đã lỗi thời"
+        },
+        "tabs": {
+          "summary": "Tóm tắt",
+          "facts": "Sự kiện",
+          "semantics": "Ngữ nghĩa",
+          "relations": "Quan hệ",
+          "risks": "Rủi ro đã chấp nhận",
+          "manifest": "Phụ thuộc"
+        }
+      }
+    },
     "scriptAgent": {
       "inputPlaceholder": "Vui lòng nhập nội dung",
       "chapterEvents": "Sự kiện chương",
@@ -690,7 +881,13 @@
         "confirmDelete": "Xác nhận xóa",
         "scriptDeleted": "Đã xóa tập lệnh"
       },
-      "reconnect": "kết nối lại"
+      "reconnect": "kết nối lại",
+      "sourceReconfirm": "Gói nguồn đã được cập nhật. Vui lòng chọn lại gói nguồn đã khóa và xác nhận gắn lại để tiếp tục.",
+      "sourcePackageSelector": {
+        "title": "Chọn gói nguồn đã khóa",
+        "reload": "Tải lại",
+        "empty": "Không có gói nguồn đã khóa"
+      }
     },
     "cornerScape": {
       "batchSettings": "Cài đặt tạo hàng loạt",
