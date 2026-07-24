@@ -1059,7 +1059,7 @@ const references = computed(() =>{
     .map((item) => ({
       type: getFileTypeByExt(item.src) as "image" | "video" | "audio" | "text",
       src: item.src ?? "",
-    })),
+    }))
 }
 
 );
