@@ -281,3 +281,161 @@ export interface PagedSourceIssues {
   pageSize: number;
   items: SourceIssue[];
 }
+
+// ---- Step 3: Episode catalog ----
+// Mirrors EpisodeCatalogService.CatalogItem.
+export interface CatalogItem {
+  id: string;
+  catalogId: string;
+  episodeNumber: number;
+  title: string;
+  startOrderIndex: number;
+  endOrderIndex: number;
+  status: "draft" | "valid" | "locked" | "reconfirm";
+  targetDurationSec: number | null;
+  note: string | null;
+  rowVersion: number;
+}
+
+// Mirrors EpisodeCatalogService.CatalogDetail.
+export interface CatalogDetail {
+  id: string;
+  projectId: number;
+  batchId: string;
+  version: number;
+  status: string;
+  createdBy: number | null;
+  createdAt: number;
+  items: CatalogItem[];
+}
+
+// Mirrors CatalogRuleIssue.
+export interface CatalogRuleIssue {
+  code:
+    | "CATALOG_RANGE_INVALID"
+    | "CATALOG_OUT_OF_BOUNDS"
+    | "CATALOG_OVERLAP"
+    | "LOCKED_RANGE_OVERLAP"
+    | "DUPLICATE_EPISODE_NUMBER";
+  itemIds: string[];
+}
+
+export interface CatalogValidation {
+  valid: boolean;
+  issues: CatalogRuleIssue[];
+}
+
+// ---- Step 4: Source package ----
+// Mirrors SourcePackageService.PackageDetail.
+export interface PackageListItem {
+  packageId: string;
+  catalogItemId: string;
+  episodeNumber: number;
+  title: string;
+  version: number;
+  contentHash: string;
+  lockedAt: number;
+}
+
+export interface PagedLockedPackages {
+  total: number;
+  page: number;
+  pageSize: number;
+  items: PackageListItem[];
+}
+
+export interface PackageBuildStart {
+  packageId: string;
+  taskId: number;
+}
+
+export interface PackageLockResult {
+  packageId: string;
+  version: number;
+  contentHash: string;
+}
+
+// AuditFinding from AuditResultV1; the package GET may expose these alongside
+// the payload when the build completes. Optional until backend exposes them.
+export interface AuditFinding {
+  code: string;
+  severity: "blocker" | "confirm" | "warning";
+  scopeType: "chapter" | "semanticObject" | "catalogItem" | "package";
+  scopeId: string;
+  message: string;
+  evidence: Array<{ novelId: number; paragraphId: string; shortQuote: string }>;
+}
+
+// Loose mirrors of the immutable V1 payloads — keep untyped sub-objects for UI.
+export interface EpisodeSourcePackageV1 {
+  schemaVersion: "episode-source-package-v1";
+  episode: {
+    episodeNumber: number;
+    title: string;
+    chapterRange: { startChapterIndex: number; endChapterIndex: number };
+  };
+  navigationSummary: string;
+  chapters: Array<{
+    novelId: number;
+    novelVersionId: string;
+    title: string;
+    sourceText: string;
+  }>;
+  facts: unknown[];
+  semantics: Array<{
+    objectId: string;
+    revisionId: string;
+    kind: "entity" | "term";
+    canonicalName: string;
+    aliases: string[];
+    profile: unknown;
+  }>;
+  relations: Array<{
+    id: string;
+    type: string;
+    source: string;
+    target: string;
+    evidence: unknown;
+  }>;
+  acceptedRisks: Array<{ issueId: string; reason: string }>;
+}
+
+export interface DependencyManifestV1 {
+  schemaVersion: "dependency-manifest-v1";
+  projectConfigFingerprint: string;
+  catalog: {
+    catalogId: string;
+    catalogVersion: number;
+    catalogItemId: string;
+    itemVersion: number;
+  };
+  novelVersions: Array<{ novelId: number; novelVersionId: string; contentHash: string }>;
+  factVersions: Array<{ novelId: number; factVersionId: string; contentHash: string }>;
+  semanticRevisions: Array<{ semanticObjectId: string; semanticRevisionId: string; contentHash: string }>;
+  relationIds: string[];
+  issueDecisions: Array<{
+    issueId: string;
+    status: "resolved" | "accepted" | "dismissed";
+    inputFingerprint: string;
+  }>;
+  audit: { auditId: string; inputFingerprint: string };
+}
+
+export interface PackageDetail {
+  packageId: string;
+  projectId: number;
+  catalogId: string;
+  catalogItemId: string;
+  version: number;
+  status: PackageStatus | string;
+  schemaVersion: string;
+  inputFingerprint: string;
+  payload: EpisodeSourcePackageV1 | null;
+  dependencyManifest: DependencyManifestV1 | null;
+  contentHash: string | null;
+  lockedBy: number | null;
+  lockedAt: number | null;
+  createdAt: number;
+  // Optional: populated when backend exposes audit findings on GET.
+  auditFindings?: AuditFinding[];
+}

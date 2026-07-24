@@ -1,10 +1,17 @@
 import axios from "@/utils/axios";
 import type {
   ApiEnvelope,
+  CatalogDetail,
+  CatalogItem,
+  CatalogValidation,
   ChapterFactDetail,
   ChapterVersionRow,
+  PackageBuildStart,
+  PackageDetail,
+  PackageLockResult,
   PagedBatches,
   PagedChapterFacts,
+  PagedLockedPackages,
   PagedSemanticObjects,
   PagedSourceChapters,
   PagedSourceIssues,
@@ -130,4 +137,51 @@ export const sourceFoundationApi = {
     issueId: string,
     data: { projectId: number; decision: "resolved" | "accepted" | "dismissed"; reason: string },
   ) => request<null>({ method: "POST", url: `/sourceFoundation/issues/${issueId}/decide`, data }),
+
+  // ---- Catalogs (Step 3) ----
+  catalogCreate: (data: { projectId: number; batchId: string }) =>
+    request<{ catalogId: string }>({ method: "POST", url: "/sourceFoundation/catalogs", data }),
+  catalogCurrent: (params: { projectId: number; batchId: string }) =>
+    request<CatalogDetail | null>({ method: "GET", url: "/sourceFoundation/catalogs/current", params }),
+  catalogValidate: (catalogId: string, data: { projectId: number }) =>
+    request<CatalogValidation>({ method: "POST", url: `/sourceFoundation/catalogs/${catalogId}/validate`, data }),
+  addCatalogItem: (
+    catalogId: string,
+    data: {
+      projectId: number;
+      episodeNumber: number;
+      title: string;
+      startOrderIndex: number;
+      endOrderIndex: number;
+      targetDurationSec?: number | null;
+      note?: string | null;
+    },
+  ) => request<CatalogItem>({ method: "POST", url: `/sourceFoundation/catalogs/${catalogId}/items`, data }),
+  updateCatalogItem: (
+    itemId: string,
+    data: {
+      projectId: number;
+      expectedVersion: number;
+      episodeNumber?: number;
+      title?: string;
+      startOrderIndex?: number;
+      endOrderIndex?: number;
+      targetDurationSec?: number | null;
+      note?: string | null;
+    },
+  ) => request<CatalogItem>({ method: "PATCH", url: `/sourceFoundation/catalog-items/${itemId}`, data }),
+  deleteCatalogItem: (itemId: string, data: { projectId: number; expectedVersion: number }) =>
+    request<null>({ method: "DELETE", url: `/sourceFoundation/catalog-items/${itemId}`, data }),
+
+  // ---- Packages (Step 4) ----
+  packageBuild: (catalogItemId: string, data: { projectId: number }) =>
+    request<PackageBuildStart>({ method: "POST", url: `/sourceFoundation/catalog-items/${catalogItemId}/package-builds`, data }),
+  packageGet: (packageId: string, projectId: number) =>
+    request<PackageDetail>({ method: "GET", url: `/sourceFoundation/packages/${packageId}`, params: { projectId } }),
+  lockPackage: (
+    packageId: string,
+    data: { projectId: number; expectedVersion: number; inputFingerprint: string },
+  ) => request<PackageLockResult>({ method: "POST", url: `/sourceFoundation/packages/${packageId}/lock`, data }),
+  listLockedPackages: (params: { projectId: number; page: number; pageSize: number }) =>
+    request<PagedLockedPackages>({ method: "GET", url: "/sourceFoundation/packages/locked", params }),
 };
