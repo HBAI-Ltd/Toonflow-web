@@ -1015,6 +1015,7 @@
         "upload": "上傳",
         "generate": "生成",
         "saveFailed": "儲存失敗，請重試",
+        "selectNodeToSave": "請選擇一個要儲存的圖片節點",
         "fetchFailed": "取得資料失敗",
         "generating": "生成中...",
         "deleteNode": "刪除節點",

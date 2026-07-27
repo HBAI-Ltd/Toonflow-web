@@ -1010,6 +1010,7 @@
         "upload": "アップロード",
         "generate": "生成",
         "saveFailed": "保存に失敗しました。再試行してください",
+        "selectNodeToSave": "保存する画像ノードを1つ選択してください",
         "fetchFailed": "データの取得に失敗しました",
         "generating": "生成中...",
         "deleteNode": "ノードを削除",

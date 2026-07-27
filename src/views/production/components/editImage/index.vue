@@ -52,6 +52,10 @@
               </template>
             </t-button>
           </t-tooltip>
+          <t-button class="guide-save-btn" theme="primary" :loading="saveLoading" @click="saveSelectedNode">
+            <template #icon><i-save /></template>
+            {{ $t("common.save") }}
+          </t-button>
         </div>
       </Panel>
     </VueFlow>
@@ -116,10 +120,11 @@ const visible = defineModel({
   type: Boolean,
   default: false,
 });
-const { addEdges, getNodes, getEdges, updateNodeData } = useVueFlow("editImage");
+const { addEdges, getNodes, getEdges, getSelectedNodes, updateNodeData } = useVueFlow("editImage");
 
 const nodes = ref<NodeType[]>([]);
 const edges = ref<Edge<any, any, string>[]>([]);
+const saveLoading = ref(false);
 
 // 防抖定时器
 let syncTimer: ReturnType<typeof setTimeout> | null = null;
@@ -232,8 +237,37 @@ const addUploadNode = (type: string, image: string = "", prompt: string = "") =>
 
   return newNodeId;
 };
+
+function getNodeImageUrl(node: NodeType) {
+  if (node.type === "upload") {
+    const data = node.data as UploadNodeData;
+    return data.image || "";
+  }
+  if (node.type === "generated") {
+    const data = node.data as GeneratedNodeData;
+    return data.generatedImage || "";
+  }
+  return "";
+}
+
+async function saveSelectedNode() {
+  const selectedNodes = getSelectedNodes.value as NodeType[];
+  if (selectedNodes.length !== 1) {
+    return window.$message.error($t("workbench.production.editImage.selectNodeToSave"));
+  }
+
+  const imageUrl = getNodeImageUrl(selectedNodes[0]);
+  if (!imageUrl) {
+    return window.$message.error($t("workbench.production.editImage.noImage"));
+  }
+
+  await sureNode(imageUrl);
+}
+
 //保存节点
 async function sureNode(imageUrl: string) {
+  if (saveLoading.value) return;
+  saveLoading.value = true;
   try {
     const payload = {
       nodes: cleanNodes(getNodes.value as NodeType[]),
@@ -250,6 +284,8 @@ async function sureNode(imageUrl: string) {
     visible.value = false;
   } catch (e) {
     window.$message.error((e as any).message || $t("workbench.production.editImage.saveFailed"));
+  } finally {
+    saveLoading.value = false;
   }
 }
 onMounted(async () => {

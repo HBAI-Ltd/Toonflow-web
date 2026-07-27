@@ -1001,6 +1001,7 @@
         "upload": "Tải lên",
         "generate": "Tạo",
         "saveFailed": "Lưu thất bại, vui lòng thử lại",
+        "selectNodeToSave": "Vui lòng chọn đúng một nút hình ảnh để lưu",
         "fetchFailed": "Lấy dữ liệu thất bại",
         "generating": "Đang tạo...",
         "deleteNode": "Xóa Node",

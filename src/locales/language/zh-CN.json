@@ -1248,6 +1248,7 @@
         "upload": "上传",
         "generate": "生成",
         "saveFailed": "保存失败，请重试",
+        "selectNodeToSave": "请选择一个要保存的图片节点",
         "fetchFailed": "获取数据失败",
         "generating": "生成中...",
         "deleteNode": "删除节点",

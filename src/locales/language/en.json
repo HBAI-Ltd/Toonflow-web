@@ -1151,6 +1151,7 @@
         "upload": "Upload",
         "generate": "Generate",
         "saveFailed": "Save failed, please try again",
+        "selectNodeToSave": "Select exactly one image node to save",
         "fetchFailed": "Failed to fetch data",
         "generating": "Generating...",
         "deleteNode": "Delete Node",
