@@ -301,11 +301,11 @@ function handlePromptBlur() {
 async function genText() {
   const track = currentTrack.value;
   if (track.id == null || track.state === "生成中") return;
-  let info: { id: number; sources: string }[] = [];
+  let info: { id: number; sources: string; fileType?: string }[] = [];
   const currentTrackId = track.id;
   const rawMedias = (track.medias ?? []) as UploadItem[];
   if (modelParmas.value.mode == "text") {
-    info = rawMedias.map(({ id, sources }) => ({ id: id!, sources }));
+    info = rawMedias.map(({ id, sources, fileType }) => ({ id: id!, sources, fileType }));
   } else {
     const frameMode = ["startEndRequired", "endFrameOptional", "startFrameOptional"];
     const preSliced = frameMode.includes(modelParmas.value.mode)
@@ -313,7 +313,9 @@ async function genText() {
       : modelParmas.value.mode === "singleImage"
         ? rawMedias.slice(0, 1)
         : rawMedias;
-    const filtered = preSliced.filter((item) => typeof item.id === "number" && !isNaN(item.id)).map(({ id, sources }) => ({ id: id!, sources }));
+    const filtered = preSliced
+      .filter((item) => typeof item.id === "number" && !isNaN(item.id))
+      .map(({ id, sources, fileType }) => ({ id: id!, sources, fileType }));
     if (frameMode.includes(modelParmas.value.mode)) info = filtered.slice(0, 2);
     else if (modelParmas.value.mode === "singleImage") info = filtered.slice(0, 1);
     else info = filtered;
@@ -406,7 +408,7 @@ async function generateVideo() {
                       : imageList.value;
                   const filtered = preSliced
                     .filter((item) => Boolean(item.src) && typeof item.id === "number" && !isNaN(item.id))
-                    .map(({ id, sources }) => ({ id, sources }));
+                    .map(({ id, sources, fileType }) => ({ id, sources, fileType }));
                   if (frameMode.includes(modelParmas.value.mode)) return filtered.slice(0, 2);
                   if (modelParmas.value.mode === "singleImage") return filtered.slice(0, 1);
                   return filtered;
