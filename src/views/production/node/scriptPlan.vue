@@ -8,7 +8,7 @@
     </div>
     <div class="content">
       <t-empty v-if="!scriptPlan" style="margin-top: 16px"></t-empty>
-      <MdPreview v-else v-model="scriptPlan" :theme="themeSetting.mode" />
+      <MdPreview v-else v-model="scriptPlan" :theme="themeSetting.mode === 'auto' ? 'light' : themeSetting.mode" />
     </div>
   </t-card>
 
@@ -26,7 +26,7 @@
     attach="body">
     <MdEditor
       v-model="editContent"
-      :theme="themeSetting.mode"
+      :theme="themeSetting.mode === 'auto' ? 'light' : themeSetting.mode"
       :toolbars="toolbars"
       :footers="[]"
       style="height: 72vh"

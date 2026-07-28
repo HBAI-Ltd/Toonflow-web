@@ -4,6 +4,13 @@
 declare const $t: (key: string, ...args: any[]) => string;
 
 /**
+ * Electron 预 preload 注入到 window 的桥接对象（仅 Electron 环境存在）。
+ */
+interface Window {
+  $electron?: any;
+}
+
+/**
  * Vite 环境变量类型定义
  */
 interface ImportMetaEnv {

@@ -13,7 +13,7 @@
     attach="body">
     <MdEditor
       v-model="editContent"
-      :theme="themeSetting.mode"
+      :theme="themeSetting.mode === 'auto' ? 'light' : themeSetting.mode"
       :toolbars="toolbars"
       :footers="[]"
       style="height: 72vh"
