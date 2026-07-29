@@ -9,8 +9,8 @@ interface PlanData {
   script: { id?: number; name: string; content: string }[];
 }
 
-function makeScriptAgentStore(projectId: string) {
-  return defineStore(`scriptAgent-${projectId}`, () => {
+function makeScriptAgentStore(projectId: string, sourcePackageId: string | null) {
+  return defineStore(`scriptAgent-${projectId}-${sourcePackageId ?? "legacy"}`, () => {
         const planData = ref<PlanData>({
           storySkeleton: "",
           adaptationStrategy: "",
@@ -20,8 +20,9 @@ function makeScriptAgentStore(projectId: string) {
         const { connected, messages, chat, stopGenerate, socket, status, disconnect, connect } = useChat({
           url: `${settingStore().baseUrl}/socket/scriptAgent`,
           auth: () => ({
-            isolationKey: `${projectId}:scriptAgent`,
+            isolationKey: sourcePackageId ? `${projectId}:scriptAgent:${sourcePackageId}` : `${projectId}:scriptAgent`,
             projectId: projectId,
+            sourcePackageId: sourcePackageId ?? undefined,
           }),
           manageLifecycle: false,
           xmlTags: [
@@ -30,7 +31,7 @@ function makeScriptAgentStore(projectId: string) {
             { tag: "scriptItem", keepInMessage: false },
           ],
           onXmlTag: (data) => {
-            const { tag, value, children, status, attrs } = data;
+            const { tag, value, attrs, status } = data;
             if (tag === "storySkeleton") {
               planData.value.storySkeleton = value;
             } else if (tag === "adaptationStrategy") {
@@ -67,7 +68,12 @@ function makeScriptAgentStore(projectId: string) {
         );
 
         async function setPlanData() {
-          await axios.post("/scriptAgent/setPlanData", { projectId: projectId, agentType: "scriptAgent", data: planData.value });
+          await axios.post("/scriptAgent/setPlanData", {
+            projectId: projectId,
+            sourcePackageId: sourcePackageId ?? undefined,
+            agentType: "scriptAgent",
+            data: planData.value,
+          });
         }
 
         const thinkLevel = ref(0);
@@ -85,15 +91,16 @@ function makeScriptAgentStore(projectId: string) {
 
 const storeMap = new Map<string, ReturnType<typeof makeScriptAgentStore>>();
 
-function createScriptAgentStore(projectId: string) {
-  if (!storeMap.has(projectId)) {
-    storeMap.set(projectId, makeScriptAgentStore(projectId));
+function createScriptAgentStore(projectId: string, sourcePackageId: string | null) {
+  const key = `${projectId}:${sourcePackageId ?? "legacy"}`;
+  if (!storeMap.has(key)) {
+    storeMap.set(key, makeScriptAgentStore(projectId, sourcePackageId));
   }
-  return storeMap.get(projectId)!;
+  return storeMap.get(key)!;
 }
 
-export default function useScriptAgentStore() {
+export default function useScriptAgentStore(sourcePackageId: string | null = null) {
   const id = projectStore().project?.id;
   if (!id) throw new Error("No project selected");
-  return createScriptAgentStore(id)();
+  return createScriptAgentStore(String(id), sourcePackageId)();
 }

@@ -490,7 +490,10 @@
         "directorManualName": "ชื่อคู่มือผู้อำนวยการ",
         "directorManualNamePh": "กรอกชื่อคู่มือผู้อำนวยการ",
         "directorFile": "เอกสารคู่มือผู้อำนวยการ",
-        "directorManualCover": "ปกคู่มือผู้อำนวยการ"
+        "directorManualCover": "ปกคู่มือผู้อำนวยการ",
+        "pipelineMode": "ไปป์ไลน์",
+        "pipelineLegacy": "คลาสสิก",
+        "pipelineXianxia": "เซี่ยนเซี่ย: รากฐานต้นฉบับ"
       },
       "msg": {
         "fetchFailed": "ดึงรายการโปรเจกต์ล้มเหลว",
@@ -653,6 +656,239 @@
         "analyzing": "กำลังวิเคราะห์เหตุการณ์"
       }
     },
+    "sourceFoundation": {
+      "steps": {
+        "source": "ต้นฉบับและชุด",
+        "facts": "ข้อเท็จจริงและเอนทิตี",
+        "catalog": "สารบัญตอน",
+        "package": "แพ็กเกจต้นฉบับ"
+      },
+      "conflictRefresh": "ข้อมูลถูกอัปเดตโดยการดำเนินการอื่นแล้ว ระบบได้รีเฟรชให้คุณแล้ว",
+      "revisionHistory": {
+        "title": "ประวัติเวอร์ชันบท",
+        "useAsBase": "ใช้เป็นฐานการแก้ไข"
+      },
+      "source": {
+        "batchTitle": "ชุดต้นฉบับ",
+        "chapterTitle": "รายการบท",
+        "import": "นำเข้าต้นฉบับ",
+        "createBatch": "สร้างชุด",
+        "start": "เริ่ม",
+        "resume": "ทำต่อ",
+        "retry": "ลองใหม่รายการล้มเหลว",
+        "cancel": "ยกเลิก",
+        "range": "ช่วงบท",
+        "pending": "รอดำเนินการ",
+        "running": "กำลังทำงาน",
+        "succeeded": "สำเร็จ",
+        "failed": "ล้มเหลว",
+        "startChapterIndex": "หมายเลขบทเริ่มต้น",
+        "endChapterIndex": "หมายเลขบทสิ้นสุด",
+        "status": {
+          "draft": "แบบร่าง",
+          "running": "กำลังทำงาน",
+          "completed": "เสร็จสิ้น",
+          "partial_failed": "ล้มเหลวบางส่วน",
+          "canceling": "กำลังยกเลิก",
+          "canceled": "ยกเลิกแล้ว",
+          "interrupted": "ถูกขัดจังหวะ",
+          "archived": "เก็บถาวรแล้ว"
+        },
+        "rangeTooLarge": "ชุดเดียวต้องไม่เกิน 50 บท",
+        "batchCreated": "สร้างชุดแล้ว",
+        "importTitle": "นำเข้าบทต้นฉบับ",
+        "dragUpload": "คลิกหรือลากไฟล์มาอัปโหลด",
+        "uploadHint": "รองรับ txt / docx สูงสุด 10MB",
+        "or": "หรือ",
+        "pastePlaceholder": "วางข้อความนิยายตรงนี้…",
+        "parsedChapters": "แยกบทแล้ว {count} บท",
+        "submitImport": "ส่งนำเข้า",
+        "docNotSupported": "ไม่รองรับ .doc โปรดแปลงเป็น .docx",
+        "unsupportedType": "ประเภทไฟล์ไม่รองรับ",
+        "fileTooLarge": "ไฟล์ใหญ่เกิน (>10MB)",
+        "parseFailed": "แยกไฟล์ไม่สำเร็จ",
+        "importSuccess": "นำเข้าสำเร็จ",
+        "history": "ประวัติเวอร์ชัน",
+        "edit": "แก้ไข",
+        "editTitle": "แก้ไขเนื้อหาบท",
+        "noCurrentVersion": "ยังไม่มีเวอร์ชันสำหรับบทนี้",
+        "impactConfirm": "ยืนยันการแก้ไข (จะกระทบขั้นตอนถัดไป)",
+        "revisionSaved": "บันทึกการแก้ไขแล้ว",
+        "conflictRefresh": "ข้อมูลถูกอัปเดตโดยการดำเนินการอื่นแล้ว ระบบได้รีเฟรชให้คุณแล้ว"
+      },
+      "facts": {
+        "chapterFacts": "ข้อเท็จจริงของบท",
+        "timeline": "เส้นเวลาข้อเท็จจริง",
+        "selectChapterHint": "เลือกบททางซ้ายเพื่อดูข้อเท็จจริง",
+        "history": "ประวัติเวอร์ชัน",
+        "sourceRevision": "เมตาดาต้าการแก้ไขต้นฉบับ",
+        "sourceVersion": "เวอร์ชันต้นฉบับ",
+        "payload": "เพย์โหลดข้อเท็จจริง (JSON)",
+        "revise": "แก้ไขด้วยมือ",
+        "reviseTitle": "แก้ไขข้อเท็จจริง",
+        "invalidPayload": "รูปแบบ JSON ไม่ถูกต้อง",
+        "revisionSaved": "บันทึกการแก้ไขข้อเท็จจริงแล้ว",
+        "semantic": "ออบเจกต์เชิงความหมาย",
+        "bindings": "การเชื่อมโยงการกล่าวถึง",
+        "noBindings": "ไม่มีการกล่าวถึงที่รอดำเนินการ",
+        "reasonPlaceholder": "โปรดระบุเหตุผลในการตัดสินใจ",
+        "confirm": "ยืนยัน",
+        "reject": "ปฏิเสธ",
+        "decisionRecorded": "บันทึกการตัดสินใจแล้ว"
+      },
+      "issues": {
+        "title": "รายการปัญหา",
+        "open": "เปิดอยู่",
+        "empty": "ไม่มีปัญหา",
+        "reasonPlaceholder": "โปรดระบุเหตุผลในการตัดสินใจ (จำเป็น)",
+        "severity": {
+          "blocker": "ตัวบล็อก",
+          "confirm": "ต้องยืนยัน",
+          "warning": "คำเตือน"
+        },
+        "decision": {
+          "resolved": "แก้แล้ว",
+          "accepted": "ยอมรับ",
+          "dismissed": "เพิกเฉย"
+        }
+      },
+      "catalog": {
+        "title": "ชื่อเรื่อง",
+        "create": "สร้างสารบัญ",
+        "validate": "ตรวจสารบัญ",
+        "addItem": "เพิ่มรายการ",
+        "edit": "แก้ไข",
+        "delete": "ลบ",
+        "cancel": "ยกเลิก",
+        "save": "บันทึก",
+        "version": "เวอร์ชัน",
+        "itemsCount": "จำนวนรายการ",
+        "lockedCount": "ล็อกแล้ว",
+        "validationIssues": "ปัญหาการตรวจสอบ",
+        "empty": "ยังไม่มีสารบัญ",
+        "createFailed": "สร้างสารบัญไม่สำเร็จ",
+        "loadFailed": "โหลดสารบัญไม่สำเร็จ",
+        "validateFailed": "การตรวจสอบล้มเหลว",
+        "saveFailed": "บันทึกไม่สำเร็จ",
+        "deleteFailed": "ลบไม่สำเร็จ",
+        "created": "สร้างสารบัญแล้ว",
+        "deleted": "ลบรายการแล้ว",
+        "saved": "บันทึกรายการแล้ว",
+        "valid": "ตรวจสอบผ่าน",
+        "invalid": "ตรวจสอบไม่ผ่าน โปรดแก้ไขปัญหา",
+        "editTitle": "แก้ไขรายการ",
+        "addTitle": "เพิ่มรายการ",
+        "episodeNumber": "เลขตอน",
+        "startOrderIndex": "หมายเลขบทเริ่มต้น",
+        "endOrderIndex": "หมายเลขบทสิ้นสุด",
+        "targetDurationSec": "ระยะเวลาเป้าหมาย (วินาที)",
+        "note": "หมายเหตุ",
+        "lockedHint": "ล็อกแล้ว แก้ไขไม่ได้",
+        "status": {
+          "draft": "แบบร่าง",
+          "valid": "ใช้ได้",
+          "partially_locked": "ล็อกบางส่วน",
+          "locked": "ล็อกแล้ว"
+        },
+        "itemStatus": {
+          "draft": "แบบร่าง",
+          "valid": "ใช้ได้",
+          "locked": "ล็อกแล้ว",
+          "reconfirm": "ต้องตรวจสอบใหม่"
+        },
+        "rule": {
+          "CATALOG_RANGE_INVALID": "ช่วงบทไม่ถูกต้อง",
+          "CATALOG_OUT_OF_BOUNDS": "เกินช่วงชุด",
+          "CATALOG_OVERLAP": "ช่วงบทซ้อนทับกัน",
+          "LOCKED_RANGE_OVERLAP": "ซ้อนทับช่วงรายการที่ล็อกแล้ว",
+          "DUPLICATE_EPISODE_NUMBER": "เลขตอนซ้ำ"
+        },
+        "titleField": "ชื่อเรื่อง"
+      },
+      "package": {
+        "title": "แพ็กเกจต้นฉบับตอน",
+        "noCatalog": "กรุณาสร้างสารบัญตอนก่อน",
+        "noItems": "สารบัญว่าง",
+        "noPackage": "ยังไม่สร้าง",
+        "build": "สร้างแพ็กเกจต้นฉบับ",
+        "review": "ดูรายละเอียด",
+        "lock": "ล็อก",
+        "enterStage2": "เข้าสู่ขั้นที่ 2",
+        "buildStarted": "เริ่มการสร้างแล้ว",
+        "buildFailed": "เริ่มการสร้างไม่สำเร็จ",
+        "loadFailed": "โหลดรายละเอียดไม่สำเร็จ",
+        "lockFailed": "ล็อกไม่สำเร็จ",
+        "locked": "ล็อกแพ็กเกจต้นฉบับแล้ว",
+        "blockersOpen": "มีปัญหาบล็อกที่ยังไม่ได้แก้ ไม่สามารถล็อกได้",
+        "detailTitle": "รายละเอียดแพ็กเกจต้นฉบับ",
+        "episode": "ตอน",
+        "range": "ช่วงบท",
+        "navigationSummary": "สรุปการนำทาง",
+        "findings": "ผลการตรวจสอบ",
+        "status": {
+          "building": "กำลังสร้าง",
+          "build_failed": "สร้างล้มเหลว",
+          "review_required": "รอตรวจ",
+          "blocked": "ถูกบล็อก",
+          "locked_valid": "ล็อกแล้ว",
+          "rebuild_required": "ต้องสร้างใหม่",
+          "superseded": "เลิกใช้แล้ว"
+        },
+        "tabs": {
+          "summary": "สรุป",
+          "facts": "ข้อเท็จจริง",
+          "semantics": "อรรถศาสตร์",
+          "relations": "ความสัมพันธ์",
+          "risks": "ความเสี่ยงที่ยอมรับ",
+          "manifest": "การพึ่งพา"
+        }
+      }
+    },
+    "screenplayPipeline": {
+      "title": "โต๊ะทำงานบท Xianxia",
+      "refresh": "รีเฟรช",
+      "selectEpisode": "เลือก Episode ทางซ้าย",
+      "loadingDetail": "กำลังโหลดรายละเอียด…",
+      "noEpisodes": "ไม่มี Episode",
+      "retry": "ลองใหม่",
+      "regions": {
+        "1": "คิว Episode",
+        "2": "การดัดแปลง",
+        "3": "บท",
+        "4": "การตรวจสอบครั้งที่ 1",
+        "5": "สคริปต์เสียง",
+        "6": "การตรวจสอบครั้งที่ 2 / ส่งมอบ"
+      },
+      "episodeList": {
+        "episodeLabel": "Episode",
+        "listStatus": "สถานะที่ได้รับ"
+      },
+      "generate": "สร้าง",
+      "regenerate": "สร้างใหม่",
+      "revise": "ปรับปรุง",
+      "confirm": "ยืนยัน",
+      "rollback": "ย้อนกลับ",
+      "approve": "อนุมัติ",
+      "dismiss": "ปฏิเสธ",
+      "voiceDraft": {
+        "dirty": "ฉบับร่างที่ยังไม่ได้บันทึก",
+        "discard": "ละทิ้งฉบับร่าง",
+        "save": "บันทึกฉบับร่าง"
+      },
+      "listStatusLabels": {
+        "pending": "รอดำเนินการ",
+        "adaptation-review": "ตรวจสอบการดัดแปลง",
+        "adaptation-blocked": "การดัดแปลงถูกบล็อก",
+        "screenplay-review": "ตรวจสอบบท",
+        "screenplay-blocked": "บทถูกบล็อก",
+        "screenplay-confirmed": "ยืนยันบทแล้ว",
+        "voice-generating": "กำลังสร้างเสียง",
+        "voice-review": "ตรวจสอบเสียง",
+        "voice-blocked": "เสียงถูกบล็อก",
+        "stage2-complete": "Stage 2 เสร็จสมบูรณ์",
+        "unadaptable": "ปรับไม่ได้"
+      }
+    },
     "scriptAgent": {
       "inputPlaceholder": "โปรดกรอกเนื้อหา",
       "chapterEvents": "เหตุการณ์ในบท",
@@ -700,7 +936,13 @@
         "confirmDelete": "ยืนยันการลบ",
         "scriptDeleted": "ลบสคริปต์แล้ว"
       },
-      "reconnect": "เชื่อมต่อใหม่"
+      "reconnect": "เชื่อมต่อใหม่",
+      "sourceReconfirm": "แพ็กเกจต้นฉบับได้รับการอัปเดต โปรดเลือกแพ็กเกจที่ล็อกแล้วใหม่และยืนยันการเชื่อมโยงอีกครั้งเพื่อดำเนินการต่อ",
+      "sourcePackageSelector": {
+        "title": "เลือกแพ็กเกจต้นฉบับที่ล็อกแล้ว",
+        "reload": "รีโหลด",
+        "empty": "ไม่มีแพ็กเกจต้นฉบับที่ล็อกแล้ว"
+      }
     },
     "cornerScape": {
       "batchSettings": "การตั้งค่าการสร้างเป็นชุด",

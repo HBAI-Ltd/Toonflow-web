@@ -489,7 +489,10 @@
         "directorManualName": "ディレクターズマニュアル名",
         "directorManualNamePh": "ディレクターズマニュアル名を入力してください",
         "directorFile": "ディレクターズマニュアル文書",
-        "directorManualCover": "ディレクターズマニュアルの表紙"
+        "directorManualCover": "ディレクターズマニュアルの表紙",
+        "pipelineMode": "パイプライン",
+        "pipelineLegacy": "クラシック",
+        "pipelineXianxia": "仙侠ソース基盤"
       },
       "msg": {
         "fetchFailed": "プロジェクトリストの取得に失敗しました",
@@ -652,6 +655,239 @@
         "analyzing": "イベント分析中"
       }
     },
+    "sourceFoundation": {
+      "steps": {
+        "source": "原著とバッチ",
+        "facts": "事実とエンティティ",
+        "catalog": "エピソード目録",
+        "package": "ソースパッケージ"
+      },
+      "conflictRefresh": "データが他の操作によって更新されたため、再読み込みしました",
+      "revisionHistory": {
+        "title": "章のリビジョン履歴",
+        "useAsBase": "リビジョンのベースにする"
+      },
+      "source": {
+        "batchTitle": "原著バッチ",
+        "chapterTitle": "章リスト",
+        "import": "原著をインポート",
+        "createBatch": "バッチ作成",
+        "start": "開始",
+        "resume": "再開",
+        "retry": "失敗をリトライ",
+        "cancel": "キャンセル",
+        "range": "章範囲",
+        "pending": "保留中",
+        "running": "実行中",
+        "succeeded": "成功",
+        "failed": "失敗",
+        "startChapterIndex": "開始章番号",
+        "endChapterIndex": "終了章番号",
+        "status": {
+          "draft": "ドラフト",
+          "running": "実行中",
+          "completed": "完了",
+          "partial_failed": "一部失敗",
+          "canceling": "キャンセル中",
+          "canceled": "キャンセル済み",
+          "interrupted": "中断",
+          "archived": "アーカイブ済み"
+        },
+        "rangeTooLarge": "1 バッチの章数は 50 を超えられません",
+        "batchCreated": "バッチを作成しました",
+        "importTitle": "原著章をインポート",
+        "dragUpload": "クリックまたはファイルをドラッグしてアップロード",
+        "uploadHint": "txt / docx 形式、最大 10MB",
+        "or": "または",
+        "pastePlaceholder": "小説本文を貼り付け…",
+        "parsedChapters": "{count} 章を解析済み",
+        "submitImport": "インポート送信",
+        "docNotSupported": ".doc は未対応です。.docx に変換してください",
+        "unsupportedType": "未対応のファイル形式",
+        "fileTooLarge": "ファイルが大きすぎます（>10MB）",
+        "parseFailed": "ファイル解析に失敗しました",
+        "importSuccess": "インポート成功",
+        "history": "バージョン履歴",
+        "edit": "編集",
+        "editTitle": "章本文を修正",
+        "noCurrentVersion": "この章にはまだバージョンがありません",
+        "impactConfirm": "修正を確認（下流に影響します）",
+        "revisionSaved": "修正を保存しました",
+        "conflictRefresh": "データが他の操作によって更新されたため、再読み込みしました"
+      },
+      "facts": {
+        "chapterFacts": "章の事実",
+        "timeline": "事実タイムライン",
+        "selectChapterHint": "左側で章を選択して事実を表示してください",
+        "history": "バージョン履歴",
+        "sourceRevision": "ソース改訂メタデータ",
+        "sourceVersion": "ソースバージョン",
+        "payload": "事実ペイロード (JSON)",
+        "revise": "手動修正",
+        "reviseTitle": "事実を修正",
+        "invalidPayload": "JSON 形式エラー",
+        "revisionSaved": "事実の修正を保存しました",
+        "semantic": "セマンティックオブジェクト",
+        "bindings": "メンションバインディング",
+        "noBindings": "保留中のメンションはありません",
+        "reasonPlaceholder": "決定理由を入力してください",
+        "confirm": "確認",
+        "reject": "却下",
+        "decisionRecorded": "決定を記録しました"
+      },
+      "issues": {
+        "title": "課題リスト",
+        "open": "未解決",
+        "empty": "課題なし",
+        "reasonPlaceholder": "決定理由を入力してください（必須）",
+        "severity": {
+          "blocker": "ブロッカー",
+          "confirm": "要確認",
+          "warning": "警告"
+        },
+        "decision": {
+          "resolved": "解決済み",
+          "accepted": "承認",
+          "dismissed": "却下"
+        }
+      },
+      "catalog": {
+        "title": "タイトル",
+        "create": "目録を作成",
+        "validate": "目録を検証",
+        "addItem": "項目を追加",
+        "edit": "編集",
+        "delete": "削除",
+        "cancel": "キャンセル",
+        "save": "保存",
+        "version": "バージョン",
+        "itemsCount": "項目数",
+        "lockedCount": "ロック数",
+        "validationIssues": "検証の問題",
+        "empty": "目録がありません",
+        "createFailed": "目録の作成に失敗しました",
+        "loadFailed": "目録の読み込みに失敗しました",
+        "validateFailed": "検証に失敗しました",
+        "saveFailed": "保存に失敗しました",
+        "deleteFailed": "削除に失敗しました",
+        "created": "目録を作成しました",
+        "deleted": "項目を削除しました",
+        "saved": "項目を保存しました",
+        "valid": "検証に合格しました",
+        "invalid": "検証不合格です。問題を修正してください",
+        "editTitle": "項目を編集",
+        "addTitle": "項目を追加",
+        "episodeNumber": "話番号",
+        "startOrderIndex": "開始章番号",
+        "endOrderIndex": "終了章番号",
+        "targetDurationSec": "目標時間 (秒)",
+        "note": "メモ",
+        "lockedHint": "ロック済み、変更できません",
+        "status": {
+          "draft": "ドラフト",
+          "valid": "有効",
+          "partially_locked": "一部ロック",
+          "locked": "ロック済み"
+        },
+        "itemStatus": {
+          "draft": "ドラフト",
+          "valid": "有効",
+          "locked": "ロック済み",
+          "reconfirm": "要再確認"
+        },
+        "rule": {
+          "CATALOG_RANGE_INVALID": "章範囲が無効です",
+          "CATALOG_OUT_OF_BOUNDS": "バッチ範囲を超えています",
+          "CATALOG_OVERLAP": "章範囲が重複しています",
+          "LOCKED_RANGE_OVERLAP": "ロック項目の範囲と重複しています",
+          "DUPLICATE_EPISODE_NUMBER": "話番号が重複しています"
+        },
+        "titleField": "タイトル"
+      },
+      "package": {
+        "title": "エピソードソースパッケージ",
+        "noCatalog": "先にエピソード目録を作成してください",
+        "noItems": "目録が空です",
+        "noPackage": "未ビルド",
+        "build": "ソースパッケージをビルド",
+        "review": "詳細を表示",
+        "lock": "ロック",
+        "enterStage2": "第 2 段階へ",
+        "buildStarted": "ビルドを開始しました",
+        "buildFailed": "ビルド開始に失敗しました",
+        "loadFailed": "詳細の読み込みに失敗しました",
+        "lockFailed": "ロックに失敗しました",
+        "locked": "ソースパッケージをロックしました",
+        "blockersOpen": "未解決のブロッカーがあるためロックできません",
+        "detailTitle": "ソースパッケージ詳細",
+        "episode": "エピソード",
+        "range": "章範囲",
+        "navigationSummary": "ナビゲーション要約",
+        "findings": "監査所見",
+        "status": {
+          "building": "ビルド中",
+          "build_failed": "ビルド失敗",
+          "review_required": "レビュー待ち",
+          "blocked": "ブロック済み",
+          "locked_valid": "ロック済み",
+          "rebuild_required": "再ビルド必要",
+          "superseded": "廃止済み"
+        },
+        "tabs": {
+          "summary": "概要",
+          "facts": "事実",
+          "semantics": "セマンティクス",
+          "relations": "リレーション",
+          "risks": "受諾リスク",
+          "manifest": "依存関係"
+        }
+      }
+    },
+    "screenplayPipeline": {
+      "title": "仙侠脚本ワークベンチ",
+      "refresh": "更新",
+      "selectEpisode": "左側でエピソードを選択してください",
+      "loadingDetail": "詳細を読み込み中…",
+      "noEpisodes": "エピソードなし",
+      "retry": "再試行",
+      "regions": {
+        "1": "エピソードキュー",
+        "2": "アダプテーション設計",
+        "3": "脚本",
+        "4": "第一次審査",
+        "5": "ボイススクリプト",
+        "6": "第二次審査 / 配信"
+      },
+      "episodeList": {
+        "episodeLabel": "エピソード",
+        "listStatus": "派生ステータス"
+      },
+      "generate": "生成",
+      "regenerate": "再生成",
+      "revise": "改訂",
+      "confirm": "確認",
+      "rollback": "ロールバック",
+      "approve": "承認",
+      "dismiss": "却下",
+      "voiceDraft": {
+        "dirty": "未保存の下書き",
+        "discard": "下書きを破棄",
+        "save": "下書きを保存"
+      },
+      "listStatusLabels": {
+        "pending": "未開始",
+        "adaptation-review": "改编審査中",
+        "adaptation-blocked": "改编ブロック",
+        "screenplay-review": "脚本審査中",
+        "screenplay-blocked": "脚本ブロック",
+        "screenplay-confirmed": "脚本確認済",
+        "voice-generating": "ボイス生成中",
+        "voice-review": "ボイス審査",
+        "voice-blocked": "ボイスブロック",
+        "stage2-complete": "Stage 2 完了",
+        "unadaptable": "改编不可"
+      }
+    },
     "scriptAgent": {
       "inputPlaceholder": "内容を入力してください",
       "chapterEvents": "章のイベント",
@@ -699,7 +935,13 @@
         "confirmDelete": "削除の確認",
         "scriptDeleted": "スクリプトが削除されました"
       },
-      "reconnect": "再接続"
+      "reconnect": "再接続",
+      "sourceReconfirm": "ソースパッケージが更新されました。ロック済みのソースパッケージを再選択し、再バインドを確認して続行してください。",
+      "sourcePackageSelector": {
+        "title": "ロック済みソースパッケージを選択",
+        "reload": "再読み込み",
+        "empty": "ロック済みソースパッケージはありません"
+      }
     },
     "cornerScape": {
       "batchSettings": "一括生成設定",

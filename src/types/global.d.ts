@@ -4,6 +4,13 @@
 declare const $t: (key: string, ...args: any[]) => string;
 
 /**
+ * Electron 预 preload 注入到 window 的桥接对象（仅 Electron 环境存在）。
+ */
+interface Window {
+  $electron?: any;
+}
+
+/**
  * Vite 环境变量类型定义
  */
 interface ImportMetaEnv {
@@ -34,6 +41,7 @@ interface Project {
   createTime?: number;
   updatedAt?: number;
   projectType: string | null;
+  pipelineMode: "legacy" | "xianxia";
 }
 interface GlobalSetting {
   aspectRatio: string; // 影片比例，例如 "16:9"

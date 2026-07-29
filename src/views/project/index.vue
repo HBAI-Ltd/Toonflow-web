@@ -74,6 +74,7 @@ const editProjectData = ref<{
   imageQuality: "1K" | "2K" | "4K" | "";
   mode: string;
   directorManual: string;
+  pipelineMode: "legacy" | "xianxia";
 } | null>(null);
 
 async function getAllProject() {
@@ -133,6 +134,7 @@ function openEdit(item: {
   imageQuality: "1K" | "2K" | "4K" | "";
   projectType: string;
   mode: string;
+  pipelineMode: "legacy" | "xianxia";
 }) {
   editProjectData.value = {
     ...item,
@@ -176,6 +178,7 @@ function addProjectFn(data: {
   videoModel: string;
   imageQuality: string;
   mode: string;
+  pipelineMode: "legacy" | "xianxia";
 }) {
   axios
     .post("/project/addProject", data)

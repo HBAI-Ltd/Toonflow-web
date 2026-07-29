@@ -708,7 +708,10 @@
         "directorManualName": "导演手册名称",
         "directorManualNamePh": "输入导演手册名称",
         "directorFile": "导演手册文件",
-        "directorManualCover": "导演手册封面"
+        "directorManualCover": "导演手册封面",
+        "pipelineMode": "制作流水线",
+        "pipelineLegacy": "经典模式",
+        "pipelineXianxia": "仙侠源基模式"
       },
       "msg": {
         "fetchFailed": "获取项目列表失败",
@@ -872,6 +875,239 @@
         "analyzing": "事件分析中"
       }
     },
+    "sourceFoundation": {
+      "steps": {
+        "source": "原文批次",
+        "facts": "事实/实体",
+        "catalog": "分集目录",
+        "package": "源数据包"
+      },
+      "conflictRefresh": "数据已被其他操作更新，已为您刷新",
+      "revisionHistory": {
+        "title": "章节版本历史",
+        "useAsBase": "作为修订基准"
+      },
+      "source": {
+        "batchTitle": "原文批次",
+        "chapterTitle": "章节列表",
+        "import": "导入原著",
+        "createBatch": "创建批次",
+        "start": "开始",
+        "resume": "恢复",
+        "retry": "重试失败",
+        "cancel": "取消",
+        "range": "章节范围",
+        "pending": "待处理",
+        "running": "进行中",
+        "succeeded": "成功",
+        "failed": "失败",
+        "startChapterIndex": "起始章节号",
+        "endChapterIndex": "结束章节号",
+        "status": {
+          "draft": "草稿",
+          "running": "运行中",
+          "completed": "已完成",
+          "partial_failed": "部分失败",
+          "canceling": "取消中",
+          "canceled": "已取消",
+          "interrupted": "已中断",
+          "archived": "已归档"
+        },
+        "rangeTooLarge": "单批次章节不能超过 50",
+        "batchCreated": "批次已创建",
+        "importTitle": "导入原著章节",
+        "dragUpload": "点击或拖拽文件上传",
+        "uploadHint": "支持 txt / docx，最大 10MB",
+        "or": "或",
+        "pastePlaceholder": "粘贴小说正文…",
+        "parsedChapters": "已解析 {count} 章",
+        "submitImport": "提交导入",
+        "docNotSupported": "暂不支持 .doc，请转换为 .docx",
+        "unsupportedType": "不支持的文件类型",
+        "fileTooLarge": "文件过大（>10MB）",
+        "parseFailed": "文件解析失败",
+        "importSuccess": "导入成功",
+        "history": "版本历史",
+        "edit": "编辑",
+        "editTitle": "修订章节正文",
+        "noCurrentVersion": "该章节尚无版本",
+        "impactConfirm": "确认修订（将使下游失效）",
+        "revisionSaved": "修订已保存",
+        "conflictRefresh": "数据已被其他操作更新，已为您刷新"
+      },
+      "facts": {
+        "chapterFacts": "章节事实",
+        "timeline": "事实时间线",
+        "selectChapterHint": "请在左侧选择章节查看事实",
+        "history": "版本历史",
+        "sourceRevision": "源修订元数据",
+        "sourceVersion": "源版本",
+        "payload": "事实载荷 (JSON)",
+        "revise": "人工修订",
+        "reviseTitle": "修订事实",
+        "invalidPayload": "JSON 格式错误",
+        "revisionSaved": "事实修订已保存",
+        "semantic": "语义对象",
+        "bindings": "提及绑定",
+        "noBindings": "暂无待处理提及",
+        "reasonPlaceholder": "请填写决定原因",
+        "confirm": "确认",
+        "reject": "驳回",
+        "decisionRecorded": "决定已记录"
+      },
+      "issues": {
+        "title": "问题清单",
+        "open": "问题",
+        "empty": "暂无问题",
+        "reasonPlaceholder": "请填写决定原因（必填）",
+        "severity": {
+          "blocker": "阻塞",
+          "confirm": "需确认",
+          "warning": "提醒"
+        },
+        "decision": {
+          "resolved": "已解决",
+          "accepted": "接受",
+          "dismissed": "忽略"
+        }
+      },
+      "catalog": {
+        "title": "标题",
+        "create": "创建目录",
+        "validate": "校验目录",
+        "addItem": "新增条目",
+        "edit": "编辑",
+        "delete": "删除",
+        "cancel": "取消",
+        "save": "保存",
+        "version": "版本",
+        "itemsCount": "条目数",
+        "lockedCount": "已锁定数",
+        "validationIssues": "校验问题",
+        "empty": "暂无目录",
+        "createFailed": "创建目录失败",
+        "loadFailed": "加载目录失败",
+        "validateFailed": "校验失败",
+        "saveFailed": "保存失败",
+        "deleteFailed": "删除失败",
+        "created": "目录已创建",
+        "deleted": "条目已删除",
+        "saved": "条目已保存",
+        "valid": "校验通过",
+        "invalid": "校验未通过，请修正问题",
+        "editTitle": "编辑条目",
+        "addTitle": "新增条目",
+        "episodeNumber": "集号",
+        "startOrderIndex": "起始章号",
+        "endOrderIndex": "结束章号",
+        "targetDurationSec": "目标时长(秒)",
+        "note": "备注",
+        "lockedHint": "已锁定，不可修改",
+        "status": {
+          "draft": "草稿",
+          "valid": "有效",
+          "partially_locked": "部分锁定",
+          "locked": "已锁定"
+        },
+        "itemStatus": {
+          "draft": "草稿",
+          "valid": "有效",
+          "locked": "已锁定",
+          "reconfirm": "需复核"
+        },
+        "rule": {
+          "CATALOG_RANGE_INVALID": "章节范围无效",
+          "CATALOG_OUT_OF_BOUNDS": "超出批次范围",
+          "CATALOG_OVERLAP": "章节范围重叠",
+          "LOCKED_RANGE_OVERLAP": "与锁定条目范围重叠",
+          "DUPLICATE_EPISODE_NUMBER": "集号重复"
+        },
+        "titleField": "标题"
+      },
+      "package": {
+        "title": "分集源数据包",
+        "noCatalog": "请先创建分集目录",
+        "noItems": "目录为空",
+        "noPackage": "未构建",
+        "build": "构建源数据包",
+        "review": "查看详情",
+        "lock": "锁定",
+        "enterStage2": "进入第二阶段",
+        "buildStarted": "构建已启动",
+        "buildFailed": "构建启动失败",
+        "loadFailed": "加载详情失败",
+        "lockFailed": "锁定失败",
+        "locked": "源数据包已锁定",
+        "blockersOpen": "存在未解决的阻塞问题，无法锁定",
+        "detailTitle": "源数据包详情",
+        "episode": "分集",
+        "range": "章节范围",
+        "navigationSummary": "导航摘要",
+        "findings": "审计发现",
+        "status": {
+          "building": "构建中",
+          "build_failed": "构建失败",
+          "review_required": "待审核",
+          "blocked": "已阻断",
+          "locked_valid": "已锁定",
+          "rebuild_required": "需重建",
+          "superseded": "已废弃"
+        },
+        "tabs": {
+          "summary": "概要",
+          "facts": "事实",
+          "semantics": "语义",
+          "relations": "关系",
+          "risks": "已接受风险",
+          "manifest": "依赖清单"
+        }
+      }
+    },
+    "screenplayPipeline": {
+      "title": "仙侠剧本工作台",
+      "refresh": "刷新",
+      "selectEpisode": "请在左侧选择一个 Episode",
+      "loadingDetail": "加载详情…",
+      "noEpisodes": "暂无 Episode",
+      "retry": "重试",
+      "regions": {
+        "1": "Episode 队列",
+        "2": "改编设计",
+        "3": "剧本",
+        "4": "第一次审核",
+        "5": "声音脚本",
+        "6": "第二次审核 / 交付"
+      },
+      "episodeList": {
+        "episodeLabel": "Episode",
+        "listStatus": "派生状态"
+      },
+      "generate": "生成",
+      "regenerate": "重做",
+      "revise": "修订",
+      "confirm": "确认",
+      "rollback": "回退",
+      "approve": "通过",
+      "dismiss": "驳回",
+      "voiceDraft": {
+        "dirty": "草稿未保存",
+        "discard": "丢弃草稿",
+        "save": "保存草稿"
+      },
+      "listStatusLabels": {
+        "pending": "待开始",
+        "adaptation-review": "改编审核",
+        "adaptation-blocked": "改编阻塞",
+        "screenplay-review": "剧本审核",
+        "screenplay-blocked": "剧本阻塞",
+        "screenplay-confirmed": "剧本已确认",
+        "voice-generating": "声音生成中",
+        "voice-review": "声音审核",
+        "voice-blocked": "声音阻塞",
+        "stage2-complete": "Stage 2 完成",
+        "unadaptable": "不可改编"
+      }
+    },
     "scriptAgent": {
       "inputPlaceholder": "请输入内容",
       "chapterEvents": "章节事件",
@@ -932,6 +1168,12 @@
         "light": "轻度思考",
         "deep": "深度思考",
         "extreme": "极致思考"
+      },
+      "sourceReconfirm": "原著包已更新，请重新选择已锁定的源包并确认重新绑定后继续。",
+      "sourcePackageSelector": {
+        "title": "选择已锁定源包",
+        "reload": "刷新",
+        "empty": "暂无已锁定源包"
       }
     },
     "cornerScape": {

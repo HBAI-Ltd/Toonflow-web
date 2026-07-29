@@ -489,7 +489,10 @@
         "directorManualName": "Название руководства режиссера",
         "directorManualNamePh": "Введите название руководства режиссера",
         "directorFile": "Документ «Руководство директора»",
-        "directorManualCover": "Обложка руководства режиссера"
+        "directorManualCover": "Обложка руководства режиссера",
+        "pipelineMode": "Пайплайн",
+        "pipelineLegacy": "Классический",
+        "pipelineXianxia": "Сянься: Исходный фундамент"
       },
       "msg": {
         "fetchFailed": "Не удалось получить список проектов",
@@ -652,6 +655,239 @@
         "analyzing": "Анализ событий"
       }
     },
+    "sourceFoundation": {
+      "steps": {
+        "source": "Источник и партии",
+        "facts": "Факты и сущности",
+        "catalog": "Каталог серий",
+        "package": "Пакет источника"
+      },
+      "conflictRefresh": "Данные были изменены другой операцией и обновлены для вас",
+      "revisionHistory": {
+        "title": "История версий главы",
+        "useAsBase": "Сделать базой ревизии"
+      },
+      "source": {
+        "batchTitle": "Партии исходника",
+        "chapterTitle": "Список глав",
+        "import": "Импорт источника",
+        "createBatch": "Создать партию",
+        "start": "Старт",
+        "resume": "Возобновить",
+        "retry": "Повторить ошибки",
+        "cancel": "Отмена",
+        "range": "Диапазон глав",
+        "pending": "В ожидании",
+        "running": "Выполняется",
+        "succeeded": "Успешно",
+        "failed": "Ошибка",
+        "startChapterIndex": "Номер начальной главы",
+        "endChapterIndex": "Номер конечной главы",
+        "status": {
+          "draft": "Черновик",
+          "running": "Выполняется",
+          "completed": "Завершено",
+          "partial_failed": "Частичный сбой",
+          "canceling": "Отменяется",
+          "canceled": "Отменено",
+          "interrupted": "Прервано",
+          "archived": "В архиве"
+        },
+        "rangeTooLarge": "Одна партия не может превышать 50 глав",
+        "batchCreated": "Партия создана",
+        "importTitle": "Импорт глав источника",
+        "dragUpload": "Нажмите или перетащите файл для загрузки",
+        "uploadHint": "Поддерживаются txt / docx, до 10MB",
+        "or": "или",
+        "pastePlaceholder": "Вставьте текст романа…",
+        "parsedChapters": "Разобрано глав: {count}",
+        "submitImport": "Отправить импорт",
+        "docNotSupported": ".doc не поддерживается, конвертируйте в .docx",
+        "unsupportedType": "Неподдерживаемый тип файла",
+        "fileTooLarge": "Файл слишком большой (>10MB)",
+        "parseFailed": "Не удалось разобрать файл",
+        "importSuccess": "Импорт выполнен",
+        "history": "История версий",
+        "edit": "Изменить",
+        "editTitle": "Редактировать текст главы",
+        "noCurrentVersion": "У этой главы пока нет версии",
+        "impactConfirm": "Подтвердить правку (влияет на downstream)",
+        "revisionSaved": "Правка сохранена",
+        "conflictRefresh": "Данные были изменены другой операцией и обновлены для вас"
+      },
+      "facts": {
+        "chapterFacts": "Факты главы",
+        "timeline": "Лента фактов",
+        "selectChapterHint": "Выберите главу слева, чтобы увидеть факты",
+        "history": "История версий",
+        "sourceRevision": "Метаданные правки источника",
+        "sourceVersion": "Версия источника",
+        "payload": "Полезная нагрузка фактов (JSON)",
+        "revise": "Ручная правка",
+        "reviseTitle": "Правка фактов",
+        "invalidPayload": "Ошибка формата JSON",
+        "revisionSaved": "Правка фактов сохранена",
+        "semantic": "Семантические объекты",
+        "bindings": "Привязки упоминаний",
+        "noBindings": "Нет ожидающих упоминаний",
+        "reasonPlaceholder": "Укажите причину решения",
+        "confirm": "Подтвердить",
+        "reject": "Отклонить",
+        "decisionRecorded": "Решение записано"
+      },
+      "issues": {
+        "title": "Список проблем",
+        "open": "Открытые",
+        "empty": "Проблем нет",
+        "reasonPlaceholder": "Укажите причину решения (обязательно)",
+        "severity": {
+          "blocker": "Блокер",
+          "confirm": "Требует подтверждения",
+          "warning": "Предупреждение"
+        },
+        "decision": {
+          "resolved": "Решено",
+          "accepted": "Принято",
+          "dismissed": "Отклонено"
+        }
+      },
+      "catalog": {
+        "title": "Заголовок",
+        "create": "Создать каталог",
+        "validate": "Проверить каталог",
+        "addItem": "Добавить элемент",
+        "edit": "Изменить",
+        "delete": "Удалить",
+        "cancel": "Отмена",
+        "save": "Сохранить",
+        "version": "Версия",
+        "itemsCount": "Элементы",
+        "lockedCount": "Заблокировано",
+        "validationIssues": "Ошибки проверки",
+        "empty": "Каталог отсутствует",
+        "createFailed": "Не удалось создать каталог",
+        "loadFailed": "Не удалось загрузить каталог",
+        "validateFailed": "Проверка не пройдена",
+        "saveFailed": "Не удалось сохранить",
+        "deleteFailed": "Не удалось удалить",
+        "created": "Каталог создан",
+        "deleted": "Элемент удалён",
+        "saved": "Элемент сохранён",
+        "valid": "Проверка пройдена",
+        "invalid": "Проверка не пройдена; исправьте проблемы",
+        "editTitle": "Редактировать элемент",
+        "addTitle": "Добавить элемент",
+        "episodeNumber": "№ серии",
+        "startOrderIndex": "№ начальной главы",
+        "endOrderIndex": "№ конечной главы",
+        "targetDurationSec": "Целевая длительность (сек)",
+        "note": "Заметка",
+        "lockedHint": "Заблокировано, изменение недоступно",
+        "status": {
+          "draft": "Черновик",
+          "valid": "Действителен",
+          "partially_locked": "Частично заблокирован",
+          "locked": "Заблокирован"
+        },
+        "itemStatus": {
+          "draft": "Черновик",
+          "valid": "Действителен",
+          "locked": "Заблокирован",
+          "reconfirm": "Требует проверки"
+        },
+        "rule": {
+          "CATALOG_RANGE_INVALID": "Недопустимый диапазон глав",
+          "CATALOG_OUT_OF_BOUNDS": "Вне диапазона партии",
+          "CATALOG_OVERLAP": "Диапазоны глав пересекаются",
+          "LOCKED_RANGE_OVERLAP": "Пересекается с заблокированным элементом",
+          "DUPLICATE_EPISODE_NUMBER": "Дубликат номера серии"
+        },
+        "titleField": "Заголовок"
+      },
+      "package": {
+        "title": "Пакет исходных данных серии",
+        "noCatalog": "Сначала создайте каталог серий",
+        "noItems": "Каталог пуст",
+        "noPackage": "Не собран",
+        "build": "Собрать пакет источника",
+        "review": "Подробности",
+        "lock": "Заблокировать",
+        "enterStage2": "Перейти к этапу 2",
+        "buildStarted": "Сборка запущена",
+        "buildFailed": "Не удалось запустить сборку",
+        "loadFailed": "Не удалось загрузить подробности",
+        "lockFailed": "Не удалось заблокировать",
+        "locked": "Пакет источника заблокирован",
+        "blockersOpen": "Есть нерешённые блокеры, блокировка невозможна",
+        "detailTitle": "Подробности пакета источника",
+        "episode": "Серия",
+        "range": "Диапазон глав",
+        "navigationSummary": "Сводка навигации",
+        "findings": "Результаты аудита",
+        "status": {
+          "building": "Сборка",
+          "build_failed": "Сборка не удалась",
+          "review_required": "Требуется проверка",
+          "blocked": "Заблокировано",
+          "locked_valid": "Заблокирован",
+          "rebuild_required": "Требуется пересборка",
+          "superseded": "Устарел"
+        },
+        "tabs": {
+          "summary": "Сводка",
+          "facts": "Факты",
+          "semantics": "Семантика",
+          "relations": "Связи",
+          "risks": "Принятые риски",
+          "manifest": "Зависимости"
+        }
+      }
+    },
+    "screenplayPipeline": {
+      "title": "Xianxia Сценарий Воркбенч",
+      "refresh": "Обновить",
+      "selectEpisode": "Выберите эпизод слева",
+      "loadingDetail": "Загрузка деталей…",
+      "noEpisodes": "Нет эпизодов",
+      "retry": "Повторить",
+      "regions": {
+        "1": "Очередь эпизодов",
+        "2": "Адаптация",
+        "3": "Сценарий",
+        "4": "Первая проверка",
+        "5": "Голосовой сценарий",
+        "6": "Вторая проверка / Доставка"
+      },
+      "episodeList": {
+        "episodeLabel": "Эпизод",
+        "listStatus": "Производный статус"
+      },
+      "generate": "Создать",
+      "regenerate": "Пересоздать",
+      "revise": "Редактировать",
+      "confirm": "Подтвердить",
+      "rollback": "Откатить",
+      "approve": "Одобрить",
+      "dismiss": "Отклонить",
+      "voiceDraft": {
+        "dirty": "Несохранённый черновик",
+        "discard": "Отменить черновик",
+        "save": "Сохранить черновик"
+      },
+      "listStatusLabels": {
+        "pending": "Ожидание",
+        "adaptation-review": "Проверка адаптации",
+        "adaptation-blocked": "Адаптация заблокирована",
+        "screenplay-review": "Проверка сценария",
+        "screenplay-blocked": "Сценарий заблокирован",
+        "screenplay-confirmed": "Сценарий подтверждён",
+        "voice-generating": "Генерация голоса",
+        "voice-review": "Проверка голоса",
+        "voice-blocked": "Голос заблокирован",
+        "stage2-complete": "Stage 2 завершён",
+        "unadaptable": "Не адаптируется"
+      }
+    },
     "scriptAgent": {
       "inputPlaceholder": "Введите текст",
       "chapterEvents": "События главы",
@@ -699,7 +935,13 @@
         "confirmDelete": "Подтвердить удаление",
         "scriptDeleted": "Скрипт удален."
       },
-      "reconnect": "Восстановить соединение"
+      "reconnect": "Восстановить соединение",
+      "sourceReconfirm": "Пакет источника обновлён. Выберите заблокированный пакет источника заново и подтвердите перепривязку для продолжения.",
+      "sourcePackageSelector": {
+        "title": "Выберите заблокированный пакет источника",
+        "reload": "Обновить",
+        "empty": "Нет заблокированных пакетов источника"
+      }
     },
     "cornerScape": {
       "batchSettings": "Пакетные настройки",

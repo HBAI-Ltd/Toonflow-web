@@ -13,6 +13,7 @@ interface Project {
   imageQuality: "1K" | "2K" | "4K" | "";
   mode: string;
   directorManual: string;
+  pipelineMode: "legacy" | "xianxia";
 }
 
 export default defineStore(

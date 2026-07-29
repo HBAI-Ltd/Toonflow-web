@@ -613,7 +613,10 @@
         "directorManualName": "Director's Manual Name",
         "directorManualNamePh": "Enter Director's Manual name",
         "directorFile": "Director's Manual Document",
-        "directorManualCover": "Director's Manual Cover"
+        "directorManualCover": "Director's Manual Cover",
+        "pipelineMode": "Pipeline",
+        "pipelineLegacy": "Classic",
+        "pipelineXianxia": "Xianxia Source-Foundation"
       },
       "msg": {
         "fetchFailed": "Failed to fetch project list",
@@ -777,6 +780,239 @@
         "analyzing": "Analyzing events"
       }
     },
+    "sourceFoundation": {
+      "steps": {
+        "source": "Source & Batches",
+        "facts": "Facts & Entities",
+        "catalog": "Episode Catalog",
+        "package": "Source Package"
+      },
+      "conflictRefresh": "Data was updated by another operation and has been refreshed for you",
+      "revisionHistory": {
+        "title": "Chapter Revision History",
+        "useAsBase": "Use as revision base"
+      },
+      "source": {
+        "batchTitle": "Source Batches",
+        "chapterTitle": "Chapter List",
+        "import": "Import Source",
+        "createBatch": "Create Batch",
+        "start": "Start",
+        "resume": "Resume",
+        "retry": "Retry Failed",
+        "cancel": "Cancel",
+        "range": "Chapter Range",
+        "pending": "Pending",
+        "running": "Running",
+        "succeeded": "Succeeded",
+        "failed": "Failed",
+        "startChapterIndex": "Start Chapter No.",
+        "endChapterIndex": "End Chapter No.",
+        "status": {
+          "draft": "Draft",
+          "running": "Running",
+          "completed": "Completed",
+          "partial_failed": "Partially Failed",
+          "canceling": "Canceling",
+          "canceled": "Canceled",
+          "interrupted": "Interrupted",
+          "archived": "Archived"
+        },
+        "rangeTooLarge": "A single batch cannot exceed 50 chapters",
+        "batchCreated": "Batch created",
+        "importTitle": "Import Source Chapters",
+        "dragUpload": "Click or drag a file to upload",
+        "uploadHint": "Supports txt / docx, up to 10MB",
+        "or": "or",
+        "pastePlaceholder": "Paste the novel text here…",
+        "parsedChapters": "{count} chapters parsed",
+        "submitImport": "Submit Import",
+        "docNotSupported": ".doc is not supported, please convert to .docx",
+        "unsupportedType": "Unsupported file type",
+        "fileTooLarge": "File too large (>10MB)",
+        "parseFailed": "File parsing failed",
+        "importSuccess": "Import succeeded",
+        "history": "Version History",
+        "edit": "Edit",
+        "editTitle": "Revise Chapter Text",
+        "noCurrentVersion": "No version for this chapter yet",
+        "impactConfirm": "Confirm Revision (will invalidate downstream)",
+        "revisionSaved": "Revision saved",
+        "conflictRefresh": "Data was updated by another operation and has been refreshed for you"
+      },
+      "facts": {
+        "chapterFacts": "Chapter Facts",
+        "timeline": "Fact Timeline",
+        "selectChapterHint": "Select a chapter on the left to view its facts",
+        "history": "Version History",
+        "sourceRevision": "Source Revision Metadata",
+        "sourceVersion": "Source Version",
+        "payload": "Facts Payload (JSON)",
+        "revise": "Manual Revision",
+        "reviseTitle": "Revise Facts",
+        "invalidPayload": "Invalid JSON format",
+        "revisionSaved": "Fact revision saved",
+        "semantic": "Semantic Objects",
+        "bindings": "Mention Bindings",
+        "noBindings": "No pending mentions",
+        "reasonPlaceholder": "Please enter the decision reason",
+        "confirm": "Confirm",
+        "reject": "Reject",
+        "decisionRecorded": "Decision recorded"
+      },
+      "issues": {
+        "title": "Issue List",
+        "open": "Open",
+        "empty": "No issues",
+        "reasonPlaceholder": "Please enter the decision reason (required)",
+        "severity": {
+          "blocker": "Blocker",
+          "confirm": "Needs Confirmation",
+          "warning": "Warning"
+        },
+        "decision": {
+          "resolved": "Resolved",
+          "accepted": "Accepted",
+          "dismissed": "Dismissed"
+        }
+      },
+      "catalog": {
+        "title": "Title",
+        "create": "Create Catalog",
+        "validate": "Validate Catalog",
+        "addItem": "Add Item",
+        "edit": "Edit",
+        "delete": "Delete",
+        "cancel": "Cancel",
+        "save": "Save",
+        "version": "Version",
+        "itemsCount": "Items",
+        "lockedCount": "Locked",
+        "validationIssues": "Validation Issues",
+        "empty": "No catalog yet",
+        "createFailed": "Failed to create catalog",
+        "loadFailed": "Failed to load catalog",
+        "validateFailed": "Validation failed",
+        "saveFailed": "Failed to save",
+        "deleteFailed": "Failed to delete",
+        "created": "Catalog created",
+        "deleted": "Item deleted",
+        "saved": "Item saved",
+        "valid": "Validation passed",
+        "invalid": "Validation failed; please fix the issues",
+        "editTitle": "Edit Item",
+        "addTitle": "Add Item",
+        "episodeNumber": "Episode No.",
+        "startOrderIndex": "Start Chapter No.",
+        "endOrderIndex": "End Chapter No.",
+        "targetDurationSec": "Target Duration (sec)",
+        "note": "Note",
+        "lockedHint": "Locked and cannot be modified",
+        "status": {
+          "draft": "Draft",
+          "valid": "Valid",
+          "partially_locked": "Partially Locked",
+          "locked": "Locked"
+        },
+        "itemStatus": {
+          "draft": "Draft",
+          "valid": "Valid",
+          "locked": "Locked",
+          "reconfirm": "Needs Review"
+        },
+        "rule": {
+          "CATALOG_RANGE_INVALID": "Invalid chapter range",
+          "CATALOG_OUT_OF_BOUNDS": "Out of batch range",
+          "CATALOG_OVERLAP": "Chapter range overlaps",
+          "LOCKED_RANGE_OVERLAP": "Overlaps a locked item range",
+          "DUPLICATE_EPISODE_NUMBER": "Duplicate episode number"
+        },
+        "titleField": "Title"
+      },
+      "package": {
+        "title": "Episode Source Package",
+        "noCatalog": "Please create the episode catalog first",
+        "noItems": "Catalog is empty",
+        "noPackage": "Not built",
+        "build": "Build Source Package",
+        "review": "View Details",
+        "lock": "Lock",
+        "enterStage2": "Enter Stage 2",
+        "buildStarted": "Build started",
+        "buildFailed": "Failed to start build",
+        "loadFailed": "Failed to load details",
+        "lockFailed": "Failed to lock",
+        "locked": "Source package locked",
+        "blockersOpen": "Unresolved blocking issues prevent locking",
+        "detailTitle": "Source Package Details",
+        "episode": "Episode",
+        "range": "Chapter Range",
+        "navigationSummary": "Navigation Summary",
+        "findings": "Audit Findings",
+        "status": {
+          "building": "Building",
+          "build_failed": "Build Failed",
+          "review_required": "Review Required",
+          "blocked": "Blocked",
+          "locked_valid": "Locked",
+          "rebuild_required": "Rebuild Required",
+          "superseded": "Superseded"
+        },
+        "tabs": {
+          "summary": "Summary",
+          "facts": "Facts",
+          "semantics": "Semantics",
+          "relations": "Relations",
+          "risks": "Accepted Risks",
+          "manifest": "Dependencies"
+        }
+      }
+    },
+    "screenplayPipeline": {
+      "title": "Xianxia Screenplay Workbench",
+      "refresh": "Refresh",
+      "selectEpisode": "Select an episode on the left",
+      "loadingDetail": "Loading detail…",
+      "noEpisodes": "No episodes",
+      "retry": "Retry",
+      "regions": {
+        "1": "Episode Queue",
+        "2": "Adaptation Design",
+        "3": "Screenplay",
+        "4": "First Audit",
+        "5": "Voice Script",
+        "6": "Second Audit / Delivery"
+      },
+      "episodeList": {
+        "episodeLabel": "Episode",
+        "listStatus": "Derived Status"
+      },
+      "generate": "Generate",
+      "regenerate": "Regenerate",
+      "revise": "Revise",
+      "confirm": "Confirm",
+      "rollback": "Rollback",
+      "approve": "Approve",
+      "dismiss": "Dismiss",
+      "voiceDraft": {
+        "dirty": "Unsaved draft",
+        "discard": "Discard draft",
+        "save": "Save draft"
+      },
+      "listStatusLabels": {
+        "pending": "Pending",
+        "adaptation-review": "Adaptation Review",
+        "adaptation-blocked": "Adaptation Blocked",
+        "screenplay-review": "Screenplay Review",
+        "screenplay-blocked": "Screenplay Blocked",
+        "screenplay-confirmed": "Screenplay Confirmed",
+        "voice-generating": "Voice Generating",
+        "voice-review": "Voice Review",
+        "voice-blocked": "Voice Blocked",
+        "stage2-complete": "Stage 2 Complete",
+        "unadaptable": "Unadaptable"
+      }
+    },
     "scriptAgent": {
       "inputPlaceholder": "Please enter content",
       "chapterEvents": "Chapter Events",
@@ -837,6 +1073,12 @@
         "light": "Light Think",
         "deep": "Deep Think",
         "extreme": "Extreme Think"
+      },
+      "sourceReconfirm": "The source package has been updated. Please re-select a locked source package and confirm rebinding to continue.",
+      "sourcePackageSelector": {
+        "title": "Select a Locked Source Package",
+        "reload": "Reload",
+        "empty": "No locked source packages"
       }
     },
     "cornerScape": {
