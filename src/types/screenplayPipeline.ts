@@ -62,6 +62,8 @@ export interface ArtifactVersion {
   supersedesId: string | null;
   inputFingerprint: string;
   contentHash: string | null;
+  /** 完整 Payload JSON 字符串（后端返回全列；详情端点含 payload，用于编辑草稿）。 */
+  payload?: string | null;
   createdBy: number | null;
   createdAt: number;
   lockedBy: number | null;

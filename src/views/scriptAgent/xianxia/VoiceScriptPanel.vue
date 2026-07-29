@@ -2,21 +2,41 @@
 // Region 5: 声音脚本编辑。
 // 只读字段：voiceSegmentId / screenplayBeatId / speakerRole / speakerSemanticObjectId / omniscientGrantId / lineage。
 // 可编辑字段：text + performance（emotion / pace / pauses / emphasis）。
-// 提交前比较服务端 content hash；提交完整 Payload + expectedRowVersion + 必填 reason。
+// 修复 #5：草稿从「shown 版本 payload」初始化（不再始终清空）；提交时回写完整 VoiceScriptPayloadV1，
+// 服务端用锁定基线覆盖只读字段并对齐 edit 字段（§24.3）。
 import { computed, ref, watch } from "vue";
 import { MessagePlugin } from "tdesign-vue-next";
 import type { VoiceScriptVersion } from "@/types/screenplayPipeline";
 import VoiceSegmentEditor from "./VoiceSegmentEditor.vue";
 
+interface VoiceSegmentPerf {
+  emotion: string | null;
+  pace: "slow" | "normal" | "fast" | null;
+  pauses: Array<{ afterText: string; strength: "short" | "medium" | "long" }>;
+  emphasis: string[];
+}
 interface VoiceSegmentDraft {
   voiceSegmentId: string;
   text: string;
-  performance: {
-    emotion: string | null;
-    pace: "slow" | "normal" | "fast" | null;
-    pauses: Array<{ afterText: string; strength: "short" | "medium" | "long" }>;
-    emphasis: string[];
-  };
+  performance: VoiceSegmentPerf;
+}
+interface VoiceScriptPayloadV1Dto {
+  schemaVersion: "voice-script-v1";
+  screenplayVersionId: string;
+  segments: Array<{
+    voiceSegmentId: string;
+    order: number;
+    screenplayBeatId: string;
+    type: string;
+    speakerRole: string;
+    speakerSemanticObjectId: string | null;
+    text: string;
+    performance: VoiceSegmentPerf;
+    estimatedDurationMs: number | null;
+    omniscientGrantId: string | null;
+    lineage: { splitFromId: string | null; mergedFromIds: string[]; replacesId: string | null; tombstone: boolean };
+  }>;
+  [key: string]: unknown;
 }
 
 const props = defineProps<{
@@ -42,15 +62,36 @@ const reasonDialog = ref(false);
 const rollbackDialog = ref(false);
 const reasonText = ref("");
 
-// Initialize draft from working version when it changes.
+// 修复 #5：从 shown 版本的 payload 初始化草稿（每个 segment 取可编辑字段 text/performance）。
+// 版本或 contentHash 变化时才重建草稿，避免无谓清空用户编辑。
 watch(
-  () => [props.working?.id, props.working?.contentHash],
+  () => [shown.value?.id, shown.value?.contentHash],
   () => {
-    draftSegments.value = [];
+    draftSegments.value = parseDraftSegments(shown.value);
     draftDirty.value = false;
   },
   { immediate: true },
 );
+
+function parseDraftSegments(version: VoiceScriptVersion | null): VoiceSegmentDraft[] {
+  if (!version?.payload) return [];
+  try {
+    const parsed = JSON.parse(String(version.payload)) as VoiceScriptPayloadV1Dto;
+    if (!Array.isArray(parsed.segments)) return [];
+    return parsed.segments.map((s) => ({
+      voiceSegmentId: s.voiceSegmentId,
+      text: s.text,
+      performance: {
+        emotion: s.performance?.emotion ?? null,
+        pace: s.performance?.pace ?? null,
+        pauses: Array.isArray(s.performance?.pauses) ? s.performance!.pauses : [],
+        emphasis: Array.isArray(s.performance?.emphasis) ? s.performance!.emphasis : [],
+      },
+    }));
+  } catch {
+    return [];
+  }
+}
 
 function onSegmentUpdate(idx: number, next: VoiceSegmentDraft): void {
   draftSegments.value = draftSegments.value.map((s, i) => (i === idx ? next : s));
@@ -69,14 +110,31 @@ function onRollback(): void {
   rollbackDialog.value = true;
 }
 
+// 修复 #5：用 shown 版本的完整 payload 作为基底，仅把草稿里的 text/performance 回写到匹配的
+// voiceSegmentId；只读字段与 soundCues/beatCoverage/changeManifest 由后端对齐/重建。
 async function onReviseSubmit(): Promise<void> {
   if (!reasonText.value.trim()) {
     MessagePlugin.warning("修订原因不能为空");
     return;
   }
+  if (!shown.value?.payload) {
+    MessagePlugin.error("缺少可修订的 voice payload");
+    return;
+  }
+  let base: VoiceScriptPayloadV1Dto;
+  try {
+    base = JSON.parse(String(shown.value.payload)) as VoiceScriptPayloadV1Dto;
+  } catch {
+    MessagePlugin.error("voice payload 解析失败");
+    return;
+  }
+  const byId = new Map(draftSegments.value.map((s) => [s.voiceSegmentId, s]));
+  const segments = (Array.isArray(base.segments) ? base.segments : []).map((seg) => {
+    const edit = byId.get(seg.voiceSegmentId);
+    return edit ? { ...seg, text: edit.text, performance: edit.performance } : seg;
+  });
   reasonDialog.value = false;
-  // 提交完整 Payload；这里使用工作版本的 payload 作为基础，仅做骨架性提交。
-  emit("revise", { segments: draftSegments.value }, reasonText.value);
+  emit("revise", { ...base, segments }, reasonText.value);
   reasonText.value = "";
 }
 
@@ -136,7 +194,7 @@ async function onRollbackSubmit(): Promise<void> {
       </div>
 
       <div v-if="draftSegments.length === 0" class="hint">
-        <p>该版本无 segment 草稿（骨架视图）。真实场景由后端 detail 返回完整 VoiceScriptPayloadV1。</p>
+        <p>该版本暂无可编辑的 voice segment（payload 为空或解析失败）。生成或重做后将自动载入草稿。</p>
       </div>
       <div v-else class="segmentList">
         <VoiceSegmentEditor

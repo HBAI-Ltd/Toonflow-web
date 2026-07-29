@@ -42,6 +42,15 @@ const regionLabels: Record<WorkbenchRegion, string> = {
   6: "第二次审核 / 交付",
 };
 
+// 修复 #5：六区核心路径应使用「working」指针（在途工作候选）而非仅 active 指针。
+// active* 仅在确认后写入，确认前（reviewing/draft）只能用 working* 触达。
+const workingScreenplay = computed(
+  () => detail.value?.workingScreenplay ?? detail.value?.activeScreenplay ?? null,
+);
+const workingVoice = computed(
+  () => detail.value?.workingVoice ?? detail.value?.activeVoice ?? null,
+);
+
 const showEmpty = computed(() => !loading.value && episodes.value.length === 0);
 
 const historyVisible = ref(false);
@@ -107,14 +116,19 @@ async function onScreenplayRegenerate(reason: string, subjectKind: "content" | "
 }
 
 async function onScreenplayConfirm(reason: string): Promise<void> {
-  if (!detail.value?.currentFirstApproval) return;
+  // 修复 #5：以「working/active 剧本」为准，而非要求已有的 first approval（循环前置）。
+  const sp = workingScreenplay.value;
+  if (!sp?.id || !sp?.inputFingerprint) {
+    MessagePlugin.error("缺少可确认的剧本或其 inputFingerprint");
+    return;
+  }
   try {
-    await screenplayPipelineApi.confirmScreenplay(detail.value.episode.id, {
+    await screenplayPipelineApi.confirmScreenplay(detail.value!.episode.id, {
       projectId: props.projectId,
-      adaptationDesignVersionId: detail.value.episode.activeAdaptationDesignVersionId ?? "",
-      screenplayVersionId: detail.value.episode.activeScreenplayVersionId ?? "",
-      expectedRowVersion: detail.value.episode.rowVersion,
-      expectedInputFingerprint: detail.value.activeScreenplay?.inputFingerprint ?? "",
+      adaptationDesignVersionId: detail.value!.episode.activeAdaptationDesignVersionId ?? "",
+      screenplayVersionId: sp.id,
+      expectedRowVersion: detail.value!.episode.rowVersion,
+      expectedInputFingerprint: sp.inputFingerprint,
       reason,
     });
     MessagePlugin.success("第一次确认成功");
@@ -126,10 +140,16 @@ async function onScreenplayConfirm(reason: string): Promise<void> {
 
 async function onScreenplayRevise(payload: unknown, reason: string): Promise<void> {
   if (!detail.value) return;
+  const sp = workingScreenplay.value;
+  const screenplayVersionId = sp?.id ?? detail.value.episode.activeScreenplayVersionId ?? "";
+  if (!screenplayVersionId) {
+    MessagePlugin.error("缺少可修订的剧本版本");
+    return;
+  }
   try {
     await screenplayPipelineApi.reviseScreenplay(detail.value.episode.id, {
       projectId: props.projectId,
-      screenplayVersionId: detail.value.episode.activeScreenplayVersionId ?? "",
+      screenplayVersionId,
       payload,
       expectedRowVersion: detail.value.episode.rowVersion,
       reason,
@@ -155,14 +175,16 @@ async function onDecideIssue(issueId: string, decision: "resolved" | "accepted" 
   }
 }
 
-// Voice handlers (Region 5).
+// Voice handlers (Region 5). 修复 #5：全部改用 working* 指针（确认前即可触达），
+// active* 仅在二次确认后写入，不能作为前置必要条件。
 async function onVoiceGenerate(reason: string): Promise<void> {
-  if (!detail.value?.episode.activeScreenplayVersionId) return;
+  const sp = workingScreenplay.value;
+  if (!sp?.id) return;
   try {
-    await screenplayPipelineApi.generateVoice(detail.value.episode.id, {
+    await screenplayPipelineApi.generateVoice(detail.value!.episode.id, {
       projectId: props.projectId,
-      screenplayVersionId: detail.value.episode.activeScreenplayVersionId,
-      expectedRowVersion: detail.value.episode.rowVersion,
+      screenplayVersionId: sp.id,
+      expectedRowVersion: detail.value!.episode.rowVersion,
       reason,
     });
     MessagePlugin.success("声音生成已发起");
@@ -174,13 +196,14 @@ async function onVoiceGenerate(reason: string): Promise<void> {
 }
 
 async function onVoiceRegenerate(reason: string, subjectKind: "content" | "audit"): Promise<void> {
-  if (!detail.value?.episode.activeScreenplayVersionId) return;
+  const sp = workingScreenplay.value;
+  if (!sp?.id) return;
   try {
-    await screenplayPipelineApi.regenerateVoice(detail.value.episode.id, {
+    await screenplayPipelineApi.regenerateVoice(detail.value!.episode.id, {
       projectId: props.projectId,
-      screenplayVersionId: detail.value.episode.activeScreenplayVersionId,
+      screenplayVersionId: sp.id,
       reason,
-      expectedRowVersion: detail.value.episode.rowVersion,
+      expectedRowVersion: detail.value!.episode.rowVersion,
       subjectKind,
     });
     MessagePlugin.success("声音重做已发起");
@@ -192,14 +215,15 @@ async function onVoiceRegenerate(reason: string, subjectKind: "content" | "audit
 }
 
 async function onVoiceRevise(payload: unknown, reason: string): Promise<void> {
-  if (!detail.value?.episode.activeVoiceScriptVersionId || !detail.value.activeVoice?.contentHash) return;
+  const voice = workingVoice.value;
+  if (!voice?.id || !voice?.contentHash) return;
   try {
-    await screenplayPipelineApi.reviseVoice(detail.value.episode.id, {
+    await screenplayPipelineApi.reviseVoice(detail.value!.episode.id, {
       projectId: props.projectId,
-      voiceScriptVersionId: detail.value.episode.activeVoiceScriptVersionId,
+      voiceScriptVersionId: voice.id,
       payload,
-      expectedRowVersion: detail.value.episode.rowVersion,
-      expectedContentHash: detail.value.activeVoice.contentHash,
+      expectedRowVersion: detail.value!.episode.rowVersion,
+      expectedContentHash: voice.contentHash,
       reason,
     });
     MessagePlugin.success("声音修订已提交");
@@ -210,13 +234,15 @@ async function onVoiceRevise(payload: unknown, reason: string): Promise<void> {
 }
 
 async function onVoiceRollback(reason: string): Promise<void> {
-  if (!detail.value?.episode.activeVoiceScriptVersionId || !detail.value.activeVoice?.contentHash) return;
+  const voice = workingVoice.value;
+  if (!voice?.id || !voice?.contentHash) return;
   try {
-    await screenplayPipelineApi.rollbackToScreenplay(detail.value.episode.id, {
+    await screenplayPipelineApi.rollbackToScreenplay(detail.value!.episode.id, {
       projectId: props.projectId,
-      screenplayVersionId: detail.value.workingScreenplay?.id ?? detail.value.episode.activeScreenplayVersionId ?? "",
-      payload: detail.value.workingScreenplay ?? {},
-      expectedRowVersion: detail.value.episode.rowVersion,
+      // 回退到「当前正在处理的剧本」派生新版本；回退时剧本 payload 由后端从源包重建。
+      screenplayVersionId: workingScreenplay.value?.id ?? detail.value!.episode.activeScreenplayVersionId ?? "",
+      payload: workingScreenplay.value?.payload ? JSON.parse(String(workingScreenplay.value.payload)) : {},
+      expectedRowVersion: detail.value!.episode.rowVersion,
       reason,
     });
     MessagePlugin.success("已回退到剧本");
@@ -227,17 +253,16 @@ async function onVoiceRollback(reason: string): Promise<void> {
 }
 
 async function onVoiceConfirm(reason: string): Promise<void> {
-  if (!detail.value?.episode.activeVoiceScriptVersionId) return;
-  const voice = detail.value.workingVoice ?? detail.value.activeVoice;
-  if (!voice?.contentHash || !voice?.inputFingerprint) {
+  const voice = workingVoice.value;
+  if (!voice?.id || !voice?.contentHash || !voice?.inputFingerprint) {
     MessagePlugin.error("缺少 voice inputFingerprint 或 contentHash");
     return;
   }
   try {
-    await screenplayPipelineApi.confirmVoice(detail.value.episode.id, {
+    await screenplayPipelineApi.confirmVoice(detail.value!.episode.id, {
       projectId: props.projectId,
-      voiceScriptVersionId: detail.value.episode.activeVoiceScriptVersionId,
-      expectedRowVersion: detail.value.episode.rowVersion,
+      voiceScriptVersionId: voice.id,
+      expectedRowVersion: detail.value!.episode.rowVersion,
       expectedInputFingerprint: voice.inputFingerprint,
       expectedContentHash: voice.contentHash,
       reason,
