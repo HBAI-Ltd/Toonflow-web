@@ -1063,6 +1063,51 @@
         }
       }
     },
+    "screenplayPipeline": {
+      "title": "仙侠剧本工作台",
+      "refresh": "刷新",
+      "selectEpisode": "请在左侧选择一个 Episode",
+      "loadingDetail": "加载详情…",
+      "noEpisodes": "暂无 Episode",
+      "retry": "重试",
+      "regions": {
+        "1": "Episode 队列",
+        "2": "改编设计",
+        "3": "剧本",
+        "4": "第一次审核",
+        "5": "声音脚本",
+        "6": "第二次审核 / 交付"
+      },
+      "episodeList": {
+        "episodeLabel": "Episode",
+        "listStatus": "派生状态"
+      },
+      "generate": "生成",
+      "regenerate": "重做",
+      "revise": "修订",
+      "confirm": "确认",
+      "rollback": "回退",
+      "approve": "通过",
+      "dismiss": "驳回",
+      "voiceDraft": {
+        "dirty": "草稿未保存",
+        "discard": "丢弃草稿",
+        "save": "保存草稿"
+      },
+      "listStatusLabels": {
+        "pending": "待开始",
+        "adaptation-review": "改编审核",
+        "adaptation-blocked": "改编阻塞",
+        "screenplay-review": "剧本审核",
+        "screenplay-blocked": "剧本阻塞",
+        "screenplay-confirmed": "剧本已确认",
+        "voice-generating": "声音生成中",
+        "voice-review": "声音审核",
+        "voice-blocked": "声音阻塞",
+        "stage2-complete": "Stage 2 完成",
+        "unadaptable": "不可改编"
+      }
+    },
     "scriptAgent": {
       "inputPlaceholder": "请输入内容",
       "chapterEvents": "章节事件",

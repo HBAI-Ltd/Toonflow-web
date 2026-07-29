@@ -968,6 +968,51 @@
         }
       }
     },
+    "screenplayPipeline": {
+      "title": "Xianxia Screenplay Workbench",
+      "refresh": "Refresh",
+      "selectEpisode": "Select an episode on the left",
+      "loadingDetail": "Loading detail…",
+      "noEpisodes": "No episodes",
+      "retry": "Retry",
+      "regions": {
+        "1": "Episode Queue",
+        "2": "Adaptation Design",
+        "3": "Screenplay",
+        "4": "First Audit",
+        "5": "Voice Script",
+        "6": "Second Audit / Delivery"
+      },
+      "episodeList": {
+        "episodeLabel": "Episode",
+        "listStatus": "Derived Status"
+      },
+      "generate": "Generate",
+      "regenerate": "Regenerate",
+      "revise": "Revise",
+      "confirm": "Confirm",
+      "rollback": "Rollback",
+      "approve": "Approve",
+      "dismiss": "Dismiss",
+      "voiceDraft": {
+        "dirty": "Unsaved draft",
+        "discard": "Discard draft",
+        "save": "Save draft"
+      },
+      "listStatusLabels": {
+        "pending": "Pending",
+        "adaptation-review": "Adaptation Review",
+        "adaptation-blocked": "Adaptation Blocked",
+        "screenplay-review": "Screenplay Review",
+        "screenplay-blocked": "Screenplay Blocked",
+        "screenplay-confirmed": "Screenplay Confirmed",
+        "voice-generating": "Voice Generating",
+        "voice-review": "Voice Review",
+        "voice-blocked": "Voice Blocked",
+        "stage2-complete": "Stage 2 Complete",
+        "unadaptable": "Unadaptable"
+      }
+    },
     "scriptAgent": {
       "inputPlaceholder": "Please enter content",
       "chapterEvents": "Chapter Events",

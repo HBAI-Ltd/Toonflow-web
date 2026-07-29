@@ -1,5 +1,8 @@
 <template>
-  <div class="scriptAgent">
+  <ScreenplayPipelineWorkbench
+    v-if="isXianxia && project?.id"
+    :project-id="Number(project.id)" />
+  <div v-else class="scriptAgent">
     <SourcePackageSelector
       v-if="isXianxia"
       :projectId="project?.id ?? ''"
@@ -228,6 +231,7 @@ const { project } = storeToRefs(projectStore());
 import editMdPreivew from "@/components/editMdPreivew.vue";
 import scriptAgentStore from "@/stores/scriptAgent";
 import SourcePackageSelector from "./components/SourcePackageSelector.vue";
+import ScreenplayPipelineWorkbench from "./xianxia/ScreenplayPipelineWorkbench.vue";
 import { sourceFoundationApi } from "@/api/sourceFoundation";
 
 const isXianxia = computed(() => project.value?.pipelineMode === "xianxia");

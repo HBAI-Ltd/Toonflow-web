@@ -847,6 +847,51 @@
         }
       }
     },
+    "screenplayPipeline": {
+      "title": "仙俠劇本工作台",
+      "refresh": "重新整理",
+      "selectEpisode": "請在左側選擇一個 Episode",
+      "loadingDetail": "載入詳細資訊…",
+      "noEpisodes": "暫無 Episode",
+      "retry": "重試",
+      "regions": {
+        "1": "Episode 佇列",
+        "2": "改編設計",
+        "3": "劇本",
+        "4": "第一次審核",
+        "5": "聲音腳本",
+        "6": "第二次審核 / 交付"
+      },
+      "episodeList": {
+        "episodeLabel": "Episode",
+        "listStatus": "衍生狀態"
+      },
+      "generate": "生成",
+      "regenerate": "重做",
+      "revise": "修訂",
+      "confirm": "確認",
+      "rollback": "回退",
+      "approve": "通過",
+      "dismiss": "駁回",
+      "voiceDraft": {
+        "dirty": "草稿未儲存",
+        "discard": "捨棄草稿",
+        "save": "儲存草稿"
+      },
+      "listStatusLabels": {
+        "pending": "待開始",
+        "adaptation-review": "改編審核",
+        "adaptation-blocked": "改編阻塞",
+        "screenplay-review": "劇本審核",
+        "screenplay-blocked": "劇本阻塞",
+        "screenplay-confirmed": "劇本已確認",
+        "voice-generating": "聲音生成中",
+        "voice-review": "聲音審核",
+        "voice-blocked": "聲音阻塞",
+        "stage2-complete": "Stage 2 完成",
+        "unadaptable": "不可改編"
+      }
+    },
     "scriptAgent": {
       "inputPlaceholder": "請輸入內容",
       "chapterEvents": "章節事件",

@@ -844,6 +844,51 @@
         }
       }
     },
+    "screenplayPipeline": {
+      "title": "โต๊ะทำงานบท Xianxia",
+      "refresh": "รีเฟรช",
+      "selectEpisode": "เลือก Episode ทางซ้าย",
+      "loadingDetail": "กำลังโหลดรายละเอียด…",
+      "noEpisodes": "ไม่มี Episode",
+      "retry": "ลองใหม่",
+      "regions": {
+        "1": "คิว Episode",
+        "2": "การดัดแปลง",
+        "3": "บท",
+        "4": "การตรวจสอบครั้งที่ 1",
+        "5": "สคริปต์เสียง",
+        "6": "การตรวจสอบครั้งที่ 2 / ส่งมอบ"
+      },
+      "episodeList": {
+        "episodeLabel": "Episode",
+        "listStatus": "สถานะที่ได้รับ"
+      },
+      "generate": "สร้าง",
+      "regenerate": "สร้างใหม่",
+      "revise": "ปรับปรุง",
+      "confirm": "ยืนยัน",
+      "rollback": "ย้อนกลับ",
+      "approve": "อนุมัติ",
+      "dismiss": "ปฏิเสธ",
+      "voiceDraft": {
+        "dirty": "ฉบับร่างที่ยังไม่ได้บันทึก",
+        "discard": "ละทิ้งฉบับร่าง",
+        "save": "บันทึกฉบับร่าง"
+      },
+      "listStatusLabels": {
+        "pending": "รอดำเนินการ",
+        "adaptation-review": "ตรวจสอบการดัดแปลง",
+        "adaptation-blocked": "การดัดแปลงถูกบล็อก",
+        "screenplay-review": "ตรวจสอบบท",
+        "screenplay-blocked": "บทถูกบล็อก",
+        "screenplay-confirmed": "ยืนยันบทแล้ว",
+        "voice-generating": "กำลังสร้างเสียง",
+        "voice-review": "ตรวจสอบเสียง",
+        "voice-blocked": "เสียงถูกบล็อก",
+        "stage2-complete": "Stage 2 เสร็จสมบูรณ์",
+        "unadaptable": "ปรับไม่ได้"
+      }
+    },
     "scriptAgent": {
       "inputPlaceholder": "โปรดกรอกเนื้อหา",
       "chapterEvents": "เหตุการณ์ในบท",

@@ -843,6 +843,51 @@
         }
       }
     },
+    "screenplayPipeline": {
+      "title": "Xianxia Сценарий Воркбенч",
+      "refresh": "Обновить",
+      "selectEpisode": "Выберите эпизод слева",
+      "loadingDetail": "Загрузка деталей…",
+      "noEpisodes": "Нет эпизодов",
+      "retry": "Повторить",
+      "regions": {
+        "1": "Очередь эпизодов",
+        "2": "Адаптация",
+        "3": "Сценарий",
+        "4": "Первая проверка",
+        "5": "Голосовой сценарий",
+        "6": "Вторая проверка / Доставка"
+      },
+      "episodeList": {
+        "episodeLabel": "Эпизод",
+        "listStatus": "Производный статус"
+      },
+      "generate": "Создать",
+      "regenerate": "Пересоздать",
+      "revise": "Редактировать",
+      "confirm": "Подтвердить",
+      "rollback": "Откатить",
+      "approve": "Одобрить",
+      "dismiss": "Отклонить",
+      "voiceDraft": {
+        "dirty": "Несохранённый черновик",
+        "discard": "Отменить черновик",
+        "save": "Сохранить черновик"
+      },
+      "listStatusLabels": {
+        "pending": "Ожидание",
+        "adaptation-review": "Проверка адаптации",
+        "adaptation-blocked": "Адаптация заблокирована",
+        "screenplay-review": "Проверка сценария",
+        "screenplay-blocked": "Сценарий заблокирован",
+        "screenplay-confirmed": "Сценарий подтверждён",
+        "voice-generating": "Генерация голоса",
+        "voice-review": "Проверка голоса",
+        "voice-blocked": "Голос заблокирован",
+        "stage2-complete": "Stage 2 завершён",
+        "unadaptable": "Не адаптируется"
+      }
+    },
     "scriptAgent": {
       "inputPlaceholder": "Введите текст",
       "chapterEvents": "События главы",

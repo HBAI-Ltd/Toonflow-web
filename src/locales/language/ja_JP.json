@@ -843,6 +843,51 @@
         }
       }
     },
+    "screenplayPipeline": {
+      "title": "仙侠脚本ワークベンチ",
+      "refresh": "更新",
+      "selectEpisode": "左側でエピソードを選択してください",
+      "loadingDetail": "詳細を読み込み中…",
+      "noEpisodes": "エピソードなし",
+      "retry": "再試行",
+      "regions": {
+        "1": "エピソードキュー",
+        "2": "アダプテーション設計",
+        "3": "脚本",
+        "4": "第一次審査",
+        "5": "ボイススクリプト",
+        "6": "第二次審査 / 配信"
+      },
+      "episodeList": {
+        "episodeLabel": "エピソード",
+        "listStatus": "派生ステータス"
+      },
+      "generate": "生成",
+      "regenerate": "再生成",
+      "revise": "改訂",
+      "confirm": "確認",
+      "rollback": "ロールバック",
+      "approve": "承認",
+      "dismiss": "却下",
+      "voiceDraft": {
+        "dirty": "未保存の下書き",
+        "discard": "下書きを破棄",
+        "save": "下書きを保存"
+      },
+      "listStatusLabels": {
+        "pending": "未開始",
+        "adaptation-review": "改编審査中",
+        "adaptation-blocked": "改编ブロック",
+        "screenplay-review": "脚本審査中",
+        "screenplay-blocked": "脚本ブロック",
+        "screenplay-confirmed": "脚本確認済",
+        "voice-generating": "ボイス生成中",
+        "voice-review": "ボイス審査",
+        "voice-blocked": "ボイスブロック",
+        "stage2-complete": "Stage 2 完了",
+        "unadaptable": "改编不可"
+      }
+    },
     "scriptAgent": {
       "inputPlaceholder": "内容を入力してください",
       "chapterEvents": "章のイベント",

@@ -834,6 +834,51 @@
         }
       }
     },
+    "screenplayPipeline": {
+      "title": "Bàn làm việc kịch bản Xianxia",
+      "refresh": "Làm mới",
+      "selectEpisode": "Hãy chọn một Episode ở bên trái",
+      "loadingDetail": "Đang tải chi tiết…",
+      "noEpisodes": "Không có Episode",
+      "retry": "Thử lại",
+      "regions": {
+        "1": "Hàng đợi Episode",
+        "2": "Thiết kế chuyển thể",
+        "3": "Kịch bản",
+        "4": "Kiểm duyệt lần 1",
+        "5": "Kịch bản lồng tiếng",
+        "6": "Kiểm duyệt lần 2 / Bàn giao"
+      },
+      "episodeList": {
+        "episodeLabel": "Episode",
+        "listStatus": "Trạng thái suy ra"
+      },
+      "generate": "Tạo",
+      "regenerate": "Tạo lại",
+      "revise": "Sửa đổi",
+      "confirm": "Xác nhận",
+      "rollback": "Hoàn tác",
+      "approve": "Phê duyệt",
+      "dismiss": "Bác bỏ",
+      "voiceDraft": {
+        "dirty": "Bản nháp chưa lưu",
+        "discard": "Hủy bản nháp",
+        "save": "Lưu bản nháp"
+      },
+      "listStatusLabels": {
+        "pending": "Đang chờ",
+        "adaptation-review": "Đang duyệt chuyển thể",
+        "adaptation-blocked": "Chuyển thể bị chặn",
+        "screenplay-review": "Đang duyệt kịch bản",
+        "screenplay-blocked": "Kịch bản bị chặn",
+        "screenplay-confirmed": "Kịch bản đã xác nhận",
+        "voice-generating": "Đang tạo giọng",
+        "voice-review": "Đang duyệt giọng",
+        "voice-blocked": "Giọng bị chặn",
+        "stage2-complete": "Stage 2 hoàn tất",
+        "unadaptable": "Không chuyển thể được"
+      }
+    },
     "scriptAgent": {
       "inputPlaceholder": "Vui lòng nhập nội dung",
       "chapterEvents": "Sự kiện chương",
