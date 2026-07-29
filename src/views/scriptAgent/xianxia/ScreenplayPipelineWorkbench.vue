@@ -11,6 +11,7 @@ import EpisodeQueue from "./EpisodeQueue.vue";
 import AdaptationDesignPanel from "./AdaptationDesignPanel.vue";
 import ScreenplayPanel from "./ScreenplayPanel.vue";
 import ScreenplayAuditPanel from "./ScreenplayAuditPanel.vue";
+import VoiceScriptPanel from "./VoiceScriptPanel.vue";
 
 const props = defineProps<{ projectId: number }>();
 
@@ -146,6 +147,77 @@ async function onDecideIssue(issueId: string, decision: "resolved" | "accepted" 
     MessagePlugin.error(String(cause?.message ?? cause));
   }
 }
+
+// Voice handlers (Region 5).
+async function onVoiceGenerate(reason: string): Promise<void> {
+  if (!detail.value?.episode.activeScreenplayVersionId) return;
+  try {
+    await screenplayPipelineApi.generateVoice(detail.value.episode.id, {
+      projectId: props.projectId,
+      screenplayVersionId: detail.value.episode.activeScreenplayVersionId,
+      expectedRowVersion: detail.value.episode.rowVersion,
+      reason,
+    });
+    MessagePlugin.success("声音生成已发起");
+    await pipelineStore.refreshDetail();
+    pipelineStore.pollWhileActive();
+  } catch (cause: any) {
+    MessagePlugin.error(String(cause?.message ?? cause));
+  }
+}
+
+async function onVoiceRegenerate(reason: string, subjectKind: "content" | "audit"): Promise<void> {
+  if (!detail.value?.episode.activeScreenplayVersionId) return;
+  try {
+    await screenplayPipelineApi.regenerateVoice(detail.value.episode.id, {
+      projectId: props.projectId,
+      screenplayVersionId: detail.value.episode.activeScreenplayVersionId,
+      reason,
+      expectedRowVersion: detail.value.episode.rowVersion,
+      subjectKind,
+    });
+    MessagePlugin.success("声音重做已发起");
+    await pipelineStore.refreshDetail();
+    pipelineStore.pollWhileActive();
+  } catch (cause: any) {
+    MessagePlugin.error(String(cause?.message ?? cause));
+  }
+}
+
+async function onVoiceRevise(payload: unknown, reason: string): Promise<void> {
+  if (!detail.value?.episode.activeVoiceScriptVersionId || !detail.value.activeVoice?.contentHash) return;
+  try {
+    await screenplayPipelineApi.reviseVoice(detail.value.episode.id, {
+      projectId: props.projectId,
+      voiceScriptVersionId: detail.value.episode.activeVoiceScriptVersionId,
+      payload,
+      expectedRowVersion: detail.value.episode.rowVersion,
+      expectedContentHash: detail.value.activeVoice.contentHash,
+      reason,
+    });
+    MessagePlugin.success("声音修订已提交");
+    await pipelineStore.refreshDetail();
+  } catch (cause: any) {
+    MessagePlugin.error(String(cause?.message ?? cause));
+  }
+}
+
+async function onVoiceRollback(reason: string): Promise<void> {
+  if (!detail.value?.episode.activeVoiceScriptVersionId || !detail.value.activeVoice?.contentHash) return;
+  try {
+    await screenplayPipelineApi.rollbackToScreenplay(detail.value.episode.id, {
+      projectId: props.projectId,
+      screenplayVersionId: detail.value.workingScreenplay?.id ?? detail.value.episode.activeScreenplayVersionId ?? "",
+      payload: detail.value.workingScreenplay ?? {},
+      expectedRowVersion: detail.value.episode.rowVersion,
+      reason,
+    });
+    MessagePlugin.success("已回退到剧本");
+    await pipelineStore.refreshDetail();
+  } catch (cause: any) {
+    MessagePlugin.error(String(cause?.message ?? cause));
+  }
+}
 </script>
 
 <template>
@@ -215,6 +287,18 @@ async function onDecideIssue(issueId: string, decision: "resolved" | "accepted" 
             v-else-if="activeRegion === 4 && detail"
             :detail="detail"
             @decide-issue="onDecideIssue" />
+          <VoiceScriptPanel
+            v-else-if="activeRegion === 5 && detail"
+            :project-id="projectId"
+            :episode-id="detail.episode.id"
+            :working="detail.workingVoice"
+            :active="detail.activeVoice"
+            :loading="detailLoading"
+            :last-error="lastError ?? null"
+            @generate="onVoiceGenerate"
+            @regenerate="onVoiceRegenerate"
+            @revise="onVoiceRevise"
+            @rollback-to-screenplay="onVoiceRollback" />
           <div v-else-if="detail" class="regionPlaceholder">
             <p>当前 listStatus：<strong>{{ listStatus }}</strong></p>
             <p>后续 Task 12–13 将在此渲染声音脚本 / 第二次审核 / 交付（区域 5/6）。</p>
