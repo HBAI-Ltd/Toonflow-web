@@ -1,12 +1,16 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, computed } from "vue";
+import { onBeforeUnmount, onMounted, computed, watch } from "vue";
 import projectStore from "@/stores/project";
 import { makeScreenplayPipelineStore } from "@/stores/screenplayPipeline";
 import type { WorkbenchRegion } from "@/stores/screenplayPipeline";
 import { storeToRefs } from "pinia";
+import { screenplayPipelineApi } from "@/api/screenplayPipeline";
+import { MessagePlugin } from "tdesign-vue-next";
 
-// 仙侠剧本工作台壳（六区 Tab + 左侧 Episode 队列）。
-// 当前 shell 仅为 Task 10 入口；后续 Task 11–13 将在右侧切换对应区域组件。
+import EpisodeQueue from "./EpisodeQueue.vue";
+import AdaptationDesignPanel from "./AdaptationDesignPanel.vue";
+import ScreenplayPanel from "./ScreenplayPanel.vue";
+import ScreenplayAuditPanel from "./ScreenplayAuditPanel.vue";
 
 const props = defineProps<{ projectId: number }>();
 
@@ -21,6 +25,7 @@ const {
   detailLoading,
   lastError,
   listStatus,
+  isActiveVoiceJobRunning,
 } = storeToRefs(pipelineStore);
 
 const regionLabels: Record<WorkbenchRegion, string> = {
@@ -42,6 +47,11 @@ onBeforeUnmount(() => {
   pipelineStore.stopPolling();
 });
 
+watch(isActiveVoiceJobRunning, (running) => {
+  if (running) pipelineStore.pollWhileActive();
+  else pipelineStore.stopPolling();
+});
+
 function onSelectEpisode(id: string): void {
   pipelineStore.selectEpisode(id);
 }
@@ -50,6 +60,90 @@ function onRefreshAll(): void {
   void pipelineStore.refreshEpisodes();
   if (selectedEpisodeId.value) {
     void pipelineStore.refreshDetail();
+  }
+}
+
+// Adaptation generate stub (oversight by parent; emits success message).
+async function onAdaptationGenerate(reason: string): Promise<void> {
+  if (!detail.value?.episode.activeAdaptationDesignVersionId && !detail.value?.episode.id) return;
+  try {
+    // Real call would be to screenplayPipelineApi.generateAdaptation for the current episode.
+    await screenplayPipelineApi.generateAdaptation(detail.value!.episode.id, {
+      projectId: props.projectId,
+      expectedRowVersion: detail.value!.episode.rowVersion,
+      reason,
+    });
+    MessagePlugin.success("改编生成已发起");
+    await pipelineStore.refreshDetail();
+  } catch (cause: any) {
+    MessagePlugin.error(String(cause?.message ?? cause));
+  }
+}
+
+// Screenplay regenerate confirm-with-reason stub.
+async function onScreenplayRegenerate(reason: string, subjectKind: "content" | "audit"): Promise<void> {
+  if (!detail.value) return;
+  try {
+    await screenplayPipelineApi.regenerateScreenplay(detail.value.episode.id, {
+      projectId: props.projectId,
+      adaptationDesignVersionId: detail.value.episode.activeAdaptationDesignVersionId ?? "",
+      reason,
+      expectedRowVersion: detail.value.episode.rowVersion,
+      subjectKind,
+    });
+    MessagePlugin.success("剧本重做已发起");
+    await pipelineStore.refreshDetail();
+  } catch (cause: any) {
+    MessagePlugin.error(String(cause?.message ?? cause));
+  }
+}
+
+async function onScreenplayConfirm(reason: string): Promise<void> {
+  if (!detail.value?.currentFirstApproval) return;
+  try {
+    await screenplayPipelineApi.confirmScreenplay(detail.value.episode.id, {
+      projectId: props.projectId,
+      adaptationDesignVersionId: detail.value.episode.activeAdaptationDesignVersionId ?? "",
+      screenplayVersionId: detail.value.episode.activeScreenplayVersionId ?? "",
+      expectedRowVersion: detail.value.episode.rowVersion,
+      expectedInputFingerprint: detail.value.activeScreenplay?.inputFingerprint ?? "",
+      reason,
+    });
+    MessagePlugin.success("第一次确认成功");
+    await pipelineStore.refreshDetail();
+  } catch (cause: any) {
+    MessagePlugin.error(String(cause?.message ?? cause));
+  }
+}
+
+async function onScreenplayRevise(payload: unknown, reason: string): Promise<void> {
+  if (!detail.value) return;
+  try {
+    await screenplayPipelineApi.reviseScreenplay(detail.value.episode.id, {
+      projectId: props.projectId,
+      screenplayVersionId: detail.value.episode.activeScreenplayVersionId ?? "",
+      payload,
+      expectedRowVersion: detail.value.episode.rowVersion,
+      reason,
+    });
+    MessagePlugin.success("剧本修订已提交");
+    await pipelineStore.refreshDetail();
+  } catch (cause: any) {
+    MessagePlugin.error(String(cause?.message ?? cause));
+  }
+}
+
+async function onDecideIssue(issueId: string, decision: "resolved" | "accepted" | "dismissed", reason: string): Promise<void> {
+  try {
+    await screenplayPipelineApi.decideIssue(issueId, {
+      projectId: props.projectId,
+      decision,
+      reason,
+    });
+    MessagePlugin.success("Issue 决议成功");
+    await pipelineStore.refreshDetail();
+  } catch (cause: any) {
+    MessagePlugin.error(String(cause?.message ?? cause));
   }
 }
 </script>
@@ -70,28 +164,11 @@ function onRefreshAll(): void {
 
     <div class="workbenchBody">
       <aside class="episodesPane">
-        <div class="paneHeader">
-          <span>Episode</span>
-          <span class="count">{{ episodes.length }}</span>
-        </div>
-        <div v-if="loading" class="paneState">加载中…</div>
-        <div v-else-if="showEmpty" class="paneState">
-          <span>暂无 Episode</span>
-          <t-button size="small" variant="outline" @click="onRefreshAll">重试</t-button>
-        </div>
-        <ul v-else class="episodeList">
-          <li
-            v-for="item in episodes"
-            :key="item.id"
-            class="episodeItem"
-            :class="{ active: item.id === selectedEpisodeId }"
-            @click="onSelectEpisode(item.id)">
-            <div class="episodeNumber">#{{ item.episodeNumber }} {{ item.title }}</div>
-            <div class="episodeMeta">
-              <span class="listStatus" :data-status="item.listStatus">{{ item.listStatus }}</span>
-            </div>
-          </li>
-        </ul>
+        <EpisodeQueue
+          :episode-id="selectedEpisodeId"
+          :episodes="episodes"
+          :loading="loading"
+          @select="onSelectEpisode" />
       </aside>
 
       <main class="rightPane">
@@ -110,9 +187,37 @@ function onRefreshAll(): void {
           <div v-if="!selectedEpisodeId" class="emptyHint">请在左侧选择一个 Episode</div>
           <div v-else-if="detailLoading && !detail" class="emptyHint">加载详情…</div>
           <div v-else-if="lastError" class="emptyHint error">{{ lastError }}</div>
+          <EpisodeQueue
+            v-else-if="activeRegion === 1"
+            :episode-id="selectedEpisodeId"
+            :episodes="episodes"
+            :loading="loading"
+            @select="onSelectEpisode" />
+          <AdaptationDesignPanel
+            v-else-if="activeRegion === 2 && detail"
+            :project-id="projectId"
+            :episode-id="detail.episode.id"
+            :working="detail.workingAdaptation"
+            :active="detail.activeAdaptation"
+            :loading="detailLoading"
+            @generate="onAdaptationGenerate" />
+          <ScreenplayPanel
+            v-else-if="activeRegion === 3 && detail"
+            :project-id="projectId"
+            :episode-id="detail.episode.id"
+            :working="detail.workingScreenplay"
+            :active="detail.activeScreenplay"
+            :loading="detailLoading"
+            @regenerate="onScreenplayRegenerate"
+            @confirm="onScreenplayConfirm"
+            @revise="onScreenplayRevise" />
+          <ScreenplayAuditPanel
+            v-else-if="activeRegion === 4 && detail"
+            :detail="detail"
+            @decide-issue="onDecideIssue" />
           <div v-else-if="detail" class="regionPlaceholder">
             <p>当前 listStatus：<strong>{{ listStatus }}</strong></p>
-            <p>后续 Task 11–13 将在此渲染六区内容（队列 / 改编 / 剧本 / 第一次审核 / 声音脚本 / 第二次审核）。</p>
+            <p>后续 Task 12–13 将在此渲染声音脚本 / 第二次审核 / 交付（区域 5/6）。</p>
           </div>
         </section>
       </main>
@@ -157,48 +262,6 @@ function onRefreshAll(): void {
   border-right: 1px solid var(--td-component-stroke, #e7e7e7);
   display: flex;
   flex-direction: column;
-  .paneHeader {
-    display: flex;
-    justify-content: space-between;
-    padding: 12px 16px;
-    border-bottom: 1px solid var(--td-component-stroke, #e7e7e7);
-    font-weight: 500;
-  }
-  .paneState {
-    padding: 24px 16px;
-    color: var(--td-text-color-secondary, #666);
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    align-items: flex-start;
-  }
-  .episodeList {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    overflow: auto;
-  }
-  .episodeItem {
-    padding: 12px 16px;
-    border-bottom: 1px solid var(--td-component-stroke, #e7e7e7);
-    cursor: pointer;
-    &:hover {
-      background: var(--td-bg-color-container-hover, #f5f5f5);
-    }
-    &.active {
-      background: var(--td-brand-color-light, #e6f0ff);
-    }
-    .episodeNumber {
-      font-weight: 500;
-    }
-    .episodeMeta {
-      margin-top: 4px;
-    }
-    .listStatus {
-      font-size: 12px;
-      color: var(--td-text-color-secondary, #666);
-    }
-  }
 }
 .rightPane {
   flex: 1;
@@ -226,7 +289,6 @@ function onRefreshAll(): void {
 }
 .regionBody {
   flex: 1;
-  padding: 16px;
   overflow: auto;
 }
 .emptyHint {
@@ -238,6 +300,7 @@ function onRefreshAll(): void {
   }
 }
 .regionPlaceholder {
+  padding: 16px;
   p {
     margin: 0 0 8px;
   }
