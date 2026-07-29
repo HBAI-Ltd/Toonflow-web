@@ -12,6 +12,10 @@ import AdaptationDesignPanel from "./AdaptationDesignPanel.vue";
 import ScreenplayPanel from "./ScreenplayPanel.vue";
 import ScreenplayAuditPanel from "./ScreenplayAuditPanel.vue";
 import VoiceScriptPanel from "./VoiceScriptPanel.vue";
+import VoiceAuditDeliveryPanel from "./VoiceAuditDeliveryPanel.vue";
+import VersionHistoryDrawer from "./VersionHistoryDrawer.vue";
+import IssueDrawer from "./IssueDrawer.vue";
+import { ref } from "vue";
 
 const props = defineProps<{ projectId: number }>();
 
@@ -39,6 +43,9 @@ const regionLabels: Record<WorkbenchRegion, string> = {
 };
 
 const showEmpty = computed(() => !loading.value && episodes.value.length === 0);
+
+const historyVisible = ref(false);
+const issuesVisible = ref(false);
 
 onMounted(async () => {
   await pipelineStore.refreshEpisodes();
@@ -218,6 +225,29 @@ async function onVoiceRollback(reason: string): Promise<void> {
     MessagePlugin.error(String(cause?.message ?? cause));
   }
 }
+
+async function onVoiceConfirm(reason: string): Promise<void> {
+  if (!detail.value?.episode.activeVoiceScriptVersionId) return;
+  const voice = detail.value.workingVoice ?? detail.value.activeVoice;
+  if (!voice?.contentHash || !voice?.inputFingerprint) {
+    MessagePlugin.error("缺少 voice inputFingerprint 或 contentHash");
+    return;
+  }
+  try {
+    await screenplayPipelineApi.confirmVoice(detail.value.episode.id, {
+      projectId: props.projectId,
+      voiceScriptVersionId: detail.value.episode.activeVoiceScriptVersionId,
+      expectedRowVersion: detail.value.episode.rowVersion,
+      expectedInputFingerprint: voice.inputFingerprint,
+      expectedContentHash: voice.contentHash,
+      reason,
+    });
+    MessagePlugin.success("第二次确认成功");
+    await pipelineStore.refreshDetail();
+  } catch (cause: any) {
+    MessagePlugin.error(String(cause?.message ?? cause));
+  }
+}
 </script>
 
 <template>
@@ -299,13 +329,34 @@ async function onVoiceRollback(reason: string): Promise<void> {
             @regenerate="onVoiceRegenerate"
             @revise="onVoiceRevise"
             @rollback-to-screenplay="onVoiceRollback" />
+          <VoiceAuditDeliveryPanel
+            v-else-if="activeRegion === 6 && detail"
+            :project-id="projectId"
+            :detail="detail"
+            @confirm-voice="onVoiceConfirm" />
           <div v-else-if="detail" class="regionPlaceholder">
             <p>当前 listStatus：<strong>{{ listStatus }}</strong></p>
-            <p>后续 Task 12–13 将在此渲染声音脚本 / 第二次审核 / 交付（区域 5/6）。</p>
           </div>
         </section>
+
+        <footer class="workbenchFooter">
+          <t-button size="small" variant="outline" @click="historyVisible = true">版本历史</t-button>
+          <t-button size="small" variant="outline" @click="issuesVisible = true">Issues</t-button>
+        </footer>
       </main>
     </div>
+
+    <VersionHistoryDrawer
+      v-if="selectedEpisodeId"
+      :project-id="projectId"
+      :episode-id="selectedEpisodeId"
+      v-model:visible="historyVisible" />
+    <IssueDrawer
+      v-if="selectedEpisodeId"
+      :project-id="projectId"
+      :episode-id="selectedEpisodeId"
+      v-model:visible="issuesVisible"
+      @decide-issue="(issueId, decision) => onDecideIssue(issueId, decision, '工作台 Issue Drawer 决议')" />
   </div>
 </template>
 
@@ -388,5 +439,12 @@ async function onVoiceRollback(reason: string): Promise<void> {
   p {
     margin: 0 0 8px;
   }
+}
+.workbenchFooter {
+  display: flex;
+  gap: 8px;
+  padding: 8px 16px;
+  border-top: 1px solid var(--td-component-stroke, #e7e7e7);
+  background: var(--td-bg-color-container, #fff);
 }
 </style>
