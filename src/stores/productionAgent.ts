@@ -231,67 +231,11 @@ function makeProductionAgentStore(projectId: string) {
       });
       flowData.value = data;
     }
-    async function batchGenerateStoryboard(allIds: number[], compulsory: boolean = false) {
-      try {
-        const { data } = await axios.post("/production/storyboard/batchGenerateImage", {
-          scriptId: episodesId.value,
-          projectId: projectId,
-          storyboardIds: allIds,
-          concurrentCount: settingStore().otherSetting.assetsBatchGenereateSize,
-          compulsory,
-        });
-        if (data) {
-          if (flowData.value.storyboard.length === 0) {
-            flowData.value.storyboard = data;
-            return data;
-          } else {
-            flowData.value.storyboard.forEach((item) => {
-              const findData = data.find((i: any) => i.id == item.id);
-              if (findData) {
-                item.state = findData.state;
-                item.src = findData.src;
-              }
-            });
-          }
-        }
-        return data;
-      } catch (e) {
-        window.$message.error((e as any)?.message);
-      }
+    async function batchGenerateStoryboard(allIds: number[], _compulsory: boolean = false) {
+      return flowData.value.storyboard.filter((item) => item.id != null && allIds.includes(item.id));
     }
     async function batchGenerateAssets(allIds: number[]) {
-      flowData.value.assets.forEach((asset) => {
-        if (asset.derive) {
-          asset.derive.forEach((derive) => {
-            if (allIds.includes(derive.id)) {
-              derive.state = "生成中" as "未生成" | "生成中" | "已完成" | "生成失败";
-            }
-          });
-        }
-      });
-      try {
-        const { data } = await axios.post("/production/assets/batchGenerateAssetsImage", {
-          assetIds: allIds,
-          projectId: projectId,
-          scriptId: episodesId.value,
-          concurrentCount: settingStore().otherSetting.assetsBatchGenereateSize,
-        });
-        if (data) {
-          data.forEach((record: { id: number; state: "未生成" | "生成中" | "已完成" | "生成失败"; src: string }) => {
-            flowData.value.assets.forEach((asset) => {
-              if (asset.derive) {
-                asset.derive.forEach((derive) => {
-                  if (derive.id === record.id) {
-                    derive.state = record.state;
-                    derive.src = record.src;
-                  }
-                });
-              }
-            });
-          });
-        }
-        return data;
-      } catch (e) {}
+      return flowData.value.assets.flatMap((asset) => asset.derive ?? []).filter((derive) => allIds.includes(derive.id));
     }
     const assetsNotStateImageIds = computed(() => {
       const ids: number[] = [];

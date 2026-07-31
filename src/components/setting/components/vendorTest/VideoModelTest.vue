@@ -148,16 +148,18 @@
         <div class="resultLabel">{{ $t("settings.vendor.test.result") }}</div>
         <video :src="resultUrl" controls autoplay loop class="resultVideo" />
       </div>
-      <div v-else-if="loading" class="loadingSection">
-        <t-loading size="large" :text="$t('settings.vendor.videoGenerating')" />
-      </div>
+      <input ref="resultVideoInputRef" type="file" accept="video/*" style="display: none" @change="uploadResultVideo" />
 
       <!-- 底部操作 -->
       <div class="dialogFooter">
         <t-button variant="outline" @click="visible = false">{{ $t("settings.vendor.test.cancel") }}</t-button>
-        <t-button theme="primary" :loading="loading" @click="handleTest">
-          <template #icon><i-lightning theme="outline" /></template>
-          {{ $t("settings.vendor.test.startTest") }}
+        <t-button theme="primary" :disabled="!canSubmit" @click="copyManualPrompt">
+          <template #icon><t-icon name="file-copy" /></template>
+          复制完整视频提示词
+        </t-button>
+        <t-button theme="success" variant="outline" @click="resultVideoInputRef?.click()">
+          <template #icon><t-icon name="upload" /></template>
+          上传生成视频
         </t-button>
       </div>
     </div>
@@ -165,10 +167,10 @@
 </template>
 
 <script setup lang="ts">
-import axios from "@/utils/axios";
 import ImageUploadBox from "./ImageUploadBox.vue";
 import VideoUploadBox from "./VideoUploadBox.vue";
 import AudioUploadBox from "./AudioUploadBox.vue";
+import { buildManualVideoPrompt, copyText, fileToDataUrl } from "@/utils/manualMedia";
 
 type VideoRawMode =
   | "singleImage"
@@ -296,6 +298,7 @@ const uploadedVideos = ref<(File | null)[]>(Array(30).fill(null));
 const uploadedAudios = ref<(File | null)[]>(Array(30).fill(null));
 const loading = ref(false);
 const resultUrl = ref("");
+const resultVideoInputRef = ref<HTMLInputElement | null>(null);
 
 function resetUploads() {
   uploadedImages.value = Array(30).fill(null);
@@ -310,7 +313,7 @@ const canSubmit = computed(() => {
   if (selectedMode.value === "startEndRequired") return !!uploadedImages.value[0] && !!uploadedImages.value[1];
   if (selectedMode.value === "endFrameOptional") return !!uploadedImages.value[0];
   if (selectedMode.value === "startFrameOptional") return !!uploadedImages.value[1];
-  if (selectedMode.value.startsWith("multiRef:")) {
+  if (selectedMode.value.startsWith("[")) {
     // 验证所有非可选 ref 都已上传
     for (let rIdx = 0; rIdx < currentMultiRefs.value.length; rIdx++) {
       const ref = currentMultiRefs.value[rIdx];
@@ -331,53 +334,33 @@ function getRefLabel(ref: RefItem): string {
   if (ref.type === "videoReference") return `${$t("settings.vendor.videoRef")} (×${ref.count})`;
   return `${$t("settings.vendor.audioRef")} (×${ref.count})`;
 }
-function fileToDataURL(file: File) {
-  return new Promise((resolve, reject) => {
-    const r = new FileReader();
-    r.onload = () => resolve(r.result); // data:xxx/yyy;base64,....
-    r.onerror = reject;
-    r.readAsDataURL(file);
-  });
+async function copyManualPrompt() {
+  try {
+    const references = [
+      ...uploadedImages.value.filter(Boolean).map((file) => ({ fileType: "image", name: file?.name })),
+      ...uploadedVideos.value.filter(Boolean).map((file) => ({ fileType: "video", name: file?.name })),
+      ...uploadedAudios.value.filter(Boolean).map((file) => ({ fileType: "audio", name: file?.name })),
+    ];
+    await copyText(
+      buildManualVideoPrompt({
+        name: props.modelName,
+        prompt: prompt.value,
+        mode: selectedMode.value,
+        references,
+      }),
+    );
+    window.$message.success("完整视频提示词已复制，请在外部工具生成后上传结果");
+  } catch (e: any) {
+    window.$message.error(e?.message ?? "复制完整视频提示词失败");
+  }
 }
 
-function mapTopType(mime = "") {
-  if (mime.startsWith("image/")) return "image";
-  if (mime.startsWith("video/")) return "video";
-  if (mime.startsWith("audio/")) return "audio";
-  return ""; // 不认识就空
-}
-async function encodeFiles(files: File[]) {
-  const valid = (files || []).filter(Boolean);
-  return Promise.all(
-    valid.map(async (f) => ({
-      type: mapTopType(f.type),
-      base64: await fileToDataURL(f), // 带前缀 data:...;base64,...
-    })),
-  );
-}
-async function handleTest() {
-  loading.value = true;
-  resultUrl.value = "";
-  try {
-    const payload = {
-      modelName: props.modelName,
-      id: props.vendorId,
-      mode: selectedMode.value,
-      ...(prompt.value.trim() ? { prompt: prompt.value.trim() } : {}),
-      images: await encodeFiles(uploadedImages.value.filter(Boolean) as File[]),
-      videos: await encodeFiles(uploadedVideos.value.filter(Boolean) as File[]),
-      audios: await encodeFiles(uploadedAudios.value.filter(Boolean) as File[]),
-    };
-    const { data } = await axios.post("/setting/vendorConfig/modelTest/videoTest", payload, {
-      timeout: 30 * 60 * 1000,
-    });
-    resultUrl.value = data;
-    window.$message.success($t("settings.vendor.msg.videoGenSuccess"));
-  } catch (e: any) {
-    window.$message.error(e?.message ?? `${$t("settings.vendor.msg.requestFailed")}`);
-  } finally {
-    loading.value = false;
-  }
+async function uploadResultVideo(event: Event) {
+  const file = (event.target as HTMLInputElement).files?.[0];
+  if (!file) return;
+  resultUrl.value = await fileToDataUrl(file);
+  (event.target as HTMLInputElement).value = "";
+  window.$message.success("生成视频已上传到测试结果区");
 }
 
 function handleClose() {
