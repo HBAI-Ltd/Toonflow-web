@@ -184,6 +184,16 @@ function makeProductionAgentStore(projectId: string) {
             deriveAssetList.splice(index, 1);
             callback({ success: true, message: $t("storyboard.assets.derivativeDelSuccess") });
           });
+          s.on("delStoryboard", async (data, callback) => {
+            const deletedIds: number[] = data.ids;
+            if (!deletedIds || !deletedIds.length) {
+              return callback({ success: false, message: "未指定要删除的分镜" });
+            }
+            flowData.value.storyboard = flowData.value.storyboard.filter(
+              (item) => !deletedIds.includes(item.id!),
+            );
+            callback({ success: true, message: "分镜已从面板移除" });
+          });
           s.on("generateDeriveAsset", async (data, callback) => {
             const assetsData = await batchGenerateAssets(data.ids);
             callback({ success: true, message: assetsData });
