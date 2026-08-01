@@ -48,6 +48,7 @@ export interface XmlTagEvent {
   value: string;
   attrs: Record<string, string>;
   children: XmlChildItem[];
+  isComplete: boolean;
   status: ChatMessageStatus;
 }
 
@@ -76,11 +77,21 @@ export interface UseChatOptions {
   autoConnect?: boolean;
   xmlTags?: Array<string | XmlTagOption>;
   keepXmlInMessage?: boolean;
+  defaultThinkingCollapsed?: boolean | ((message: ChatMessagesData) => boolean);
   onXmlTag?: (event: XmlTagEvent) => void;
   onError?: (error: { code: string; message: string }) => void;
   onConnect?: () => void;
   onDisconnect?: () => void;
   manageLifecycle?: boolean;
+}
+
+export function appendThinkingDelta(currentData: Record<string, any> | null | undefined, delta: Record<string, any>) {
+  const currentThinkingText = typeof currentData?.text === "string" ? currentData.text : "";
+  return {
+    ...currentData,
+    ...delta,
+    text: currentThinkingText + (typeof delta.text === "string" ? delta.text : ""),
+  };
 }
 
 export function useChat(options: UseChatOptions) {
@@ -90,6 +101,7 @@ export function useChat(options: UseChatOptions) {
     autoConnect = true,
     xmlTags = [],
     keepXmlInMessage = true,
+    defaultThinkingCollapsed = true,
     onXmlTag,
     onError,
     onConnect,
@@ -117,6 +129,9 @@ export function useChat(options: UseChatOptions) {
   const hiddenXmlTags = normalizedXmlTagOptions.filter((item) => ((item.keepInMessage ?? keepXmlInMessage) ? false : true)).map((item) => item.tag);
   const emittedXmlState = new Map<string, Record<string, string>>();
   const rawContentState = new Map<string, string>();
+
+  const resolveDefaultThinkingCollapsed = (message: ChatMessagesData) =>
+    typeof defaultThinkingCollapsed === "function" ? defaultThinkingCollapsed(message) : defaultThinkingCollapsed;
 
   // 计算属性 - 修复：增加对内容流状态的判断
   const isGenerating = computed(() => {
@@ -280,7 +295,13 @@ export function useChat(options: UseChatOptions) {
       if (parsed === null) continue;
 
       const { value, isComplete } = parsed;
-      const eventStatus = isComplete ? (status === "error" || status === "stop" ? status : "complete") : status;
+      const eventStatus = isComplete
+        ? status === "error" || status === "stop"
+          ? status
+          : "complete"
+        : status === "complete"
+          ? "error"
+          : status;
 
       const shouldEmit = prevState[tag] !== value || eventStatus === "complete";
       if (!shouldEmit) continue;
@@ -298,6 +319,7 @@ export function useChat(options: UseChatOptions) {
         value,
         attrs: parsed.attrs,
         children: parsed.children,
+        isComplete,
         status: eventStatus,
       });
     }
@@ -391,6 +413,8 @@ export function useChat(options: UseChatOptions) {
 
       rawContentState.set(contentKey, nextRaw);
       syncContentDisplay(messageId, content);
+    } else if (content.type === "thinking" && strategy === "append" && typeof data === "object" && typeof data.text === "string") {
+      content.data = appendThinkingDelta(content.data, data);
     } else if (strategy === "append") {
       if (typeof data === "string") {
         appendStringData(content, data);
@@ -436,6 +460,9 @@ export function useChat(options: UseChatOptions) {
       if (data.role === "assistant") {
         const aiMessage = newMessage as AIMessage;
         aiMessage.content?.forEach((content) => {
+          if (content.type === "thinking") {
+            content.ext = { collapsed: resolveDefaultThinkingCollapsed(newMessage), ...content.ext };
+          }
           if (!isXmlTextContent(content)) return;
           rawContentState.set(getContentKey(data.id, content), content.data);
           syncContentDisplay(data.id, content);
@@ -507,7 +534,7 @@ export function useChat(options: UseChatOptions) {
         ...data.content,
         status: data.content.status || "pending",
         // thinking 内容块默认折叠
-        ...(data.content.type === "thinking" ? { ext: { collapsed: true, ...data.content.ext } } : {}),
+        ...(data.content.type === "thinking" ? { ext: { collapsed: resolveDefaultThinkingCollapsed(msg), ...data.content.ext } } : {}),
       };
 
       if (isXmlTextContent(content)) {

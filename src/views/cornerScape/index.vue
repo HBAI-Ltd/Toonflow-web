@@ -31,9 +31,6 @@
             <t-checkbox-group @change="onChangeFn" v-model="checkboxValue" :options="translatedOptions" class="filterGroup" />
           </t-form-item>
 
-          <t-form-item :label="$t('workbench.cornerScape.genModel')">
-            <modelSelect v-model="selectValue" :type="`image`" />
-          </t-form-item>
           <t-form-item :label="$t('workbench.cornerScape.resolution')">
             <t-select
               v-model="resolution"
@@ -60,9 +57,7 @@
                   {{ $t("workbench.cornerScape.batchBingAudio") }}
                 </t-button>
               </div>
-              <t-button theme="primary" block @click="batchGenerationImage">
-                {{ $t("workbench.cornerScape.startBatch") }}
-              </t-button>
+              <t-button theme="primary" block @click="batchGenerationImage">批量复制完整生图提示词</t-button>
             </div>
           </t-form-item>
         </t-form>
@@ -189,9 +184,6 @@
               </div>
             </div>
           </t-form-item>
-          <t-form-item :label="$t('workbench.cornerScape.genModel')">
-            <modelSelect v-model="selectValue" :type="`image`" />
-          </t-form-item>
           <t-form-item :label="$t('workbench.cornerScape.resolution')">
             <t-select v-model="editForm.resolution" :placeholder="$t('workbench.cornerScape.resolutionPh')" :options="resolutionOptions" />
           </t-form-item>
@@ -232,9 +224,13 @@
                 <template #icon><t-icon name="edit" /></template>
                 {{ $t("workbench.cornerScape.aiPolish") }}
               </t-button>
-              <t-button theme="primary" @click="regenerateItem" :disabled="currentItem.state == '生成中' ? true : false">
-                <template #icon><t-icon name="refresh" /></template>
-                {{ $t("workbench.cornerScape.regenerate") }}
+              <t-button theme="primary" @click="copyManualPrompt">
+                <template #icon><t-icon name="file-copy" /></template>
+                复制完整生图提示词
+              </t-button>
+              <t-button theme="success" variant="outline" :loading="uploadingManualImage" @click="uploadManualImage">
+                <template #icon><t-icon name="upload" /></template>
+                上传生成图片
               </t-button>
             </div>
           </t-form-item>
@@ -247,9 +243,10 @@
 <script setup lang="ts">
 import axios from "@/utils/axios";
 import projectStore from "@/stores/project";
-import modelSelect from "@/components/modelSelect.vue";
 import settingStore from "@/stores/setting";
 import openAssetsSelector from "@/utils/assetsCheck";
+import { buildBatchPrompt, buildManualImagePrompt, copyText, fileToDataUrl } from "@/utils/manualMedia";
+import { useFileDialog } from "@vueuse/core";
 
 const { otherSetting } = storeToRefs(settingStore());
 interface Image {
@@ -277,7 +274,6 @@ interface DataItem {
 
 const checkboxValue = ref<string[]>([]);
 const { project } = storeToRefs(projectStore());
-const selectValue = ref(project.value?.imageModel ?? "");
 const resolution = ref("1K");
 const otherTextPrompt = ref("");
 const resolutionOptions = [
@@ -300,24 +296,11 @@ const translatedOptions = computed(() =>
 const dataList = ref<DataItem[]>([]);
 const loading = ref(false);
 
-// 用于取消进行中的生成请求
-let abortController: AbortController | null = null;
-
-function createAbortController() {
-  abortController?.abort();
-  abortController = new AbortController();
-  return abortController;
-}
-
 onMounted(() => {
   getFilteredData();
 });
 
 onUnmounted(() => {
-  if (abortController) {
-    abortController.abort();
-    abortController = null;
-  }
   stopPolling();
   stopImagePolling();
   stopAudioPolling();
@@ -520,12 +503,8 @@ function setItemState(id: number, state: string) {
   if (currentItem.value?.id === id) currentItem.value.state = state;
 }
 
-function regenerateItem() {
+async function copyManualPrompt() {
   if (!currentItem.value) return;
-  if (!selectValue.value) {
-    window.$message.warning($t("workbench.cornerScape.msg.selectModel"));
-    return;
-  }
   if (!editForm.resolution) {
     window.$message.warning($t("workbench.cornerScape.msg.selectResolution"));
     return;
@@ -534,35 +513,58 @@ function regenerateItem() {
     window.$message.warning($t("workbench.cornerScape.msg.enterPrompt"));
     return;
   }
-  const item = currentItem.value;
-  setItemState(item.id, "生成中");
-  drawerVisible.value = false;
-  const controller = createAbortController();
-  axios
-    .post(
-      "/assetsGenerate/generateAssets",
-      {
-        type: item.type ?? "props",
-        projectId: project.value?.id,
-        name: item.name ?? $t("workbench.cornerScape.unnamed"),
-        base64: "",
-        prompt: editForm.prompt,
-        model: selectValue.value,
-        id: item.id,
-        resolution: editForm.resolution,
-        concurrentCount: 1,
-      },
-      { signal: controller.signal },
-    )
-    .then(async () => {
-      window.$message.success($t("workbench.cornerScape.msg.genSuccess", { name: item.name }));
-      await getFilteredData();
-    })
-    .catch((e: any) => {
-      if (e.name === "CanceledError" || e.code === "ERR_CANCELED") return;
-      window.$message.error(e.message ?? $t("workbench.cornerScape.msg.genFailed", { name: item.name }));
-      setItemState(item.id, "生成失败");
+  await copyText(
+    buildManualImagePrompt({
+      category: currentItem.value.type,
+      name: currentItem.value.name,
+      prompt: editForm.prompt,
+      description: currentItem.value.describe,
+      artStyle: project.value?.artStyle,
+      aspectRatio: project.value?.videoRatio,
+      resolution: editForm.resolution,
+    }),
+  );
+  window.$message.success("完整生图提示词已复制，请在外部工具生成后回到此处上传");
+}
+
+const uploadingManualImage = ref(false);
+const {
+  open: openManualImage,
+  onChange: onManualImageChange,
+  onCancel: onManualImageCancel,
+} = useFileDialog({
+  multiple: false,
+  reset: true,
+  accept: ".png,.jpg,.jpeg,.webp",
+});
+
+async function uploadManualImage() {
+  if (!currentItem.value) return;
+  const files = await new Promise<FileList | null>((resolve) => {
+    openManualImage();
+    onManualImageChange((value) => resolve(value));
+    onManualImageCancel(() => resolve(null));
+  });
+  if (!files?.length) return;
+
+  uploadingManualImage.value = true;
+  try {
+    await axios.post("/assets/saveAssets", {
+      id: currentItem.value.id,
+      type: currentItem.value.type,
+      projectId: project.value?.id,
+      prompt: editForm.prompt,
+      base64: await fileToDataUrl(files[0]),
     });
+    await getFilteredData();
+    const freshItem = dataList.value.find((item) => item.id === currentItem.value?.id);
+    if (freshItem) currentItem.value = freshItem;
+    window.$message.success("图片上传成功，已替换当前资产图片");
+  } catch (e: any) {
+    window.$message.error(e?.message ?? "图片上传失败");
+  } finally {
+    uploadingManualImage.value = false;
+  }
 }
 
 // 提示词失焦保存
@@ -690,10 +692,6 @@ async function batchGenerationImage() {
     window.$message.warning($t("workbench.cornerScape.msg.selectAtLeastOne"));
     return;
   }
-  if (!selectValue.value) {
-    window.$message.warning($t("workbench.cornerScape.msg.selectModel"));
-    return;
-  }
   if (!resolution.value) {
     window.$message.warning($t("workbench.cornerScape.msg.selectResolution"));
     return;
@@ -712,30 +710,27 @@ async function batchGenerationImage() {
     return;
   }
 
-  // 前端先将所有选中项标记为"生成中"
-  items.forEach((item) => setItemState(item.id, "生成中"));
-
-  window.$message.success(
-    $t("workbench.cornerScape.msg.batchStarted", { count: items.length, concurrent: otherSetting.value.assetsBatchGenereateSize }),
-  );
-
   try {
-    await axios.post("/assetsGenerate/batchGenerateImageAssets", {
-      projectId: project.value?.id,
-      model: selectValue.value,
-      resolution: resolution.value,
-      concurrentCount: otherSetting.value.assetsBatchGenereateSize,
-      items: items.map((item) => ({
-        id: item.id,
-        type: item.type ?? "props",
-        name: item.name ?? $t("workbench.cornerScape.unnamed"),
-        prompt: item.prompt,
-      })),
-    });
+    await copyText(
+      buildBatchPrompt(
+        items.map((item) => ({
+          title: item.name ?? $t("workbench.cornerScape.unnamed"),
+          prompt: buildManualImagePrompt({
+            category: item.type,
+            name: item.name,
+            prompt: item.prompt,
+            description: item.describe,
+            artStyle: project.value?.artStyle,
+            aspectRatio: project.value?.videoRatio,
+            resolution: resolution.value,
+          }),
+        })),
+      ),
+    );
     selectedIds.value = [];
+    window.$message.success(`已复制 ${items.length} 条完整生图提示词，请在外部生成后逐项上传`);
   } catch (e: any) {
-    if (e.name === "CanceledError" || e.code === "ERR_CANCELED") return;
-    window.$message.error(e.message ?? $t("workbench.cornerScape.msg.batchFailed"));
+    window.$message.error(e?.message ?? "复制完整生图提示词失败");
   }
 }
 //轮询

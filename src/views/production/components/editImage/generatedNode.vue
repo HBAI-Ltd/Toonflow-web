@@ -44,7 +44,6 @@
       </div>
       <div class="operate ac jb">
         <div class="ac">
-          <modelSelect v-model="data.model" type="image" size="small" />
           <t-select v-model="data.ratio" class="paramSelect ml-5" size="small" :placeholder="$t('workbench.production.editImage.ratio')">
             <t-option value="16:9" label="16:9" />
             <t-option value="9:16" label="9:16" />
@@ -58,9 +57,9 @@
         </div>
 
         <div class="f" style="gap: 5px; margin-left: 5px">
-          <t-popup :content="$t('workbench.production.editImage.generateBtn')">
-            <t-button theme="primary" size="small" class="generateBtn" :disabled="generating" :loading="generating" @click="handleGenerate">
-              <template #icon><i-arrow-up /></template>
+          <t-popup content="复制完整生图提示词">
+            <t-button theme="primary" size="small" class="generateBtn" @click="copyManualPrompt">
+              <template #icon><t-icon name="file-copy" /></template>
             </t-button>
           </t-popup>
           <t-popup :content="$t('workbench.production.save')">
@@ -78,7 +77,6 @@
 <script setup lang="ts">
 import { Handle, useVueFlow, Position } from "@vue-flow/core";
 import type { Ref } from "vue";
-import modelSelect from "@/components/modelSelect.vue";
 import PromptEditor from "@/components/promptEditor.vue";
 import axios from "@/utils/axios";
 import { type GeneratedNodeData } from "../../utils/editImageType";
@@ -87,6 +85,7 @@ import type { Storyboard } from "../../utils/flowBuilder";
 import openAssetsSelector from "@/utils/assetsCheck";
 import { useFileDialog } from "@vueuse/core";
 import projectStore from "@/stores/project";
+import { buildManualImagePrompt, copyText } from "@/utils/manualMedia";
 const { project } = storeToRefs(projectStore());
 const openStoryboardCheck = inject<() => Promise<Storyboard[]>>("openStoryboardCheck")!;
 const { open, onChange, onCancel } = useFileDialog({ multiple: false, reset: true, accept: ".png,.jpg,.jpeg" });
@@ -171,26 +170,25 @@ async function getStoryboardImage() {
     props.data.generatedImage = filePath;
   }
 }
-// 生成
-async function handleGenerate() {
-  if (!props.data.model) return window.$message.error($t("workbench.production.editImage.selectModel"));
+async function copyManualPrompt() {
   if (!props.data.quality) return window.$message.error($t("workbench.production.editImage.selectQuality"));
   if (!props.data.ratio) return window.$message.error($t("workbench.production.editImage.selectRatio"));
-  generating.value = true;
+  if (!props.data.prompt?.trim()) return window.$message.error("请先填写图片提示词");
   try {
-    const { data } = await axios.post("/production/editImage/generateFlowImage", {
-      references: props.data.references.map((i) => i.image).filter(Boolean),
-      model: props.data.model,
-      quality: props.data.quality,
-      ratio: props.data.ratio,
-      prompt: props.data.prompt,
-      projectId: props.projectId,
-    });
-    props.data.generatedImage = data.url;
+    await copyText(
+      buildManualImagePrompt({
+        category: "storyboard",
+        name: "当前分镜图片",
+        prompt: props.data.prompt,
+        artStyle: project.value?.artStyle,
+        aspectRatio: props.data.ratio,
+        resolution: props.data.quality,
+        referenceCount: props.data.references.filter((item) => item.image).length,
+      }),
+    );
+    window.$message.success("完整生图提示词已复制，请在外部工具生成后使用左侧“上传”入口导入");
   } catch (e) {
-    return window.$message.error((e as any)?.message || $t("workbench.production.editImage.generateFailed"));
-  } finally {
-    generating.value = false;
+    return window.$message.error((e as any)?.message || "复制完整生图提示词失败");
   }
 }
 

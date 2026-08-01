@@ -13,9 +13,9 @@
       <div class="content">
         <div class="toolbar">
           <t-space>
-            <span class="selectedInfo">{{ $t('workbench.assets.batch.selected', { count: selectedRowKeys.length }) }}</span>
-            <t-button theme="primary" size="small" @click="handleSelectAll">{{ $t('workbench.assets.batch.selectAll') }}</t-button>
-            <t-button theme="default" size="small" @click="handleClearSelection">{{ $t('workbench.assets.batch.clearSelection') }}</t-button>
+            <span class="selectedInfo">{{ $t("workbench.assets.batch.selected", { count: selectedRowKeys.length }) }}</span>
+            <t-button theme="primary" size="small" @click="handleSelectAll">{{ $t("workbench.assets.batch.selectAll") }}</t-button>
+            <t-button theme="default" size="small" @click="handleClearSelection">{{ $t("workbench.assets.batch.clearSelection") }}</t-button>
           </t-space>
           <t-input v-model="searchText" :placeholder="$t('workbench.assets.searchPlaceholder')" clearable style="width: 400px; margin-left: 10px">
             <template #prefix-icon>
@@ -26,13 +26,13 @@
             <t-button theme="primary" @click="handleBatchGeneratePrompt" :loading="textLoading" :disabled="textLoading">
               <div class="ac">
                 <i-translate theme="outline" size="20" />
-                {{ $t('workbench.assets.generatePrompt') }}
+                {{ $t("workbench.assets.generatePrompt") }}
               </div>
             </t-button>
-            <t-button theme="primary" style="margin-left: 10px" @click="handleBatchGenerateImage" :loading="imageLoading" :disabled="imageLoading">
+            <t-button theme="primary" style="margin-left: 10px" @click="handleBatchGenerateImage">
               <div class="ac">
                 <i-pic theme="outline" size="20" />
-                {{ $t('workbench.assets.generateImage') }}
+                批量复制完整生图提示词
               </div>
             </t-button>
           </div>
@@ -62,7 +62,7 @@
                     </div>
                     <div v-if="row.filePath" class="imageHoverOverlay">
                       <t-icon name="browse" size="20px" />
-                      <span class="hoverText">{{ $t('workbench.assets.preview') }}</span>
+                      <span class="hoverText">{{ $t("workbench.assets.preview") }}</span>
                     </div>
                   </div>
                 </template>
@@ -78,8 +78,10 @@
       </div>
       <template #footer>
         <t-space>
-          <t-button theme="default" @click="handleCancel">{{ $t('workbench.assets.cancelBtn') }}</t-button>
-          <t-button theme="primary" @click="onConfirm" :disabled="selectedRowKeys.length === 0">{{ $t('workbench.assets.batch.saveSelected', { count: selectedRowKeys.length }) }}</t-button>
+          <t-button theme="default" @click="handleCancel">{{ $t("workbench.assets.cancelBtn") }}</t-button>
+          <t-button theme="primary" @click="onConfirm" :disabled="selectedRowKeys.length === 0">
+            {{ $t("workbench.assets.batch.saveSelected", { count: selectedRowKeys.length }) }}
+          </t-button>
         </t-space>
       </template>
     </t-dialog>
@@ -93,6 +95,7 @@ const { otherSetting } = storeToRefs(settingStore());
 import axios from "@/utils/axios";
 import projectStore from "@/stores/project";
 import type { TableProps } from "tdesign-vue-next";
+import { buildBatchPrompt, buildManualImagePrompt, copyText } from "@/utils/manualMedia";
 
 const { project } = storeToRefs(projectStore());
 
@@ -105,21 +108,21 @@ const columns: TableProps["columns"] = [
   { colKey: "row-select", type: "multiple", width: 50, align: "center", fixed: "left" },
   {
     colKey: "filePath",
-    title: $t('workbench.assets.batch.colPreviewImg'),
+    title: $t("workbench.assets.batch.colPreviewImg"),
     width: 100,
     align: "center",
     cell: "preview",
   },
   {
     colKey: "name",
-    title: $t('workbench.assets.colName'),
+    title: $t("workbench.assets.colName"),
     width: 150,
     align: "left",
     ellipsis: true,
   },
   {
     colKey: "prompt",
-    title: $t('workbench.assets.colPrompt'),
+    title: $t("workbench.assets.colPrompt"),
     minWidth: 200,
     align: "left",
     ellipsis: true,
@@ -142,7 +145,6 @@ interface AssetItem {
 const tableData = ref<AssetItem[]>([]);
 const localData = ref<AssetItem[]>([]);
 const rowPromptLoading = ref<Record<number, boolean>>({});
-const rowImageLoading = ref<Record<number, boolean>>({});
 
 // 选中的行
 const selectedRowKeys = ref<number[]>([]);
@@ -230,7 +232,6 @@ async function handlePageChange(pageInfo: { current: number; pageSize: number })
 function closeModal(): void {
   // 取消正在进行的生成任务
   promptGenerateCancel.value = true;
-  imageGenerateCancel.value = true;
 
   batchGenerationShow.value = false;
   selectedRowKeys.value = [];
@@ -250,12 +251,12 @@ const emit = defineEmits(["update"]);
 
 async function onConfirm() {
   if (selectedRowKeys.value.length === 0) {
-    window.$message.warning($t('workbench.assets.selectAtLeastOne'));
+    window.$message.warning($t("workbench.assets.selectAtLeastOne"));
     return;
   }
   const selectedAssets = tableData.value.filter((item) => selectedRowKeys.value.includes(item.id));
   if (selectedAssets.length === 0) {
-    window.$message.error($t('workbench.assets.batch.selectToSave'));
+    window.$message.error($t("workbench.assets.batch.selectToSave"));
     return;
   }
 
@@ -280,12 +281,12 @@ async function onConfirm() {
       }
     });
 
-    window.$message.success($t('workbench.assets.batch.saveSuccess'));
+    window.$message.success($t("workbench.assets.batch.saveSuccess"));
     emit("update"); // 通知父组件更新数据
     closeModal();
   } catch (error) {
     console.error("保存失败:", error);
-    window.$message.error($t('workbench.assets.batch.saveFail'));
+    window.$message.error($t("workbench.assets.batch.saveFail"));
   }
 }
 const textLoading = ref(false);
@@ -294,7 +295,7 @@ const promptGenerateCancel = ref(false);
 async function handleBatchGeneratePrompt() {
   const selectedAssets = tableData.value.filter((item) => selectedRowKeys.value.includes(item.id));
   if (selectedAssets.length === 0) {
-    window.$message.error($t('workbench.assets.selectAtLeastOne'));
+    window.$message.error($t("workbench.assets.selectAtLeastOne"));
     return;
   }
   promptGenerateCancel.value = false;
@@ -302,13 +303,13 @@ async function handleBatchGeneratePrompt() {
   const batchSize = otherSetting.value.assetsBatchGenereateSize || 5; // 从设置中获取批量生成的大小，默认为5
   try {
     for (let i = 0; i < selectedAssets.length; i += batchSize) {
-      if (promptGenerateCancel.value) throw new Error($t('workbench.assets.batch.promptGenCancelled'));
+      if (promptGenerateCancel.value) throw new Error($t("workbench.assets.batch.promptGenCancelled"));
       const batch = selectedAssets.slice(i, i + batchSize);
       await Promise.allSettled(batch.map((item) => generatePrompt(item)));
     }
-    window.$message.success($t('workbench.assets.batch.promptDone'));
+    window.$message.success($t("workbench.assets.batch.promptDone"));
   } catch (e) {
-    if (e instanceof Error && e.message !== $t('workbench.assets.batch.promptGenCancelled')) {
+    if (e instanceof Error && e.message !== $t("workbench.assets.batch.promptGenCancelled")) {
       window.$message.error(e.message);
     }
   } finally {
@@ -336,83 +337,43 @@ async function generatePrompt(data: AssetItem) {
       }
     }
   } catch (e: any) {
-    window.$message.error(`"${data.name}" ${e?.message ?? $t('workbench.assets.batch.promptFail')}`);
+    window.$message.error(`"${data.name}" ${e?.message ?? $t("workbench.assets.batch.promptFail")}`);
   } finally {
     rowPromptLoading.value[data.id] = false;
   }
 }
-const imageLoading = ref(false);
-const imageGenerateCancel = ref(false);
-// 生成图片
 async function handleBatchGenerateImage() {
   const selectedAssets = tableData.value.filter((item) => selectedRowKeys.value.includes(item.id));
   if (selectedAssets.length === 0) {
-    window.$message.warning($t('workbench.assets.selectAtLeastOne'));
+    window.$message.warning($t("workbench.assets.selectAtLeastOne"));
     return;
   }
   // 检查是否所有选中的资产都有提示词
   const assetsWithoutPrompt = selectedAssets.filter((item) => !item.prompt || item.prompt.trim() === "");
   if (assetsWithoutPrompt.length > 0) {
-    window.$message.warning($t('workbench.assets.batch.missingPrompts', { count: assetsWithoutPrompt.length }));
+    window.$message.warning($t("workbench.assets.batch.missingPrompts", { count: assetsWithoutPrompt.length }));
     return;
   }
-  imageGenerateCancel.value = false;
-  imageLoading.value = true;
-  const batchSize = otherSetting.value.assetsBatchGenereateSize || 5; // 从设置中获取批量生成的大小，默认为5
   try {
-    for (let i = 0; i < selectedAssets.length; i += batchSize) {
-      if (imageGenerateCancel.value) throw new Error($t('workbench.assets.batch.promptGenCancelled'));
-      const batch = selectedAssets.slice(i, i + batchSize);
-      await Promise.allSettled(
-        batch.map((item) =>
-          startGenerate({
-            id: item.id,
-            name: item.name,
-            prompt: item.prompt,
-            type: props.type ?? "props",
-          }),
-        ),
-      );
-    }
-    window.$message.success($t('workbench.assets.batch.imageDone'));
-  } catch (e) {
-    if (e instanceof Error && e.message !== $t('workbench.assets.batch.promptGenCancelled')) {
-      window.$message.error(e.message);
-    }
-  } finally {
-    imageLoading.value = false;
-    imageGenerateCancel.value = false;
-  }
-}
-async function startGenerate(data: { id: number; prompt: string; name: string; type: string }) {
-  if (imageGenerateCancel.value) return;
-  rowImageLoading.value[data.id] = true;
-  try {
-    const res = await axios.post("/assets/generateAssets", {
-      type: data.type,
-      projectId: project.value?.id,
-      name: data.name,
-      base64: undefined,
-      prompt: data.prompt ?? "",
-      id: data.id,
-    });
-    if (!imageGenerateCancel.value) {
-      const index = tableData.value.findIndex((item: AssetItem) => item.id === res.data.assetsId);
-      if (index !== -1) {
-        tableData.value[index].filePath = res.data.path;
-        // 同步更新 localData
-        const localIndex = localData.value.findIndex((item: AssetItem) => item.id === res.data.assetsId);
-        if (localIndex !== -1) {
-          localData.value[localIndex].filePath = res.data.path;
-        }
-      }
-    }
+    const promptBundle = buildBatchPrompt(
+      selectedAssets.map((item) => ({
+        title: item.name,
+        prompt: buildManualImagePrompt({
+          name: item.name,
+          category: item.type ?? props.type,
+          prompt: item.prompt,
+          description: item.describe,
+          artStyle: project.value?.artStyle,
+          aspectRatio: project.value?.videoRatio,
+          resolution: project.value?.imageQuality,
+        }),
+      })),
+    );
+    await copyText(promptBundle);
+    window.$message.success(`已复制 ${selectedAssets.length} 条完整生图提示词，请生成后逐项上传`);
+    selectedRowKeys.value = [];
   } catch (e: any) {
-    if (!imageGenerateCancel.value) {
-      window.$message.error(`"${data.name}" ${$t('workbench.assets.batch.imageGenFail')}: ${e?.message ?? $t('workbench.assets.batch.unknownError')}`);
-    }
-  } finally {
-    rowImageLoading.value[data.id] = false;
+    window.$message.error(e?.message ?? "批量复制提示词失败");
   }
 }
 </script>

@@ -45,16 +45,18 @@
           <img :src="resultUrl" alt="generated" />
         </div>
       </div>
-      <div v-else-if="loading" class="loadingSection">
-        <t-loading size="large" :text="$t('settings.vendor.generating')" />
-      </div>
+      <input ref="resultImageInputRef" type="file" accept="image/*" style="display: none" @change="uploadResultImage" />
 
       <!-- 底部操作 -->
       <div class="dialogFooter">
         <t-button variant="outline" @click="visible = false">{{ $t("settings.vendor.test.cancel") }}</t-button>
-        <t-button theme="primary" :loading="loading" :disabled="!canSubmit" @click="handleTest">
-          <template #icon><i-lightning theme="outline" /></template>
-          {{ $t("settings.vendor.test.startTest") }}
+        <t-button theme="primary" :disabled="!canSubmit" @click="copyManualPrompt">
+          <template #icon><t-icon name="file-copy" /></template>
+          复制完整生图提示词
+        </t-button>
+        <t-button theme="success" variant="outline" @click="resultImageInputRef?.click()">
+          <template #icon><t-icon name="upload" /></template>
+          上传生成图片
         </t-button>
       </div>
     </div>
@@ -62,7 +64,7 @@
 </template>
 
 <script setup lang="ts">
-import axios from "@/utils/axios";
+import { buildManualImagePrompt, copyText, fileToDataUrl } from "@/utils/manualMedia";
 
 type ImageMode = "text" | "singleImage" | "multiReference";
 const visible = defineModel<boolean>("modelVisible");
@@ -106,6 +108,7 @@ const imagePreview = ref("");
 const imageInputRef = ref<HTMLInputElement | null>(null);
 const loading = ref(false);
 const resultUrl = ref("");
+const resultImageInputRef = ref<HTMLInputElement | null>(null);
 
 const canSubmit = computed(() => {
   if (loading.value) return false;
@@ -134,34 +137,28 @@ function handleDrop(e: DragEvent) {
   }
 }
 
-const fileToDataURL = (file: File) =>
-  new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string); // data:image/...;base64,xxxx
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-async function handleTest() {
-  loading.value = true;
-  resultUrl.value = "";
+async function copyManualPrompt() {
   try {
-    const payload: Record<string, any> = {
-      modelName: props.modelName,
-      id: props.vendorId,
-    };
-    const p = prompt.value.trim();
-    if (p) payload.prompt = p;
-    if (imageFile.value) {
-      payload.imageBase64 = await fileToDataURL(imageFile.value); // 带前缀 data:image/...;base64,
-    }
-    const { data } = await axios.post("/setting/vendorConfig/modelTest/imageTest", payload);
-    resultUrl.value = data;
-    window.$message.success($t("settings.vendor.msg.imageGenSuccess"));
+    await copyText(
+      buildManualImagePrompt({
+        category: "模型测试",
+        name: props.modelName,
+        prompt: prompt.value,
+        referenceCount: imageFile.value ? 1 : 0,
+      }),
+    );
+    window.$message.success("完整生图提示词已复制，请在外部工具生成后上传结果");
   } catch (e: any) {
-    window.$message.error(e.message ?? `${$t("settings.vendor.msg.requestFailed")}`);
-  } finally {
-    loading.value = false;
+    window.$message.error(e.message ?? "复制完整生图提示词失败");
   }
+}
+
+async function uploadResultImage(event: Event) {
+  const file = (event.target as HTMLInputElement).files?.[0];
+  if (!file) return;
+  resultUrl.value = await fileToDataUrl(file);
+  (event.target as HTMLInputElement).value = "";
+  window.$message.success("生成图片已上传到测试结果区");
 }
 
 function handleClose() {

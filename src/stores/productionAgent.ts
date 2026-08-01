@@ -6,6 +6,20 @@ import type { FlowData, Storyboard } from "@/views/production/utils/flowBuilder"
 import type { ChatMessagesData } from "@tdesign-vue-next/chat";
 import { useThrottleFn } from "@vueuse/core";
 
+function isExecutionDirectorMessage(message: ChatMessagesData): boolean {
+  return (message as ChatMessagesData & { name?: string }).name === "执行导演";
+}
+
+function expandExecutionDirectorThinking(message: ChatMessagesData): ChatMessagesData {
+  if (!isExecutionDirectorMessage(message) || message.role !== "assistant") return message;
+  message.content?.forEach((content) => {
+    if (content.type === "thinking") {
+      content.ext = { ...content.ext, collapsed: false };
+    }
+  });
+  return message;
+}
+
 function makeProductionAgentStore(projectId: string) {
   return defineStore(`productionAgent-${projectId}`, () => {
     const defMsg: ChatMessagesData[] = [
@@ -54,13 +68,14 @@ function makeProductionAgentStore(projectId: string) {
         { tag: "storyboardTable", keepInMessage: false },
         { tag: "storyboardItem", keepInMessage: false },
       ],
+      defaultThinkingCollapsed: (message) => !isExecutionDirectorMessage(message),
       onXmlTag: async (data) => {
-        const { tag, value, children, attrs, status } = data;
+        const { tag, value, children, attrs, isComplete, status } = data;
         if (tag === "script") {
           flowData.value.script = value ?? "";
         } else if (tag === "scriptPlan") {
           flowData.value.scriptPlan = value ?? "";
-        } else if (tag === "storyboardTable") {
+        } else if (tag === "storyboardTable" && isComplete && status === "complete") {
           flowData.value.storyboardTable = value ?? "";
         }
         // else if (tag === "storyboardItem") {
@@ -231,67 +246,11 @@ function makeProductionAgentStore(projectId: string) {
       });
       flowData.value = data;
     }
-    async function batchGenerateStoryboard(allIds: number[], compulsory: boolean = false) {
-      try {
-        const { data } = await axios.post("/production/storyboard/batchGenerateImage", {
-          scriptId: episodesId.value,
-          projectId: projectId,
-          storyboardIds: allIds,
-          concurrentCount: settingStore().otherSetting.assetsBatchGenereateSize,
-          compulsory,
-        });
-        if (data) {
-          if (flowData.value.storyboard.length === 0) {
-            flowData.value.storyboard = data;
-            return data;
-          } else {
-            flowData.value.storyboard.forEach((item) => {
-              const findData = data.find((i: any) => i.id == item.id);
-              if (findData) {
-                item.state = findData.state;
-                item.src = findData.src;
-              }
-            });
-          }
-        }
-        return data;
-      } catch (e) {
-        window.$message.error((e as any)?.message);
-      }
+    async function batchGenerateStoryboard(allIds: number[], _compulsory: boolean = false) {
+      return flowData.value.storyboard.filter((item) => item.id != null && allIds.includes(item.id));
     }
     async function batchGenerateAssets(allIds: number[]) {
-      flowData.value.assets.forEach((asset) => {
-        if (asset.derive) {
-          asset.derive.forEach((derive) => {
-            if (allIds.includes(derive.id)) {
-              derive.state = "生成中" as "未生成" | "生成中" | "已完成" | "生成失败";
-            }
-          });
-        }
-      });
-      try {
-        const { data } = await axios.post("/production/assets/batchGenerateAssetsImage", {
-          assetIds: allIds,
-          projectId: projectId,
-          scriptId: episodesId.value,
-          concurrentCount: settingStore().otherSetting.assetsBatchGenereateSize,
-        });
-        if (data) {
-          data.forEach((record: { id: number; state: "未生成" | "生成中" | "已完成" | "生成失败"; src: string }) => {
-            flowData.value.assets.forEach((asset) => {
-              if (asset.derive) {
-                asset.derive.forEach((derive) => {
-                  if (derive.id === record.id) {
-                    derive.state = record.state;
-                    derive.src = record.src;
-                  }
-                });
-              }
-            });
-          });
-        }
-        return data;
-      } catch (e) {}
+      return flowData.value.assets.flatMap((asset) => asset.derive ?? []).filter((derive) => allIds.includes(derive.id));
     }
     const assetsNotStateImageIds = computed(() => {
       const ids: number[] = [];
@@ -478,7 +437,7 @@ function makeProductionAgentStore(projectId: string) {
         agentType: "productionAgent",
       });
       messages.value = [];
-      messages.value = [...defMsg, ...data];
+      messages.value = [...defMsg, ...data.map(expandExecutionDirectorThinking)];
       loadingHistory.value = false;
     }
 
