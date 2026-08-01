@@ -55,12 +55,12 @@ function makeProductionAgentStore(projectId: string) {
         { tag: "storyboardItem", keepInMessage: false },
       ],
       onXmlTag: async (data) => {
-        const { tag, value, children, attrs, status } = data;
+        const { tag, value, children, attrs, isComplete, status } = data;
         if (tag === "script") {
           flowData.value.script = value ?? "";
         } else if (tag === "scriptPlan") {
           flowData.value.scriptPlan = value ?? "";
-        } else if (tag === "storyboardTable") {
+        } else if (tag === "storyboardTable" && isComplete && status === "complete") {
           flowData.value.storyboardTable = value ?? "";
         }
         // else if (tag === "storyboardItem") {

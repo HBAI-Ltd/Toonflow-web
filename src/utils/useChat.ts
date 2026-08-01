@@ -48,6 +48,7 @@ export interface XmlTagEvent {
   value: string;
   attrs: Record<string, string>;
   children: XmlChildItem[];
+  isComplete: boolean;
   status: ChatMessageStatus;
 }
 
@@ -280,7 +281,13 @@ export function useChat(options: UseChatOptions) {
       if (parsed === null) continue;
 
       const { value, isComplete } = parsed;
-      const eventStatus = isComplete ? (status === "error" || status === "stop" ? status : "complete") : status;
+      const eventStatus = isComplete
+        ? status === "error" || status === "stop"
+          ? status
+          : "complete"
+        : status === "complete"
+          ? "error"
+          : status;
 
       const shouldEmit = prevState[tag] !== value || eventStatus === "complete";
       if (!shouldEmit) continue;
@@ -298,6 +305,7 @@ export function useChat(options: UseChatOptions) {
         value,
         attrs: parsed.attrs,
         children: parsed.children,
+        isComplete,
         status: eventStatus,
       });
     }
