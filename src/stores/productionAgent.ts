@@ -6,6 +6,20 @@ import type { FlowData, Storyboard } from "@/views/production/utils/flowBuilder"
 import type { ChatMessagesData } from "@tdesign-vue-next/chat";
 import { useThrottleFn } from "@vueuse/core";
 
+function isExecutionDirectorMessage(message: ChatMessagesData): boolean {
+  return (message as ChatMessagesData & { name?: string }).name === "执行导演";
+}
+
+function expandExecutionDirectorThinking(message: ChatMessagesData): ChatMessagesData {
+  if (!isExecutionDirectorMessage(message) || message.role !== "assistant") return message;
+  message.content?.forEach((content) => {
+    if (content.type === "thinking") {
+      content.ext = { ...content.ext, collapsed: false };
+    }
+  });
+  return message;
+}
+
 function makeProductionAgentStore(projectId: string) {
   return defineStore(`productionAgent-${projectId}`, () => {
     const defMsg: ChatMessagesData[] = [
@@ -54,6 +68,7 @@ function makeProductionAgentStore(projectId: string) {
         { tag: "storyboardTable", keepInMessage: false },
         { tag: "storyboardItem", keepInMessage: false },
       ],
+      defaultThinkingCollapsed: (message) => !isExecutionDirectorMessage(message),
       onXmlTag: async (data) => {
         const { tag, value, children, attrs, isComplete, status } = data;
         if (tag === "script") {
@@ -422,7 +437,7 @@ function makeProductionAgentStore(projectId: string) {
         agentType: "productionAgent",
       });
       messages.value = [];
-      messages.value = [...defMsg, ...data];
+      messages.value = [...defMsg, ...data.map(expandExecutionDirectorThinking)];
       loadingHistory.value = false;
     }
 
