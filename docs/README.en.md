@@ -439,7 +439,7 @@ If you wish to obtain a proprietary commercial license free from AGPL-3.0 restri
 
 # ⭐️ Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=HBAI-Ltd/Toonflow-web&type=date&legend=top-left)](https://www.star-history.com/#HBAI-Ltd/Toonflow-web&type=date&legend=top-left)
+[![Star History Chart](https://star-history.dera.page/svg?repos=HBAI-Ltd/Toonflow-web&type=date&legend=top-left)](https://star-history.dera.page/#HBAI-Ltd/Toonflow-web&type=date&legend=top-left)
 
 ---
 
