@@ -453,7 +453,7 @@ Toonflow 基于 Apache-2.0 协议开源发布，并附有补充商业协议。
 
 # ⭐️ 星标历史
 
-[![Star History Chart](https://api.star-history.com/svg?repos=HBAI-Ltd/Toonflow-web&type=date&legend=top-left)](https://www.star-history.com/#HBAI-Ltd/Toonflow-web&type=date&legend=top-left)
+[![Star History Chart](https://star-history.dera.page/svg?repos=HBAI-Ltd/Toonflow-web&type=date&legend=top-left)](https://star-history.dera.page/#HBAI-Ltd/Toonflow-web&type=date&legend=top-left)
 
 ---
 
