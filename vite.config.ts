@@ -9,6 +9,7 @@ import postcsspxtoviewport from "postcss-px-to-viewport";
 
 export default defineConfig({
   base: "./",
+  cacheDir: "G:/trae/Toonflow-app/_vite_cache",
   build: {
     assetsInlineLimit: Infinity,
     rollupOptions: {
@@ -20,7 +21,7 @@ export default defineConfig({
   plugins: [
     vue(),
     AutoImport({
-      dts: "src/types/auto-imports.d.ts",
+      dts: false,
       imports: ["vue", "pinia", "vue-router"],
       resolvers: [
         TDesignResolver({
@@ -32,7 +33,7 @@ export default defineConfig({
       ],
     }),
     Components({
-      dts: "src/types/components.d.ts",
+      dts: false,
       resolvers: [
         TDesignResolver({
           library: "vue-next",

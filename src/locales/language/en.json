@@ -85,6 +85,8 @@
       "displayNamePlaceholder": "e.g., GPT-4o",
       "modelId": "Model ID",
       "modelIdPlaceholder": "e.g., gpt-4o",
+      "modelApiKey": "Model-level API Key (optional)",
+      "modelApiKeyPlaceholder": "Leave empty to use vendor global key; some channels require a separate key per model",
       "modelType": "Model Type",
       "multimodal": "Multimodal",
       "supported": "Supported",
@@ -541,6 +543,7 @@
   "workbench": {
     "selectProject": "Please select a project",
     "menu": {
+      "faceAsset": "Face Library",
       "myProject": "My Projects",
       "taskCenter": "Task Center",
       "novel": "Novel Text",
@@ -551,7 +554,8 @@
       "assetCenter": "Asset Center",
       "settings": "Settings",
       "jumpGithub": "Jump to Github",
-      "feedbackQuestions": "Feedback question"
+      "feedbackQuestions": "Feedback question",
+      "needProjectTip": "Please create or select a project in \"My Projects\" first"
     },
     "project": {
       "title": "My Projects",
@@ -566,6 +570,18 @@
         "projectType": "Project Type",
         "selectType": "Select Project Type",
         "basedOnNovel": "Based on Novel Text",
+        "contentFormat": "Content Format",
+        "contentFormatPh": "Select Content Format",
+        "formatVerticalEpisode": "Vertical Micro-Drama (55s/ep, with Paywalls)",
+        "formatSeriesDrama": "Series Drama (5-15 min/ep, Multi-Act Arc)",
+        "formatSingleFilm": "Short Story / Micro-Film (Single Episode)",
+        "formatExplainerVideo": "Explainer / Knowledge Video (Voiceover Driven)",
+        "episodeDuration": "Episode Duration",
+        "filmDuration": "Target Film Duration",
+        "secondsUnit": "s",
+        "minutesUnit": "min",
+        "totalEpisodes": "Total Episodes",
+        "totalEpisodesPh": "Enter total episodes",
         "projectName": "Project Name",
         "projectNamePh": "Please enter project name",
         "novelType": "Novel Genre",

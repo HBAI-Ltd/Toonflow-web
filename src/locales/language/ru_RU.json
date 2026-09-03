@@ -85,6 +85,8 @@
       "displayNamePlaceholder": "Например: GPT-4o",
       "modelId": "ID модели",
       "modelIdPlaceholder": "Например: gpt-4o",
+      "modelApiKey": "API-ключ модели (необязательно)",
+      "modelApiKeyPlaceholder": "Оставьте пустым, чтобы использовать общий ключ провайдера",
       "modelType": "Тип модели",
       "multimodal": "Мультимодальная",
       "supported": "Поддерживается",
@@ -417,6 +419,7 @@
   "workbench": {
     "selectProject": "Пожалуйста, выберите проект",
     "menu": {
+      "faceAsset": "Библиотека лиц",
       "myProject": "Мои проекты",
       "taskCenter": "Центр задач",
       "novel": "Текст романа",
@@ -427,7 +430,8 @@
       "assetCenter": "Центр ассетов",
       "settings": "Настройки",
       "jumpGithub": "Перейти на Гитхаб",
-      "feedbackQuestions": "Вопрос обратной связи"
+      "feedbackQuestions": "Вопрос обратной связи",
+      "needProjectTip": "Сначала создайте или выберите проект в «Мои проекты»"
     },
     "project": {
       "title": "Мои проекты",
@@ -442,6 +446,12 @@
         "projectType": "Тип проекта",
         "selectType": "Выберите тип",
         "basedOnNovel": "На основе текста романа",
+        "contentFormat": "Формат контента",
+        "contentFormatPh": "Выберите формат контента",
+        "formatVerticalEpisode": "Вертикальная мини-драма (55с/серия, с платными точками)",
+        "formatSeriesDrama": "Сериал (5-15 мин/серия, длинное повествование)",
+        "formatSingleFilm": "Рассказ / мини-фильм (одна завершённая серия)",
+        "formatExplainerVideo": "Научно-популярное видео (закадровый голос)",
         "projectName": "Название проекта",
         "projectNamePh": "Введите название проекта",
         "novelType": "Жанр романа",

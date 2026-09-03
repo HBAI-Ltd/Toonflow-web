@@ -21,7 +21,18 @@
           <div class="title">
             {{ project.name }}
           </div>
-          <div>
+          <div class="f ac" style="gap: 4px;">
+            <t-tag shape="round" theme="primary" variant="light" v-if="project.contentFormat">
+              {{
+                project.contentFormat === 'series_drama'
+                  ? '连续剧'
+                  : project.contentFormat === 'single_film'
+                  ? '微电影'
+                  : project.contentFormat === 'explainer_video'
+                  ? '科普解说'
+                  : '超短剧'
+              }}
+            </t-tag>
             <t-tag shape="round">
               {{ project.projectType == "novel" ? $t(`workbench.project.type.novel`) : $t(`workbench.project.type.script`) }}
             </t-tag>

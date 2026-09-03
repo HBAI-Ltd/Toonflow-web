@@ -1,0 +1,1342 @@
+<template>
+  <div class="faceAssetPage">
+    <!-- 顶部工具栏 -->
+    <div class="toolbar f ac jb">
+      <div class="left f ac">
+        <h2 class="title">人物资产库</h2>
+        <span class="sub">双真人人脸参考底图 · 角色生图自动抽样</span>
+      </div>
+      <div class="right f ac">
+        <t-select v-model="filter.gender" placeholder="性别" clearable style="width: 100px" @change="loadList(1)">
+          <t-option v-for="g in genderOptions" :key="g.value" :value="g.value" :label="g.label" />
+        </t-select>
+        <t-select v-model="filter.ethnicity" placeholder="人种" clearable style="width: 110px" @change="loadList(1)">
+          <t-option v-for="e in ethnicityOptions" :key="e.value" :value="e.value" :label="e.label" />
+        </t-select>
+        <t-select v-model="filter.ageGroup" placeholder="年龄段" clearable style="width: 100px" @change="loadList(1)">
+          <t-option v-for="a in ageOptions" :key="a.value" :value="a.value" :label="a.label" />
+        </t-select>
+        <t-select v-model="filter.beautyLevel" placeholder="颜值" clearable style="width: 90px" @change="loadList(1)">
+          <t-option v-for="b in beautyOptions" :key="b.value" :value="b.value" :label="b.label" />
+        </t-select>
+
+        <!-- 批量删除模式：点击「批量删除」进入，卡片显示复选框 -->
+        <template v-if="deleteMode">
+          <span class="batchInfo" v-if="selectedIds.size > 0">已选 {{ selectedIds.size }}/{{ total }} 项</span>
+          <t-button variant="outline" @click="selectAllPage">
+            <template #icon><i-check-circle class="icon" /></template>
+            全选本页
+          </t-button>
+          <t-button variant="outline" @click="selectAllFiltered">
+            <template #icon><i-check-double class="icon" /></template>
+            全选全部
+          </t-button>
+          <t-button variant="text" @click="clearSelected">取消选择</t-button>
+          <t-button variant="outline" theme="danger" :disabled="selectedIds.size === 0" @click="confirmBatchDel">
+            <template #icon><i-delete class="icon" /></template>
+            删除所选
+          </t-button>
+          <t-button variant="text" @click="exitDeleteMode">退出</t-button>
+        </template>
+        <template v-else>
+          <t-button variant="outline" theme="danger" @click="enterDeleteMode">
+            <template #icon><i-delete class="icon" /></template>
+            批量删除
+          </t-button>
+        </template>
+
+        <t-button theme="primary" @click="openUpload">
+          <template #icon><i-add class="icon" /></template>
+          批量上传人脸
+        </t-button>
+      </div>
+    </div>
+
+    <!-- 卡片列表 -->
+    <div v-if="list.length" class="cardGrid">
+      <div v-for="item in list" :key="item.id" class="card" :class="{ selected: selectedIds.has(item.id) }">
+        <div class="imgBox" @click="preview(item)">
+          <!-- 使用高清原图（fileUrlRaw），避免列表模糊；原图懒加载 -->
+          <img :src="item.fileUrlRaw || item.fileUrl" :alt="item.name" loading="lazy" class="cardImg" />
+          <div class="hoverOverlay">
+            <i-expand-text-input class="zoomIcon" />
+            <span>点击查看大图</span>
+          </div>
+          <!-- 多选复选框：仅在删除模式下显示 -->
+          <div v-if="deleteMode" class="cardCheck" @click.stop>
+            <t-checkbox
+              :checked="selectedIds.has(item.id)"
+              @change="(v) => toggleSelect(item.id, !!v)" />
+          </div>
+        </div>
+        <div class="info">
+          <div class="nameRow f ac jb">
+            <span class="name" :title="item.name">{{ item.name }}</span>
+            <span class="gender" :class="item.gender === '女' ? 'female' : item.gender === '男' ? 'male' : ''">{{ item.gender }}</span>
+          </div>
+          <div class="meta">
+            <t-tag size="small" variant="light">{{ item.ethnicity || "未标注" }}</t-tag>
+            <t-tag size="small" variant="light" theme="primary">{{ item.ageGroup || "未标注" }}</t-tag>
+            <t-tag v-if="item.beautyLevel" size="small" variant="light" theme="warning">颜值{{ item.beautyLevel }}</t-tag>
+          </div>
+          <div class="tags" v-if="item.tags?.length">
+            <t-tag v-for="(t, i) in item.tags.slice(0, 3)" :key="i" size="small" variant="outline" theme="success" style="margin-right: 4px">{{ t }}</t-tag>
+            <span v-if="item.tags.length > 3" class="moreTags">+{{ item.tags.length - 3 }}</span>
+          </div>
+          <div class="desc" v-if="item.description" :title="item.description">{{ item.description }}</div>
+
+          <!-- 始终可见的操作按钮区（不依赖 hover，触屏/桌面均可用） -->
+          <div class="cardActionsBar">
+            <t-button size="small" variant="text" theme="primary" @click="openDetail(item)">
+              <template #icon><i-view-list /></template>
+              详情
+            </t-button>
+            <t-button size="small" variant="text" theme="primary" @click="openEdit(item)">
+              <template #icon><i-edit /></template>
+              编辑
+            </t-button>
+            <t-button size="small" variant="text" theme="danger" @click="confirmDel(item)">
+              <template #icon><i-delete /></template>
+              删除
+            </t-button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <t-empty v-else description="暂无人物资产，点击右上角「批量上传人脸」开始建设人脸库" style="margin-top: 80px" />
+
+    <!-- 分页 -->
+    <div class="pager f ac" v-if="total > pageSize">
+      <t-pagination :total="total" :page-size="pageSize" :current="page" show-jumper @change="onPageChange" />
+    </div>
+
+    <!-- 批量上传对话框 -->
+    <t-dialog :visible="dialogVisible" :header="'批量上传人物资产'" :footer="false" width="640px" @close="closeDialog">
+      <t-form label-align="left" :label-width="80">
+        <t-form-item label="照片" required :error="imgError">
+          <div
+            class="uploadArea"
+            :class="{ isDragOver }"
+            v-if="!pendingFiles.length"
+            @dragover.prevent="isDragOver = true"
+            @dragleave.prevent="isDragOver = false"
+            @drop.prevent="handleDrop">
+            <label class="pickBtn c">
+              <input type="file" accept="image/*" multiple style="display: none" @change="onPickImages" />
+              <i-upload-one class="icon" />
+              <span>点击或将多张人脸照片拖拽至此处</span>
+            </label>
+            <div class="tips">支持 jpg/png/webp 格式，可拖动或多选批量上传；每张可开启 AI 自动打标</div>
+          </div>
+          <div
+            v-else
+            class="pendingBox"
+            :class="{ isDragOver }"
+            @dragover.prevent="isDragOver = true"
+            @dragleave.prevent="isDragOver = false"
+            @drop.prevent="handleDrop">
+            <div class="thumbs">
+              <div v-for="(f, i) in pendingFiles" :key="i" class="thumb">
+                <img :src="f.base64" />
+                <div class="rm" @click="removePending(i)"><i-close class="icon" /></div>
+              </div>
+            </div>
+            <div class="btnRow f ac">
+              <label class="addMore"><input type="file" accept="image/*" multiple style="display: none" @change="onPickImages" />＋ 继续添加（或直接拖入）</label>
+              <span class="count">共 {{ pendingFiles.length }} 张</span>
+            </div>
+          </div>
+        </t-form-item>
+        <t-form-item label="性别">
+          <t-radio-group v-model="form.gender" variant="default-filled">
+            <t-radio-button value="自动识别">自动识别</t-radio-button>
+            <t-radio-button value="女">女</t-radio-button>
+            <t-radio-button value="男">男</t-radio-button>
+            <t-radio-button value="未知">未知</t-radio-button>
+          </t-radio-group>
+        </t-form-item>
+        <t-form-item label="年龄段">
+          <t-radio-group v-model="form.ageGroup" variant="default-filled">
+            <t-radio-button value="自动识别">自动识别</t-radio-button>
+            <t-radio-button v-for="a in ageOptions" :key="a.value" :value="a.value">{{ a.label }}</t-radio-button>
+          </t-radio-group>
+        </t-form-item>
+        <t-form-item label="人种">
+          <t-radio-group v-model="form.ethnicity" variant="default-filled">
+            <t-radio-button value="自动识别">自动识别</t-radio-button>
+            <t-radio-button v-for="e in ethnicityOptions" :key="e.value" :value="e.value">{{ e.label }}</t-radio-button>
+          </t-radio-group>
+        </t-form-item>
+        <t-form-item label="颜值等级">
+          <t-radio-group v-model="form.beautyLevel" variant="default-filled">
+            <t-radio-button value="自动识别">自动识别</t-radio-button>
+            <t-radio-button v-for="b in beautyOptions" :key="b.value" :value="b.value">{{ b.label }}</t-radio-button>
+          </t-radio-group>
+        </t-form-item>
+        <t-form-item label="面容标签">
+          <t-input v-model="form.tagsText" placeholder="多个标签用逗号分隔（批量上传时应用到全部照片）" />
+        </t-form-item>
+        <t-form-item label="AI 自动打标">
+          <t-switch v-model="form.autoTag" />
+          <span class="autoTip" style="margin-left: 10px">开启后由全局配置的视觉模型自动分析人种/年龄/性别/面容标签（未手填的字段）</span>
+        </t-form-item>
+      </t-form>
+      <div class="dialogFooter f ac jb">
+        <span v-if="uploading" class="uploading">正在上传 {{ uploadedCount }}/{{ pendingFiles.length }}，请勿关闭…</span>
+        <div class="f ac">
+          <t-button variant="outline" :disabled="uploading" @click="closeDialog">取消</t-button>
+          <t-button theme="primary" :loading="uploading" :disabled="!pendingFiles.length" style="margin-left: 10px" @click="submit">开始上传</t-button>
+        </div>
+      </div>
+    </t-dialog>
+
+    <!-- 编辑对话框 -->
+    <t-dialog :visible="editVisible" header="编辑人物资产" :footer="false" width="520px" @close="editVisible = false">
+      <t-form label-align="left" :label-width="80">
+        <t-form-item label="名称">
+          <t-input v-model="editForm.name" />
+        </t-form-item>
+        <t-form-item label="性别">
+          <t-radio-group v-model="editForm.gender" variant="default-filled">
+            <t-radio-button value="女">女</t-radio-button>
+            <t-radio-button value="男">男</t-radio-button>
+            <t-radio-button value="未知">未知</t-radio-button>
+          </t-radio-group>
+        </t-form-item>
+        <t-form-item label="年龄段">
+          <t-radio-group v-model="editForm.ageGroup" variant="default-filled">
+            <t-radio-button v-for="a in ageOptions" :key="a.value" :value="a.value">{{ a.label }}</t-radio-button>
+          </t-radio-group>
+        </t-form-item>
+        <t-form-item label="人种">
+          <t-radio-group v-model="editForm.ethnicity" variant="default-filled">
+            <t-radio-button v-for="e in ethnicityOptions" :key="e.value" :value="e.value">{{ e.label }}</t-radio-button>
+          </t-radio-group>
+        </t-form-item>
+        <t-form-item label="颜值等级">
+          <t-radio-group v-model="editForm.beautyLevel" variant="default-filled">
+            <t-radio-button v-for="b in beautyOptions" :key="b.value" :value="b.value">{{ b.label }}</t-radio-button>
+          </t-radio-group>
+        </t-form-item>
+        <t-form-item label="面容标签">
+          <t-input v-model="editForm.tagsText" placeholder="多个标签用逗号分隔" />
+        </t-form-item>
+        <t-form-item label="骨相描述">
+          <t-textarea v-model="editForm.description" placeholder="50字内概括骨相立体度、五官神态、皮肤质感" :maxlength="50" show-word-limit />
+        </t-form-item>
+      </t-form>
+      <div class="dialogFooter f ac jb">
+        <span></span>
+        <div class="f ac">
+          <t-button variant="outline" @click="editVisible = false">取消</t-button>
+          <t-button theme="primary" style="margin-left: 10px" @click="submitEdit">保存</t-button>
+        </div>
+      </div>
+    </t-dialog>
+
+    <!-- 详情对话框（只读查看全部元信息） -->
+    <t-dialog
+      :visible="detailVisible"
+      header="人物资产详情"
+      :footer="false"
+      width="640px"
+      @close="detailVisible = false">
+      <div v-if="detailItem" class="detailDialog">
+        <div class="detailDialog__hero">
+          <img
+            :src="detailItem.fileUrlRaw || detailItem.fileUrl"
+            :alt="detailItem.name"
+            class="detailDialog__img" />
+          <div class="detailDialog__basic">
+            <div class="detailDialog__name">{{ detailItem.name || "未命名" }}</div>
+            <div class="detailDialog__chips">
+              <t-tag theme="primary" variant="light">性别：{{ detailItem.gender || "未标注" }}</t-tag>
+              <t-tag theme="success" variant="light">年龄段：{{ detailItem.ageGroup || "未标注" }}</t-tag>
+              <t-tag theme="warning" variant="light">人种：{{ detailItem.ethnicity || "未标注" }}</t-tag>
+              <t-tag v-if="detailItem.beautyLevel" theme="danger" variant="light">颜值：{{ detailItem.beautyLevel }}</t-tag>
+            </div>
+            <div class="detailDialog__time">入库时间：{{ formatTime(detailItem.createTime) }}</div>
+          </div>
+        </div>
+
+        <t-form label-align="top" class="detailDialog__form">
+          <t-form-item label="面容特征标签">
+            <div v-if="detailItem.tags?.length" class="detailDialog__tags">
+              <t-tag
+                v-for="(t, i) in detailItem.tags"
+                :key="i"
+                theme="success"
+                variant="light"
+                size="medium"
+                style="margin: 0 6px 6px 0">
+                {{ t }}
+              </t-tag>
+            </div>
+            <span v-else class="detailDialog__empty">暂无标签</span>
+          </t-form-item>
+
+          <t-form-item label="骨相 / 面部神态描述">
+            <div v-if="detailItem.description" class="detailDialog__desc">{{ detailItem.description }}</div>
+            <span v-else class="detailDialog__empty">暂无描述</span>
+          </t-form-item>
+
+          <t-form-item label="文件信息">
+            <div class="detailDialog__fileinfo">
+              <div><b>路径：</b>{{ detailItem.filePath || "-" }}</div>
+              <div><b>缩略图：</b>{{ detailItem.fileUrl || "-" }}</div>
+              <div><b>原图：</b>{{ detailItem.fileUrlRaw || "-" }}</div>
+            </div>
+          </t-form-item>
+        </t-form>
+
+        <div class="dialogFooter f ac jb">
+          <span></span>
+          <div class="f ac">
+            <t-button variant="outline" @click="detailVisible = false">关闭</t-button>
+            <t-button theme="primary" style="margin-left: 10px" @click="() => { detailVisible = false; openEdit(detailItem); }">
+              <template #icon><i-edit /></template>
+              去编辑
+            </t-button>
+          </div>
+        </div>
+      </div>
+    </t-dialog>
+
+    <!-- 高清人脸预览（自定义灯箱：解决 t-image-viewer 在竖屏/EXIF 方向下的排版问题） -->
+    <teleport to="body">
+      <div v-if="previewVisible" class="faceLightbox" @click.self="closePreview">
+        <div class="faceLightbox__topbar">
+          <div class="faceLightbox__title">{{ previewCurrent?.name || "" }}</div>
+          <div class="faceLightbox__meta">
+            <span v-if="previewCurrent?.gender">{{ previewCurrent.gender }}</span>
+            <span v-if="previewCurrent?.ageGroup">{{ previewCurrent.ageGroup }}</span>
+            <span v-if="previewCurrent?.ethnicity">{{ previewCurrent.ethnicity }}</span>
+            <span v-if="previewCurrent?.beautyLevel">颜值{{ previewCurrent.beautyLevel }}</span>
+            <span class="counter">{{ previewIndex + 1 }} / {{ previewImages.length }}</span>
+          </div>
+          <button class="faceLightbox__close" @click="closePreview" aria-label="关闭">
+            <i-close size="22" />
+          </button>
+        </div>
+
+        <button v-if="previewImages.length > 1" class="faceLightbox__nav faceLightbox__nav--prev" @click="prevPreview" aria-label="上一张">
+          <i-chevron-left size="28" />
+        </button>
+        <button v-if="previewImages.length > 1" class="faceLightbox__nav faceLightbox__nav--next" @click="nextPreview" aria-label="下一张">
+          <i-chevron-right size="28" />
+        </button>
+
+        <div class="faceLightbox__stage" @click.stop>
+          <img
+            v-if="previewCurrentRaw"
+            :key="previewCurrentRaw"
+            :src="previewCurrentRaw"
+            :alt="previewCurrent?.name"
+            class="faceLightbox__img"
+            @load="onPreviewImgLoad"
+            @error="onPreviewImgError" />
+        </div>
+
+        <div v-if="previewImages.length > 1" class="faceLightbox__thumbs">
+          <div
+            v-for="(img, i) in previewImages"
+            :key="i"
+            class="faceLightbox__thumb"
+            :class="{ active: i === previewIndex }"
+            @click="goPreview(i)">
+            <img :src="img" />
+          </div>
+        </div>
+      </div>
+    </teleport>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, reactive, computed, onMounted, onBeforeUnmount } from "vue";
+import axios from "@/utils/axios";
+import { MessagePlugin } from "tdesign-vue-next";
+
+const genderOptions = [
+  { value: "女", label: "女" },
+  { value: "男", label: "男" },
+];
+const ethnicityOptions = [
+  { value: "东亚", label: "东亚" },
+  { value: "东南亚", label: "东南亚" },
+  { value: "南亚", label: "南亚" },
+  { value: "欧美", label: "欧美" },
+  { value: "拉丁", label: "拉丁" },
+  { value: "非裔", label: "非裔" },
+  { value: "其他", label: "其他（含混血）" },
+];
+const ageOptions = [
+  { value: "少年", label: "少年" },
+  { value: "青年", label: "青年" },
+  { value: "中年", label: "中年" },
+  { value: "老年", label: "老年" },
+];
+const beautyOptions = [
+  { value: "高", label: "高" },
+  { value: "中", label: "中" },
+];
+
+const list = ref<any[]>([]);
+const total = ref(0);
+const page = ref(1);
+const pageSize = ref(30);
+const filter = reactive({ gender: "", ethnicity: "", ageGroup: "", beautyLevel: "" });
+
+// ---- 多选删除（删除模式）----
+const selectedIds = ref<Set<number>>(new Set());
+const deleteMode = ref(false); // 是否处于「批量删除」模式：仅此模式下卡片显示复选框
+
+function enterDeleteMode() {
+  deleteMode.value = true;
+}
+
+function exitDeleteMode() {
+  deleteMode.value = false;
+  clearSelected();
+}
+
+function toggleSelect(id: number, checked: boolean) {
+  const set = new Set(selectedIds.value);
+  if (checked) set.add(id);
+  else set.delete(id);
+  selectedIds.value = set;
+}
+
+function clearSelected() {
+  selectedIds.value = new Set();
+}
+
+// 全选：选中当前页全部卡片
+function selectAllPage() {
+  const set = new Set(selectedIds.value);
+  for (const item of list.value) set.add(item.id);
+  selectedIds.value = set;
+}
+
+// 全选全部：选中当前筛选条件下的全部资产（跨页，最多 5000 条，避免一次拉取过多）
+async function selectAllFiltered() {
+  const { data } = await axios.post("/faceAsset/getFaceAssets", {
+    page: 1,
+    pageSize: 5000,
+    gender: filter.gender || undefined,
+    ethnicity: filter.ethnicity || undefined,
+    ageGroup: filter.ageGroup || undefined,
+    beautyLevel: filter.beautyLevel || undefined,
+  });
+  const all = (data?.list || []) as any[];
+  if (!all.length) return;
+  const set = new Set(selectedIds.value);
+  for (const item of all) set.add(item.id);
+  selectedIds.value = set;
+  MessagePlugin.success(`已选中 ${set.size} 张人脸（当前筛选条件下全部 ${all.length} 张已加入选择）`);
+}
+
+function confirmBatchDel() {
+  const ids = [...selectedIds.value];
+  if (!ids.length) return;
+  const dialog = DialogPlugin.confirm({
+    header: "批量删除人物资产",
+    body: `确定删除选中的 ${ids.length} 个人脸资产吗？删除后角色将无法追溯这些参考底图。`,
+    theme: "danger",
+    confirmBtn: "删除",
+    cancelBtn: "取消",
+    onConfirm: async () => {
+      await delByIds(ids);
+      dialog.destroy();
+    },
+    onClose: () => dialog.destroy(),
+  });
+}
+
+async function delByIds(ids: number[]) {
+  try {
+    await axios.post("/faceAsset/delFaceAsset", { ids });
+    MessagePlugin.success(`已删除 ${ids.length} 项`);
+    exitDeleteMode();
+    loadList();
+  } catch (e: any) {
+    console.error("[Face Batch Del Error]:", e);
+    MessagePlugin.error(e?.response?.data?.message || "删除失败，请重试");
+  }
+}
+
+// ---- 批量上传 ----
+const dialogVisible = ref(false);
+const pendingFiles = ref<{ base64: string }[]>([]);
+const uploading = ref(false);
+const uploadedCount = ref(0);
+const imgError = ref("");
+const isDragOver = ref(false);
+const form = reactive<any>({
+  gender: "自动识别",
+  ageGroup: "自动识别",
+  ethnicity: "自动识别",
+  beautyLevel: "自动识别",
+  tagsText: "",
+  autoTag: true,
+});
+
+// ---- 编辑 ----
+const editVisible = ref(false);
+const editId = ref<number | null>(null);
+const editForm = reactive<any>({ name: "", gender: "女", ageGroup: "青年", ethnicity: "东亚", beautyLevel: "中", tagsText: "", description: "" });
+
+// ---- 大图预览 ----
+async function loadList(p?: number) {
+  if (p) page.value = p;
+  const { data } = await axios.post("/faceAsset/getFaceAssets", {
+    page: page.value,
+    pageSize: pageSize.value,
+    gender: filter.gender || undefined,
+    ethnicity: filter.ethnicity || undefined,
+    ageGroup: filter.ageGroup || undefined,
+    beautyLevel: filter.beautyLevel || undefined,
+  });
+  list.value = data.list || [];
+  total.value = data.total || 0;
+  // 清理已不存在的选中项（被删除或过滤掉）
+  const ids = new Set(list.value.map((i: any) => i.id));
+  selectedIds.value = new Set([...selectedIds.value].filter((id) => ids.has(id)));
+  // 列表为空时自动退出删除模式
+  if (deleteMode.value && list.value.length === 0) {
+    deleteMode.value = false;
+  }
+}
+
+function onPageChange({ current, pageSize: size }: any) {
+  page.value = current;
+  pageSize.value = size;
+  loadList();
+}
+
+const previewVisible = ref(false);
+const previewImages = ref<string[]>([]);
+const previewRawImages = ref<string[]>([]); // 高清原图 URL（无 ?size=20）
+const previewIndex = ref(0);
+
+const previewCurrent = computed(() => {
+  const item = list.value[previewIndex.value];
+  if (!item) return null;
+  return item;
+});
+
+const previewCurrentRaw = computed(() => previewRawImages.value[previewIndex.value] || "");
+
+function closePreview() {
+  previewVisible.value = false;
+}
+
+function nextPreview() {
+  if (!previewImages.value.length) return;
+  previewIndex.value = (previewIndex.value + 1) % previewImages.value.length;
+}
+
+function prevPreview() {
+  if (!previewImages.value.length) return;
+  previewIndex.value = (previewIndex.value - 1 + previewImages.value.length) % previewImages.value.length;
+}
+
+function goPreview(i: number) {
+  previewIndex.value = i;
+}
+
+function onPreviewImgLoad() {
+  // 加载完成后无需操作，CSS 已自动按 EXIF 方向展示
+}
+
+function onPreviewImgError() {
+  MessagePlugin.warning("图片加载失败");
+}
+
+function formatTime(ts?: number) {
+  if (!ts) return "-";
+  const d = new Date(ts);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function preview(item: any) {
+  previewImages.value = list.value.map((i) => i.fileUrl || "");
+  previewRawImages.value = list.value.map((i) => i.fileUrlRaw || i.fileUrl || "");
+  previewIndex.value = list.value.findIndex((i) => i.id === item.id);
+  previewVisible.value = true;
+}
+
+function onPreviewKeydown(e: KeyboardEvent) {
+  if (!previewVisible.value) return;
+  if (e.key === "Escape") closePreview();
+  else if (e.key === "ArrowRight") nextPreview();
+  else if (e.key === "ArrowLeft") prevPreview();
+}
+
+onMounted(() => {
+  loadList();
+  window.addEventListener("keydown", onPreviewKeydown);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener("keydown", onPreviewKeydown);
+});
+function openUpload() {
+  pendingFiles.value = [];
+  uploadedCount.value = 0;
+  imgError.value = "";
+  Object.assign(form, {
+    gender: "自动识别",
+    ageGroup: "自动识别",
+    ethnicity: "自动识别",
+    beautyLevel: "自动识别",
+    tagsText: "",
+    autoTag: true,
+  });
+  dialogVisible.value = true;
+}
+
+function closeDialog() {
+  if (uploading.value) return;
+  dialogVisible.value = false;
+}
+
+function onPickImages(e: any) {
+  const files: File[] = Array.from(e.target.files || []);
+  processFiles(files);
+  e.target.value = "";
+}
+
+function handleDrop(e: DragEvent) {
+  isDragOver.value = false;
+  const dt = e.dataTransfer;
+  if (!dt || !dt.files || dt.files.length === 0) return;
+  const files: File[] = Array.from(dt.files);
+  processFiles(files);
+}
+
+function processFiles(files: File[]) {
+  for (const file of files) {
+    if (!file.type || !file.type.startsWith('image/')) continue;
+    if (file.size > 10 * 1024 * 1024) {
+      MessagePlugin.warning(`「${file.name}」超过 10MB 已跳过`);
+      continue;
+    }
+    const reader = new FileReader();
+    reader.onload = () => pendingFiles.value.push({ base64: reader.result as string });
+    reader.readAsDataURL(file);
+  }
+}
+
+function removePending(i: number) {
+  pendingFiles.value.splice(i, 1);
+}
+
+async function submit() {
+  if (!pendingFiles.value.length) {
+    imgError.value = "请先选择至少一张人脸照片";
+    return;
+  }
+  const tags = form.tagsText
+    .split(/[,，]/)
+    .map((s: string) => s.trim())
+    .filter(Boolean);
+  uploading.value = true;
+  uploadedCount.value = 0;
+  let fail = 0;
+  for (const f of pendingFiles.value) {
+    try {
+      await axios.post("/faceAsset/addFaceAsset", {
+        fileUrl: f.base64,
+        gender: !form.gender || form.gender === "自动识别" || form.gender === "未知" ? undefined : form.gender,
+        ageGroup: !form.ageGroup || form.ageGroup === "自动识别" ? undefined : form.ageGroup,
+        ethnicity: !form.ethnicity || form.ethnicity === "自动识别" ? undefined : form.ethnicity,
+        beautyLevel: !form.beautyLevel || form.beautyLevel === "自动识别" ? undefined : form.beautyLevel,
+        tags: tags.length ? tags : undefined,
+        // 不传 model：由后端统一走全局配置的视觉模型（faceAssetVisionAgent → universalAi 降级链）
+        model: form.autoTag ? undefined : "none",
+      });
+    } catch (err) {
+      console.error("[Face Upload Single Error]:", err);
+      fail++;
+    }
+    uploadedCount.value++;
+  }
+  uploading.value = false;
+  if (fail === 0) {
+    MessagePlugin.success(`成功上传 ${pendingFiles.value.length} 张人脸`);
+  } else {
+    MessagePlugin.warning(`完成，其中 ${fail} 张上传失败`);
+  }
+  pendingFiles.value = [];
+  dialogVisible.value = false;
+  loadList();
+}
+
+// ---- 编辑 ----
+function openEdit(item: any) {
+  editId.value = item.id;
+  Object.assign(editForm, {
+    name: item.name || "",
+    gender: item.gender || "女",
+    ageGroup: item.ageGroup || "青年",
+    ethnicity: item.ethnicity || "东亚",
+    beautyLevel: item.beautyLevel || "中",
+    tagsText: (item.tags || []).join(","),
+    description: item.description || "",
+  });
+  editVisible.value = true;
+}
+
+// ---- 详情（只读查看，不进入编辑）----
+const detailVisible = ref(false);
+const detailItem = ref<any>(null);
+
+function openDetail(item: any) {
+  detailItem.value = item;
+  detailVisible.value = true;
+}
+
+async function submitEdit() {
+  if (!editId.value) return;
+  const tags = editForm.tagsText
+    .split(/[,，]/)
+    .map((s: string) => s.trim())
+    .filter(Boolean);
+  try {
+    await axios.post("/faceAsset/editFaceAsset", {
+      id: editId.value,
+      name: editForm.name || undefined,
+      gender: editForm.gender === "未知" ? undefined : editForm.gender,
+      ageGroup: editForm.ageGroup || undefined,
+      ethnicity: editForm.ethnicity || undefined,
+      beautyLevel: editForm.beautyLevel || undefined,
+      tags: tags.length ? tags : undefined,
+      description: editForm.description || undefined,
+    });
+    MessagePlugin.success("更新成功");
+    editVisible.value = false;
+    loadList();
+  } catch (e: any) {
+    MessagePlugin.error(e?.response?.data?.message || "操作失败");
+  }
+}
+
+async function delItem(item: any) {
+  try {
+    await axios.post("/faceAsset/delFaceAsset", { ids: [item.id] });
+    MessagePlugin.success("已删除");
+    loadList();
+  } catch (e: any) {
+    console.error("[Face Del Error]:", e);
+    MessagePlugin.error(e?.response?.data?.message || "删除失败，请重试");
+  }
+}
+
+async function confirmDel(item: any) {
+  const dialog = DialogPlugin.confirm({
+    header: "删除人物资产",
+    body: `确定删除「${item.name || "该人脸"}」吗？删除后角色将无法追溯该参考底图。`,
+    theme: "danger",
+    confirmBtn: "删除",
+    cancelBtn: "取消",
+    onConfirm: async () => {
+      await delItem(item);
+      dialog.destroy();
+    },
+    onClose: () => dialog.destroy(),
+  });
+}
+
+// ---- 高清预览 ----
+// （新逻辑已统一到上方自定义灯箱区块，此处移除重复定义，避免与上方的 preview() 冲突）
+</script>
+
+<style lang="scss" scoped>
+.faceAssetPage {
+  padding: 20px 24px;
+  height: 100%;
+  overflow-y: auto;
+
+  .toolbar {
+    margin-bottom: 20px;
+
+    .title {
+      font-size: 18px;
+      margin: 0;
+    }
+    .sub {
+      margin-left: 12px;
+      font-size: 12px;
+      color: var(--td-text-color-placeholder);
+    }
+    .right {
+      gap: 10px;
+
+      .batchInfo {
+        font-size: 13px;
+        color: var(--td-brand-color, #0052d9);
+        font-weight: 500;
+      }
+    }
+  }
+
+  .cardGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 14px;
+  }
+
+  .card {
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--td-bg-color-container);
+    border: 1px solid var(--td-component-border);
+    transition: all 0.2s ease;
+
+    &.selected {
+      border-color: var(--td-brand-color, #0052d9);
+      box-shadow: 0 0 0 2px rgba(0, 82, 217, 0.25);
+    }
+
+    .cardCheck {
+      position: absolute;
+      top: 6px;
+      left: 6px;
+      z-index: 3;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.85);
+      padding: 2px;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+    }
+
+    &:hover {
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+      transform: translateY(-2px);
+      .hoverOverlay {
+        opacity: 1;
+      }
+    }
+
+    .imgBox {
+      position: relative;
+      aspect-ratio: 1 / 1;
+      background: #f5f5f5;
+      overflow: hidden;
+      cursor: pointer;
+
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+
+      .hoverOverlay {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        background: rgba(0, 0, 0, 0.35);
+        color: #fff;
+        font-size: 11px;
+        opacity: 0;
+        transition: opacity 0.2s;
+        pointer-events: none;
+
+        .zoomIcon {
+          font-size: 20px;
+        }
+      }
+    }
+
+    .info {
+      padding: 8px 10px 10px;
+
+      .nameRow {
+        .name {
+          font-size: 13px;
+          font-weight: 600;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .gender {
+          font-size: 11px;
+          padding: 0 6px;
+          border-radius: 8px;
+          &.female {
+            color: #e34d59;
+            background: rgba(227, 77, 89, 0.1);
+          }
+          &.male {
+            color: #0052d9;
+            background: rgba(0, 82, 217, 0.1);
+          }
+        }
+      }
+
+      .meta {
+        margin: 6px 0;
+        display: flex;
+        gap: 4px;
+      }
+
+      /* 始终可见的操作栏 */
+      .cardActionsBar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 6px;
+        padding-top: 6px;
+        border-top: 1px dashed var(--td-component-border);
+        gap: 2px;
+
+        .t-button {
+          flex: 1;
+          padding: 0 4px;
+        }
+      }
+
+      .tags {
+        display: flex;
+        align-items: center;
+        flex-wrap: nowrap;
+        overflow: hidden;
+        margin-bottom: 4px;
+
+        .moreTags {
+          font-size: 10px;
+          color: var(--td-text-color-placeholder);
+        }
+      }
+
+      .desc {
+        margin-top: 4px;
+        font-size: 11px;
+        color: var(--td-text-color-secondary);
+        display: -webkit-box;
+        -webkit-line-clamp: 1;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+    }
+  }
+
+  .pager {
+    margin-top: 20px;
+    justify-content: flex-end;
+  }
+
+  .uploadArea {
+    width: 100%;
+    transition: all 0.2s ease;
+
+    &.isDragOver .pickBtn {
+      border-color: var(--td-brand-color);
+      background-color: var(--td-brand-color-light);
+      color: var(--td-brand-color);
+      transform: scale(1.01);
+    }
+
+    .pickBtn {
+      width: 100%;
+      height: 130px;
+      border: 1px dashed var(--td-component-border);
+      border-radius: 8px;
+      flex-direction: column;
+      gap: 8px;
+      cursor: pointer;
+      color: var(--td-text-color-placeholder);
+      font-size: 13px;
+      transition: all 0.2s ease;
+
+      .icon {
+        font-size: 30px;
+      }
+
+      &:hover {
+        border-color: var(--td-brand-color);
+        color: var(--td-brand-color);
+      }
+    }
+
+    .tips {
+      margin-top: 8px;
+      font-size: 12px;
+      color: var(--td-text-color-placeholder);
+    }
+  }
+
+  .pendingBox {
+    width: 100%;
+    transition: all 0.2s ease;
+
+    &.isDragOver {
+      outline: 2px dashed var(--td-brand-color);
+      outline-offset: 4px;
+      border-radius: 8px;
+    }
+
+    .thumbs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      max-height: 220px;
+      overflow-y: auto;
+
+      .thumb {
+        position: relative;
+        width: 72px;
+        height: 92px;
+        border-radius: 6px;
+        overflow: hidden;
+
+        img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+
+        .rm {
+          position: absolute;
+          top: 2px;
+          right: 2px;
+          width: 18px;
+          height: 18px;
+          border-radius: 50%;
+          background: rgba(0, 0, 0, 0.6);
+          color: #fff;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          font-size: 10px;
+        }
+      }
+    }
+
+    .btnRow {
+      margin-top: 10px;
+      gap: 12px;
+
+      .addMore {
+        font-size: 13px;
+        color: var(--td-brand-color);
+        cursor: pointer;
+      }
+
+      .count {
+        font-size: 12px;
+        color: var(--td-text-color-placeholder);
+      }
+    }
+  }
+
+  .dialogFooter {
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid var(--td-component-border);
+
+    .uploading {
+      font-size: 13px;
+      color: var(--td-brand-color);
+    }
+  }
+
+  .autoTip {
+    margin-left: 10px;
+    font-size: 12px;
+    color: var(--td-text-color-placeholder);
+  }
+
+  .cardImg {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    image-orientation: from-image;
+  }
+
+  .infoBtn:hover {
+    background: rgba(0, 82, 217, 0.85);
+  }
+}
+
+/* ===================== 详情对话框 ===================== */
+.detailDialog {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  &__hero {
+    display: flex;
+    gap: 18px;
+    align-items: stretch;
+  }
+
+  &__img {
+    width: 200px;
+    height: 240px;
+    object-fit: cover;
+    border-radius: 8px;
+    image-orientation: from-image;
+    background: #f3f4f6;
+    flex-shrink: 0;
+  }
+
+  &__basic {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-width: 0;
+  }
+
+  &__name {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1f2329;
+    margin-bottom: 12px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  &__time {
+    font-size: 12px;
+    color: var(--td-text-color-placeholder);
+  }
+
+  &__form {
+    margin-top: 4px;
+  }
+
+  &__tags {
+    display: flex;
+    flex-wrap: wrap;
+  }
+
+  &__desc {
+    padding: 12px 14px;
+    background: var(--td-bg-color-container);
+    border: 1px solid var(--td-component-border);
+    border-radius: 6px;
+    font-size: 13px;
+    color: #1f2329;
+    line-height: 1.6;
+    word-break: break-word;
+  }
+
+  &__fileinfo {
+    font-size: 12px;
+    color: var(--td-text-color-secondary);
+    background: var(--td-bg-color-container);
+    padding: 10px 12px;
+    border-radius: 6px;
+    word-break: break-all;
+
+    div {
+      margin-bottom: 4px;
+    }
+    div:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  &__empty {
+    color: var(--td-text-color-placeholder);
+    font-size: 12px;
+    font-style: italic;
+  }
+}
+
+/* ===================== 独立灯箱预览（全局 teleport，脱离 scoped） ===================== */
+.faceLightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.92);
+  z-index: 3000;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: space-between;
+  padding: 56px 24px 24px;
+  animation: faceLightboxFade 0.2s ease-out;
+
+  &__topbar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 48px;
+    padding: 0 56px 0 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    color: #fff;
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.55), transparent);
+  }
+
+  &__title {
+    font-size: 15px;
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 30vw;
+  }
+
+  &__meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.78);
+    flex: 1;
+    overflow: hidden;
+
+    span {
+      padding: 2px 8px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    .counter {
+      margin-left: auto;
+      background: rgba(0, 82, 217, 0.6);
+    }
+  }
+
+  &__close {
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+  }
+
+  &__stage {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 0;
+    margin-bottom: 12px;
+    overflow: hidden;
+  }
+
+  &__img {
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    /* 自动按 EXIF 旋转方向展示（手机竖屏拍摄默认正常） */
+    image-orientation: from-image;
+    border-radius: 4px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+    user-select: none;
+    -webkit-user-drag: none;
+  }
+
+  &__nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 44px;
+    height: 64px;
+    border: none;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+    z-index: 1;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.18);
+    }
+
+    &--prev {
+      left: 16px;
+    }
+
+    &--next {
+      right: 16px;
+    }
+  }
+
+  &__thumbs {
+    flex-shrink: 0;
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px 8px 4px;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: thin;
+  }
+
+  &__thumb {
+    width: 56px;
+    height: 72px;
+    border-radius: 4px;
+    overflow: hidden;
+    cursor: pointer;
+    flex-shrink: 0;
+    border: 2px solid transparent;
+    opacity: 0.6;
+    transition: all 0.2s ease;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      image-orientation: from-image;
+    }
+
+    &:hover {
+      opacity: 0.9;
+    }
+
+    &.active {
+      opacity: 1;
+      border-color: var(--td-brand-color, #0052d9);
+      transform: scale(1.06);
+    }
+  }
+}
+
+@keyframes faceLightboxFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+</style>

@@ -19,15 +19,58 @@
                 <t-option key="基于剧本" :label="$t('workbench.project.dialog.basedOnScript')" value="script" />
               </t-select>
             </t-form-item>
+            <t-form-item :label="$t('workbench.project.dialog.contentFormat')">
+              <t-select v-model="formState.contentFormat" :placeholder="$t('workbench.project.dialog.contentFormatPh')">
+                <t-option key="vertical_episode" :label="$t('workbench.project.dialog.formatVerticalEpisode')" value="vertical_episode" />
+                <t-option key="series_drama" :label="$t('workbench.project.dialog.formatSeriesDrama')" value="series_drama" />
+                <t-option key="single_film" :label="$t('workbench.project.dialog.formatSingleFilm')" value="single_film" />
+                <t-option key="explainer_video" :label="$t('workbench.project.dialog.formatExplainerVideo')" value="explainer_video" />
+              </t-select>
+            </t-form-item>
+            <div v-if="isEdit && formState.contentFormat === 'vertical_episode'" class="ac" style="gap: 10px; width: 100%; margin-bottom: 16px;">
+              <t-form-item :label="$t('workbench.project.dialog.episodeDuration')" style="flex: 1; margin-bottom: 0;">
+                <t-input-number v-model="formState.episodeDuration" :min="15" :max="120" :step="5" theme="column">
+                  <template #suffix>{{ $t('workbench.project.dialog.secondsUnit') }}</template>
+                </t-input-number>
+              </t-form-item>
+              <t-form-item :label="$t('workbench.project.dialog.totalEpisodes')" style="flex: 1; margin-bottom: 0;">
+                <t-input-number v-model="formState.totalEpisodes" :min="1" :max="200" theme="column" />
+              </t-form-item>
+            </div>
+            <div v-else-if="isEdit && formState.contentFormat === 'series_drama'" class="ac" style="gap: 10px; width: 100%; margin-bottom: 16px;">
+              <t-form-item :label="$t('workbench.project.dialog.episodeDuration')" style="flex: 1; margin-bottom: 0;">
+                <t-input-number v-model="formState.episodeDurationMinutes" :min="3" :max="60" :step="1" theme="column">
+                  <template #suffix>{{ $t('workbench.project.dialog.minutesUnit') }}</template>
+                </t-input-number>
+              </t-form-item>
+              <t-form-item :label="$t('workbench.project.dialog.totalEpisodes')" style="flex: 1; margin-bottom: 0;">
+                <t-input-number v-model="formState.totalEpisodes" :min="1" :max="100" theme="column" />
+              </t-form-item>
+            </div>
+            <div v-else-if="isEdit && (formState.contentFormat === 'single_film' || formState.contentFormat === 'explainer_video')" class="ac" style="gap: 10px; width: 100%; margin-bottom: 16px;">
+              <t-form-item :label="$t('workbench.project.dialog.filmDuration')" style="flex: 1; margin-bottom: 0;">
+                <t-input-number v-model="formState.episodeDurationMinutes" :min="1" :max="180" :step="1" theme="column">
+                  <template #suffix>{{ $t('workbench.project.dialog.minutesUnit') }}</template>
+                </t-input-number>
+              </t-form-item>
+            </div>
             <t-form-item :label="$t('workbench.project.dialog.projectName')">
               <t-input v-model="formState.name" :placeholder="$t('workbench.project.dialog.projectNamePh')" />
             </t-form-item>
-            <t-form-item :label="$t('workbench.project.dialog.novelType')">
+            <t-form-item :label="$t('workbench.project.dialog.videoModelData')">
+              <div class="ac" style="gap: 5px; width: 100%">
+                <modelSelect v-model="formState.videoModel" type="video" @change="changeFn" :changeConfig="true" :autoSelectDefault="false" />
+                <t-select v-model="formState.mode" class="paramSelect ml-5" :placeholder="$t('workbench.production.editImage.mode')">
+                  <t-option v-for="value in mode" :key="value.value" :value="value.value" :label="value.label" />
+                </t-select>
+              </div>
+            </t-form-item>
+            <t-form-item v-if="isEdit" :label="$t('workbench.project.dialog.novelType')">
               <t-input v-model="formState.type" :placeholder="$t('workbench.project.dialog.novelTypePh')" />
             </t-form-item>
-            <t-form-item :label="$t('workbench.project.dialog.modelData')">
+            <t-form-item v-if="isEdit" :label="$t('workbench.project.dialog.modelData')">
               <div class="ac" style="gap: 5px; width: 100%">
-                <modelSelect v-model="formState.imageModel" type="image" />
+                <modelSelect v-model="formState.imageModel" type="image" :autoSelectDefault="true" :preferImage2="true" />
                 <t-select v-model="formState.imageQuality" class="paramSelect ml-5" :placeholder="$t('workbench.production.editImage.quality')">
                   <t-option value="1K" label="1K" />
                   <t-option value="2K" label="2K" />
@@ -35,18 +78,10 @@
                 </t-select>
               </div>
             </t-form-item>
-            <t-form-item :label="$t('workbench.project.dialog.videoModelData')">
-              <div class="ac" style="gap: 5px; width: 100%">
-                <modelSelect v-model="formState.videoModel" type="video" @change="changeFn" :changeConfig="true" />
-                <t-select v-model="formState.mode" class="paramSelect ml-5" :placeholder="$t('workbench.production.editImage.mode')">
-                  <t-option v-for="value in mode" :key="value.value" :value="value.value" :label="value.label" />
-                </t-select>
-              </div>
-            </t-form-item>
-            <t-form-item :label="$t('workbench.project.dialog.videoRatio')">
+            <t-form-item v-if="isEdit" :label="$t('workbench.project.dialog.videoRatio')">
               <t-select v-model="formState.videoRatio" :options="RATIO_OPTIONS" />
             </t-form-item>
-            <t-form-item :label="$t('workbench.project.dialog.novelIntro')">
+            <t-form-item v-if="isEdit" :label="$t('workbench.project.dialog.novelIntro')">
               <t-textarea
                 v-model="formState.intro"
                 :autosize="{ minRows: 3, maxRows: 6 }"
@@ -312,6 +347,9 @@ const emit = defineEmits<{
       projectType: string;
       imageQuality: "1K" | "2K" | "4K" | "";
       mode: string;
+      contentFormat: "vertical_episode" | "series_drama" | "single_film" | "explainer_video";
+      episodeDuration: number;
+      totalEpisodes: number;
     },
   ): void;
 }>();
@@ -331,6 +369,9 @@ interface ProjectData {
   imageQuality: "1K" | "2K" | "4K" | "";
   visualManual?: string;
   mode: string;
+  contentFormat?: "vertical_episode" | "series_drama" | "single_film" | "explainer_video";
+  episodeDuration?: number;
+  totalEpisodes?: number;
 }
 
 interface ProjectFormData {
@@ -345,6 +386,9 @@ interface ProjectFormData {
   videoModel: string;
   imageQuality: "1K" | "2K" | "4K" | "";
   mode: string;
+  contentFormat: "vertical_episode" | "series_drama" | "single_film" | "explainer_video";
+  episodeDuration: number;
+  totalEpisodes: number;
 }
 interface VisualManualItem {
   name: string;
@@ -388,12 +432,12 @@ const RATIO_OPTIONS = [
   { value: "9:16", label: "9:16" },
 ];
 
-const DEFAULT_FORM: () => ProjectFormData & { id: number; era: string; createTime: number; userId: number } = () => ({
+const DEFAULT_FORM: () => ProjectFormData & { id: number; era: string; createTime: number; userId: number; episodeDurationMinutes?: number } = () => ({
   id: 0,
   projectType: "novel",
   name: "",
   intro: "",
-  type: "",
+  type: "都市",
   artStyle: "",
   era: "",
   videoRatio: "16:9",
@@ -401,9 +445,13 @@ const DEFAULT_FORM: () => ProjectFormData & { id: number; era: string; createTim
   userId: 0,
   imageModel: "",
   videoModel: "",
-  imageQuality: "",
-  mode: "",
+  imageQuality: "2K",
+  mode: "singleImage",
   directorManual: "",
+  contentFormat: "vertical_episode",
+  episodeDuration: 0,
+  episodeDurationMinutes: 0,
+  totalEpisodes: 0,
 });
 
 // ===== 表单 =====
@@ -419,16 +467,43 @@ function handleCancel() {
 }
 
 function handleOk() {
-  if (!formState.value.name) return window.$message.warning($t("workbench.project.msg.enterProjectName"));
-  if (!formState.value.type) return window.$message.warning($t("workbench.project.msg.enterProjectType"));
-  if (!formState.value.imageModel) return window.$message.warning($t("workbench.project.msg.enterImageModel"));
-  if (!formState.value.videoModel) return window.$message.warning($t("workbench.project.msg.enterVideoModel"));
-  if (!formState.value.artStyle) return window.$message.warning($t("workbench.project.msg.enterArtStyle"));
-  if (!formState.value.directorManual) return window.$message.warning($t("workbench.project.msg.directorManual"));
-  if (!formState.value.videoRatio) return window.$message.warning($t("workbench.project.msg.enterVideoRatio"));
-  if (!formState.value.intro) return window.$message.warning($t("workbench.project.msg.enterProjectIntro"));
-  if (!formState.value.imageQuality) return window.$message.warning($t("workbench.project.msg.enterProjectQuality"));
-  if (!formState.value.mode) return window.$message.warning($t("workbench.project.msg.selectMode"));
+  if (isEdit.value && !formState.value.name) return window.$message.warning($t("workbench.project.msg.enterProjectName"));
+  if (!formState.value.artStyle) {
+    if (visualManualOptions.value.length > 0) {
+      formState.value.artStyle = visualManualOptions.value[0].stylePath;
+    } else {
+      return window.$message.warning($t("workbench.project.msg.enterArtStyle"));
+    }
+  }
+  if (!formState.value.directorManual) {
+    if (directorManualOptions.value.length > 0) {
+      formState.value.directorManual = directorManualOptions.value[0].directorManual;
+    } else {
+      return window.$message.warning($t("workbench.project.msg.directorManual"));
+    }
+  }
+  if (!formState.value.imageModel) formState.value.imageModel = "openlux:gpt-image-2";
+  if (!formState.value.imageQuality) formState.value.imageQuality = "2K";
+  if (!formState.value.mode) formState.value.mode = "singleImage";
+  if (!formState.value.videoRatio) {
+    formState.value.videoRatio = formState.value.contentFormat === "vertical_episode" ? "9:16" : "16:9";
+  }
+  if (!formState.value.type) formState.value.type = "都市";
+
+  const calculatedDuration =
+    isEdit.value
+      ? formState.value.contentFormat === "vertical_episode"
+        ? Number(formState.value.episodeDuration) || 0
+        : (Number(formState.value.episodeDurationMinutes) || 0) * 60
+      : 0; // 新建时不硬编码时长，留给后续剧本分析推断
+
+  const calculatedTotalEpisodes =
+    isEdit.value
+      ? formState.value.contentFormat === "single_film"
+        ? 1
+        : Number(formState.value.totalEpisodes) || 0
+      : 0; // 新建时不硬编码集数，留给后续剧本分析推断
+
   if (isEdit.value) {
     emit("edit", {
       id: formState.value.id as unknown as string,
@@ -443,6 +518,9 @@ function handleOk() {
       directorManual: formState.value.directorManual,
       imageQuality: formState.value.imageQuality,
       mode: formState.value.mode,
+      contentFormat: formState.value.contentFormat || "vertical_episode",
+      episodeDuration: calculatedDuration,
+      totalEpisodes: calculatedTotalEpisodes,
     });
   } else {
     emit("add", {
@@ -451,12 +529,15 @@ function handleOk() {
       intro: formState.value.intro,
       type: formState.value.type,
       artStyle: formState.value.artStyle,
-      videoRatio: formState.value.videoRatio || "16:9",
+      videoRatio: formState.value.videoRatio,
       imageModel: formState.value.imageModel,
       videoModel: formState.value.videoModel,
       imageQuality: formState.value.imageQuality,
       directorManual: formState.value.directorManual,
       mode: formState.value.mode,
+      contentFormat: formState.value.contentFormat || "vertical_episode",
+      episodeDuration: calculatedDuration,
+      totalEpisodes: calculatedTotalEpisodes,
     });
   }
   resetForm();
@@ -482,6 +563,8 @@ const promptToolbars: ToolbarNames[] = [
 watch(addProjectShow, async (visible) => {
   if (visible) {
     if (props.projectData) {
+      const dur = props.projectData.episodeDuration || 55;
+      const fmt = props.projectData.contentFormat || "vertical_episode";
       formState.value = {
         ...DEFAULT_FORM(),
         id: props.projectData.id as unknown as number,
@@ -496,6 +579,10 @@ watch(addProjectShow, async (visible) => {
         projectType: props.projectData.projectType || "novel",
         mode: props.projectData.mode || "text",
         directorManual: props.projectData.directorManual || "",
+        contentFormat: fmt,
+        episodeDuration: dur,
+        episodeDurationMinutes: Math.max(1, Math.round(dur / 60)),
+        totalEpisodes: props.projectData.totalEpisodes || 1,
       };
       // 编辑模式下主动获取视频模型详情，填充 mode 列表以回显 label
       if (props.projectData.videoModel) {
@@ -545,6 +632,9 @@ function fetchVisualManuals() {
           data: item.data,
         }),
       );
+      if (!isEdit.value && !formState.value.artStyle && visualManualOptions.value.length > 0) {
+        formState.value.artStyle = visualManualOptions.value[0].stylePath;
+      }
     })
     .finally(() => {
       visualManualLoading.value = false;
@@ -695,10 +785,21 @@ function modeToKey(m: VideoMode): string {
 }
 //获取模式
 function changeFn(val: string, data: any) {
-  mode.value = data.mode.map((item: any) => ({
-    label: getModeLabel(item),
-    value: modeToKey(item),
-  }));
+  if (data?.mode && Array.isArray(data.mode)) {
+    mode.value = data.mode.map((item: any) => ({
+      label: getModeLabel(item),
+      value: modeToKey(item),
+    }));
+    // 如果当前 mode 未选或不在可用列表中，自动选中首选模式（优先 singleImage 或第一项）
+    const availableKeys = mode.value.map((m) => m.value);
+    if (!formState.value.mode || !availableKeys.includes(formState.value.mode)) {
+      if (availableKeys.includes("singleImage")) {
+        formState.value.mode = "singleImage";
+      } else if (availableKeys.length > 0) {
+        formState.value.mode = availableKeys[0];
+      }
+    }
+  }
 }
 //导演手册
 interface DirectorManualItem {
@@ -734,6 +835,9 @@ function queryDirectorManual() {
           data: item.data,
         }),
       );
+      if (!isEdit.value && !formState.value.directorManual && directorManualOptions.value.length > 0) {
+        formState.value.directorManual = directorManualOptions.value[0].directorManual;
+      }
     })
     .finally(() => {
       directorManualLoading.value = false;

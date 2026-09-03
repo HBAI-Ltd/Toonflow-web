@@ -166,6 +166,8 @@
       "displayNamePlaceholder": "例如：GPT-4o",
       "modelId": "模型标识",
       "modelIdPlaceholder": "例如：gpt-4o",
+      "modelApiKey": "模型级 API Key（可选）",
+      "modelApiKeyPlaceholder": "留空则使用供应商全局 Key；部分渠道每个模型需独立 Key",
       "modelType": "模型类型",
       "multimodal": "多模态",
       "supported": "支持",
@@ -636,6 +638,7 @@
   "workbench": {
     "selectProject": "请选择项目",
     "menu": {
+      "faceAsset": "人物资产库",
       "myProject": "我的项目",
       "taskCenter": "任务中心",
       "novel": "小说原文",
@@ -646,7 +649,8 @@
       "assetCenter": "资产中心",
       "settings": "设置",
       "jumpGithub": "跳转Github",
-      "feedbackQuestions": "反馈问题"
+      "feedbackQuestions": "反馈问题",
+      "needProjectTip": "请先在「我的项目」中创建或选择一个项目后再进入"
     },
     "project": {
       "title": "我的项目",
@@ -661,6 +665,18 @@
         "projectType": "项目类型",
         "selectType": "选择项目类型",
         "basedOnNovel": "基于小说原文",
+        "contentFormat": "内容形态",
+        "contentFormatPh": "请选择内容形态",
+        "formatVerticalEpisode": "超短剧（竖屏55s/集，含付费卡点）",
+        "formatSeriesDrama": "连续剧（5-15分钟/集，长叙事推进）",
+        "formatSingleFilm": "短故事 / 微电影（整片单集完结）",
+        "formatExplainerVideo": "趣味科普 / 知识解说（旁白解说驱动）",
+        "episodeDuration": "单集时长",
+        "filmDuration": "整片目标时长",
+        "secondsUnit": "秒",
+        "minutesUnit": "分钟",
+        "totalEpisodes": "预计集数",
+        "totalEpisodesPh": "请输入总集数",
         "projectName": "项目名称",
         "projectNamePh": "请输入项目名称",
         "novelType": "小说类型",

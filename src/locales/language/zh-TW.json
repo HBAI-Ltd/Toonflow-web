@@ -93,6 +93,8 @@
       "displayNamePlaceholder": "例如：GPT-4o",
       "modelId": "模型 ID",
       "modelIdPlaceholder": "例如：gpt-4o",
+      "modelApiKey": "模型級 API Key（可選）",
+      "modelApiKeyPlaceholder": "留空則使用供應商全局 Key；部分渠道每個模型需獨立 Key",
       "modelType": "模型類型",
       "multimodal": "多模態",
       "supported": "支援",
@@ -421,6 +423,7 @@
   "workbench": {
     "selectProject": "請選擇專案",
     "menu": {
+      "faceAsset": "人物資產庫",
       "myProject": "我的專案",
       "taskCenter": "任務中心",
       "novel": "小說原文",
@@ -431,7 +434,8 @@
       "assetCenter": "資產中心",
       "settings": "設定",
       "jumpGithub": "跳轉Github",
-      "feedbackQuestions": "回饋問題"
+      "feedbackQuestions": "回饋問題",
+      "needProjectTip": "請先在「我的專案」中建立或選擇一個專案後再進入"
     },
     "project": {
       "title": "我的專案",
@@ -447,6 +451,12 @@
         "selectType": "選擇專案類型",
         "basedOnNovel": "基於小說原文",
         "basedOnScript": "基於劇本",
+        "contentFormat": "內容形態",
+        "contentFormatPh": "請選擇內容形態",
+        "formatVerticalEpisode": "超短劇（豎屏 55s/集，含付費卡點）",
+        "formatSeriesDrama": "連續劇（5-15分鐘/集，長敘事推進）",
+        "formatSingleFilm": "短故事 / 微電影（整片單集完結）",
+        "formatExplainerVideo": "趣味科普 / 知識解說（旁白解說驅動）",
         "projectName": "專案名稱",
         "projectNamePh": "請輸入專案名稱",
         "novelType": "小說類型",

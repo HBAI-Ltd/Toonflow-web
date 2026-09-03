@@ -156,6 +156,9 @@
                 <t-radio :value="false">{{ $t("settings.vendor.notSupported") }}</t-radio>
               </t-radio-group>
             </t-form-item>
+            <t-form-item name="apiKey" :label="$t('settings.vendor.modelApiKey')">
+              <t-input v-model="modelFormData.apiKey" type="password" :placeholder="$t('settings.vendor.modelApiKeyPlaceholder')" clearable />
+            </t-form-item>
           </template>
 
           <template v-if="modelFormData.type === 'image'">
@@ -747,6 +750,7 @@ const modelFormData = ref({
   modelName: "",
   type: "text" as "text" | "image" | "video",
   think: false,
+  apiKey: "",
   mode: [] as string[],
   mixedMode: [] as string[], // referenceOptions 选中项，单独存放，构建时作为数组元素加入 mode
   mixedModeCount: {} as Record<string, number>, // 每个 reference 的数量限制
@@ -760,6 +764,7 @@ function resetModelForm(type: "text" | "image" | "video" = "text") {
     modelName: "",
     type,
     think: false,
+    apiKey: "",
     mode: [],
     mixedMode: [],
     mixedModeCount: {},
@@ -794,6 +799,7 @@ function buildModelFromForm(): VendorModel | null {
       modelName,
       type: "text",
       think: modelFormData.value.think,
+      apiKey: modelFormData.value.apiKey.trim() || undefined,
     };
   }
 
@@ -920,6 +926,7 @@ function handleEditModel(model: VendorModel) {
       modelName: model.modelName,
       type: "text",
       think: model.think,
+      apiKey: (model as any).apiKey || "",
       mode: [],
       mixedMode: [],
       mixedModeCount: {},

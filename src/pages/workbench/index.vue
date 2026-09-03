@@ -85,7 +85,8 @@ const { showSetting, isElectron, needUpdate } = storeToRefs(settingStore());
 const menuList = ref([
   { type: "btn", path: "/project", labelKey: "workbench.menu.myProject", icon: "i-folder-close" },
   { type: "btn", path: "/task", labelKey: "workbench.menu.taskCenter", icon: "i-view-list" },
-  // { type: "divider" },
+  { type: "divider" },
+  { type: "btn", path: "/faceAsset", labelKey: "workbench.menu.faceAsset", icon: "i-face-recognition" },
 ]);
 
 const rightBtnList = ref([
@@ -110,7 +111,10 @@ watch(
 );
 
 function handleClick(menu: any) {
-  if (menu.needProject && !project.value) return;
+  if (menu.needProject && !project.value) {
+    NotifyPlugin.warning({ title: $t("workbench.selectProject"), content: $t("workbench.menu.needProjectTip") });
+    return;
+  }
   router.push(menu.path);
   activeMenu.value = menu.path;
 }

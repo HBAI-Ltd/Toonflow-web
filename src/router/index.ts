@@ -24,6 +24,10 @@ const router = createRouter({
           component: () => import("@/views/project/index.vue"),
         },
         {
+          path: "/faceAsset",
+          component: () => import("@/views/faceAsset/index.vue"),
+        },
+        {
           path: "/task",
           component: () => import("@/views/task/index.vue"),
         },

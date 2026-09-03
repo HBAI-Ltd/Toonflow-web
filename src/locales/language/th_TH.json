@@ -85,6 +85,8 @@
       "displayNamePlaceholder": "ตัวอย่างเช่น: GPT-4o",
       "modelId": "รหัสโมเดล (Model ID)",
       "modelIdPlaceholder": "ตัวอย่างเช่น: gpt-4o",
+      "modelApiKey": "API Key ระดับโมเดล (ไม่บังคับ)",
+      "modelApiKeyPlaceholder": "เว้นว่างไว้เพื่อใช้คีย์หลักของตัวแทนจำหน่าย",
       "modelType": "ประเภทโมเดล",
       "multimodal": "มัลติโมดัล (Multimodal)",
       "supported": "รองรับ",
@@ -418,6 +420,7 @@
   "workbench": {
     "selectProject": "โปรดเลือกโปรเจกต์",
     "menu": {
+      "faceAsset": "คลังใบหน้า",
       "myProject": "โปรเจกต์ของฉัน",
       "taskCenter": "ศูนย์งาน",
       "novel": "ต้นฉบับนิยาย",
@@ -428,7 +431,8 @@
       "assetCenter": "ศูนย์สินทรัพย์",
       "settings": "การตั้งค่า",
       "jumpGithub": "ข้ามไปที่ Github",
-      "feedbackQuestions": "คำถามคำติชม"
+      "feedbackQuestions": "คำถามคำติชม",
+      "needProjectTip": "กรุณาสร้างหรือเลือกโปรเจกต์ใน «โปรเจกต์ของฉัน» ก่อน"
     },
     "project": {
       "title": "โปรเจกต์ของฉัน",
@@ -443,6 +447,12 @@
         "projectType": "ประเภทโปรเจกต์",
         "selectType": "เลือกประเภทโปรเจกต์",
         "basedOnNovel": "สร้างจากต้นฉบับนิยาย",
+        "contentFormat": "รูปแบบคอนเทนต์",
+        "contentFormatPh": "โปรดเลือกรูปแบบคอนเทนต์",
+        "formatVerticalEpisode": "ละครสั้นแนวตั้ง (55 วินาที/ตอน, มีจุดชำระเงิน)",
+        "formatSeriesDrama": "ซีรีส์ (5-15 นาที/ตอน, เนื้อเรื่องยาว)",
+        "formatSingleFilm": "เรื่องสั้น / หนังสั้น (จบในตอนเดียว)",
+        "formatExplainerVideo": "วิดีโอให้ความรู้ (พากย์เสียงบรรยาย)",
         "projectName": "ชื่อโปรเจกต์",
         "projectNamePh": "โปรดกรอกชื่อโปรเจกต์",
         "novelType": "ประเภทนิยาย",

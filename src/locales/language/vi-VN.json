@@ -84,6 +84,8 @@
       "displayNamePlaceholder": "Ví dụ: GPT-4o",
       "modelId": "Mã mô hình (Model ID)",
       "modelIdPlaceholder": "Ví dụ: gpt-4o",
+      "modelApiKey": "API Key cấp mô hình (tùy chọn)",
+      "modelApiKeyPlaceholder": "Để trống để dùng khóa toàn cục của nhà cung cấp",
       "modelType": "Loại mô hình",
       "multimodal": "Đa phương thức (Multimodal)",
       "supported": "Hỗ trợ",
@@ -408,6 +410,7 @@
   "workbench": {
     "selectProject": "Vui lòng chọn dự án",
     "menu": {
+      "faceAsset": "Kho khuôn mặt",
       "myProject": "Dự án của tôi",
       "taskCenter": "Trung tâm tác vụ",
       "novel": "Bản gốc tiểu thuyết",
@@ -418,7 +421,8 @@
       "assetCenter": "Trung tâm tài nguyên",
       "settings": "Cài đặt",
       "jumpGithub": "Chuyển tới Github",
-      "feedbackQuestions": "Câu hỏi phản hồi"
+      "feedbackQuestions": "Câu hỏi phản hồi",
+      "needProjectTip": "Vui lòng tạo hoặc chọn một dự án trong «Dự án của tôi» trước"
     },
     "project": {
       "title": "Dự án của tôi",
@@ -433,6 +437,12 @@
         "projectType": "Loại dự án",
         "selectType": "Chọn loại dự án",
         "basedOnNovel": "Dựa trên bản gốc tiểu thuyết",
+        "contentFormat": "Định dạng nội dung",
+        "contentFormatPh": "Vui lòng chọn định dạng nội dung",
+        "formatVerticalEpisode": "Phim ngắn dọc (55s/tập, có điểm tính phí)",
+        "formatSeriesDrama": "Phim dài tập (5-15 phút/tập, kể chuyện dài)",
+        "formatSingleFilm": "Truyện ngắn / Phim ngắn (trọn vẹn một tập)",
+        "formatExplainerVideo": "Video giải thích kiến thức (thuyết minh)",
         "projectName": "Tên dự án",
         "projectNamePh": "Vui lòng nhập tên dự án",
         "novelType": "Thể loại tiểu thuyết",

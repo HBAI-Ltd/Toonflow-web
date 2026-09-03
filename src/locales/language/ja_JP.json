@@ -85,6 +85,8 @@
       "displayNamePlaceholder": "例：GPT-4o",
       "modelId": "モデルID",
       "modelIdPlaceholder": "例：gpt-4o",
+      "modelApiKey": "モデル別 API Key（任意）",
+      "modelApiKeyPlaceholder": "空欄の場合はプロバイダー全体のキーを使用。チャネルによってはモデルごとに個別キーが必要",
       "modelType": "モデルタイプ",
       "multimodal": "マルチモーダル",
       "supported": "対応",
@@ -417,6 +419,7 @@
   "workbench": {
     "selectProject": "プロジェクトを選択してください",
     "menu": {
+      "faceAsset": "人物アセットライブラリ",
       "myProject": "マイプロジェクト",
       "taskCenter": "タスクセンター",
       "novel": "小説の原文",
@@ -427,7 +430,8 @@
       "assetCenter": "アセットセンター",
       "settings": "設定",
       "jumpGithub": "Githubにジャンプ",
-      "feedbackQuestions": "フィードバックの質問"
+      "feedbackQuestions": "フィードバックの質問",
+      "needProjectTip": "先に「マイプロジェクト」でプロジェクトを作成または選択してください"
     },
     "project": {
       "title": "マイプロジェクト",
@@ -442,6 +446,12 @@
         "projectType": "プロジェクトタイプ",
         "selectType": "プロジェクトタイプを選択",
         "basedOnNovel": "小説の原文に基づく",
+        "contentFormat": "コンテンツ形態",
+        "contentFormatPh": "コンテンツ形態を選択",
+        "formatVerticalEpisode": "縦型超短劇（55秒/集、課金ポイントあり）",
+        "formatSeriesDrama": "連続ドラマ（5〜15分/集、長尺ストーリー）",
+        "formatSingleFilm": "短編 / ミニ映画（1話で完結）",
+        "formatExplainerVideo": "雑学解説（ナレーション駆動）",
         "projectName": "プロジェクト名",
         "projectNamePh": "プロジェクト名を入力してください",
         "novelType": "小説のジャンル",
