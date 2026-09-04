@@ -663,6 +663,18 @@
       }
     },
     "scriptAgent": {
+        "retry": "リトライ",
+        "regenerate": "再生成",
+        "rollback": "ロールバック",
+        "rollbackKeepTitle": "この返信時点へ戻す",
+        "rollbackKeepBody": "この返信完了時の成果を保持し、以降のラウンドによるストーリー骨子・改編方針・脚本への変更を取り消し、関連メモリを消去します。",
+        "rollbackDiscardTitle": "このメッセージ前に戻す",
+        "rollbackDiscardBody": "このメッセージと以降のラウンドによるストーリー骨子・改編方針・脚本への変更を取り消し、関連メモリを消去します。このメッセージは会話に残るため、再開できます。",
+        "rollbackConfirm": "ロールバック確認",
+        "rollbackSuccess": "当時の状態に戻しました",
+        "rollbackFailed": "ロールバックに失敗しました。もう一度お試しください",
+        "rollbackNoSnapshot": "この時点より前に利用可能なスナップショットがないため戻せません",
+        "rollbackBusy": "生成中のため、停止してからロールバックしてください",
       "inputPlaceholder": "内容を入力してください",
       "chapterEvents": "章のイベント",
       "clearMessageMemory": "メッセージメモリをクリア",

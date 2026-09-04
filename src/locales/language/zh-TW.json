@@ -667,6 +667,18 @@
       }
     },
     "scriptAgent": {
+        "retry": "重試",
+        "regenerate": "重新生成",
+        "rollback": "回退",
+        "rollbackKeepTitle": "回退到這條回覆",
+        "rollbackKeepBody": "保留這條回覆完成時的成果，撤銷其後所有輪次對故事骨架、改編策略、劇本的修改，並清除對應記憶。",
+        "rollbackDiscardTitle": "回退到這條訊息之前",
+        "rollbackDiscardBody": "將撤銷這條訊息及其後所有輪次對故事骨架、改編策略、劇本的修改，並清除對應記憶。這條訊息會保留在對話中，可重新發起。",
+        "rollbackConfirm": "確認回退",
+        "rollbackSuccess": "已回退到當時的狀態",
+        "rollbackFailed": "回退失敗，請重試",
+        "rollbackNoSnapshot": "該時間點之前沒有可用的狀態快照，無法回退",
+        "rollbackBusy": "生成進行中，請先停止後再回退",
       "inputPlaceholder": "請輸入內容",
       "chapterEvents": "章節事件",
       "clearMessageMemory": "清除訊息記憶",

@@ -440,7 +440,7 @@ const DEFAULT_FORM: () => ProjectFormData & { id: number; era: string; createTim
   type: "都市",
   artStyle: "",
   era: "",
-  videoRatio: "16:9",
+  videoRatio: "",
   createTime: 0,
   userId: 0,
   imageModel: "",
@@ -464,6 +464,8 @@ const DEFAULT_MANUALS: Record<string, { artStyle: string; directorManual: string
 
 function applyDefaultManual() {
   if (isEdit.value) return; // 编辑不自动改已选手册
+  // 新建时画幅未在界面展示，清空后由提交逻辑按内容形态推导（竖屏短剧 9:16，其余 16:9）
+  formState.value.videoRatio = "";
   const mapping = DEFAULT_MANUALS[formState.value.contentFormat];
   if (!mapping) return;
   // 视觉手册：仅在仍为空且选项列表包含推荐项时填入，否则回退列表第一个

@@ -794,6 +794,18 @@
       }
     },
     "scriptAgent": {
+        "retry": "Retry",
+        "regenerate": "Regenerate",
+        "rollback": "Rollback",
+        "rollbackKeepTitle": "Roll back to this reply",
+        "rollbackKeepBody": "Keep the results as of this reply and undo all later changes to the story skeleton, adaptation strategy and scripts, clearing the related memory.",
+        "rollbackDiscardTitle": "Roll back to before this message",
+        "rollbackDiscardBody": "Undo this message and all later changes to the story skeleton, adaptation strategy and scripts, clearing the related memory. This message will stay in the conversation so you can start again.",
+        "rollbackConfirm": "Confirm rollback",
+        "rollbackSuccess": "Rolled back to the state at that time",
+        "rollbackFailed": "Rollback failed, please try again",
+        "rollbackNoSnapshot": "No state snapshot available before that point, cannot roll back",
+        "rollbackBusy": "Generation in progress, please stop it before rolling back",
       "inputPlaceholder": "Please enter content",
       "chapterEvents": "Chapter Events",
       "clearMessageMemory": "Clear Message Memory",

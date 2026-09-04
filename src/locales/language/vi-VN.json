@@ -654,6 +654,18 @@
       }
     },
     "scriptAgent": {
+        "retry": "Thử lại",
+        "regenerate": "Tạo lại",
+        "rollback": "Quay lại",
+        "rollbackKeepTitle": "Quay lại về câu trả lời này",
+        "rollbackKeepBody": "Giữ kết quả tại thời điểm câu trả lời này hoàn tất và hoàn tác mọi thay đổi sau đó đối với khung cốt truyện, chiến lược chuyển thể và kịch bản, đồng thời xóa bộ nhớ liên quan.",
+        "rollbackDiscardTitle": "Quay lại trước tin nhắn này",
+        "rollbackDiscardBody": "Hoàn tác tin nhắn này và mọi thay đổi sau đó đối với khung cốt truyện, chiến lược chuyển thể và kịch bản, đồng thời xóa bộ nhớ liên quan. Tin nhắn này vẫn ở lại cuộc hội thoại để bạn có thể bắt đầu lại.",
+        "rollbackConfirm": "Xác nhận quay lại",
+        "rollbackSuccess": "Đã quay lại trạng thái tại thời điểm đó",
+        "rollbackFailed": "Quay lại thất bại, vui lòng thử lại",
+        "rollbackNoSnapshot": "Không có ảnh chụp trạng thái trước thời điểm này nên không thể quay lại",
+        "rollbackBusy": "Đang tạo nội dung, hãy dừng trước khi quay lại",
       "inputPlaceholder": "Vui lòng nhập nội dung",
       "chapterEvents": "Sự kiện chương",
       "clearMessageMemory": "Xóa bộ nhớ tin nhắn",
