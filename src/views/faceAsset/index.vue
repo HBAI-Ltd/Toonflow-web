@@ -52,6 +52,21 @@
       </div>
     </div>
 
+    <!-- 库存覆盖提示：按 性别×年龄段 统计，缺口一目了然（选图策略：年龄段硬锁、族裔可放宽） -->
+    <div class="coverageBar f ac" v-if="coverageBuckets.length">
+      <span class="coverageLabel">库存覆盖</span>
+      <t-tag
+        v-for="b in coverageBuckets"
+        :key="b.label"
+        size="small"
+        :theme="b.total === 0 ? 'danger' : 'success'"
+        variant="light"
+        style="margin-right: 6px">
+        {{ b.label }} {{ b.total }}
+      </t-tag>
+      <span v-if="missingBuckets.length" class="coverageWarn">⚠ 缺口：{{ missingBuckets.join("、") }}（该档生图将拿不到参考底图，请优先补充）</span>
+    </div>
+
     <!-- 卡片列表 -->
     <div v-if="list.length" class="cardGrid">
       <div v-for="item in list" :key="item.id" class="card" :class="{ selected: selectedIds.has(item.id) }">
@@ -79,12 +94,6 @@
             <t-tag size="small" variant="light" theme="primary">{{ ageGroupText(item.ageGroup) }}</t-tag>
             <t-tag v-if="item.beautyScore != null" size="small" variant="light" theme="warning">颜值 {{ item.beautyScore }}</t-tag>
           </div>
-          <div class="tags" v-if="item.tags?.length">
-            <t-tag v-for="(t, i) in item.tags.slice(0, 3)" :key="i" size="small" variant="outline" theme="success" style="margin-right: 4px">{{ t }}</t-tag>
-            <span v-if="item.tags.length > 3" class="moreTags">+{{ item.tags.length - 3 }}</span>
-          </div>
-          <div class="desc" v-if="item.description" :title="item.description">{{ item.description }}</div>
-
           <!-- 始终可见的操作按钮区（不依赖 hover，触屏/桌面均可用） -->
           <div class="cardActionsBar">
             <t-button size="small" variant="text" theme="primary" @click="openDetail(item)">
@@ -179,12 +188,9 @@
             <span class="autoTip" style="margin-left: 10px">2.0~10.0 客观连续分；留空由视觉模型评分</span>
           </div>
         </t-form-item>
-        <t-form-item label="面容标签">
-          <t-input v-model="form.tagsText" placeholder="多个标签用逗号分隔（批量上传时应用到全部照片）" />
-        </t-form-item>
         <t-form-item label="AI 自动打标">
           <t-switch v-model="form.autoTag" />
-          <span class="autoTip" style="margin-left: 10px">开启后由视觉模型自动分析性别/年龄段/族裔/颜值评分/面容标签（未手填的字段）</span>
+          <span class="autoTip" style="margin-left: 10px">开启后由视觉模型自动分析性别/年龄段/族裔/颜值评分（未手填的字段）</span>
         </t-form-item>
       </t-form>
       <div class="dialogFooter f ac jb">
@@ -228,12 +234,6 @@
             placeholder="2.0 ~ 10.0"
             style="width: 150px" />
         </t-form-item>
-        <t-form-item label="面容标签">
-          <t-input v-model="editForm.tagsText" placeholder="多个标签用逗号分隔" />
-        </t-form-item>
-        <t-form-item label="骨相描述">
-          <t-textarea v-model="editForm.description" placeholder="50字内概括骨相立体度、五官神态、皮肤质感" :maxlength="50" show-word-limit />
-        </t-form-item>
       </t-form>
       <div class="dialogFooter f ac jb">
         <span></span>
@@ -265,31 +265,10 @@
               <t-tag theme="warning" variant="light">人种：{{ ethnicityText(detailItem.ethnicity) }}</t-tag>
               <t-tag v-if="detailItem.beautyScore != null" theme="danger" variant="light">颜值：{{ detailItem.beautyScore }}</t-tag>
             </div>
-            <div class="detailDialog__time">入库时间：{{ formatTime(detailItem.createTime) }}</div>
           </div>
         </div>
 
         <t-form label-align="top" class="detailDialog__form">
-          <t-form-item label="面容特征标签">
-            <div v-if="detailItem.tags?.length" class="detailDialog__tags">
-              <t-tag
-                v-for="(t, i) in detailItem.tags"
-                :key="i"
-                theme="success"
-                variant="light"
-                size="medium"
-                style="margin: 0 6px 6px 0">
-                {{ t }}
-              </t-tag>
-            </div>
-            <span v-else class="detailDialog__empty">暂无标签</span>
-          </t-form-item>
-
-          <t-form-item label="骨相 / 面部神态描述">
-            <div v-if="detailItem.description" class="detailDialog__desc">{{ detailItem.description }}</div>
-            <span v-else class="detailDialog__empty">暂无描述</span>
-          </t-form-item>
-
           <t-form-item label="文件信息">
             <div class="detailDialog__fileinfo">
               <div><b>路径：</b>{{ detailItem.filePath || "-" }}</div>
@@ -504,14 +483,42 @@ const form = reactive<any>({
   ageGroup: 0,
   ethnicity: 0,
   beautyScore: undefined,
-  tagsText: "",
   autoTag: true,
 });
 
 // ---- 编辑 ----
 const editVisible = ref(false);
 const editId = ref<number | null>(null);
-const editForm = reactive<any>({ name: "", gender: 2, ageGroup: 2, ethnicity: 1, beautyScore: undefined, tagsText: "", description: "" });
+const editForm = reactive<any>({ name: "", gender: 2, ageGroup: 2, ethnicity: 1, beautyScore: undefined });
+
+// ---- 库存覆盖（缺口报告）----
+const missingBuckets = ref<string[]>([]);
+const coverageMatrix = ref<Record<string, Record<string, Record<string, number>>> | null>(null);
+const coverageBuckets = computed(() => {
+  const m = coverageMatrix.value;
+  if (!m) return [];
+  const buckets: { label: string; total: number }[] = [];
+  const genderLabels: [string, string][] = [["1", "男"], ["2", "女"], ["3", "中性"]];
+  const ageLabels: [string, string][] = [["1", "少年"], ["2", "青年"], ["3", "中年"], ["4", "老年"]];
+  for (const [g, gLabel] of genderLabels) {
+    for (const [a, aLabel] of ageLabels) {
+      const ages = m[g]?.[a] || {};
+      const total = Object.values(ages).reduce((s: number, v) => s + (v as number), 0);
+      buckets.push({ label: `${aLabel}${gLabel}`, total });
+    }
+  }
+  return buckets;
+});
+async function loadStats() {
+  try {
+    const { data } = await axios.post("/faceAsset/faceAssetStats");
+    coverageMatrix.value = data.matrix || null;
+    missingBuckets.value = data.missingBuckets || [];
+  } catch {
+    coverageMatrix.value = null;
+    missingBuckets.value = [];
+  }
+}
 
 // 组装筛选参数：码值全等 + 颜值档位映射为连续分区间
 function filterPayload() {
@@ -542,6 +549,7 @@ async function loadList(p?: number) {
   if (deleteMode.value && list.value.length === 0) {
     deleteMode.value = false;
   }
+  loadStats();
 }
 
 function onPageChange({ current, pageSize: size }: any) {
@@ -589,13 +597,6 @@ function onPreviewImgError() {
   MessagePlugin.warning("图片加载失败");
 }
 
-function formatTime(ts?: number) {
-  if (!ts) return "-";
-  const d = new Date(ts);
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
-
 function preview(item: any) {
   previewImages.value = list.value.map((i) => i.fileUrl || "");
   previewRawImages.value = list.value.map((i) => i.fileUrlRaw || i.fileUrl || "");
@@ -627,7 +628,6 @@ function openUpload() {
     ageGroup: 0,
     ethnicity: 0,
     beautyScore: undefined,
-    tagsText: "",
     autoTag: true,
   });
   dialogVisible.value = true;
@@ -674,10 +674,6 @@ async function submit() {
     imgError.value = "请先选择至少一张人脸照片";
     return;
   }
-  const tags = form.tagsText
-    .split(/[,，]/)
-    .map((s: string) => s.trim())
-    .filter(Boolean);
   uploading.value = true;
   uploadedCount.value = 0;
   let fail = 0;
@@ -690,7 +686,6 @@ async function submit() {
         ageGroup: form.ageGroup || undefined,
         ethnicity: form.ethnicity || undefined,
         beautyScore: form.beautyScore ?? undefined,
-        tags: tags.length ? tags : undefined,
         // 不传 model：由后端统一走全局配置的视觉模型（faceAssetVisionAgent → universalAi 降级链）
         model: form.autoTag ? undefined : "none",
       });
@@ -720,8 +715,6 @@ function openEdit(item: any) {
     ageGroup: Number(item.ageGroup) || 2,
     ethnicity: Number(item.ethnicity) || 1,
     beautyScore: typeof item.beautyScore === "number" ? item.beautyScore : Number(item.beautyScore) || undefined,
-    tagsText: (item.tags || []).join(","),
-    description: item.description || "",
   });
   editVisible.value = true;
 }
@@ -737,10 +730,6 @@ function openDetail(item: any) {
 
 async function submitEdit() {
   if (!editId.value) return;
-  const tags = editForm.tagsText
-    .split(/[,，]/)
-    .map((s: string) => s.trim())
-    .filter(Boolean);
   try {
     await axios.post("/faceAsset/editFaceAsset", {
       id: editId.value,
@@ -749,8 +738,6 @@ async function submitEdit() {
       ageGroup: editForm.ageGroup || undefined,
       ethnicity: editForm.ethnicity || undefined,
       beautyScore: editForm.beautyScore ?? undefined,
-      tags: tags.length ? tags : undefined,
-      description: editForm.description || undefined,
     });
     MessagePlugin.success("更新成功");
     editVisible.value = false;
@@ -1375,5 +1362,20 @@ async function confirmDel(item: any) {
 @keyframes faceLightboxFade {
   from { opacity: 0; }
   to { opacity: 1; }
+}
+.coverageBar {
+  flex-wrap: wrap;
+  gap: 4px 0;
+  margin-bottom: 12px;
+  .coverageLabel {
+    color: var(--td-text-color-secondary);
+    font-size: 12px;
+    margin-right: 8px;
+  }
+  .coverageWarn {
+    color: var(--td-error-color);
+    font-size: 12px;
+    margin-left: 8px;
+  }
 }
 </style>
