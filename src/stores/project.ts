@@ -13,6 +13,7 @@ interface Project {
   imageQuality: "1K" | "2K" | "4K" | "";
   mode: string;
   directorManual: string;
+  contentFormat?: "vertical_episode" | "series_drama" | "single_film" | "explainer_video" | null;
 }
 
 export default defineStore(

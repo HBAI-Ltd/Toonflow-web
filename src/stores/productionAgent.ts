@@ -482,7 +482,7 @@ function makeProductionAgentStore(projectId: string) {
       loadingHistory.value = false;
     }
 
-    const thinkLevel = ref(0);
+    const thinkLevel = ref(1);
 
     function updateThinkConfig(value: number) {
       thinkLevel.value = value;

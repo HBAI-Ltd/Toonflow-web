@@ -85,6 +85,7 @@ const editProjectData = ref<{
   imageQuality: "1K" | "2K" | "4K" | "";
   mode: string;
   directorManual: string;
+  contentFormat?: "vertical_episode" | "series_drama" | "single_film" | "explainer_video" | null;
 } | null>(null);
 
 async function getAllProject() {

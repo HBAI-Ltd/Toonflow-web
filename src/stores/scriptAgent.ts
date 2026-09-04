@@ -70,7 +70,7 @@ function makeScriptAgentStore(projectId: string) {
           await axios.post("/scriptAgent/setPlanData", { projectId: projectId, agentType: "scriptAgent", data: planData.value });
         }
 
-        const thinkLevel = ref(0);
+        const thinkLevel = ref(1);
 
         function updateThinkConfig(value: number) {
           thinkLevel.value = value;

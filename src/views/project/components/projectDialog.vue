@@ -20,7 +20,7 @@
               </t-select>
             </t-form-item>
             <t-form-item :label="$t('workbench.project.dialog.contentFormat')">
-              <t-select v-model="formState.contentFormat" :placeholder="$t('workbench.project.dialog.contentFormatPh')">
+              <t-select v-model="formState.contentFormat" :placeholder="$t('workbench.project.dialog.contentFormatPh')" @change="applyDefaultManual">
                 <t-option key="vertical_episode" :label="$t('workbench.project.dialog.formatVerticalEpisode')" value="vertical_episode" />
                 <t-option key="series_drama" :label="$t('workbench.project.dialog.formatSeriesDrama')" value="series_drama" />
                 <t-option key="single_film" :label="$t('workbench.project.dialog.formatSingleFilm')" value="single_film" />
@@ -225,7 +225,7 @@
                     <t-tab-panel v-for="tab in visualManualTabData" :key="tab.value" :value="tab.value" :label="tab.label">
                       <MdEditor
                         v-model="tab.data"
-                        :theme="themeSetting.mode"
+                        :theme="themeSetting.mode === 'auto' ? 'light' : themeSetting.mode"
                         :toolbars="promptToolbars"
                         :footers="[]"
                         :placeholder="$t('workbench.project.dialog.promptPlaceholder')"
@@ -296,7 +296,7 @@
                     <t-tab-panel v-for="tab in directorManualTabData" :key="tab.value" :value="tab.value" :label="tab.label">
                       <MdEditor
                         v-model="tab.data"
-                        :theme="themeSetting.mode"
+                        :theme="themeSetting.mode === 'auto' ? 'light' : themeSetting.mode"
                         :toolbars="promptToolbars"
                         :footers="[]"
                         :placeholder="$t('workbench.project.dialog.promptPlaceholder')"
@@ -369,7 +369,7 @@ interface ProjectData {
   imageQuality: "1K" | "2K" | "4K" | "";
   visualManual?: string;
   mode: string;
-  contentFormat?: "vertical_episode" | "series_drama" | "single_film" | "explainer_video";
+  contentFormat?: "vertical_episode" | "series_drama" | "single_film" | "explainer_video" | null;
   episodeDuration?: number;
   totalEpisodes?: number;
 }
@@ -454,6 +454,29 @@ const DEFAULT_FORM: () => ProjectFormData & { id: number; era: string; createTim
   totalEpisodes: 0,
 });
 
+// 新建项目时按内容形态推荐的默认视觉/导演手册（用户手选优先，仅字段为空时使用）
+const DEFAULT_MANUALS: Record<string, { artStyle: string; directorManual: string }> = {
+  vertical_episode: { artStyle: "2D_mature_urban_romance", directorManual: "Urban_workplace_drama" },
+  series_drama: { artStyle: "realpeople_modern_city", directorManual: "Urban_workplace_drama" },
+  single_film: { artStyle: "Wong_Kar_wai_film", directorManual: "Psychological_drama" },
+  explainer_video: { artStyle: "Rick_Morty_adult_animation", directorManual: "Fun_science_director" },
+};
+
+function applyDefaultManual() {
+  if (isEdit.value) return; // 编辑不自动改已选手册
+  const mapping = DEFAULT_MANUALS[formState.value.contentFormat];
+  if (!mapping) return;
+  // 视觉手册：仅在仍为空且选项列表包含推荐项时填入，否则回退列表第一个
+  if (!formState.value.artStyle) {
+    const exists = visualManualOptions.value.some((i) => i.stylePath === mapping.artStyle);
+    formState.value.artStyle = exists ? mapping.artStyle : visualManualOptions.value[0]?.stylePath || "";
+  }
+  if (!formState.value.directorManual) {
+    const exists = directorManualOptions.value.some((i) => i.directorManual === mapping.directorManual);
+    formState.value.directorManual = exists ? mapping.directorManual : directorManualOptions.value[0]?.directorManual || "";
+  }
+}
+
 // ===== 表单 =====
 const formState = ref(DEFAULT_FORM());
 
@@ -468,6 +491,7 @@ function handleCancel() {
 
 function handleOk() {
   if (isEdit.value && !formState.value.name) return window.$message.warning($t("workbench.project.msg.enterProjectName"));
+  applyDefaultManual(); // 兜底：新建且字段仍为空时按 contentFormat 映射默认填
   if (!formState.value.artStyle) {
     if (visualManualOptions.value.length > 0) {
       formState.value.artStyle = visualManualOptions.value[0].stylePath;
@@ -603,8 +627,8 @@ watch(addProjectShow, async (visible) => {
     } else {
       resetForm();
     }
-    fetchVisualManuals();
-    queryDirectorManual();
+    await Promise.all([fetchVisualManuals(), queryDirectorManual()]);
+    applyDefaultManual();
   }
 });
 
@@ -620,7 +644,7 @@ const visualManualTabData = ref<Data[]>(DEFAULT_TAB_DATA());
 
 function fetchVisualManuals() {
   visualManualLoading.value = true;
-  axios
+  return axios
     .post("/project/getVisualManual")
     .then(({ data }) => {
       visualManualOptions.value = data.map(
@@ -632,9 +656,6 @@ function fetchVisualManuals() {
           data: item.data,
         }),
       );
-      if (!isEdit.value && !formState.value.artStyle && visualManualOptions.value.length > 0) {
-        formState.value.artStyle = visualManualOptions.value[0].stylePath;
-      }
     })
     .finally(() => {
       visualManualLoading.value = false;
@@ -823,7 +844,7 @@ const directorManualTabData = ref<Data[]>(DIRECTOR_DEFAULT_TAB_DATA());
 //查询导演手册
 function queryDirectorManual() {
   directorManualLoading.value = true;
-  axios
+  return axios
     .post("/project/queryDirectorManual")
     .then(({ data }) => {
       directorManualOptions.value = data.map(
@@ -835,9 +856,6 @@ function queryDirectorManual() {
           data: item.data,
         }),
       );
-      if (!isEdit.value && !formState.value.directorManual && directorManualOptions.value.length > 0) {
-        formState.value.directorManual = directorManualOptions.value[0].directorManual;
-      }
     })
     .finally(() => {
       directorManualLoading.value = false;

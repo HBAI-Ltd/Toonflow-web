@@ -3,6 +3,12 @@
     <Splitpanes class="default-theme data f">
       <Pane :size="30" :min-size="15" class="operate">
         <div class="box pr">
+          <div class="resetBar">
+            <t-button size="small" theme="danger" variant="outline" @click="handleResetConversation()" :disabled="status === 'pending' || status === 'streaming'">
+              <template #icon><i-refresh size="14" /></template>
+              {{ $t("workbench.scriptAgent.resetConversation") }}
+            </t-button>
+          </div>
           <t-chat-list :clear-history="false">
             <t-chat-message
               v-for="message in messages"
@@ -313,6 +319,23 @@ function handleClearMemory(type: "message" | "summary" | "all" | "reconnect") {
       await axios.post(`/agents/clearMemory`, { projectId: project.value?.id, agentType: "scriptAgent", type });
       window.$message.success($t("workbench.scriptAgent.msg.memoryCleared", { type: memoryTypeLabel[type] }));
       dialog.destroy();
+      getHistory();
+    },
+  });
+}
+function handleResetConversation() {
+  const dialog = DialogPlugin.confirm({
+    header: $t("workbench.scriptAgent.resetConversation"),
+    body: $t("workbench.scriptAgent.resetBody"),
+    confirmBtn: $t("workbench.scriptAgent.clearAllMemory"),
+    cancelBtn: $t("workbench.scriptAgent.msg.cancel"),
+    theme: "danger",
+    onConfirm: async () => {
+      await axios.post(`/scriptAgent/resetConversation`, { projectId: project.value?.id });
+      window.$message.success($t("workbench.scriptAgent.resetSuccess"));
+      dialog.destroy();
+      messages.value = [...defMsg];
+      getPlanData();
       getHistory();
     },
   });
@@ -779,6 +802,11 @@ function toggleAllCards() {
       color: var(--td-error-color);
     }
   }
+}
+.resetBar {
+  display: flex;
+  justify-content: flex-end;
+  padding: 8px 12px 4px;
 }
 :deep(.t-tabs__operations--right) {
   top: 0;
