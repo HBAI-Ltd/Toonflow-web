@@ -19,7 +19,20 @@
               :variant="message.role === 'user' ? 'base' : 'outline'"
               :handleActions="message.role === 'user' ? {} : handleActions"
               :status="message.status"
-              allowContentSegmentCustom></t-chat-message>
+              allowContentSegmentCustom>
+              <template #actionbar>
+                <div v-if="canRetry(message) || canRollback(message)" class="msgActions" :class="message.role === 'user' ? 'isUser' : 'isAssistant'">
+                  <t-button v-if="canRetry(message)" size="small" variant="text" theme="default" @click="handleRetry(message)">
+                    <template #icon><i-refresh size="13" /></template>
+                    {{ message.role === "user" ? $t("workbench.scriptAgent.retry") : $t("workbench.scriptAgent.regenerate") }}
+                  </t-button>
+                  <t-button v-if="canRollback(message)" size="small" variant="text" theme="default" @click="handleRollback(message)">
+                    <template #icon><i-rollback size="13" /></template>
+                    {{ $t("workbench.scriptAgent.rollback") }}
+                  </t-button>
+                </div>
+              </template>
+            </t-chat-message>
           </t-chat-list>
           <t-chat-sender
             class="inputBox"
@@ -303,6 +316,65 @@ function handleStop() {
   scriptAgentStore().stopGenerate();
 }
 
+/** 是否允许重试该消息：用户消息可重试；助手消息需前面紧邻一条用户消息；生成中禁用 */
+function canRetry(message: ChatMessagesData): boolean {
+  if (status.value === "pending" || status.value === "streaming") return false;
+  const idx = messages.value.findIndex((m) => m.id === message.id);
+  if (idx === -1) return false;
+  if (message.role === "user") return true;
+  return idx > 0 && messages.value[idx - 1].role === "user";
+}
+
+/** 重试一轮对话：截断该轮之后的所有消息，并原样重发用户输入 */
+function handleRetry(message: ChatMessagesData) {
+  const idx = messages.value.findIndex((m) => m.id === message.id);
+  if (idx === -1) return;
+  const target = message.role === "user" ? message : messages.value[idx - 1];
+  if (!target || target.role !== "user") return;
+  const text = String((target.content?.[0] as any)?.data ?? "").trim();
+  if (!text) return;
+  scriptAgentStore().retryFrom(target.id, text);
+}
+
+/** 是否允许回退该消息：非欢迎语、非生成中；AI消息需其后还有内容（否则无可撤销项） */
+function canRollback(message: ChatMessagesData): boolean {
+  if (status.value === "pending" || status.value === "streaming") return false;
+  if (message.id === "welcome") return false;
+  const idx = messages.value.findIndex((m) => m.id === message.id);
+  if (idx === -1) return false;
+  if (message.role === "user") return true;
+  return idx < messages.value.length - 1;
+}
+
+/** 回退到某条消息对应时刻的工作区状态，并截断其后对话 */
+function handleRollback(message: ChatMessagesData) {
+  const mode = message.role === "user" ? "discard" : "keep";
+  const dialog = DialogPlugin.confirm({
+    header: $t(mode === "keep" ? "workbench.scriptAgent.rollbackKeepTitle" : "workbench.scriptAgent.rollbackDiscardTitle"),
+    body: $t(mode === "keep" ? "workbench.scriptAgent.rollbackKeepBody" : "workbench.scriptAgent.rollbackDiscardBody"),
+    confirmBtn: { content: $t("workbench.scriptAgent.rollbackConfirm"), theme: "warning" },
+    cancelBtn: $t("workbench.scriptAgent.msg.cancel"),
+    theme: "warning",
+    onConfirm: async () => {
+      dialog.destroy();
+      const res = await scriptAgentStore().rollbackTo(message.id, mode);
+      if (!res.ok) {
+        window.$message.error(
+          res.message === "generating"
+            ? $t("workbench.scriptAgent.rollbackBusy")
+            : res.message?.includes("没有可用的状态快照")
+              ? $t("workbench.scriptAgent.rollbackNoSnapshot")
+              : $t("workbench.scriptAgent.rollbackFailed"),
+        );
+        return;
+      }
+      // 状态已回退：同步刷新右侧工作区数据
+      await getPlanData();
+      window.$message.success($t("workbench.scriptAgent.rollbackSuccess"));
+    },
+  });
+}
+
 const memoryTypeLabel: Record<string, string> = {
   message: $t("workbench.scriptAgent.memoryType.message"),
   summary: $t("workbench.scriptAgent.memoryType.summary"),
@@ -520,7 +592,27 @@ function toggleAllCards() {
 </script>
 
 <style lang="scss" scoped>
-.scriptAgent {
+  .msgActions {
+    display: flex;
+    gap: 4px;
+    padding: 2px 0;
+    opacity: 0.55;
+    transition: opacity 0.2s;
+
+    &:hover {
+      opacity: 1;
+    }
+
+    &.isUser {
+      justify-content: flex-end;
+    }
+
+    &.isAssistant {
+      justify-content: flex-start;
+    }
+  }
+
+  .scriptAgent {
   height: calc(100% - 16px);
   display: flex;
   flex-direction: column;

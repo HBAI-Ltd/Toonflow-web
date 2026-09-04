@@ -17,7 +17,7 @@ function makeScriptAgentStore(projectId: string) {
           script: [],
         });
 
-        const { connected, messages, chat, stopGenerate, socket, status, disconnect, connect } = useChat({
+        const { connected, messages, chat, stopGenerate, socket, status, disconnect, connect, emit, removeMessagesAfter, isGenerating } = useChat({
           url: `${settingStore().baseUrl}/socket/scriptAgent`,
           auth: () => ({
             isolationKey: `${projectId}:scriptAgent`,
@@ -72,6 +72,46 @@ function makeScriptAgentStore(projectId: string) {
 
         const thinkLevel = ref(1);
 
+        /** 重试某一轮对话：截断该用户消息之后的所有回复，并原样重发 */
+        function retryFrom(userMessageId: string, text: string) {
+          if (!socket.value?.connected) return false;
+          if (isGenerating.value) stopGenerate();
+          removeMessagesAfter(userMessageId);
+          return emit("chat", { content: text });
+        }
+
+        /**
+         * 回退到某条消息对应时刻的工作区状态
+         * @param mode keep=保留该AI回复完成时的成果，撤销其后轮次；discard=撤销该用户消息及其后轮次
+         * @returns 后端回退结果；ok=false 时 message 为失败原因
+         */
+        function rollbackTo(messageId: string, mode: "keep" | "discard"): Promise<{ ok: boolean; message?: string; restoredTo?: string }> {
+          return new Promise((resolve) => {
+            if (!socket.value?.connected) {
+              resolve({ ok: false, message: "socketNotConnected" });
+              return;
+            }
+            if (isGenerating.value) {
+              resolve({ ok: false, message: "generating" });
+              return;
+            }
+            const target = messages.value.find((m) => m.id === messageId);
+            if (!target?.datetime) {
+              resolve({ ok: false, message: "messageNotFound" });
+              return;
+            }
+            const messageTime = new Date(target.datetime).getTime();
+            if (!Number.isFinite(messageTime)) {
+              resolve({ ok: false, message: "invalidMessageTime" });
+              return;
+            }
+            socket.value.emit("rollback", { messageTime, mode }, (res: { ok: boolean; message?: string; restoredTo?: string }) => {
+              if (res?.ok) removeMessagesAfter(messageId);
+              resolve(res ?? { ok: false, message: "noResponse" });
+            });
+          });
+        }
+
         function updateThinkConfig(value: number) {
           thinkLevel.value = value;
           if (socket.value) {
@@ -79,7 +119,7 @@ function makeScriptAgentStore(projectId: string) {
           }
         }
 
-        return { connected, messages, chat, stopGenerate, socket, status, planData, setPlanData, connect, disconnect, thinkLevel, updateThinkConfig };
+        return { connected, messages, chat, stopGenerate, socket, status, planData, setPlanData, connect, disconnect, thinkLevel, updateThinkConfig, retryFrom, rollbackTo };
       });
 }
 
