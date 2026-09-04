@@ -1,10 +1,15 @@
 <template>
-  <div class="faceAssetPage">
+  <div
+    class="faceAssetPage"
+    @dragenter="onPageDragEnter"
+    @dragover.prevent
+    @dragleave="onPageDragLeave"
+    @drop.prevent="onPageDrop">
     <!-- 顶部工具栏 -->
     <div class="toolbar f ac jb">
       <div class="left f ac">
         <h2 class="title">人物资产库</h2>
-        <span class="sub">双真人人脸参考底图 · 角色生图自动抽样</span>
+        <span class="sub">双真人人脸参考底图 · 角色生图自动抽样 · 支持拖拽直接上传</span>
       </div>
       <div class="right f ac">
         <t-select v-model="filter.gender" placeholder="性别" clearable style="width: 100px" @change="loadList(1)">
@@ -112,12 +117,22 @@
         </div>
       </div>
     </div>
-    <t-empty v-else description="暂无人物资产，点击右上角「批量上传人脸」开始建设人脸库" style="margin-top: 80px" />
+    <t-empty v-else description="暂无人物资产，把人脸照片拖进本页即可上传，或点击右上角「批量上传人脸」" style="margin-top: 80px" />
 
     <!-- 分页 -->
     <div class="pager f ac" v-if="total > pageSize">
       <t-pagination :total="total" :page-size="pageSize" :current="page" show-jumper @change="onPageChange" />
     </div>
+
+    <!-- 全页拖拽遮罩（pointer-events: none，保证 drop 事件落在页面根元素） -->
+    <div v-if="pageDragOver" class="pageDropOverlay">
+      <div class="pageDropOverlay__inner">
+        <i-upload-one class="pageDropOverlay__icon" />
+        <div class="pageDropOverlay__title">松开鼠标，立即上传并 AI 解析</div>
+        <div class="pageDropOverlay__sub">支持多张 · 自动识别性别/年龄段/族裔/颜值 · 后台静默录入，不打断浏览</div>
+      </div>
+    </div>
+
 
     <!-- 批量上传对话框 -->
     <t-dialog :visible="dialogVisible" :header="'批量上传人物资产'" :footer="false" width="640px" @close="closeDialog">
@@ -518,6 +533,42 @@ async function loadStats() {
     coverageMatrix.value = null;
     missingBuckets.value = [];
   }
+}
+
+// ---- 页面级拖拽 + 全局后台上传（任务挂在 Pinia store，切到其他页面也继续运行）----
+import backgroundTaskStore from "@/stores/backgroundTask";
+const taskStore = backgroundTaskStore();
+const pageDragOver = ref(false);
+let pageDragDepth = 0; // dragenter/leave 在子元素间切换时会成对触发，用深度计数避免闪烁
+
+// 在本页时：每录入成功一张就刷新列表（新纪录置顶）与库存覆盖统计
+watch(
+  () => taskStore.faceUploadSuccessVersion,
+  () => loadList(),
+);
+
+function hasFilePayload(e: DragEvent) {
+  return Array.from(e.dataTransfer?.types || []).includes("Files");
+}
+function onPageDragEnter(e: DragEvent) {
+  if (!hasFilePayload(e)) return;
+  pageDragDepth++;
+  pageDragOver.value = true;
+}
+function onPageDragLeave() {
+  pageDragDepth = Math.max(0, pageDragDepth - 1);
+  if (pageDragDepth === 0) pageDragOver.value = false;
+}
+function onPageDrop(e: DragEvent) {
+  pageDragDepth = 0;
+  pageDragOver.value = false;
+  const all = Array.from(e.dataTransfer?.files || []);
+  const images = all.filter((f) => f.type?.startsWith("image/"));
+  const oversized = images.filter((f) => f.size > 10 * 1024 * 1024);
+  if (oversized.length) MessagePlugin.warning(`${oversized.length} 张超过 10MB 已跳过`);
+  if (!images.length) return;
+  // 不传任何码值字段：全部交给视觉模型自动识别（与批量上传弹窗的手动模式互补）
+  taskStore.addFaceUploadFiles(images);
 }
 
 // 组装筛选参数：码值全等 + 颜值档位映射为连续分区间
@@ -1376,6 +1427,44 @@ async function confirmDel(item: any) {
     color: var(--td-error-color);
     font-size: 12px;
     margin-left: 8px;
+  }
+}
+.pageDropOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 82, 217, 0.12);
+  backdrop-filter: blur(2px);
+  pointer-events: none; // 关键：让 drop 事件落在页面根元素上，遮罩只做视觉反馈
+
+  &__inner {
+    text-align: center;
+    padding: 48px 72px;
+    border: 2px dashed var(--td-brand-color, #0052d9);
+    border-radius: 16px;
+    background: var(--td-bg-color-container, #fff);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+  }
+
+  &__icon {
+    font-size: 48px;
+    color: var(--td-brand-color, #0052d9);
+  }
+
+  &__title {
+    margin-top: 12px;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--td-text-color-primary, #333);
+  }
+
+  &__sub {
+    margin-top: 6px;
+    font-size: 13px;
+    color: var(--td-text-color-secondary, #999);
   }
 }
 </style>
