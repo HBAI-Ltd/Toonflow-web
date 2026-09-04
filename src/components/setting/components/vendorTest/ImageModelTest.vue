@@ -1,7 +1,7 @@
 <template>
   <t-dialog
     placement="center"
-    width="56vw"
+    width="58vw"
     v-model:visible="visible"
     :header="$t('settings.vendor.test.imageTitle') + ' - ' + modelName"
     :footer="false"
@@ -16,7 +16,7 @@
 
       <!-- 输入区 -->
       <div class="inputSection">
-        <!-- 图生图：上传图片 -->
+        <!-- 图生图：单张上传图片 -->
         <div v-if="testMode === 'singleImage'" class="uploadRow">
           <div class="uploadBox" @click="triggerImageUpload" @dragover.prevent @drop.prevent="handleDrop">
             <img v-if="imagePreview" :src="imagePreview" class="previewImg" alt="preview" />
@@ -29,10 +29,67 @@
           <input ref="imageInputRef" type="file" accept="image/*" style="display: none" @change="handleImageChange" />
         </div>
 
+        <!-- 多图参考：多图上传列表 -->
+        <div v-else-if="testMode === 'multiReference'" class="multiRefSection">
+          <div class="multiRefHeader">
+            <span class="refTitle">{{ $t("settings.vendor.test.referenceImage") }} ({{ multiImages.length }}/5)</span>
+          </div>
+          <div class="multiRefGrid">
+            <div
+              v-for="(img, index) in multiImages"
+              :key="index"
+              class="multiRefItem">
+              <img :src="img.preview" class="multiRefImg" alt="ref" />
+              <div class="refIndexBadge">{{ index + 1 }}</div>
+              <button class="removeRefBtn" @click.stop="removeMultiImage(index)">
+                <i-close theme="outline" size="12" />
+              </button>
+            </div>
+            <div
+              v-if="multiImages.length < 5"
+              class="multiRefAddBox"
+              @click="triggerMultiUpload"
+              @dragover.prevent
+              @drop.prevent="handleMultiDrop">
+              <i-plus theme="outline" size="24" fill="var(--td-brand-color)" />
+              <span class="addText">{{ $t("settings.vendor.test.addImage") }}</span>
+            </div>
+          </div>
+          <input
+            ref="multiInputRef"
+            type="file"
+            accept="image/*"
+            multiple
+            style="display: none"
+            @change="handleMultiImageChange" />
+        </div>
+
+        <!-- 参数配置：分辨率 & 比例 -->
+        <div class="paramsRow">
+          <div class="paramItem">
+            <span class="paramLabel">{{ $t("settings.vendor.test.resolution") }}</span>
+            <t-select v-model="size" size="small" style="width: 120px">
+              <t-option value="1K" label="1K" />
+              <t-option value="2K" label="2K" />
+              <t-option value="4K" label="4K" />
+            </t-select>
+          </div>
+          <div class="paramItem">
+            <span class="paramLabel">{{ $t("settings.vendor.test.aspectRatio") }}</span>
+            <t-select v-model="aspectRatio" size="small" style="width: 130px">
+              <t-option value="16:9" label="16:9 (横屏)" />
+              <t-option value="9:16" label="9:16 (竖屏)" />
+              <t-option value="1:1" label="1:1 (方形)" />
+              <t-option value="4:3" label="4:3" />
+              <t-option value="3:4" label="3:4" />
+            </t-select>
+          </div>
+        </div>
+
         <t-form-item :label="$t('settings.vendor.test.prompt')">
           <t-textarea
             v-model="prompt"
-            :placeholder="$t('settings.vendor.test.promptPlaceholder')"
+            :placeholder="testMode === 'multiReference' ? $t('settings.vendor.test.multiRefPromptPlaceholder') : $t('settings.vendor.test.promptPlaceholder')"
             :autosize="{ minRows: 2, maxRows: 4 }"
             :disabled="loading" />
         </t-form-item>
@@ -40,7 +97,15 @@
 
       <!-- 结果区 -->
       <div v-if="resultUrl" class="resultSection">
-        <div class="resultLabel">{{ $t("settings.vendor.test.result") }}</div>
+        <div class="resultHeader">
+          <div class="resultLabel">{{ $t("settings.vendor.test.result") }}</div>
+          <div class="resultActions">
+            <t-button size="small" variant="outline" @click="downloadImage(resultUrl)">
+              <template #icon><i-download theme="outline" size="14" /></template>
+              {{ $t("components.imageTools.download") || "下载图片" }}
+            </t-button>
+          </div>
+        </div>
         <div class="resultImg">
           <img :src="resultUrl" alt="generated" />
         </div>
@@ -83,6 +148,8 @@ const MODE_OPTIONS: { value: ImageMode; label: string }[] = [
 const availableModes = computed(() => MODE_OPTIONS.filter((m) => props.supportedModes.includes(m.value)));
 
 const testMode = ref<ImageMode>("text");
+const size = ref<"1K" | "2K" | "4K">("1K");
+const aspectRatio = ref<string>("16:9");
 
 watch(
   () => props.supportedModes,
@@ -97,6 +164,7 @@ watch(
 watch(testMode, () => {
   imageFile.value = null;
   imagePreview.value = "";
+  multiImages.value = [];
   resultUrl.value = "";
 });
 
@@ -104,13 +172,22 @@ const prompt = ref("");
 const imageFile = ref<File | null>(null);
 const imagePreview = ref("");
 const imageInputRef = ref<HTMLInputElement | null>(null);
+
+interface MultiImgItem {
+  file: File;
+  preview: string;
+}
+const multiImages = ref<MultiImgItem[]>([]);
+const multiInputRef = ref<HTMLInputElement | null>(null);
+
 const loading = ref(false);
 const resultUrl = ref("");
 
 const canSubmit = computed(() => {
   if (loading.value) return false;
   if (testMode.value === "text") return !!prompt.value.trim();
-  if (testMode.value === "singleImage" || testMode.value === "multiReference") return !!imageFile.value;
+  if (testMode.value === "singleImage") return !!imageFile.value;
+  if (testMode.value === "multiReference") return multiImages.value.length > 0 || !!prompt.value.trim();
   return false;
 });
 
@@ -134,6 +211,37 @@ function handleDrop(e: DragEvent) {
   }
 }
 
+function triggerMultiUpload() {
+  multiInputRef.value?.click();
+}
+
+function handleMultiImageChange(e: Event) {
+  const files = Array.from((e.target as HTMLInputElement).files || []);
+  for (const file of files) {
+    if (multiImages.value.length >= 5) break;
+    multiImages.value.push({
+      file,
+      preview: URL.createObjectURL(file),
+    });
+  }
+  (e.target as HTMLInputElement).value = "";
+}
+
+function handleMultiDrop(e: DragEvent) {
+  const files = Array.from(e.dataTransfer?.files || []).filter((f) => f.type.startsWith("image/"));
+  for (const file of files) {
+    if (multiImages.value.length >= 5) break;
+    multiImages.value.push({
+      file,
+      preview: URL.createObjectURL(file),
+    });
+  }
+}
+
+function removeMultiImage(index: number) {
+  multiImages.value.splice(index, 1);
+}
+
 const fileToDataURL = (file: File) =>
   new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
@@ -141,6 +249,7 @@ const fileToDataURL = (file: File) =>
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
+
 async function handleTest() {
   loading.value = true;
   resultUrl.value = "";
@@ -148,15 +257,29 @@ async function handleTest() {
     const payload: Record<string, any> = {
       modelName: props.modelName,
       id: props.vendorId,
+      size: size.value,
+      aspectRatio: aspectRatio.value,
     };
     const p = prompt.value.trim();
     if (p) payload.prompt = p;
-    if (imageFile.value) {
-      payload.imageBase64 = await fileToDataURL(imageFile.value); // 带前缀 data:image/...;base64,
+
+    if (testMode.value === "singleImage" && imageFile.value) {
+      payload.imageBase64 = await fileToDataURL(imageFile.value);
+    } else if (testMode.value === "multiReference" && multiImages.value.length > 0) {
+      const b64List: string[] = [];
+      for (const item of multiImages.value) {
+        b64List.push(await fileToDataURL(item.file));
+      }
+      payload.imagesBase64 = b64List;
     }
+
     const { data } = await axios.post("/setting/vendorConfig/modelTest/imageTest", payload);
     resultUrl.value = data;
     window.$message.success($t("settings.vendor.msg.imageGenSuccess"));
+    // 自动触发下载生成的图片
+    if (data) {
+      downloadImage(data);
+    }
   } catch (e: any) {
     window.$message.error(e.message ?? `${$t("settings.vendor.msg.requestFailed")}`);
   } finally {
@@ -164,10 +287,40 @@ async function handleTest() {
   }
 }
 
+async function downloadImage(url: string) {
+  if (!url) return;
+  const filename = `${props.modelName}_${Date.now()}.jpg`;
+  let objectUrl = "";
+  try {
+    const response = await fetch(url, { mode: "cors" });
+    if (!response.ok) throw new Error("下载失败");
+    const blob = await response.blob();
+    objectUrl = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = objectUrl;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  } catch {
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  } finally {
+    if (objectUrl) URL.revokeObjectURL(objectUrl);
+  }
+}
+
 function handleClose() {
   prompt.value = "";
   imageFile.value = null;
   imagePreview.value = "";
+  multiImages.value = [];
   resultUrl.value = "";
   loading.value = false;
 }
@@ -188,7 +341,26 @@ function handleClose() {
   .inputSection {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
+
+    .paramsRow {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      padding: 6px 0;
+
+      .paramItem {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+
+        .paramLabel {
+          font-size: 13px;
+          color: var(--td-text-color-secondary);
+          white-space: nowrap;
+        }
+      }
+    }
 
     .uploadRow {
       display: flex;
@@ -196,7 +368,7 @@ function handleClose() {
 
       .uploadBox {
         width: 200px;
-        height: 160px;
+        height: 150px;
         border: 2px dashed var(--td-component-border);
         border-radius: 8px;
         cursor: pointer;
@@ -230,14 +402,117 @@ function handleClose() {
         }
       }
     }
+
+    .multiRefSection {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+
+      .multiRefHeader {
+        .refTitle {
+          font-size: 13px;
+          color: var(--td-text-color-secondary);
+          font-weight: 500;
+        }
+      }
+
+      .multiRefGrid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+
+        .multiRefItem {
+          position: relative;
+          width: 96px;
+          height: 96px;
+          border-radius: 8px;
+          border: 1px solid var(--td-component-border);
+          overflow: hidden;
+          background: var(--td-bg-color-secondarycontainer);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+
+          .multiRefImg {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+          }
+
+          .refIndexBadge {
+            position: absolute;
+            left: 4px;
+            bottom: 4px;
+            background: rgba(0, 0, 0, 0.6);
+            color: #fff;
+            font-size: 10px;
+            padding: 1px 5px;
+            border-radius: 4px;
+          }
+
+          .removeRefBtn {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            background: rgba(0, 0, 0, 0.55);
+            border: none;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #fff;
+            padding: 0;
+            transition: background 0.2s;
+
+            &:hover {
+              background: rgba(220, 38, 38, 0.85);
+            }
+          }
+        }
+
+        .multiRefAddBox {
+          width: 96px;
+          height: 96px;
+          border: 2px dashed var(--td-component-border);
+          border-radius: 8px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 4px;
+          cursor: pointer;
+          transition: border-color 0.2s, background 0.2s;
+
+          &:hover {
+            border-color: var(--td-brand-color);
+            background: var(--td-brand-color-light);
+          }
+
+          .addText {
+            font-size: 11px;
+            color: var(--td-text-color-placeholder);
+          }
+        }
+      }
+    }
   }
 
   .resultSection {
-    .resultLabel {
-      font-size: 13px;
-      font-weight: 600;
+    .resultHeader {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       margin-bottom: 8px;
-      color: var(--td-text-color-secondary);
+
+      .resultLabel {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--td-text-color-secondary);
+      }
     }
 
     .resultImg {

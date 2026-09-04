@@ -25,25 +25,73 @@
               <span>{{ msg.content }}</span>
               <span v-if="msg.loading" class="cursor">▌</span>
             </div>
-            <div class="content" v-else>{{ msg.content }}</div>
+            <div class="content" v-else>
+              <!-- 用户消息中包含的图片预览 -->
+              <div v-if="msg.images && msg.images.length > 0" class="msgImages">
+                <t-image-viewer
+                  v-for="(img, imgIdx) in msg.images"
+                  :key="imgIdx"
+                  :images="[img]"
+                  :closeOnEscKeydown="true"
+                  :closeOnOverlay="true">
+                  <template #trigger>
+                    <img :src="img" class="msgImageThumb" alt="msg image" />
+                  </template>
+                </t-image-viewer>
+              </div>
+              <div v-if="msg.content" class="msgText">{{ msg.content }}</div>
+            </div>
           </div>
         </div>
       </div>
       <!-- 输入区域 -->
       <div class="inputArea">
+        <!-- 待发送图片暂存预览区（可选） -->
+        <div v-if="pendingImages.length > 0" class="pendingImagesArea">
+          <div v-for="(img, idx) in pendingImages" :key="idx" class="pendingImageItem">
+            <img :src="img" class="thumb" alt="pending" />
+            <button class="removeBtn" @click="removePendingImage(idx)">
+              <i-close theme="outline" size="10" />
+            </button>
+          </div>
+        </div>
+
         <t-textarea
           v-model="inputText"
           :placeholder="$t('settings.vendor.test.textInputPlaceholder')"
           :autosize="{ minRows: 2, maxRows: 5 }"
           :disabled="loading"
-          @keydown.enter.ctrl.exact="handleSend" />
+          @keydown.enter.ctrl.exact="handleSend"
+          @paste="handlePaste" />
         <div class="inputActions">
-          <span class="hint">Ctrl + Enter {{ $t("settings.vendor.test.send") }}</span>
+          <div class="leftTools">
+            <span class="hint">Ctrl + Enter {{ $t("settings.vendor.test.send") }}</span>
+            <input
+              ref="imageInputRef"
+              type="file"
+              accept="image/*"
+              multiple
+              style="display: none"
+              @change="handleImageFileChange" />
+            <t-tooltip :content="$t('settings.vendor.test.uploadImage') || '上传图片(可选)'" placement="top">
+              <t-button
+                variant="text"
+                shape="square"
+                size="small"
+                class="uploadBtn"
+                :disabled="loading"
+                @click="triggerImageSelect">
+                <template #icon>
+                  <i-picture theme="outline" size="16" />
+                </template>
+              </t-button>
+            </t-tooltip>
+          </div>
           <div class="btns">
-            <t-button variant="outline" size="small" :disabled="loading || messages.length === 0" @click="handleClear">
+            <t-button variant="outline" size="small" :disabled="loading || (messages.length === 0 && pendingImages.length === 0)" @click="handleClear">
               {{ $t("settings.vendor.test.clearHistory") }}
             </t-button>
-            <t-button theme="primary" size="small" :loading="loading" :disabled="!inputText.trim()" @click="handleSend">
+            <t-button theme="primary" size="small" :loading="loading" :disabled="!canSend" @click="handleSend">
               <template #icon><i-send theme="outline" /></template>
               {{ $t("settings.vendor.test.send") }}
             </t-button>
@@ -66,14 +114,21 @@ const visible = defineModel<boolean>("modelVisible");
 interface Message {
   role: "user" | "assistant";
   content: string;
+  images?: string[];
   thinking?: string;
   loading?: boolean;
 }
 
 const messages = ref<Message[]>([]);
 const inputText = ref("");
+const pendingImages = ref<string[]>([]);
+const imageInputRef = ref<HTMLInputElement | null>(null);
 const loading = ref(false);
 const messageListRef = ref<HTMLDivElement | null>(null);
+
+const canSend = computed(() => {
+  return !loading.value && (!!inputText.value.trim() || pendingImages.value.length > 0);
+});
 
 function scrollToBottom() {
   nextTick(() => {
@@ -83,12 +138,56 @@ function scrollToBottom() {
   });
 }
 
+const fileToDataURL = (file: File) =>
+  new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+
+function triggerImageSelect() {
+  imageInputRef.value?.click();
+}
+
+async function handleImageFileChange(e: Event) {
+  const files = Array.from((e.target as HTMLInputElement).files || []);
+  for (const file of files) {
+    if (file.type.startsWith("image/")) {
+      const b64 = await fileToDataURL(file);
+      pendingImages.value.push(b64);
+    }
+  }
+  (e.target as HTMLInputElement).value = "";
+}
+
+function removePendingImage(idx: number) {
+  pendingImages.value.splice(idx, 1);
+}
+
+async function handlePaste(e: ClipboardEvent) {
+  const items = e.clipboardData?.items;
+  if (!items) return;
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i];
+    if (item.type.indexOf("image") !== -1) {
+      const file = item.getAsFile();
+      if (file) {
+        const b64 = await fileToDataURL(file);
+        pendingImages.value.push(b64);
+      }
+    }
+  }
+}
+
 async function handleSend() {
   const text = inputText.value.trim();
-  if (!text || loading.value) return;
+  const imgs = [...pendingImages.value];
+  if ((!text && imgs.length === 0) || loading.value) return;
 
-  messages.value.push({ role: "user", content: text });
+  messages.value.push({ role: "user", content: text, images: imgs.length > 0 ? imgs : undefined });
   inputText.value = "";
+  pendingImages.value = [];
   loading.value = true;
 
   const assistantMsg: Message = { role: "assistant", content: "", loading: true };
@@ -96,7 +195,11 @@ async function handleSend() {
   scrollToBottom();
 
   try {
-    const history = messages.value.slice(0, -1).map((m) => ({ role: m.role, content: m.content }));
+    const history = messages.value.slice(0, -1).map((m) => ({
+      role: m.role,
+      content: m.content,
+      images: m.images,
+    }));
 
     const { data } = await axios.post("/setting/vendorConfig/modelTest/textTest", {
       modelName: props.modelName,
@@ -119,10 +222,12 @@ async function handleSend() {
 
 function handleClear() {
   messages.value = [];
+  pendingImages.value = [];
 }
 
 function handleClose() {
   messages.value = [];
+  pendingImages.value = [];
   inputText.value = "";
   loading.value = false;
 }
@@ -189,6 +294,27 @@ function handleClose() {
           white-space: pre-wrap;
           word-break: break-word;
 
+          .msgImages {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 6px;
+
+            .msgImageThumb {
+              max-width: 140px;
+              max-height: 140px;
+              border-radius: 6px;
+              object-fit: cover;
+              cursor: pointer;
+              box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+              transition: transform 0.15s ease;
+
+              &:hover {
+                transform: scale(1.03);
+              }
+            }
+          }
+
           .thinkContent {
             display: block;
             font-size: 12px;
@@ -215,14 +341,70 @@ function handleClose() {
     flex-direction: column;
     gap: 8px;
 
+    .pendingImagesArea {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 4px 2px;
+
+      .pendingImageItem {
+        position: relative;
+        width: 52px;
+        height: 52px;
+        border-radius: 6px;
+        border: 1px solid var(--td-component-border);
+        overflow: hidden;
+
+        .thumb {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+
+        .removeBtn {
+          position: absolute;
+          top: 2px;
+          right: 2px;
+          width: 16px;
+          height: 16px;
+          border-radius: 50%;
+          background: rgba(0, 0, 0, 0.6);
+          color: #fff;
+          border: none;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 0;
+
+          &:hover {
+            background: rgba(0, 0, 0, 0.85);
+          }
+        }
+      }
+    }
+
     .inputActions {
       display: flex;
       align-items: center;
       justify-content: space-between;
 
-      .hint {
-        font-size: 12px;
-        color: var(--td-text-color-placeholder);
+      .leftTools {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+
+        .hint {
+          font-size: 12px;
+          color: var(--td-text-color-placeholder);
+        }
+
+        .uploadBtn {
+          color: var(--td-text-color-secondary);
+          &:hover {
+            color: var(--td-brand-color);
+          }
+        }
       }
 
       .btns {
