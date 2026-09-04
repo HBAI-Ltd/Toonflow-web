@@ -90,34 +90,20 @@
           <t-textarea
             v-model="prompt"
             :placeholder="testMode === 'multiReference' ? $t('settings.vendor.test.multiRefPromptPlaceholder') : $t('settings.vendor.test.promptPlaceholder')"
-            :autosize="{ minRows: 2, maxRows: 4 }"
-            :disabled="loading" />
+            :autosize="{ minRows: 2, maxRows: 4 }" />
         </t-form-item>
       </div>
 
-      <!-- 结果区 -->
-      <div v-if="resultUrl" class="resultSection">
-        <div class="resultHeader">
-          <div class="resultLabel">{{ $t("settings.vendor.test.result") }}</div>
-          <div class="resultActions">
-            <t-button size="small" variant="outline" @click="downloadImage(resultUrl)">
-              <template #icon><i-download theme="outline" size="14" /></template>
-              {{ $t("components.imageTools.download") || "下载图片" }}
-            </t-button>
-          </div>
-        </div>
-        <div class="resultImg">
-          <img :src="resultUrl" alt="generated" />
-        </div>
-      </div>
-      <div v-else-if="loading" class="loadingSection">
-        <t-loading size="large" :text="$t('settings.vendor.generating')" />
+      <!-- 后台任务提示：测试不再阻塞页面，切走也继续运行 -->
+      <div v-if="submitted" class="loadingSection bgTaskHint">
+        <div class="bgTaskHint__text">测试已在后台运行，可关闭此窗口继续其他操作。</div>
+        <t-button size="small" variant="text" theme="primary" @click="taskStore.collapse(false)">在右下角任务托盘查看进度与结果 →</t-button>
       </div>
 
       <!-- 底部操作 -->
       <div class="dialogFooter">
         <t-button variant="outline" @click="visible = false">{{ $t("settings.vendor.test.cancel") }}</t-button>
-        <t-button theme="primary" :loading="loading" :disabled="!canSubmit" @click="handleTest">
+        <t-button theme="primary" :disabled="!canSubmit" @click="handleTest">
           <template #icon><i-lightning theme="outline" /></template>
           {{ $t("settings.vendor.test.startTest") }}
         </t-button>
@@ -127,7 +113,7 @@
 </template>
 
 <script setup lang="ts">
-import axios from "@/utils/axios";
+import backgroundTaskStore from "@/stores/backgroundTask";
 
 type ImageMode = "text" | "singleImage" | "multiReference";
 const visible = defineModel<boolean>("modelVisible");
@@ -138,6 +124,7 @@ const props = defineProps<{
   /** 模型支持的 mode 列表 */
   supportedModes: ImageMode[];
 }>();
+const taskStore = backgroundTaskStore();
 
 const MODE_OPTIONS: { value: ImageMode; label: string }[] = [
   { value: "text", label: $t("settings.vendor.test.textToImage") },
@@ -165,7 +152,6 @@ watch(testMode, () => {
   imageFile.value = null;
   imagePreview.value = "";
   multiImages.value = [];
-  resultUrl.value = "";
 });
 
 const prompt = ref("");
@@ -180,11 +166,9 @@ interface MultiImgItem {
 const multiImages = ref<MultiImgItem[]>([]);
 const multiInputRef = ref<HTMLInputElement | null>(null);
 
-const loading = ref(false);
-const resultUrl = ref("");
+const submitted = ref(false); // 是否已提交后台任务（替代原阻塞式 loading）
 
 const canSubmit = computed(() => {
-  if (loading.value) return false;
   if (testMode.value === "text") return !!prompt.value.trim();
   if (testMode.value === "singleImage") return !!imageFile.value;
   if (testMode.value === "multiReference") return multiImages.value.length > 0 || !!prompt.value.trim();
@@ -251,69 +235,29 @@ const fileToDataURL = (file: File) =>
   });
 
 async function handleTest() {
-  loading.value = true;
-  resultUrl.value = "";
-  try {
-    const payload: Record<string, any> = {
-      modelName: props.modelName,
-      id: props.vendorId,
-      size: size.value,
-      aspectRatio: aspectRatio.value,
-    };
-    const p = prompt.value.trim();
-    if (p) payload.prompt = p;
+  const payload: Record<string, any> = {
+    modelName: props.modelName,
+    id: props.vendorId,
+    size: size.value,
+    aspectRatio: aspectRatio.value,
+  };
+  const p = prompt.value.trim();
+  if (p) payload.prompt = p;
 
-    if (testMode.value === "singleImage" && imageFile.value) {
-      payload.imageBase64 = await fileToDataURL(imageFile.value);
-    } else if (testMode.value === "multiReference" && multiImages.value.length > 0) {
-      const b64List: string[] = [];
-      for (const item of multiImages.value) {
-        b64List.push(await fileToDataURL(item.file));
-      }
-      payload.imagesBase64 = b64List;
+  if (testMode.value === "singleImage" && imageFile.value) {
+    payload.imageBase64 = await fileToDataURL(imageFile.value);
+  } else if (testMode.value === "multiReference" && multiImages.value.length > 0) {
+    const b64List: string[] = [];
+    for (const item of multiImages.value) {
+      b64List.push(await fileToDataURL(item.file));
     }
-
-    const { data } = await axios.post("/setting/vendorConfig/modelTest/imageTest", payload);
-    resultUrl.value = data;
-    window.$message.success($t("settings.vendor.msg.imageGenSuccess"));
-    // 自动触发下载生成的图片
-    if (data) {
-      downloadImage(data);
-    }
-  } catch (e: any) {
-    window.$message.error(e.message ?? `${$t("settings.vendor.msg.requestFailed")}`);
-  } finally {
-    loading.value = false;
+    payload.imagesBase64 = b64List;
   }
-}
 
-async function downloadImage(url: string) {
-  if (!url) return;
-  const filename = `${props.modelName}_${Date.now()}.jpg`;
-  let objectUrl = "";
-  try {
-    const response = await fetch(url, { mode: "cors" });
-    if (!response.ok) throw new Error("下载失败");
-    const blob = await response.blob();
-    objectUrl = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = objectUrl;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  } catch {
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    a.target = "_blank";
-    a.rel = "noopener noreferrer";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  } finally {
-    if (objectUrl) URL.revokeObjectURL(objectUrl);
-  }
+  // 交给全局后台任务中心：切页/关窗都继续运行，完成后托盘展示结果图与失败原因
+  taskStore.addImageModelTest(payload, `${props.modelName} 测试图`);
+  submitted.value = true;
+  window.$message.success("已加入后台任务，可关闭窗口继续其他操作");
 }
 
 function handleClose() {
@@ -321,8 +265,7 @@ function handleClose() {
   imageFile.value = null;
   imagePreview.value = "";
   multiImages.value = [];
-  resultUrl.value = "";
-  loading.value = false;
+  submitted.value = false;
 }
 </script>
 
@@ -545,6 +488,20 @@ function handleClose() {
     gap: 10px;
     border-top: 1px solid var(--td-component-border);
     padding-top: 12px;
+  }
+}
+
+.bgTaskHint {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 20px 0;
+
+  &__text {
+    font-size: 13px;
+    color: var(--td-text-color-secondary);
   }
 }
 </style>

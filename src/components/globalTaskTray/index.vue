@@ -20,13 +20,14 @@
         <div class="trayList">
           <div v-for="t in taskStore.tasks" :key="t.id" class="trayItem" :class="`is-${t.status}`">
             <img v-if="t.previewUrl" :src="t.previewUrl" class="trayThumb" :alt="t.title" />
+            <img v-else-if="t.status === 'success' && t.resultUrl" :src="t.resultUrl" class="trayThumb trayThumb--result" :alt="t.title" @click="openResult(t)" />
             <div v-else class="trayThumb trayThumb--ph">图</div>
             <div class="trayMeta">
               <div class="trayName" :title="t.title">{{ t.title }}</div>
               <div class="trayStatus">
                 <template v-if="t.status === 'pending'">排队中…</template>
-                <template v-else-if="t.status === 'running'"><span class="traySpinner"></span>AI 解析并上传中…</template>
-                <template v-else-if="t.status === 'success'">✅ 已录入人物资产库</template>
+                <template v-else-if="t.status === 'running'"><span class="traySpinner"></span>{{ t.runningText || "处理中…" }}</template>
+                <template v-else-if="t.status === 'success'">{{ t.successText || "✅ 已完成" }}</template>
                 <template v-else>❌ 上传失败</template>
               </div>
               <div v-if="t.status === 'fail' && t.error" class="trayError" :title="t.error">原因：{{ t.error }}</div>
@@ -41,8 +42,13 @@
 
 <script setup lang="ts">
 import backgroundTaskStore from "@/stores/backgroundTask";
+import type { BgTask } from "@/stores/backgroundTask";
 
 const taskStore = backgroundTaskStore();
+
+function openResult(t: BgTask) {
+  if (t.resultUrl) window.open(t.resultUrl, "_blank", "noopener,noreferrer");
+}
 </script>
 
 <style lang="scss" scoped>
@@ -127,6 +133,10 @@ const taskStore = backgroundTaskStore();
     justify-content: center;
     font-size: 12px;
     color: var(--td-text-color-secondary, #999);
+  }
+
+  &--result {
+    cursor: zoom-in;
   }
 }
 

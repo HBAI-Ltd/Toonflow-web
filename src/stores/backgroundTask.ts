@@ -5,6 +5,10 @@ export interface BgTask {
   kind: string; // 任务类型：faceUpload（人脸上传）；后续生图/测试等长任务可复用
   title: string;
   previewUrl?: string;
+  payload?: any; // 执行参数（如图片测试的请求体）
+  resultUrl?: string; // 成功产物（如生成的测试图 URL，托盘可直接查看）
+  runningText?: string; // 自定义进行中文案
+  successText?: string; // 自定义成功文案
   status: "pending" | "running" | "success" | "fail";
   error?: string; // 失败原因（axios 拦截器 reject 的是 response.data，e.message 即后端 message）
   createTime: number;
@@ -16,6 +20,12 @@ const runners = new Map<string, (task: BgTask) => Promise<any>>();
 // 人脸资产上传：全部交给视觉模型自动识别，串行执行避免并发打爆 Vision 接口
 runners.set("faceUpload", async (task) => {
   await axios.post("/faceAsset/addFaceAsset", { fileUrl: task.previewUrl, species: 1 });
+});
+
+// 图像模型测试：生成测试图，完成后结果 URL 直接挂到任务上供托盘查看
+runners.set("imageModelTest", async (task) => {
+  const { data } = await axios.post("/setting/vendorConfig/modelTest/imageTest", task.payload);
+  task.resultUrl = typeof data === "string" ? data : data?.url || "";
 });
 
 /**
@@ -62,6 +72,11 @@ export default defineStore(
         };
         reader.readAsDataURL(f);
       }
+    }
+
+    function addImageModelTest(payload: Record<string, any>, title: string) {
+      panelCollapsed.value = false;
+      return pushTask({ kind: "imageModelTest", title, payload, runningText: "测试图生成中…", successText: "✅ 测试图已生成，点击缩略图查看" });
     }
 
     async function processQueue() {
@@ -127,6 +142,7 @@ export default defineStore(
       faceUploadSuccessVersion,
       registerRunner,
       addFaceUploadFiles,
+      addImageModelTest,
       retryTask,
       retryAllFailed,
       clearTasks,
