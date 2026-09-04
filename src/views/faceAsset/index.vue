@@ -16,8 +16,8 @@
         <t-select v-model="filter.ageGroup" placeholder="年龄段" clearable style="width: 100px" @change="loadList(1)">
           <t-option v-for="a in ageOptions" :key="a.value" :value="a.value" :label="a.label" />
         </t-select>
-        <t-select v-model="filter.beautyLevel" placeholder="颜值" clearable style="width: 90px" @change="loadList(1)">
-          <t-option v-for="b in beautyOptions" :key="b.value" :value="b.value" :label="b.label" />
+        <t-select v-model="filter.beautyBand" placeholder="颜值档位" clearable style="width: 130px" @change="loadList(1)">
+          <t-option v-for="b in beautyBandOptions" :key="b.value" :value="b.value" :label="b.label" />
         </t-select>
 
         <!-- 批量删除模式：点击「批量删除」进入，卡片显示复选框 -->
@@ -72,12 +72,12 @@
         <div class="info">
           <div class="nameRow f ac jb">
             <span class="name" :title="item.name">{{ item.name }}</span>
-            <span class="gender" :class="item.gender === '女' ? 'female' : item.gender === '男' ? 'male' : ''">{{ item.gender }}</span>
+            <span class="gender" :class="Number(item.gender) === 2 ? 'female' : Number(item.gender) === 1 ? 'male' : ''">{{ genderText(item.gender) }}</span>
           </div>
           <div class="meta">
-            <t-tag size="small" variant="light">{{ item.ethnicity || "未标注" }}</t-tag>
-            <t-tag size="small" variant="light" theme="primary">{{ item.ageGroup || "未标注" }}</t-tag>
-            <t-tag v-if="item.beautyLevel" size="small" variant="light" theme="warning">颜值{{ item.beautyLevel }}</t-tag>
+            <t-tag size="small" variant="light">{{ ethnicityText(item.ethnicity) }}</t-tag>
+            <t-tag size="small" variant="light" theme="primary">{{ ageGroupText(item.ageGroup) }}</t-tag>
+            <t-tag v-if="item.beautyScore != null" size="small" variant="light" theme="warning">颜值 {{ item.beautyScore }}</t-tag>
           </div>
           <div class="tags" v-if="item.tags?.length">
             <t-tag v-for="(t, i) in item.tags.slice(0, 3)" :key="i" size="small" variant="outline" theme="success" style="margin-right: 4px">{{ t }}</t-tag>
@@ -149,36 +149,42 @@
         </t-form-item>
         <t-form-item label="性别">
           <t-radio-group v-model="form.gender" variant="default-filled">
-            <t-radio-button value="自动识别">自动识别</t-radio-button>
-            <t-radio-button value="女">女</t-radio-button>
-            <t-radio-button value="男">男</t-radio-button>
-            <t-radio-button value="未知">未知</t-radio-button>
+            <t-radio-button :value="0">自动识别</t-radio-button>
+            <t-radio-button v-for="g in genderOptions" :key="g.value" :value="g.value">{{ g.label }}</t-radio-button>
           </t-radio-group>
         </t-form-item>
         <t-form-item label="年龄段">
           <t-radio-group v-model="form.ageGroup" variant="default-filled">
-            <t-radio-button value="自动识别">自动识别</t-radio-button>
+            <t-radio-button :value="0">自动识别</t-radio-button>
             <t-radio-button v-for="a in ageOptions" :key="a.value" :value="a.value">{{ a.label }}</t-radio-button>
           </t-radio-group>
         </t-form-item>
         <t-form-item label="人种">
           <t-radio-group v-model="form.ethnicity" variant="default-filled">
-            <t-radio-button value="自动识别">自动识别</t-radio-button>
+            <t-radio-button :value="0">自动识别</t-radio-button>
             <t-radio-button v-for="e in ethnicityOptions" :key="e.value" :value="e.value">{{ e.label }}</t-radio-button>
           </t-radio-group>
         </t-form-item>
-        <t-form-item label="颜值等级">
-          <t-radio-group v-model="form.beautyLevel" variant="default-filled">
-            <t-radio-button value="自动识别">自动识别</t-radio-button>
-            <t-radio-button v-for="b in beautyOptions" :key="b.value" :value="b.value">{{ b.label }}</t-radio-button>
-          </t-radio-group>
+        <t-form-item label="颜值评分">
+          <div class="f ac">
+            <t-input-number
+              v-model="form.beautyScore"
+              :min="2"
+              :max="10"
+              :step="0.1"
+              :decimal-places="1"
+              theme="column"
+              placeholder="留空自动评分"
+              style="width: 150px" />
+            <span class="autoTip" style="margin-left: 10px">2.0~10.0 客观连续分；留空由视觉模型评分</span>
+          </div>
         </t-form-item>
         <t-form-item label="面容标签">
           <t-input v-model="form.tagsText" placeholder="多个标签用逗号分隔（批量上传时应用到全部照片）" />
         </t-form-item>
         <t-form-item label="AI 自动打标">
           <t-switch v-model="form.autoTag" />
-          <span class="autoTip" style="margin-left: 10px">开启后由全局配置的视觉模型自动分析人种/年龄/性别/面容标签（未手填的字段）</span>
+          <span class="autoTip" style="margin-left: 10px">开启后由视觉模型自动分析性别/年龄段/族裔/颜值评分/面容标签（未手填的字段）</span>
         </t-form-item>
       </t-form>
       <div class="dialogFooter f ac jb">
@@ -198,9 +204,7 @@
         </t-form-item>
         <t-form-item label="性别">
           <t-radio-group v-model="editForm.gender" variant="default-filled">
-            <t-radio-button value="女">女</t-radio-button>
-            <t-radio-button value="男">男</t-radio-button>
-            <t-radio-button value="未知">未知</t-radio-button>
+            <t-radio-button v-for="g in genderOptions" :key="g.value" :value="g.value">{{ g.label }}</t-radio-button>
           </t-radio-group>
         </t-form-item>
         <t-form-item label="年龄段">
@@ -213,10 +217,16 @@
             <t-radio-button v-for="e in ethnicityOptions" :key="e.value" :value="e.value">{{ e.label }}</t-radio-button>
           </t-radio-group>
         </t-form-item>
-        <t-form-item label="颜值等级">
-          <t-radio-group v-model="editForm.beautyLevel" variant="default-filled">
-            <t-radio-button v-for="b in beautyOptions" :key="b.value" :value="b.value">{{ b.label }}</t-radio-button>
-          </t-radio-group>
+        <t-form-item label="颜值评分">
+          <t-input-number
+            v-model="editForm.beautyScore"
+            :min="2"
+            :max="10"
+            :step="0.1"
+            :decimal-places="1"
+            theme="column"
+            placeholder="2.0 ~ 10.0"
+            style="width: 150px" />
         </t-form-item>
         <t-form-item label="面容标签">
           <t-input v-model="editForm.tagsText" placeholder="多个标签用逗号分隔" />
@@ -250,10 +260,10 @@
           <div class="detailDialog__basic">
             <div class="detailDialog__name">{{ detailItem.name || "未命名" }}</div>
             <div class="detailDialog__chips">
-              <t-tag theme="primary" variant="light">性别：{{ detailItem.gender || "未标注" }}</t-tag>
-              <t-tag theme="success" variant="light">年龄段：{{ detailItem.ageGroup || "未标注" }}</t-tag>
-              <t-tag theme="warning" variant="light">人种：{{ detailItem.ethnicity || "未标注" }}</t-tag>
-              <t-tag v-if="detailItem.beautyLevel" theme="danger" variant="light">颜值：{{ detailItem.beautyLevel }}</t-tag>
+              <t-tag theme="primary" variant="light">性别：{{ genderText(detailItem.gender) }}</t-tag>
+              <t-tag theme="success" variant="light">年龄段：{{ ageGroupText(detailItem.ageGroup) }}</t-tag>
+              <t-tag theme="warning" variant="light">人种：{{ ethnicityText(detailItem.ethnicity) }}</t-tag>
+              <t-tag v-if="detailItem.beautyScore != null" theme="danger" variant="light">颜值：{{ detailItem.beautyScore }}</t-tag>
             </div>
             <div class="detailDialog__time">入库时间：{{ formatTime(detailItem.createTime) }}</div>
           </div>
@@ -308,10 +318,10 @@
         <div class="faceLightbox__topbar">
           <div class="faceLightbox__title">{{ previewCurrent?.name || "" }}</div>
           <div class="faceLightbox__meta">
-            <span v-if="previewCurrent?.gender">{{ previewCurrent.gender }}</span>
-            <span v-if="previewCurrent?.ageGroup">{{ previewCurrent.ageGroup }}</span>
-            <span v-if="previewCurrent?.ethnicity">{{ previewCurrent.ethnicity }}</span>
-            <span v-if="previewCurrent?.beautyLevel">颜值{{ previewCurrent.beautyLevel }}</span>
+            <span v-if="previewCurrent?.gender != null">{{ genderText(previewCurrent.gender) }}</span>
+            <span v-if="previewCurrent?.ageGroup != null">{{ ageGroupText(previewCurrent.ageGroup) }}</span>
+            <span v-if="previewCurrent?.ethnicity != null">{{ ethnicityText(previewCurrent.ethnicity) }}</span>
+            <span v-if="previewCurrent?.beautyScore != null">颜值 {{ previewCurrent.beautyScore }}</span>
             <span class="counter">{{ previewIndex + 1 }} / {{ previewImages.length }}</span>
           </div>
           <button class="faceLightbox__close" @click="closePreview" aria-label="关闭">
@@ -357,35 +367,55 @@ import { ref, reactive, computed, onMounted, onBeforeUnmount } from "vue";
 import axios from "@/utils/axios";
 import { MessagePlugin } from "tdesign-vue-next";
 
+// 全系统统一数字码值字典：1男/2女/3中性；1东亚/2欧美/3东南亚/4南亚/5拉丁/6非裔/7混血；1少年/2青年/3中年/4老年
 const genderOptions = [
-  { value: "女", label: "女" },
-  { value: "男", label: "男" },
+  { value: 1, label: "男" },
+  { value: 2, label: "女" },
+  { value: 3, label: "中性" },
 ];
 const ethnicityOptions = [
-  { value: "东亚", label: "东亚" },
-  { value: "东南亚", label: "东南亚" },
-  { value: "南亚", label: "南亚" },
-  { value: "欧美", label: "欧美" },
-  { value: "拉丁", label: "拉丁" },
-  { value: "非裔", label: "非裔" },
-  { value: "其他", label: "其他（含混血）" },
+  { value: 1, label: "东亚" },
+  { value: 2, label: "欧美" },
+  { value: 3, label: "东南亚" },
+  { value: 4, label: "南亚" },
+  { value: 5, label: "拉丁" },
+  { value: 6, label: "非裔" },
+  { value: 7, label: "混血/其他" },
 ];
 const ageOptions = [
-  { value: "少年", label: "少年" },
-  { value: "青年", label: "青年" },
-  { value: "中年", label: "中年" },
-  { value: "老年", label: "老年" },
+  { value: 1, label: "少年" },
+  { value: 2, label: "青年" },
+  { value: 3, label: "中年" },
+  { value: 4, label: "老年" },
 ];
-const beautyOptions = [
-  { value: "高", label: "高" },
-  { value: "中", label: "中" },
+// 颜值筛选档位（映射为 2.0~10.0 连续分区间，与选角打分锚点一致）
+const beautyBandOptions = [
+  { value: "top", label: "神颜 9.0+", min: 9.0, max: 10.0 },
+  { value: "high", label: "俊美 7.5~8.9", min: 7.5, max: 8.9 },
+  { value: "good", label: "清秀 5.5~7.4", min: 5.5, max: 7.4 },
+  { value: "plain", label: "路人 4.0~5.4", min: 4.0, max: 5.4 },
+  { value: "rough", label: "特型 2.0~3.9", min: 2.0, max: 3.9 },
 ];
+
+// 码值 → 中文展示
+const GENDER_LABEL: Record<number, string> = { 1: "男", 2: "女", 3: "中性" };
+const ETHNICITY_LABEL: Record<number, string> = { 1: "东亚", 2: "欧美", 3: "东南亚", 4: "南亚", 5: "拉丁", 6: "非裔", 7: "混血" };
+const AGE_GROUP_LABEL: Record<number, string> = { 1: "少年", 2: "青年", 3: "中年", 4: "老年" };
+function genderText(v: any) {
+  return GENDER_LABEL[Number(v)] || "未标注";
+}
+function ethnicityText(v: any) {
+  return ETHNICITY_LABEL[Number(v)] || "未标注";
+}
+function ageGroupText(v: any) {
+  return AGE_GROUP_LABEL[Number(v)] || "未标注";
+}
 
 const list = ref<any[]>([]);
 const total = ref(0);
 const page = ref(1);
 const pageSize = ref(30);
-const filter = reactive({ gender: "", ethnicity: "", ageGroup: "", beautyLevel: "" });
+const filter = reactive<any>({ gender: undefined, ethnicity: undefined, ageGroup: undefined, beautyBand: "" });
 
 // ---- 多选删除（删除模式）----
 const selectedIds = ref<Set<number>>(new Set());
@@ -423,10 +453,7 @@ async function selectAllFiltered() {
   const { data } = await axios.post("/faceAsset/getFaceAssets", {
     page: 1,
     pageSize: 5000,
-    gender: filter.gender || undefined,
-    ethnicity: filter.ethnicity || undefined,
-    ageGroup: filter.ageGroup || undefined,
-    beautyLevel: filter.beautyLevel || undefined,
+    ...filterPayload(),
   });
   const all = (data?.list || []) as any[];
   if (!all.length) return;
@@ -473,10 +500,10 @@ const uploadedCount = ref(0);
 const imgError = ref("");
 const isDragOver = ref(false);
 const form = reactive<any>({
-  gender: "自动识别",
-  ageGroup: "自动识别",
-  ethnicity: "自动识别",
-  beautyLevel: "自动识别",
+  gender: 0, // 0 = 自动识别（数字码值从 1 开始）
+  ageGroup: 0,
+  ethnicity: 0,
+  beautyScore: undefined,
   tagsText: "",
   autoTag: true,
 });
@@ -484,7 +511,19 @@ const form = reactive<any>({
 // ---- 编辑 ----
 const editVisible = ref(false);
 const editId = ref<number | null>(null);
-const editForm = reactive<any>({ name: "", gender: "女", ageGroup: "青年", ethnicity: "东亚", beautyLevel: "中", tagsText: "", description: "" });
+const editForm = reactive<any>({ name: "", gender: 2, ageGroup: 2, ethnicity: 1, beautyScore: undefined, tagsText: "", description: "" });
+
+// 组装筛选参数：码值全等 + 颜值档位映射为连续分区间
+function filterPayload() {
+  const band = beautyBandOptions.find((b) => b.value === filter.beautyBand);
+  return {
+    gender: filter.gender || undefined,
+    ethnicity: filter.ethnicity || undefined,
+    ageGroup: filter.ageGroup || undefined,
+    beautyMin: band ? band.min : undefined,
+    beautyMax: band ? band.max : undefined,
+  };
+}
 
 // ---- 大图预览 ----
 async function loadList(p?: number) {
@@ -492,10 +531,7 @@ async function loadList(p?: number) {
   const { data } = await axios.post("/faceAsset/getFaceAssets", {
     page: page.value,
     pageSize: pageSize.value,
-    gender: filter.gender || undefined,
-    ethnicity: filter.ethnicity || undefined,
-    ageGroup: filter.ageGroup || undefined,
-    beautyLevel: filter.beautyLevel || undefined,
+    ...filterPayload(),
   });
   list.value = data.list || [];
   total.value = data.total || 0;
@@ -587,10 +623,10 @@ function openUpload() {
   uploadedCount.value = 0;
   imgError.value = "";
   Object.assign(form, {
-    gender: "自动识别",
-    ageGroup: "自动识别",
-    ethnicity: "自动识别",
-    beautyLevel: "自动识别",
+    gender: 0,
+    ageGroup: 0,
+    ethnicity: 0,
+    beautyScore: undefined,
     tagsText: "",
     autoTag: true,
   });
@@ -649,10 +685,11 @@ async function submit() {
     try {
       await axios.post("/faceAsset/addFaceAsset", {
         fileUrl: f.base64,
-        gender: !form.gender || form.gender === "自动识别" || form.gender === "未知" ? undefined : form.gender,
-        ageGroup: !form.ageGroup || form.ageGroup === "自动识别" ? undefined : form.ageGroup,
-        ethnicity: !form.ethnicity || form.ethnicity === "自动识别" ? undefined : form.ethnicity,
-        beautyLevel: !form.beautyLevel || form.beautyLevel === "自动识别" ? undefined : form.beautyLevel,
+        species: 1,
+        gender: form.gender || undefined,
+        ageGroup: form.ageGroup || undefined,
+        ethnicity: form.ethnicity || undefined,
+        beautyScore: form.beautyScore ?? undefined,
         tags: tags.length ? tags : undefined,
         // 不传 model：由后端统一走全局配置的视觉模型（faceAssetVisionAgent → universalAi 降级链）
         model: form.autoTag ? undefined : "none",
@@ -679,10 +716,10 @@ function openEdit(item: any) {
   editId.value = item.id;
   Object.assign(editForm, {
     name: item.name || "",
-    gender: item.gender || "女",
-    ageGroup: item.ageGroup || "青年",
-    ethnicity: item.ethnicity || "东亚",
-    beautyLevel: item.beautyLevel || "中",
+    gender: Number(item.gender) || 2,
+    ageGroup: Number(item.ageGroup) || 2,
+    ethnicity: Number(item.ethnicity) || 1,
+    beautyScore: typeof item.beautyScore === "number" ? item.beautyScore : Number(item.beautyScore) || undefined,
     tagsText: (item.tags || []).join(","),
     description: item.description || "",
   });
@@ -708,10 +745,10 @@ async function submitEdit() {
     await axios.post("/faceAsset/editFaceAsset", {
       id: editId.value,
       name: editForm.name || undefined,
-      gender: editForm.gender === "未知" ? undefined : editForm.gender,
+      gender: editForm.gender || undefined,
       ageGroup: editForm.ageGroup || undefined,
       ethnicity: editForm.ethnicity || undefined,
-      beautyLevel: editForm.beautyLevel || undefined,
+      beautyScore: editForm.beautyScore ?? undefined,
       tags: tags.length ? tags : undefined,
       description: editForm.description || undefined,
     });
