@@ -1,5 +1,20 @@
 <template>
   <div class="scriptAgent">
+    <div class="batchHeader f ac jb">
+      <div class="batchSelector f ac">
+        <span class="batchLabel">{{ $t("workbench.scriptAgent.sourceBatch") }}</span>
+        <t-select
+          v-model="selectedImportId"
+          class="batchSelect"
+          :loading="importListLoading"
+          :disabled="status === 'pending' || status === 'streaming'"
+          @change="handleBatchChange">
+          <t-option :value="MAINLINE_IMPORT" :label="$t('workbench.scriptAgent.projectMainline')" />
+          <t-option v-for="batch in importBatches" :key="batch.id" :value="String(batch.id)" :label="batch.name || $t('workbench.scriptAgent.unnamedBatch')" />
+        </t-select>
+      </div>
+      <span class="currentBatchName">{{ currentBatchName }}</span>
+    </div>
     <Splitpanes class="default-theme data f">
       <Pane :size="30" :min-size="15" class="operate">
         <div class="box pr">
@@ -238,6 +253,27 @@
         </div>
       </div>
     </t-dialog>
+
+    <!-- 可编辑重试：预填该轮用户消息原文，可改字后重发；不改字直接发送即原样重试 -->
+    <t-dialog
+      :visible="retryEditVisible"
+      :header="$t('workbench.scriptAgent.retryEditTitle')"
+      :footer="false"
+      width="560px"
+      @close="retryEditVisible = false">
+      <t-textarea
+        v-model="retryEditText"
+        :autosize="{ minRows: 4, maxRows: 12 }"
+        :placeholder="$t('workbench.scriptAgent.retryEditPlaceholder')" />
+      <div class="f ac" style="justify-content: flex-end; gap: 10px; margin-top: 12px">
+        <t-button variant="outline" @click="retryEditVisible = false">
+          {{ $t("workbench.scriptAgent.msg.cancel") }}
+        </t-button>
+        <t-button theme="primary" :disabled="!retryEditText.trim()" @click="confirmRetryEdit">
+          {{ $t("workbench.scriptAgent.retryEditSend") }}
+        </t-button>
+      </div>
+    </t-dialog>
   </div>
 </template>
 
@@ -257,11 +293,21 @@ import scriptAgentStore from "@/stores/scriptAgent";
 const route = useRoute();
 const { connected, messages, status, planData, thinkLevel, autoAdvance, isGenerating } = storeToRefs(scriptAgentStore());
 const sessionAgentStore = scriptAgentStore();
+interface ImportBatch {
+  id: number;
+  name: string;
+  chapterCount: number;
+  scriptCount: number;
+}
+const MAINLINE_IMPORT = "mainline";
 const queryNumber = (name: string) => {
   const value = Number(route.query[name]);
   return Number.isFinite(value) && value > 0 ? value : undefined;
 };
 const routeImportId = computed(() => queryNumber("importId"));
+const selectedImportId = ref(routeImportId.value !== undefined ? String(routeImportId.value) : MAINLINE_IMPORT);
+const importBatches = ref<ImportBatch[]>([]);
+const importListLoading = ref(false);
 const routeScriptId = computed(() => queryNumber("scriptId"));
 const routeMerge = computed(() => routeImportId.value !== undefined && route.query.merge === "1");
 const scriptSessionParams = () => ({
@@ -276,6 +322,11 @@ const thinkLevelOptions = [
 ];
 const currentTable = ref(1);
 const inputValue = ref("");
+const currentBatchName = computed(() => {
+  if (selectedImportId.value === MAINLINE_IMPORT) return $t("workbench.scriptAgent.projectMainline");
+  const batch = importBatches.value.find((item) => String(item.id) === selectedImportId.value);
+  return batch?.name || $t("workbench.scriptAgent.unnamedBatch");
+});
 const toolbars: ToolbarNames[] = [
   "bold",
   "underline",
@@ -318,10 +369,40 @@ onMounted(() => {
   if (messages.value.length <= 0) messages.value = [...defMsg, ...messages.value];
   getPlanData();
   getNovel();
+  getImportList();
   sessionAgentStore.connect();
 
   if (messages.value.length <= 1) getHistory();
 });
+async function getImportList() {
+  importListLoading.value = true;
+  try {
+    const { data } = await axios.post("/novel/getImportList", { projectId: project.value?.id });
+    importBatches.value = Array.isArray(data) ? data : [];
+  } catch (e) {
+    console.error("获取取材批次失败:", e);
+    window.$message.error($t("workbench.scriptAgent.msg.importListFailed"));
+  } finally {
+    importListLoading.value = false;
+  }
+}
+
+function handleBatchChange(value: string | number | boolean | unknown) {
+  const nextValue = String(value);
+  if (nextValue === MAINLINE_IMPORT) {
+    useRouter().push({ path: "/scriptAgent", query: { projectId: project.value?.id } });
+    return;
+  }
+  const importId = Number(nextValue);
+  if (!Number.isFinite(importId) || importId <= 0) return;
+  useRouter().push({
+    path: "/scriptAgent",
+    query: {
+      projectId: project.value?.id,
+      importId: String(importId),
+    },
+  });
+}
 onUnmounted(() => {
   sessionAgentStore.disconnect();
 });
@@ -375,7 +456,12 @@ function canRetry(message: ChatMessagesData): boolean {
   return idx > 0 && messages.value[idx - 1].role === "user";
 }
 
-/** 重试一轮对话：截断该轮之后的所有消息，并原样重发用户输入 */
+/** 可编辑重试状态：点重试弹编辑框，预填该轮用户消息原文；不改字发送=原样重试，改字发送=编辑后重试 */
+const retryEditVisible = ref(false);
+const retryEditText = ref("");
+const retryTargetId = ref("");
+
+/** 重试一轮对话：截断该轮之后的所有消息，重发用户输入（可编辑） */
 function handleRetry(message: ChatMessagesData) {
   const idx = messages.value.findIndex((m) => m.id === message.id);
   if (idx === -1) return;
@@ -383,7 +469,17 @@ function handleRetry(message: ChatMessagesData) {
   if (!target || target.role !== "user") return;
   const text = String((target.content?.[0] as any)?.data ?? "").trim();
   if (!text) return;
-  scriptAgentStore().retryFrom(target.id, text);
+  retryTargetId.value = target.id;
+  retryEditText.value = text;
+  retryEditVisible.value = true;
+}
+
+/** 确认编辑后重试 */
+function confirmRetryEdit() {
+  const text = retryEditText.value.trim();
+  if (!text || !retryTargetId.value) return;
+  retryEditVisible.value = false;
+  scriptAgentStore().retryFrom(retryTargetId.value, text);
 }
 
 /** 是否允许回退该消息：非欢迎语、非生成中；AI消息需其后还有内容（否则无可撤销项） */
@@ -399,6 +495,16 @@ function canRollback(message: ChatMessagesData): boolean {
 /** 回退到某条消息对应时刻的工作区状态，并截断其后对话 */
 function handleRollback(message: ChatMessagesData) {
   const mode = message.role === "user" ? "discard" : "keep";
+  // 回退前捕获将被截断范围的首条用户消息，回退成功后回填输入框（可改字重发，也可清空不用）
+  const rbIdx = messages.value.findIndex((m) => m.id === message.id);
+  let backfillText = "";
+  if (rbIdx >= 0) {
+    const removedUser =
+      mode === "discard" && message.role === "user"
+        ? message
+        : messages.value.slice(rbIdx + 1).find((m) => m.role === "user");
+    backfillText = String(((removedUser?.content?.[0] as any)?.data) ?? "").trim();
+  }
   const dialog = DialogPlugin.confirm({
     header: $t(mode === "keep" ? "workbench.scriptAgent.rollbackKeepTitle" : "workbench.scriptAgent.rollbackDiscardTitle"),
     body: $t(mode === "keep" ? "workbench.scriptAgent.rollbackKeepBody" : "workbench.scriptAgent.rollbackDiscardBody"),
@@ -420,6 +526,8 @@ function handleRollback(message: ChatMessagesData) {
       }
       // 状态已回退：同步刷新右侧工作区数据
       await getPlanData();
+      // 回填被回退轮次的用户消息到输入框，便于改字重发
+      if (backfillText) inputValue.value = backfillText;
       window.$message.success($t("workbench.scriptAgent.rollbackSuccess"));
     },
   });
@@ -671,6 +779,32 @@ function toggleAllCards() {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  .batchHeader {
+    flex-shrink: 0;
+    gap: 16px;
+    min-height: 48px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--td-border-level-1-color);
+    .batchSelector {
+      gap: 10px;
+      .batchLabel {
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--td-text-color-secondary);
+      }
+      .batchSelect {
+        width: 280px;
+      }
+    }
+    .currentBatchName {
+      max-width: 360px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 13px;
+      font-weight: 600;
+    }
+  }
   :deep(.splitpanes__pane) {
     background-color: transparent !important;
   }

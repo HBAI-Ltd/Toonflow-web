@@ -125,6 +125,9 @@ function makeProductionAgentStore(projectId: string) {
     /** 智能推进开关：开启后决策层代替用户确认并自动推进；按项目持久化，重连后自动同步到后端 */
     const autoAdvance = ref(localStorage.getItem(`productionAgent-autoAdvance-${projectId}`) === "1");
 
+    /** 思考档位：前端默认轻量思考；连接建立与重连时同步到后端，避免连接级状态回退为关闭 */
+    const thinkLevel = ref(1);
+
     function updateAutoAdvance(value: boolean) {
       autoAdvance.value = value;
       localStorage.setItem(`productionAgent-autoAdvance-${projectId}`, value ? "1" : "0");
@@ -147,8 +150,10 @@ function makeProductionAgentStore(projectId: string) {
         if (s) {
           // 连接建立后同步本地开关状态，避免后端停留在旧模式
           s.emit("setAutoAdvance", { enabled: autoAdvance.value });
+          s.emit("updateThinkConfig", { think: thinkLevel.value > 0, thinlLevel: thinkLevel.value });
           s.on("connect", () => {
             s.emit("setAutoAdvance", { enabled: autoAdvance.value });
+            s.emit("updateThinkConfig", { think: thinkLevel.value > 0, thinlLevel: thinkLevel.value });
             getHistory();
           });
           s.on("getFlowData", (_, callback) => {
@@ -512,8 +517,6 @@ function makeProductionAgentStore(projectId: string) {
       messages.value = [...defMsg, ...data];
       loadingHistory.value = false;
     }
-
-    const thinkLevel = ref(1);
 
     function updateThinkConfig(value: number) {
       thinkLevel.value = value;

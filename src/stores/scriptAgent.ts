@@ -69,6 +69,9 @@ function makeScriptAgentStore(session: ScriptAgentSession) {
         /** 智能推进开关：开启后决策层代替用户确认并自动推进；按项目持久化，重连后自动同步到后端 */
         const autoAdvance = ref(localStorage.getItem(`scriptAgent-autoAdvance-${projectId}`) === "1");
 
+        /** 思考档位：前端默认轻量思考；连接建立与重连时同步到后端，避免连接级状态回退为关闭 */
+        const thinkLevel = ref(1);
+
         function updateAutoAdvance(value: boolean) {
           autoAdvance.value = value;
           localStorage.setItem(`scriptAgent-autoAdvance-${projectId}`, value ? "1" : "0");
@@ -94,6 +97,9 @@ function makeScriptAgentStore(session: ScriptAgentSession) {
               // socket 建立与每次重连都同步本地开关，避免后端连接级状态丢失后静默退回人工模式
               syncAutoAdvance();
               s.on("connect", syncAutoAdvance);
+              const syncThinkLevel = () => s.emit("updateThinkConfig", { think: thinkLevel.value > 0, thinlLevel: thinkLevel.value });
+              syncThinkLevel();
+              s.on("connect", syncThinkLevel);
             }
           },
           { immediate: true },
@@ -108,8 +114,6 @@ function makeScriptAgentStore(session: ScriptAgentSession) {
             ...(scriptId !== undefined ? { scriptId } : {}),
           });
         }
-
-        const thinkLevel = ref(1);
 
         /** 重试某一轮对话：截断该用户消息之后的所有回复，并原样重发 */
         function retryFrom(userMessageId: string, text: string) {
@@ -145,7 +149,15 @@ function makeScriptAgentStore(session: ScriptAgentSession) {
               return;
             }
             socket.value.emit("rollback", { messageTime, mode }, (res: { ok: boolean; message?: string; restoredTo?: string }) => {
-              if (res?.ok) removeMessagesAfter(messageId);
+              if (res?.ok) {
+                removeMessagesAfter(messageId);
+                // discard：目标用户消息本身也移除（其原文已回填输入框待编辑重发，
+                // 避免消息留在对话里 + 输入框同文，看起来像重复发送）
+                if (mode === "discard") {
+                  const idx = messages.value.findIndex((m) => m.id === messageId);
+                  if (idx > -1) messages.value.splice(idx, 1);
+                }
+              }
               resolve(res ?? { ok: false, message: "noResponse" });
             });
           });
