@@ -84,6 +84,20 @@
                 </div>
               </template>
             </t-popup>
+            <t-tooltip :content="autoAdvance ? $t('workbench.scriptAgent.autoAdvance.onTip') : $t('workbench.scriptAgent.autoAdvance.offTip')" placement="top">
+              <t-button
+                size="small"
+                variant="outline"
+                :theme="autoAdvance ? 'warning' : 'default'"
+                :disabled="!connected"
+                @click="toggleAutoAdvance()">
+                <template #icon>
+                  <i-pause v-if="autoAdvance" size="16" />
+                  <i-play v-else size="16" />
+                </template>
+                {{ autoAdvance ? $t("workbench.scriptAgent.autoAdvance.on") : $t("workbench.scriptAgent.autoAdvance.off") }}
+              </t-button>
+            </t-tooltip>
           </div>
         </template>
       </t-chat-sender>
@@ -98,7 +112,7 @@ import axios from "@/utils/axios";
 import productionAgentStore from "@/stores/productionAgent";
 import projectStore from "@/stores/project";
 const { project } = storeToRefs(projectStore());
-const { connected, messages, status, episodesId, loadingHistory, thinkLevel } = storeToRefs(productionAgentStore());
+const { connected, messages, status, episodesId, loadingHistory, thinkLevel, autoAdvance, isGenerating } = storeToRefs(productionAgentStore());
 const thinkLevelOptions = [
   { label: $t("workbench.scriptAgent.thinkLevel.off"), value: 0 },
   { label: $t("workbench.scriptAgent.thinkLevel.light"), value: 1 },
@@ -118,6 +132,18 @@ function handleSend(text: string) {
 }
 function handleStop() {
   productionAgentStore().stopGenerate();
+}
+
+/** 智能推进开关：开启后决策层代替用户确认并自动推进；若流程已启动且当前空闲，立即续跑 */
+function toggleAutoAdvance() {
+  const next = !autoAdvance.value;
+  productionAgentStore().updateAutoAdvance(next);
+  const hasConversation = messages.value.some((m) => m.role === "user");
+  // 最后一条消息是用户消息 = 有回合在途（首包前 isGenerating 尚为 false），此时补发续跑会触发后端 abort 杀掉当前回合
+  const awaitingReply = messages.value[messages.value.length - 1]?.role === "user";
+  if (next && hasConversation && connected.value && !isGenerating.value && !awaitingReply) {
+    productionAgentStore().autoAdvanceContinue();
+  }
 }
 function handleReconnect() {
   const dialog = DialogPlugin.confirm({

@@ -39,7 +39,7 @@ function makeProductionAgentStore(projectId: string) {
 
     const episodesId = ref<number>();
 
-    const { connected, messages, chat, stopGenerate, socket, status, reconnect, connect, disconnect } = useChat({
+    const { connected, messages, chat, stopGenerate, socket, status, reconnect, connect, disconnect, isGenerating } = useChat({
       url: `${settingStore().baseUrl}/socket/productionAgent`,
       auth: () => ({
         isolationKey: `${projectId}:productionAgent:${episodesId.value}`,
@@ -122,12 +122,33 @@ function makeProductionAgentStore(projectId: string) {
       true,
       true,
     );
+    /** 智能推进开关：开启后决策层代替用户确认并自动推进；按项目持久化，重连后自动同步到后端 */
+    const autoAdvance = ref(localStorage.getItem(`productionAgent-autoAdvance-${projectId}`) === "1");
+
+    function updateAutoAdvance(value: boolean) {
+      autoAdvance.value = value;
+      localStorage.setItem(`productionAgent-autoAdvance-${projectId}`, value ? "1" : "0");
+      if (socket.value) {
+        socket.value.emit("setAutoAdvance", { enabled: value });
+      }
+    }
+
+    /** 智能推进续跑：走专用控制事件，不产生用户消息气泡、不写入对话记忆 */
+    function autoAdvanceContinue() {
+      if (!socket.value?.connected) return false;
+      socket.value.emit("autoAdvanceContinue");
+      return true;
+    }
+
     // 注册 getPlanData 事件（无需依赖组件生命周期）
     watch(
       socket,
       (s) => {
         if (s) {
+          // 连接建立后同步本地开关状态，避免后端停留在旧模式
+          s.emit("setAutoAdvance", { enabled: autoAdvance.value });
           s.on("connect", () => {
+            s.emit("setAutoAdvance", { enabled: autoAdvance.value });
             getHistory();
           });
           s.on("getFlowData", (_, callback) => {
@@ -186,11 +207,12 @@ function makeProductionAgentStore(projectId: string) {
           });
           s.on("generateDeriveAsset", async (data, callback) => {
             const assetsData = await batchGenerateAssets(data.ids);
-            callback({ success: true, message: assetsData });
+            // 请求失败时 batchGenerateAssets 返回 undefined，必须把失败传回给后端 Agent，否则安全阀无法感知
+            callback({ success: !!assetsData, message: assetsData ?? "衍生资产图片生成请求失败" });
           });
           s.on("generateStoryboard", async (data, callback) => {
             const storyData = await batchGenerateStoryboard(data.ids);
-            callback({ success: true, message: storyData });
+            callback({ success: !!storyData, message: storyData ?? "分镜图生成请求失败" });
           });
           s.on("addStoryboard", async (data, callback) => {
             const insertVal = {
@@ -291,7 +313,16 @@ function makeProductionAgentStore(projectId: string) {
           });
         }
         return data;
-      } catch (e) {}
+      } catch (e) {
+        // 请求失败：回滚预置的“生成中”状态，避免界面永远卡在生成中
+        flowData.value.assets.forEach((asset) => {
+          asset.derive?.forEach((derive) => {
+            if (allIds.includes(derive.id) && derive.state === "生成中") {
+              derive.state = "未生成" as "未生成" | "生成中" | "已完成" | "生成失败";
+            }
+          });
+        });
+      }
     }
     const assetsNotStateImageIds = computed(() => {
       const ids: number[] = [];
@@ -511,6 +542,10 @@ function makeProductionAgentStore(projectId: string) {
       reconnect,
       thinkLevel,
       updateThinkConfig,
+      autoAdvance,
+      updateAutoAdvance,
+      autoAdvanceContinue,
+      isGenerating,
     };
   });
 }

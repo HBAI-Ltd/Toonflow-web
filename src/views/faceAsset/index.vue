@@ -32,6 +32,14 @@
             全选全部
           </t-button>
           <t-button variant="text" @click="clearSelected">取消选择</t-button>
+          <t-select v-model="batchScore" size="small" clearable placeholder="批量设分" style="width: 120px">
+            <t-option :value="85" label="漂亮 85" />
+            <t-option :value="55" label="普通 55" />
+            <t-option :value="32" label="丑陋 32" />
+          </t-select>
+          <t-button variant="outline" :disabled="batchScore == null || selectedIds.size === 0" @click="batchSetScore">
+            设分
+          </t-button>
           <t-button variant="outline" theme="danger" :disabled="selectedIds.size === 0" @click="confirmBatchDel">
             <template #icon><i-delete class="icon" /></template>
             删除所选
@@ -188,14 +196,14 @@
           <div class="f ac">
             <t-input-number
               v-model="form.beautyScore"
-              :min="2"
-              :max="10"
-              :step="0.1"
-              :decimal-places="1"
+              :min="20"
+              :max="100"
+              :step="1"
+              :decimal-places="0"
               theme="column"
               placeholder="留空自动评分"
               style="width: 150px" />
-            <span class="autoTip" style="margin-left: 10px">2.0~10.0 客观连续分；留空由视觉模型评分</span>
+            <span class="autoTip" style="margin-left: 10px">百分制 20~100 整数；留空由视觉模型评分</span>
           </div>
         </t-form-item>
         <t-form-item label="AI 自动打标">
@@ -236,12 +244,12 @@
         <t-form-item label="颜值评分">
           <t-input-number
             v-model="editForm.beautyScore"
-            :min="2"
-            :max="10"
-            :step="0.1"
-            :decimal-places="1"
+            :min="20"
+            :max="100"
+            :step="1"
+            :decimal-places="0"
             theme="column"
-            placeholder="2.0 ~ 10.0"
+            placeholder="20 ~ 100"
             style="width: 150px" />
         </t-form-item>
       </t-form>
@@ -377,13 +385,11 @@ const ageOptions = [
   { value: 3, label: "中年" },
   { value: 4, label: "老年" },
 ];
-// 颜值筛选档位（映射为 2.0~10.0 连续分区间，与选角打分锚点一致）
+// 颜值筛选档位（百分制三档：漂亮/普通/丑陋，与选角分值段直选策略一致）
 const beautyBandOptions = [
-  { value: "top", label: "神颜 9.0+", min: 9.0, max: 10.0 },
-  { value: "high", label: "俊美 7.5~8.9", min: 7.5, max: 8.9 },
-  { value: "good", label: "清秀 5.5~7.4", min: 5.5, max: 7.4 },
-  { value: "plain", label: "路人 4.0~5.4", min: 4.0, max: 5.4 },
-  { value: "rough", label: "特型 2.0~3.9", min: 2.0, max: 3.9 },
+  { value: "top", label: "漂亮 75-100", min: 75, max: 100 },
+  { value: "good", label: "普通 41-74", min: 41, max: 74 },
+  { value: "rough", label: "丑陋 25-40", min: 25, max: 40 },
 ];
 
 // 码值 → 中文展示
@@ -409,6 +415,7 @@ const filter = reactive<any>({ gender: undefined, ethnicity: undefined, ageGroup
 // ---- 多选删除（删除模式）----
 const selectedIds = ref<Set<number>>(new Set());
 const deleteMode = ref(false); // 是否处于「批量删除」模式：仅此模式下卡片显示复选框
+const batchScore = ref<number | undefined>(undefined); // 批量设分（v6：人工标高分档）
 
 function enterDeleteMode() {
   deleteMode.value = true;
@@ -428,6 +435,21 @@ function toggleSelect(id: number, checked: boolean) {
 
 function clearSelected() {
   selectedIds.value = new Set();
+  batchScore.value = undefined;
+}
+
+// 批量设分：多选美女帅哥一键标高分（图2主图池），普通脸保持模型粗分不动
+async function batchSetScore() {
+  const ids = [...selectedIds.value];
+  if (!ids.length || batchScore.value === undefined) return;
+  try {
+    await axios.post("/faceAsset/editFaceAsset", { ids, beautyScore: batchScore.value });
+    MessagePlugin.success(`已将 ${ids.length} 张人脸设为 ${batchScore.value} 分`);
+    clearSelected();
+    loadList();
+  } catch (e: any) {
+    MessagePlugin.error(e?.response?.data?.message || "批量设分失败");
+  }
 }
 
 // 全选：选中当前页全部卡片

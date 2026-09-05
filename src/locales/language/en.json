@@ -865,6 +865,12 @@
         "light": "Light Think",
         "deep": "Deep Think",
         "extreme": "Extreme Think"
+      },
+      "autoAdvance": {
+        "off": "Auto Advance",
+        "on": "Advancing",
+        "offTip": "When enabled, the agent auto-confirms and advances the workflow (batch storyboard image generation still asks first)",
+        "onTip": "Pauses future auto-advance; does not interrupt the current generation"
       }
     },
     "cornerScape": {

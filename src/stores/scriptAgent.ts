@@ -17,7 +17,7 @@ function makeScriptAgentStore(projectId: string) {
           script: [],
         });
 
-        const { connected, messages, chat, stopGenerate, socket, status, disconnect, connect, emit, removeMessagesAfter, isGenerating } = useChat({
+        const { connected, messages, chat, stopGenerate, socket, status, disconnect, connect, reconnect, emit, removeMessagesAfter, isGenerating } = useChat({
           url: `${settingStore().baseUrl}/socket/scriptAgent`,
           auth: () => ({
             isolationKey: `${projectId}:scriptAgent`,
@@ -54,6 +54,23 @@ function makeScriptAgentStore(projectId: string) {
           autoConnect: false,
         });
 
+        /** 智能推进开关：开启后决策层代替用户确认并自动推进；按项目持久化，重连后自动同步到后端 */
+        const autoAdvance = ref(localStorage.getItem(`scriptAgent-autoAdvance-${projectId}`) === "1");
+
+        function updateAutoAdvance(value: boolean) {
+          autoAdvance.value = value;
+          localStorage.setItem(`scriptAgent-autoAdvance-${projectId}`, value ? "1" : "0");
+          if (socket.value) {
+            socket.value.emit("setAutoAdvance", { enabled: value });
+          }
+        }
+
+        /** 智能推进续跑：走专用控制事件，不产生用户消息气泡、不写入对话记忆 */
+        function autoAdvanceContinue() {
+          if (!socket.value?.connected) return false;
+          return emit("autoAdvanceContinue");
+        }
+
         watch(
           socket,
           (s) => {
@@ -61,6 +78,10 @@ function makeScriptAgentStore(projectId: string) {
               s.on("getPlanData", (_, callback) => {
                 callback(planData.value);
               });
+              const syncAutoAdvance = () => s.emit("setAutoAdvance", { enabled: autoAdvance.value });
+              // socket 建立与每次重连都同步本地开关，避免后端连接级状态丢失后静默退回人工模式
+              syncAutoAdvance();
+              s.on("connect", syncAutoAdvance);
             }
           },
           { immediate: true },
@@ -119,7 +140,7 @@ function makeScriptAgentStore(projectId: string) {
           }
         }
 
-        return { connected, messages, chat, stopGenerate, socket, status, planData, setPlanData, connect, disconnect, thinkLevel, updateThinkConfig, retryFrom, rollbackTo };
+        return { connected, messages, chat, stopGenerate, socket, status, planData, setPlanData, connect, disconnect, reconnect, thinkLevel, updateThinkConfig, retryFrom, rollbackTo, autoAdvance, updateAutoAdvance, autoAdvanceContinue, isGenerating };
       });
 }
 

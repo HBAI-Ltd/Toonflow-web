@@ -94,6 +94,24 @@
                   </div>
                 </template>
               </t-popup>
+              <t-tooltip
+                v-if="project?.contentFormat === 'explainer_video'"
+                :content="autoAdvance ? $t('workbench.scriptAgent.autoAdvance.onTip') : $t('workbench.scriptAgent.autoAdvance.offTip')"
+                placement="top">
+                <t-button
+                  size="small"
+                  variant="outline"
+                  :theme="autoAdvance ? 'warning' : 'default'"
+                  style="margin-left: 8px"
+                  :disabled="!connected"
+                  @click="toggleAutoAdvance()">
+                  <template #icon>
+                    <i-pause v-if="autoAdvance" size="16" />
+                    <i-play v-else size="16" />
+                  </template>
+                  {{ autoAdvance ? $t("workbench.scriptAgent.autoAdvance.on") : $t("workbench.scriptAgent.autoAdvance.off") }}
+                </t-button>
+              </t-tooltip>
             </template>
           </t-chat-sender>
           <i-dot class="dot" theme="outline" :fill="connected ? 'green' : 'red'" />
@@ -236,14 +254,13 @@ import projectStore from "@/stores/project";
 const { project } = storeToRefs(projectStore());
 import editMdPreivew from "@/components/editMdPreivew.vue";
 import scriptAgentStore from "@/stores/scriptAgent";
-const { connected, messages, status, planData, thinkLevel } = storeToRefs(scriptAgentStore());
+const { connected, messages, status, planData, thinkLevel, autoAdvance, isGenerating } = storeToRefs(scriptAgentStore());
 const thinkLevelOptions = [
   { label: $t("workbench.scriptAgent.thinkLevel.off"), value: 0 },
   { label: $t("workbench.scriptAgent.thinkLevel.light"), value: 1 },
   { label: $t("workbench.scriptAgent.thinkLevel.deep"), value: 2 },
   { label: $t("workbench.scriptAgent.thinkLevel.extreme"), value: 3 },
 ];
-import productionAgentStore from "@/stores/productionAgent";
 const currentTable = ref(1);
 const inputValue = ref("");
 const toolbars: ToolbarNames[] = [
@@ -314,6 +331,18 @@ function handleSend(text: string) {
 }
 function handleStop() {
   scriptAgentStore().stopGenerate();
+}
+
+/** 智能推进开关：开启后决策层代替用户确认并自动推进；若流程已启动且当前空闲，立即续跑 */
+function toggleAutoAdvance() {
+  const next = !autoAdvance.value;
+  scriptAgentStore().updateAutoAdvance(next);
+  const hasConversation = messages.value.some((m) => m.role === "user");
+  // 最后一条消息是用户消息 = 有回合在途（首包前 isGenerating 尚为 false），此时补发续跑会触发后端 abort 杀掉当前回合
+  const awaitingReply = messages.value[messages.value.length - 1]?.role === "user";
+  if (next && hasConversation && connected.value && !isGenerating.value && !awaitingReply) {
+    scriptAgentStore().autoAdvanceContinue();
+  }
 }
 
 /** 是否允许重试该消息：用户消息可重试；助手消息需前面紧邻一条用户消息；生成中禁用 */
@@ -420,7 +449,7 @@ function handleReconnect() {
     cancelBtn: $t("workbench.scriptAgent.msg.cancel"),
     theme: "warning",
     onConfirm: async () => {
-      productionAgentStore().reconnect();
+      scriptAgentStore().reconnect();
       dialog.destroy();
     },
   });
