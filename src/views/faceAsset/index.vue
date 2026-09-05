@@ -1,10 +1,5 @@
 <template>
-  <div
-    class="faceAssetPage"
-    @dragenter="onPageDragEnter"
-    @dragover.prevent
-    @dragleave="onPageDragLeave"
-    @drop.prevent="onPageDrop">
+  <div class="faceAssetPage">
     <!-- 顶部工具栏 -->
     <div class="toolbar f ac jb">
       <div class="left f ac">
@@ -550,18 +545,26 @@ watch(
 function hasFilePayload(e: DragEvent) {
   return Array.from(e.dataTransfer?.types || []).includes("Files");
 }
-function onPageDragEnter(e: DragEvent) {
+
+// ---- 文档级拖拽监听：不依赖页面根元素几何范围，空白处、内边距、滚动区都能触发 ----
+function onDocDragEnter(e: DragEvent) {
   if (!hasFilePayload(e)) return;
   pageDragDepth++;
   pageDragOver.value = true;
 }
-function onPageDragLeave() {
+function onDocDragOver(e: DragEvent) {
+  if (!hasFilePayload(e)) return;
+  e.preventDefault(); // 必须阻止默认行为，否则浏览器直接打开文件而不触发 drop
+}
+function onDocDragLeave() {
   pageDragDepth = Math.max(0, pageDragDepth - 1);
   if (pageDragDepth === 0) pageDragOver.value = false;
 }
-function onPageDrop(e: DragEvent) {
+function onDocDrop(e: DragEvent) {
   pageDragDepth = 0;
   pageDragOver.value = false;
+  // 批量上传弹窗打开时让弹窗自己的拖拽区处理，避免重复上传
+  if (dialogVisible.value) return;
   const all = Array.from(e.dataTransfer?.files || []);
   const images = all.filter((f) => f.type?.startsWith("image/"));
   const oversized = images.filter((f) => f.size > 10 * 1024 * 1024);
@@ -665,10 +668,18 @@ function onPreviewKeydown(e: KeyboardEvent) {
 onMounted(() => {
   loadList();
   window.addEventListener("keydown", onPreviewKeydown);
+  document.addEventListener("dragenter", onDocDragEnter);
+  document.addEventListener("dragover", onDocDragOver);
+  document.addEventListener("dragleave", onDocDragLeave);
+  document.addEventListener("drop", onDocDrop);
 });
 
 onBeforeUnmount(() => {
   window.removeEventListener("keydown", onPreviewKeydown);
+  document.removeEventListener("dragenter", onDocDragEnter);
+  document.removeEventListener("dragover", onDocDragOver);
+  document.removeEventListener("dragleave", onDocDragLeave);
+  document.removeEventListener("drop", onDocDrop);
 });
 function openUpload() {
   pendingFiles.value = [];
