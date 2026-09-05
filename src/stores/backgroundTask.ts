@@ -9,7 +9,7 @@ export interface BgTask {
   resultUrl?: string; // 成功产物（如生成的测试图 URL，托盘可直接查看）
   runningText?: string; // 自定义进行中文案
   successText?: string; // 自定义成功文案
-  status: "pending" | "running" | "success" | "fail" | "stopped";
+  status: "pending" | "running" | "success" | "fail" | "paused"; // paused：用户暂停，可一键恢复
   error?: string; // 失败原因（axios 拦截器 reject 的是 response.data，e.message 即后端 message）
   createTime: number;
 }
@@ -44,9 +44,9 @@ export default defineStore(
     let processing = false;
 
     const counts = computed(() => {
-      const c = { pending: 0, running: 0, success: 0, fail: 0, stopped: 0, done: 0 };
+      const c = { pending: 0, running: 0, success: 0, fail: 0, paused: 0, done: 0 };
       for (const t of tasks.value) c[t.status]++;
-      c.done = c.success + c.fail + c.stopped;
+      c.done = c.success + c.fail + c.paused;
       return c;
     });
     const active = computed(() => counts.value.pending + counts.value.running > 0);
@@ -101,14 +101,14 @@ export default defineStore(
           try {
             await runner(task, ac.signal);
             if (ac.signal.aborted) {
-              task.status = "stopped";
+              task.status = "paused";
             } else {
               task.status = "success";
               if (task.kind === "faceUpload") faceUploadSuccessVersion.value++;
             }
           } catch (e: any) {
             if (ac.signal.aborted) {
-              task.status = "stopped"; // 用户主动停止，不算失败
+              task.status = "paused"; // 用户主动暂停，不算失败
             } else {
               task.status = "fail";
               task.error = e?.message || "未知错误";
@@ -123,7 +123,7 @@ export default defineStore(
     }
 
     function retryTask(task: BgTask) {
-      if (task.status !== "fail" && task.status !== "stopped") return;
+      if (task.status !== "fail" && task.status !== "paused") return;
       task.status = "pending";
       task.error = undefined;
       processQueue();
@@ -144,15 +144,23 @@ export default defineStore(
       tasks.value = [];
     }
 
-    /** 一键全部停止：排队中的直接置为已停止，运行中的中断其在途请求 */
-    function stopAll() {
+    /** 一键全部暂停：排队中的直接挂起，运行中的中断其在途请求（可随时恢复） */
+    function pauseAll() {
       for (const t of tasks.value) {
-        if (t.status === "pending") {
-          t.status = "stopped";
-        } else if (t.status === "running") {
-          controllers.get(t.id)?.abort();
+        if (t.status === "pending") t.status = "paused";
+        else if (t.status === "running") controllers.get(t.id)?.abort(); // 中断后由 processQueue 标记为 paused
+      }
+    }
+
+    /** 一键恢复：挂起的任务重新排队执行 */
+    function resumeAll() {
+      for (const t of tasks.value) {
+        if (t.status === "paused") {
+          t.status = "pending";
+          t.error = undefined;
         }
       }
+      processQueue();
     }
 
     function collapse(v?: boolean) {
@@ -171,7 +179,8 @@ export default defineStore(
       retryTask,
       retryAllFailed,
       clearTasks,
-      stopAll,
+      pauseAll,
+      resumeAll,
       collapse,
     };
   },
