@@ -254,7 +254,20 @@ import projectStore from "@/stores/project";
 const { project } = storeToRefs(projectStore());
 import editMdPreivew from "@/components/editMdPreivew.vue";
 import scriptAgentStore from "@/stores/scriptAgent";
+const route = useRoute();
 const { connected, messages, status, planData, thinkLevel, autoAdvance, isGenerating } = storeToRefs(scriptAgentStore());
+const sessionAgentStore = scriptAgentStore();
+const queryNumber = (name: string) => {
+  const value = Number(route.query[name]);
+  return Number.isFinite(value) && value > 0 ? value : undefined;
+};
+const routeImportId = computed(() => queryNumber("importId"));
+const routeScriptId = computed(() => queryNumber("scriptId"));
+const routeMerge = computed(() => routeImportId.value !== undefined && route.query.merge === "1");
+const scriptSessionParams = () => ({
+  ...(routeImportId.value !== undefined ? { importId: routeImportId.value } : {}),
+  ...(routeScriptId.value !== undefined ? { scriptId: routeScriptId.value } : {}),
+});
 const thinkLevelOptions = [
   { label: $t("workbench.scriptAgent.thinkLevel.off"), value: 0 },
   { label: $t("workbench.scriptAgent.thinkLevel.light"), value: 1 },
@@ -305,13 +318,21 @@ onMounted(() => {
   if (messages.value.length <= 0) messages.value = [...defMsg, ...messages.value];
   getPlanData();
   getNovel();
-  scriptAgentStore().connect();
+  sessionAgentStore.connect();
 
   if (messages.value.length <= 1) getHistory();
 });
+onUnmounted(() => {
+  sessionAgentStore.disconnect();
+});
 const agentWorkDataId = ref<number>();
 async function getPlanData() {
-  const { data } = await axios.post("/scriptAgent/getPlanData", { projectId: project.value?.id, agentType: "scriptAgent" });
+  const { data } = await axios.post("/scriptAgent/getPlanData", {
+    projectId: project.value?.id,
+    agentType: "scriptAgent",
+    ...scriptSessionParams(),
+    ...(routeImportId.value !== undefined ? { merge: routeMerge.value } : {}),
+  });
   planData.value.storySkeleton = data.data.storySkeleton;
   planData.value.adaptationStrategy = data.data.adaptationStrategy;
   planData.value.script = data.data.script || [];
@@ -432,7 +453,11 @@ function handleResetConversation() {
     cancelBtn: $t("workbench.scriptAgent.msg.cancel"),
     theme: "danger",
     onConfirm: async () => {
-      await axios.post(`/scriptAgent/resetConversation`, { projectId: project.value?.id });
+      await axios.post(`/scriptAgent/resetConversation`, {
+        projectId: project.value?.id,
+        ...scriptSessionParams(),
+        ...(routeImportId.value !== undefined ? { merge: routeMerge.value } : {}),
+      });
       window.$message.success($t("workbench.scriptAgent.resetSuccess"));
       dialog.destroy();
       messages.value = [...defMsg];

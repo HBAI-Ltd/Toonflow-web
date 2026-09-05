@@ -28,6 +28,10 @@ const router = createRouter({
           component: () => import("@/views/faceAsset/index.vue"),
         },
         {
+          path: "/ip",
+          component: () => import("@/views/ip/index.vue"),
+        },
+        {
           path: "/task",
           component: () => import("@/views/task/index.vue"),
         },

@@ -87,6 +87,7 @@ const menuList = ref([
   { type: "btn", path: "/task", labelKey: "workbench.menu.taskCenter", icon: "i-view-list" },
   { type: "divider" },
   { type: "btn", path: "/faceAsset", labelKey: "workbench.menu.faceAsset", icon: "i-face-recognition" },
+  { type: "btn", path: "/ip", labelKey: "workbench.menu.ipLibrary", icon: "i-peoples-two" },
 ]);
 
 const rightBtnList = ref([

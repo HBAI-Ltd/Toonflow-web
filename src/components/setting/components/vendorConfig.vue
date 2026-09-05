@@ -41,7 +41,7 @@
             :message="$t('settings.vendor.msg.vendorNeedsUpdate')"
             style="margin-bottom: 12px" />
           <t-form-item>
-            <MdPreview v-model="currentVendor.description" :theme="themeSetting.mode" />
+            <MdPreview v-model="currentVendor.description" :theme="mdTheme" />
           </t-form-item>
           <t-form-item v-for="input in requiredInputs" :key="input.key" :name="input.key">
             <template #label>
@@ -354,6 +354,7 @@ import TextModelTest from "./vendorTest/TextModelTest.vue";
 import ImageModelTest from "./vendorTest/ImageModelTest.vue";
 import VideoModelTest from "./vendorTest/VideoModelTest.vue";
 const { themeSetting } = storeToRefs(settingStore());
+const mdTheme = computed(() => (themeSetting.value.mode === "auto" ? "light" : themeSetting.value.mode));
 
 // ── 类型 ──
 interface TextModel {
@@ -361,6 +362,7 @@ interface TextModel {
   modelName: string;
   type: "text";
   think: boolean;
+  apiKey?: string;
 }
 
 interface ImageModel {
@@ -941,6 +943,7 @@ function handleEditModel(model: VendorModel) {
       modelName: model.modelName,
       type: "image",
       think: false,
+      apiKey: "",
       mode: [...model.mode],
       mixedMode: [],
       mixedModeCount: {},
@@ -979,6 +982,7 @@ function handleEditModel(model: VendorModel) {
       modelName: model.modelName,
       type: "video",
       think: false,
+      apiKey: "",
       mode: mixedMode.length > 0 ? [...flatMode, "multiReference"] : flatMode,
       mixedMode,
       mixedModeCount,

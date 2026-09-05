@@ -61,6 +61,7 @@ export interface ChatSocketEvents {
   chat: { content: string; attachments?: any[] };
   stop: { messageId: string };
   regenerate: { messageId: string };
+  autoAdvanceContinue: Record<string, never>;
 
   // 接收事件
   message: MessageEvent;

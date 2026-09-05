@@ -2,6 +2,7 @@ import axios from "@/utils/axios";
 import projectStore from "@/stores/project";
 import settingStore from "@/stores/setting";
 import { useChat } from "@/utils/useChat";
+import router from "@/router";
 
 interface PlanData {
   storySkeleton: string;
@@ -9,8 +10,16 @@ interface PlanData {
   script: { id?: number; name: string; content: string }[];
 }
 
-function makeScriptAgentStore(projectId: string) {
-  return defineStore(`scriptAgent-${projectId}`, () => {
+export interface ScriptAgentSession {
+  projectId: string;
+  importId?: number;
+  scriptId?: number;
+  merge?: boolean;
+}
+
+function makeScriptAgentStore(session: ScriptAgentSession) {
+  const { projectId, importId, scriptId, merge } = session;
+  return defineStore(`scriptAgent-${projectId}${importId ? `-i${importId}` : ""}${scriptId ? `-s${scriptId}` : ""}${merge ? "-m1" : ""}`, () => {
         const planData = ref<PlanData>({
           storySkeleton: "",
           adaptationStrategy: "",
@@ -20,8 +29,11 @@ function makeScriptAgentStore(projectId: string) {
         const { connected, messages, chat, stopGenerate, socket, status, disconnect, connect, reconnect, emit, removeMessagesAfter, isGenerating } = useChat({
           url: `${settingStore().baseUrl}/socket/scriptAgent`,
           auth: () => ({
-            isolationKey: `${projectId}:scriptAgent`,
+            isolationKey: importId ? `${projectId}:scriptAgent:b${importId}` : `${projectId}:scriptAgent`,
             projectId: projectId,
+            ...(importId !== undefined ? { importId } : {}),
+            ...(scriptId !== undefined ? { scriptId } : {}),
+            ...(importId !== undefined ? { merge: !!merge } : {}),
           }),
           manageLifecycle: false,
           xmlTags: [
@@ -88,7 +100,13 @@ function makeScriptAgentStore(projectId: string) {
         );
 
         async function setPlanData() {
-          await axios.post("/scriptAgent/setPlanData", { projectId: projectId, agentType: "scriptAgent", data: planData.value });
+          await axios.post("/scriptAgent/setPlanData", {
+            projectId: projectId,
+            agentType: "scriptAgent",
+            data: planData.value,
+            ...(importId !== undefined ? { importId } : {}),
+            ...(scriptId !== undefined ? { scriptId } : {}),
+          });
         }
 
         const thinkLevel = ref(1);
@@ -144,17 +162,33 @@ function makeScriptAgentStore(projectId: string) {
       });
 }
 
-const storeMap = new Map<string, ReturnType<typeof makeScriptAgentStore>>();
+const storeMap = new Map<string, ReturnType<ReturnType<typeof makeScriptAgentStore>>>();
 
-function createScriptAgentStore(projectId: string) {
-  if (!storeMap.has(projectId)) {
-    storeMap.set(projectId, makeScriptAgentStore(projectId));
+function createScriptAgentStore(session: ScriptAgentSession) {
+  const key = `${session.projectId}${session.importId ? `-i${session.importId}` : ""}${session.scriptId ? `-s${session.scriptId}` : ""}${session.merge ? "-m1" : ""}`;
+  if (!storeMap.has(key)) {
+    storeMap.set(key, makeScriptAgentStore(session)());
   }
-  return storeMap.get(projectId)!;
+  return storeMap.get(key)!;
 }
 
-export default function useScriptAgentStore() {
+function getSessionFromRoute(): ScriptAgentSession {
   const id = projectStore().project?.id;
   if (!id) throw new Error("No project selected");
-  return createScriptAgentStore(id)();
+  const query = router.currentRoute.value.query;
+  const toNumber = (value: unknown) => {
+    const num = Number(value);
+    return Number.isFinite(num) && num > 0 ? num : undefined;
+  };
+  const importId = toNumber(query.importId);
+  return {
+    projectId: id,
+    importId,
+    scriptId: toNumber(query.scriptId),
+    merge: importId !== undefined && query.merge === "1",
+  };
+}
+
+export default function useScriptAgentStore(session?: ScriptAgentSession) {
+  return createScriptAgentStore(session ?? getSessionFromRoute());
 }

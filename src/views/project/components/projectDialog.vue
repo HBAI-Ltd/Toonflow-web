@@ -19,6 +19,16 @@
                 <t-option key="基于剧本" :label="$t('workbench.project.dialog.basedOnScript')" value="script" />
               </t-select>
             </t-form-item>
+            <t-form-item v-if="!isEdit" :label="$t('workbench.project.dialog.ip')">
+              <t-select
+                v-model="formState.ipId"
+                clearable
+                :loading="ipLoading"
+                :placeholder="$t('workbench.project.dialog.ipPlaceholder')"
+                @change="handleIpChange">
+                <t-option v-for="item in ipOptions" :key="item.id" :value="item.id" :label="item.name" />
+              </t-select>
+            </t-form-item>
             <t-form-item :label="$t('workbench.project.dialog.contentFormat')">
               <t-select v-model="formState.contentFormat" :placeholder="$t('workbench.project.dialog.contentFormatPh')" @change="applyDefaultManual">
                 <t-option key="vertical_episode" :label="$t('workbench.project.dialog.formatVerticalEpisode')" value="vertical_episode" />
@@ -108,7 +118,7 @@
                         :key="index"
                         class="gridItem"
                         :class="{ active: formState.artStyle === item.stylePath }"
-                        @click="formState.artStyle = item.stylePath">
+                        @click="selectArtStyle(item.stylePath)">
                         <div class="imageWrapper">
                           <img :src="item.images && item.images[0]" :alt="item.name" class="artImage" loading="lazy" />
                           <div class="text">{{ item.name }}</div>
@@ -389,12 +399,18 @@ interface ProjectFormData {
   contentFormat: "vertical_episode" | "series_drama" | "single_film" | "explainer_video";
   episodeDuration: number;
   totalEpisodes: number;
+  ipId?: number;
 }
 interface VisualManualItem {
   name: string;
   images?: string[];
   data?: Data[];
   stylePath: string;
+}
+interface IpOption {
+  id: number;
+  name: string;
+  artStyle?: string;
 }
 interface Data {
   label: string;
@@ -452,6 +468,7 @@ const DEFAULT_FORM: () => ProjectFormData & { id: number; era: string; createTim
   episodeDuration: 0,
   episodeDurationMinutes: 0,
   totalEpisodes: 0,
+  ipId: undefined,
 });
 
 // 新建项目时按内容形态推荐的默认视觉/导演手册（用户手选优先，仅字段为空时使用）
@@ -481,6 +498,38 @@ function applyDefaultManual() {
 
 // ===== 表单 =====
 const formState = ref(DEFAULT_FORM());
+
+// 仅新建时可选 IP；用户手动点选画风后，IP 不再覆盖画风
+const ipOptions = ref<IpOption[]>([]);
+const ipLoading = ref(false);
+const artStyleTouched = ref(false);
+
+function selectArtStyle(stylePath: string) {
+  formState.value.artStyle = stylePath;
+  artStyleTouched.value = true;
+}
+
+async function fetchIpOptions() {
+  ipLoading.value = true;
+  try {
+    const { data } = await axios.post("/ip/getIpList", {});
+    ipOptions.value = data || [];
+  } catch (e) {
+    console.error("Failed to load IP list", e);
+  } finally {
+    ipLoading.value = false;
+  }
+}
+
+function handleIpChange(ipId: unknown) {
+  const id = Number(ipId);
+  if (!Number.isFinite(id) || id <= 0) return;
+  const ip = ipOptions.value.find((item) => item.id === id);
+  const validStyle = ip?.artStyle && visualManualOptions.value.some((item) => item.stylePath === ip.artStyle);
+  if (!artStyleTouched.value && validStyle) {
+    formState.value.artStyle = ip!.artStyle!;
+  }
+}
 
 function resetForm() {
   formState.value = DEFAULT_FORM();
@@ -564,6 +613,7 @@ function handleOk() {
       contentFormat: formState.value.contentFormat || "vertical_episode",
       episodeDuration: calculatedDuration,
       totalEpisodes: calculatedTotalEpisodes,
+      ipId: formState.value.ipId,
     });
   }
   resetForm();
@@ -588,6 +638,7 @@ const promptToolbars: ToolbarNames[] = [
 
 watch(addProjectShow, async (visible) => {
   if (visible) {
+    artStyleTouched.value = false;
     if (props.projectData) {
       const dur = props.projectData.episodeDuration || 55;
       const fmt = props.projectData.contentFormat || "vertical_episode";
@@ -629,7 +680,8 @@ watch(addProjectShow, async (visible) => {
     } else {
       resetForm();
     }
-    await Promise.all([fetchVisualManuals(), queryDirectorManual()]);
+    await Promise.all([fetchVisualManuals(), queryDirectorManual(), fetchIpOptions()]);
+    handleIpChange(formState.value.ipId);
     applyDefaultManual();
   }
 });

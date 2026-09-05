@@ -188,11 +188,17 @@ function addProjectFn(data: {
   videoModel: string;
   imageQuality: string;
   mode: string;
+  ipId?: number;
 }) {
   axios
     .post("/project/addProject", data)
-    .then(() => {
-      window.$message.success($t("workbench.project.msg.addSuccess"));
+    .then(({ data: result }) => {
+      const copiedRoleCount = Number(result?.copiedRoleCount || 0);
+      window.$message.success(
+        copiedRoleCount > 0
+          ? $t("workbench.project.msg.addSuccessWithRoles", { count: copiedRoleCount })
+          : $t("workbench.project.msg.addSuccess"),
+      );
       getAllProject();
     })
     .catch((e) => {
