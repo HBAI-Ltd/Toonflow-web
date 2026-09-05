@@ -561,6 +561,10 @@ function onDocDragLeave() {
   if (pageDragDepth === 0) pageDragOver.value = false;
 }
 function onDocDrop(e: DragEvent) {
+  // 只接管文件拖入；应用内元素拖拽（如排序）不受影响
+  if (!hasFilePayload(e)) return;
+  // 必须无条件阻止默认行为，否则浏览器会直接打开/导航到拖入的图片文件
+  e.preventDefault();
   pageDragDepth = 0;
   pageDragOver.value = false;
   // 批量上传弹窗打开时让弹窗自己的拖拽区处理，避免重复上传

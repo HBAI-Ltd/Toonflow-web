@@ -9,22 +9,24 @@ export interface BgTask {
   resultUrl?: string; // 成功产物（如生成的测试图 URL，托盘可直接查看）
   runningText?: string; // 自定义进行中文案
   successText?: string; // 自定义成功文案
-  status: "pending" | "running" | "success" | "fail";
+  status: "pending" | "running" | "success" | "fail" | "stopped";
   error?: string; // 失败原因（axios 拦截器 reject 的是 response.data，e.message 即后端 message）
   createTime: number;
 }
 
 // 任务执行器注册表：把「怎么执行」与「任务中心」解耦，任何长任务都能挂进来全局后台运行
-const runners = new Map<string, (task: BgTask) => Promise<any>>();
+const runners = new Map<string, (task: BgTask, signal: AbortSignal) => Promise<any>>();
+// 每个运行中任务的取消器：全部停止时真正中断在途 HTTP 请求
+const controllers = new Map<number, AbortController>();
 
 // 人脸资产上传：全部交给视觉模型自动识别，串行执行避免并发打爆 Vision 接口
-runners.set("faceUpload", async (task) => {
-  await axios.post("/faceAsset/addFaceAsset", { fileUrl: task.previewUrl, species: 1 });
+runners.set("faceUpload", async (task, signal) => {
+  await axios.post("/faceAsset/addFaceAsset", { fileUrl: task.previewUrl, species: 1 }, { signal });
 });
 
 // 图像模型测试：生成测试图，完成后结果 URL 直接挂到任务上供托盘查看
-runners.set("imageModelTest", async (task) => {
-  const { data } = await axios.post("/setting/vendorConfig/modelTest/imageTest", task.payload);
+runners.set("imageModelTest", async (task, signal) => {
+  const { data } = await axios.post("/setting/vendorConfig/modelTest/imageTest", task.payload, { signal });
   task.resultUrl = typeof data === "string" ? data : data?.url || "";
 });
 
@@ -42,9 +44,9 @@ export default defineStore(
     let processing = false;
 
     const counts = computed(() => {
-      const c = { pending: 0, running: 0, success: 0, fail: 0, done: 0 };
+      const c = { pending: 0, running: 0, success: 0, fail: 0, stopped: 0, done: 0 };
       for (const t of tasks.value) c[t.status]++;
-      c.done = c.success + c.fail;
+      c.done = c.success + c.fail + c.stopped;
       return c;
     });
     const active = computed(() => counts.value.pending + counts.value.running > 0);
@@ -94,13 +96,25 @@ export default defineStore(
             task.error = `未注册的任务类型: ${task.kind}`;
             continue;
           }
+          const ac = new AbortController();
+          controllers.set(task.id, ac);
           try {
-            await runner(task);
-            task.status = "success";
-            if (task.kind === "faceUpload") faceUploadSuccessVersion.value++;
+            await runner(task, ac.signal);
+            if (ac.signal.aborted) {
+              task.status = "stopped";
+            } else {
+              task.status = "success";
+              if (task.kind === "faceUpload") faceUploadSuccessVersion.value++;
+            }
           } catch (e: any) {
-            task.status = "fail";
-            task.error = e?.message || "未知错误";
+            if (ac.signal.aborted) {
+              task.status = "stopped"; // 用户主动停止，不算失败
+            } else {
+              task.status = "fail";
+              task.error = e?.message || "未知错误";
+            }
+          } finally {
+            controllers.delete(task.id);
           }
         }
       } finally {
@@ -109,7 +123,7 @@ export default defineStore(
     }
 
     function retryTask(task: BgTask) {
-      if (task.status !== "fail") return;
+      if (task.status !== "fail" && task.status !== "stopped") return;
       task.status = "pending";
       task.error = undefined;
       processQueue();
@@ -130,6 +144,17 @@ export default defineStore(
       tasks.value = [];
     }
 
+    /** 一键全部停止：排队中的直接置为已停止，运行中的中断其在途请求 */
+    function stopAll() {
+      for (const t of tasks.value) {
+        if (t.status === "pending") {
+          t.status = "stopped";
+        } else if (t.status === "running") {
+          controllers.get(t.id)?.abort();
+        }
+      }
+    }
+
     function collapse(v?: boolean) {
       panelCollapsed.value = v ?? !panelCollapsed.value;
     }
@@ -146,6 +171,7 @@ export default defineStore(
       retryTask,
       retryAllFailed,
       clearTasks,
+      stopAll,
       collapse,
     };
   },

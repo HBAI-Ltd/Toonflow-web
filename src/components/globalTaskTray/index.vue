@@ -5,10 +5,12 @@
         <span class="trayTitle">
           <template v-if="taskStore.active">⏳ 后台任务 {{ taskStore.counts.done }}/{{ taskStore.tasks.length }}</template>
           <template v-else-if="taskStore.counts.fail > 0">⚠️ 已完成 · {{ taskStore.counts.fail }} 项失败</template>
+          <template v-else-if="taskStore.counts.stopped > 0">⏹ 已停止 · {{ taskStore.counts.stopped }} 项</template>
           <template v-else>✅ 后台任务完成 · 共 {{ taskStore.tasks.length }} 项</template>
         </span>
         <span class="trayOps" @click.stop>
-          <t-button v-if="!taskStore.active && taskStore.counts.fail === 0" size="small" variant="text" theme="default" @click="taskStore.clearTasks()">关闭</t-button>
+          <t-button v-if="taskStore.active" size="small" variant="text" theme="danger" @click="taskStore.stopAll()">全部停止</t-button>
+          <t-button v-if="!taskStore.active" size="small" variant="text" theme="default" @click="taskStore.clearTasks()">关闭</t-button>
           <span class="trayToggle">{{ taskStore.panelCollapsed ? "展开" : "收起" }}</span>
         </span>
       </div>
@@ -28,11 +30,12 @@
                 <template v-if="t.status === 'pending'">排队中…</template>
                 <template v-else-if="t.status === 'running'"><span class="traySpinner"></span>{{ t.runningText || "处理中…" }}</template>
                 <template v-else-if="t.status === 'success'">{{ t.successText || "✅ 已完成" }}</template>
+                <template v-else-if="t.status === 'stopped'">⏹ 已停止</template>
                 <template v-else>❌ 上传失败</template>
               </div>
               <div v-if="t.status === 'fail' && t.error" class="trayError" :title="t.error">原因：{{ t.error }}</div>
             </div>
-            <t-button v-if="t.status === 'fail'" size="small" variant="text" theme="primary" @click="taskStore.retryTask(t)">重试</t-button>
+            <t-button v-if="t.status === 'fail' || t.status === 'stopped'" size="small" variant="text" theme="primary" @click="taskStore.retryTask(t)">重试</t-button>
           </div>
         </div>
       </div>
@@ -187,6 +190,10 @@ function openResult(t: BgTask) {
 
 .trayItem.is-fail .trayStatus {
   color: var(--td-error-color, #d54941);
+}
+
+.trayItem.is-stopped .trayStatus {
+  color: var(--td-text-color-secondary, #999);
 }
 
 @keyframes traySpin {
