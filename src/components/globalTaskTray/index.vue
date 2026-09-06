@@ -8,10 +8,10 @@
           <template v-else-if="taskStore.counts.paused > 0">⏸ 已暂停 · {{ taskStore.counts.paused }} 项（点「全部开始」恢复）</template>
           <template v-else>✅ 后台任务完成 · 共 {{ taskStore.tasks.length }} 项</template>
         </span>
-        <span class="trayOps" @click.stop>
-          <t-button v-if="taskStore.active" size="small" variant="text" theme="danger" @click="taskStore.pauseAll()">全部暂停</t-button>
-          <t-button v-else-if="taskStore.counts.paused > 0" size="small" variant="text" theme="primary" @click="taskStore.resumeAll()">全部开始</t-button>
-          <t-button v-if="!taskStore.active" size="small" variant="text" theme="default" @click="taskStore.clearTasks()">关闭</t-button>
+        <span class="trayOps">
+          <t-button v-if="taskStore.active" size="small" variant="text" theme="danger" @click.stop="taskStore.pauseAll()">全部暂停</t-button>
+          <t-button v-else-if="taskStore.counts.paused > 0" size="small" variant="text" theme="primary" @click.stop="taskStore.resumeAll()">全部开始</t-button>
+          <t-button v-if="!taskStore.active" size="small" variant="text" theme="default" @click.stop="taskStore.clearTasks()">关闭</t-button>
           <span class="trayToggle">{{ taskStore.panelCollapsed ? "展开" : "收起" }}</span>
         </span>
       </div>
