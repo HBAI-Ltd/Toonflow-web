@@ -10,6 +10,8 @@
       "preview": "Preview",
       "download": "Download",
       "msg": {
+        "addVoice": "Add at least one valid voice (both display name and voice_id are required)",
+        "ttsTestPending": "TTS testing is not available yet; verify the voice list in model settings",
         "imageLoadFailed": "Failed to load image",
         "convertFailed": "Conversion failed",
         "copied": "Copied to clipboard",
@@ -88,6 +90,11 @@
       "modelApiKey": "Model-level API Key (optional)",
       "modelApiKeyPlaceholder": "Leave empty to use vendor global key; some channels require a separate key per model",
       "modelType": "Model Type",
+        "ttsModel": "Text-to-Speech",
+        "ttsVoices": "Voices (display name / voice_id)",
+        "voiceTitlePlaceholder": "Display name, e.g. Gentle Female",
+        "voiceIdPlaceholder": "voice_id, e.g. female-qn-qingse",
+        "addVoice": "Add Voice",
       "multimodal": "Multimodal",
       "supported": "Supported",
       "notSupported": "Not Supported",
@@ -635,6 +642,12 @@
         "projectNamePh": "Please enter project name",
         "novelType": "Novel Genre",
         "novelTypePh": "e.g., Fantasy, Sci-Fi, Romance",
+        "basedOnExplainer": "Knowledge Explainer (upload texts)",
+        "knowledgeField": "Knowledge Field (optional)",
+        "knowledgeFieldPh": "e.g., Physics, History, Math",
+        "topicIntro": "Topic Summary (optional)",
+        "topicIntroPh": "Optional; the topic is derived from the uploaded texts",
+        "targetDurationOptional": "Target Duration (optional)",
         "artStyle": "Art Style",
         "selected": "Selected:",
         "selectArtStyle": "Please select an art style",
@@ -729,11 +742,24 @@
       },
       "type": {
         "novel": "Based on the original novel",
-        "script": "Based on novel script"
+        "script": "Based on novel script",
+        "explainer": "Knowledge Explainer"
       }
     },
     "novel": {
       "importText": "Import Text",
+      "explainer": {
+        "importText": "Upload Texts",
+        "extract": "Extract Points",
+        "searchPlaceholder": "Search titles...",
+        "chapterCount": "{count} episodes",
+        "empty": "No knowledge texts yet",
+        "col": {
+          "title": "Title",
+          "content": "Content",
+          "points": "Key Points"
+        }
+      },
       "batchDelete": "Batch Delete",
       "eventAnalysis": "Event Analysis",
       "searchPlaceholder": "Search text names...",
@@ -773,6 +799,7 @@
         "unnamed": "Unnamed batch",
         "unknown": "Batch {id}",
         "unbatched": "Unbatched",
+        "verticalImportLocked": "Ultra-short drama projects support only one import. Delete the existing batch first if you need to replace the source text.",
         "empty": "No novel text",
         "save": "Save",
         "cancel": "Cancel",
@@ -792,6 +819,16 @@
         "step1": "Step 1",
         "step2": "Step 2",
         "step3": "Step 3",
+        "explainer": {
+          "title": "Upload Knowledge Texts",
+          "dragUpload": "Drag and drop one or more knowledge text files here, or click to upload",
+          "uploadHint": "Select multiple .txt or .docx files; each file becomes an independent batch (one video). Recommended size: under 10MB per file",
+          "pasteLabel": "Paste knowledge text directly",
+          "pastePlaceholder": "Enter the knowledge text here",
+          "parsedChapters": "Parsed {count} episode(s)",
+          "importedChapters": "{count} episode(s) imported",
+          "batchNamePlaceholder": "Batch name (optional; default: import_text_date, auto-renamed to the extracted title)"
+        },
         "dragUpload": "Drag and drop one or more novel files here, or click to upload",
         "uploadHint": "Select multiple .txt or .docx files; each file becomes an independent batch. Recommended size: under 10MB per file",
         "or": "OR",
@@ -1819,6 +1856,12 @@
   "settings.vendor.videoGenerating": "Video generation is slow, please wait patiently",
   "settings.memory.modelMap.editRefeshWord": "rebind",
   "settings.memory.modelMap.delPrompt": "delete",
+  "settings.vendor.test.thinkMode": "Thinking",
+  "settings.vendor.test.thinkLevel": "Thinking level",
+  "settings.vendor.test.levelLight": "Light",
+  "settings.vendor.test.levelLow": "Low",
+  "settings.vendor.test.levelMedium": "Medium",
+  "settings.vendor.test.levelHigh": "High",
   "settings.vendor.testModel": "test",
   "storyboard.assets.addStoryboardFailed": "Failed to add storyboard"
 }

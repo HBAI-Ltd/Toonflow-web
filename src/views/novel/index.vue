@@ -2,27 +2,38 @@
   <div class="novel" ref="novelRef">
     <div class="headBtn jb ac" ref="headBtnRef">
       <t-space>
-        <t-button theme="primary" @click="importNovelFn">
-          <template #icon>
-            <t-icon name="add" />
-          </template>
-          {{ $t("workbench.novel.importText") }}
-        </t-button>
+        <t-tooltip :disabled="!importLocked" :content="$t('workbench.novel.batch.verticalImportLocked')" placement="bottom">
+          <t-button theme="primary" :disabled="importLocked" @click="importNovelFn">
+            <template #icon>
+              <t-icon name="add" />
+            </template>
+            {{ $t(isExplainer ? "workbench.novel.explainer.importText" : "workbench.novel.importText") }}
+          </t-button>
+        </t-tooltip>
+        <t-tooltip v-if="isExplainer" content="生成出题提示词并复制到剪贴板，粘贴到 AI 对话生成新题材" placement="bottom">
+          <t-button @click="handleRandomTopic">
+            <template #icon>
+              <i-refresh size="14" />
+            </template>
+            随机题材
+          </t-button>
+        </t-tooltip>
         <t-button theme="danger" :disabled="selectedRowKeys.length === 0" @click="handleBatchDelete">
           <template #icon>
             <t-icon name="delete" />
           </template>
           {{ $t("workbench.novel.batchDelete") }} {{ selectedRowKeys.length > 0 ? `(${selectedRowKeys.length})` : "" }}
         </t-button>
-        <t-button @click="startEventAnalysis" :disabled="selectedRowKeys.length === 0">
+        <t-button v-if="!isExplainer" @click="startEventAnalysis" :disabled="selectedRowKeys.length === 0">
           <template #icon>
             <t-icon name="analytics" />
           </template>
-          {{ $t("workbench.novel.eventAnalysis") }} {{ selectedRowKeys.length > 0 ? `(${selectedRowKeys.length})` : "" }}
+          {{ $t(isExplainer ? "workbench.novel.explainer.extract" : "workbench.novel.eventAnalysis") }}
+          {{ selectedRowKeys.length > 0 ? `(${selectedRowKeys.length})` : "" }}
         </t-button>
       </t-space>
       <div class="f">
-        <t-input v-model="searchText" :placeholder="$t('workbench.novel.searchPlaceholder')" clearable style="width: 260px" />
+        <t-input v-model="searchText" :placeholder="$t(isExplainer ? 'workbench.novel.explainer.searchPlaceholder' : 'workbench.novel.searchPlaceholder')" clearable style="width: 260px" />
         <t-button @click="onChange" style="margin-left: 10px">
           <template #icon><t-icon name="search" /></template>
           {{ $t("workbench.novel.search") }}
@@ -35,7 +46,9 @@
         <div class="batchHeader f ac jb">
           <div class="batchInfo f ac">
             <span class="batchName">{{ group.name }}</span>
-            <t-tag size="small" variant="light">{{ $t("workbench.novel.batch.chapterCount", { count: group.chapterCount }) }}</t-tag>
+            <t-tag size="small" variant="light">
+              {{ $t(isExplainer ? "workbench.novel.explainer.chapterCount" : "workbench.novel.batch.chapterCount", { count: group.chapterCount }) }}
+            </t-tag>
             <span v-if="group.createTime" class="batchDate">{{ dayjs(group.createTime).format("YYYY-MM-DD") }}</span>
             <t-tag v-if="group.isNew" size="small" variant="light" theme="warning">{{ $t("workbench.novel.batch.new") }}</t-tag>
           </div>
@@ -119,7 +132,7 @@
         </t-table>
       </section>
       <div v-if="!loading && chapterGroups.length === 0" class="emptyState">
-        <t-empty :title="$t('workbench.novel.batch.empty')" />
+        <t-empty :title="$t(isExplainer ? 'workbench.novel.explainer.empty' : 'workbench.novel.batch.empty')" />
       </div>
     </div>
 
@@ -161,6 +174,7 @@ import projectStore from "@/stores/project";
 import settingStore from "@/stores/setting";
 const { otherSetting } = storeToRefs(settingStore());
 const { project } = storeToRefs(projectStore());
+const router = useRouter();
 
 interface OriginalText {
   id: number;
@@ -200,8 +214,11 @@ const searchText = ref("");
 const tableRef = ref();
 const novelRef = ref();
 const headBtnRef = ref();
+// 科普形态：界面切换为「知识文本」体系；超短剧已有批次时锁定导入（一本小说一部剧）
+const isExplainer = computed(() => project.value?.contentFormat === "explainer_video");
+const importLocked = computed(() => project.value?.contentFormat === "vertical_episode" && importBatches.value.length > 0);
 // 表头
-const columns = ref<Record<string, unknown>[]>([
+const columns = computed<Record<string, unknown>[]>(() => [
   {
     colKey: "row-select",
     type: "multiple",
@@ -215,11 +232,12 @@ const columns = ref<Record<string, unknown>[]>([
     align: "center",
   },
   { colKey: "reel", title: $t("workbench.novel.col.reel"), width: 100, align: "center", cell: "preview" },
-  { colKey: "chapter", title: $t("workbench.novel.col.chapter"), width: 100, ellipsis: true },
-  { colKey: "chapterData", title: $t("workbench.novel.col.chapterData"), ellipsis: true },
-  { colKey: "event", title: $t("workbench.novel.col.event"), ellipsis: true },
+  { colKey: "chapter", title: $t(isExplainer.value ? "workbench.novel.explainer.col.title" : "workbench.novel.col.chapter"), width: 100, ellipsis: true },
+  { colKey: "chapterData", title: $t(isExplainer.value ? "workbench.novel.explainer.col.content" : "workbench.novel.col.chapterData"), ellipsis: true },
+  { colKey: "event", title: $t(isExplainer.value ? "workbench.novel.explainer.col.points" : "workbench.novel.col.event"), ellipsis: true },
   { colKey: "operation", title: $t("workbench.novel.col.operation"), width: 200, align: "center" },
-]);
+]
+  .filter((col) => (isExplainer.value ? (col as { colKey?: string }).colKey !== "reel" : true)));
 const editNodelShow = ref(false);
 const formData = ref<OriginalText>({ id: -1, index: 0, reel: "", chapter: "", chapterData: "", event: "" });
 const PREVIEW_MAX_LENGTH = 80;
@@ -234,9 +252,9 @@ const renameValue = ref("");
 const renamingBatch = ref<ImportBatch>();
 
 const batchMenuOptions = [
-  { value: "rename", label: $t("workbench.novel.batch.rename") },
-  { value: "delete", label: $t("workbench.novel.batch.delete"), theme: "error" },
-  { value: "merge", label: $t("workbench.novel.batch.mergeDisabled"), disabled: true },
+  { value: "rename", content: $t("workbench.novel.batch.rename") },
+  { value: "delete", content: $t("workbench.novel.batch.delete"), theme: "error" as const },
+  { value: "merge", content: $t("workbench.novel.batch.mergeDisabled"), disabled: true },
 ];
 
 // 表格数据
@@ -270,7 +288,7 @@ const chapterGroups = computed<ChapterGroup[]>(() => {
     }
   });
 
-  const groups = importBatches.value
+  const groups: ChapterGroup[] = importBatches.value
     .filter((batch) => rowsByImportId.has(batch.id))
     .map((batch) => ({
       key: `batch-${batch.id}`,
@@ -339,6 +357,70 @@ async function getImportList() {
   }
 }
 
+/** 随机题材出题器：构建提示词（含已用题材排除）并复制到剪贴板 */
+const TOPIC_GENERATOR_PROMPT = `# 经典谜题科普材料生成
+
+你是资深科普作者。我给你一个经典逻辑谜题的名字，你把它扩写成一篇结构完整、可直接导入知识视频生产工具的材料文本。
+
+## 硬性规则
+1. 只处理你确切掌握解法机制的经典谜题/悖论；对给出的名字没有把握时，直接回复"该谜题我不掌握可靠解法"，禁止编造
+2. 逻辑自洽：落笔前先从最小情形完整重走一遍推导，确认每个时间点与结论一致；正文每一步"依据→结论"写全，禁止跳步
+3. 自包含：后续推导依赖的所有前提（绝对理性、同步观测、禁止交流、共同知晓规则等）必须显式写在设定里，正文不得引入未声明的前提
+4. 具体结局必须给：回到原题时写清本题的具体数字与完整时间线（第几夜/第几轮发生什么），主谜题解决后的连锁反应与后续结局也要写全，不得只留通用规律
+5. 必须包含一个"认知落差"：大众真实持有的直觉预期 vs 实际机制，两者互斥；直觉必须普遍真实，禁止硬凹
+6. 必须有一句可独立剪进视频的金句（10-25字）
+7. 写明推理成立的前提边界（在什么条件下这个结论才对）
+
+## 结构模板
+# {谜题名}（经典逻辑谜题）
+
+## 故事设定
+> 一句话场景
+- 规则/条件（逐条列出，后续推理用到的每一条前提都在这里）
+- 实际情况（隐藏的事实，如真实数量/分布）
+
+## 从最小情形推导（核心逻辑）
+### 情况1：最小规模（基准情形，必须独立成立）
+### 情况2：进一档（关键：上一步"没发生"本身就是信息）
+### 情况3：再进一档
+👉 每步写明时间点与发生了什么
+
+## 回到原题
+一般规律（一句话）→ 本题具体数字的完整时间线结局 → 连锁反应/后续结局
+
+## 最关键的疑问：{大众直觉问题}
+直觉是什么 → 为什么不成立 → 正确机制完整展开（涉及的概念区分写清楚）
+
+## 适用边界
+（成立前提逐条列出）
+
+## 篇幅与风格
+不设硬上限，但必须精炼。推理链完整、认知落差立住、边界写明——讲完就停。
+精炼 = 每句话只为推进推理或建立前提服务。删掉任何一句话，推理断了→保留；没断→删。同一个前提不在设定和推理段重复声明；同一个结论不在不同段落反复出现。
+参考：一个经典谜题通常 600~1200 字可讲清。明显超出时，检查是否在重复解释——超过的部分要么是必要深度，要么是废话，自己分辨。
+说人话，不堆术语；写给没见过这题的聪明普通人。
+
+## 待扩写谜题
+`;
+
+function handleRandomTopic() {
+  const usedNames = importBatches.value
+    .filter((b) => b.chapterCount > 0)
+    .map((b) => b.name)
+    .filter(Boolean);
+  let prompt = TOPIC_GENERATOR_PROMPT;
+  if (usedNames.length > 0) {
+    prompt += "\n\n## 排除以下已使用过的谜题，选一个其他的新谜题：\n" + usedNames.join("、") + "\n";
+  } else {
+    prompt += "\n请自行选择一个经典逻辑谜题。";
+  }
+  navigator.clipboard.writeText(prompt).then(() => {
+    window.$message.success("出题提示词已复制，请粘贴到 AI 对话生成新题材");
+  }).catch(() => {
+    window.$message.error("复制失败，请手动复制");
+  });
+}
+
 function getNovel() {
   loading.value = true;
   axios
@@ -374,6 +456,10 @@ function handleImported(importIds: number[]) {
   newImportIds.value = importIds.filter((id) => Number.isFinite(id) && id > 0);
   getNovel();
   getImportList();
+  // 科普形态：上传后自动跳转到剧本Agent聊天页，进入预审+全流程
+  if (isExplainer.value) {
+    router.push("/scriptAgent");
+  }
 }
 
 // 处理选择变化
@@ -400,7 +486,7 @@ function handleBatchDelete() {
 
 function goGenerateScript(group: ChapterGroup) {
   if (!group.id || !project.value?.id) return;
-  useRouter().push({
+  router.push({
     path: "/scriptAgent",
     query: {
       projectId: project.value.id,
@@ -454,7 +540,7 @@ function handleDeleteBatch(group: ChapterGroup) {
           projectId: project.value!.id,
           importId: group.id!,
         });
-        const removedIds = new Set(group.rows.map((row) => row.id));
+        const removedIds = new Set<number | string>(group.rows.map((row) => row.id));
         selectedRowKeys.value = selectedRowKeys.value.filter((id) => !removedIds.has(id));
         newImportIds.value = newImportIds.value.filter((id) => id !== group.id);
         if (group.rows.length === tableData.value.length && pagination.value.page > 1) {
