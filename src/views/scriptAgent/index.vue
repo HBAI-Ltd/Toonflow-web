@@ -7,9 +7,9 @@
           v-model="selectedImportId"
           class="batchSelect"
           :loading="importListLoading"
-          :disabled="status === 'pending' || status === 'streaming'"
+          :disabled="isGenerating"
           @change="handleBatchChange">
-          <t-option :value="MAINLINE_IMPORT" :label="$t('workbench.scriptAgent.projectMainline')" />
+          <t-option v-if="showMainline" :value="MAINLINE_IMPORT" :label="$t('workbench.scriptAgent.projectMainline')" />
           <t-option v-for="batch in importBatches" :key="batch.id" :value="String(batch.id)" :label="batch.name || $t('workbench.scriptAgent.unnamedBatch')" />
         </t-select>
       </div>
@@ -17,9 +17,9 @@
     </div>
     <Splitpanes class="default-theme data f">
       <Pane :size="30" :min-size="15" class="operate">
-        <div class="box pr">
+        <div class="box pr" :class="{ isGenerating }">
           <div class="resetBar">
-            <t-button size="small" theme="danger" variant="outline" @click="handleResetConversation()" :disabled="status === 'pending' || status === 'streaming'">
+            <t-button size="small" theme="danger" variant="outline" @click="handleResetConversation()" :disabled="isGenerating">
               <template #icon><i-refresh size="14" /></template>
               {{ $t("workbench.scriptAgent.resetConversation") }}
             </t-button>
@@ -32,10 +32,11 @@
               :name="(message as any).name"
               :placement="message.role === 'user' ? 'right' : 'left'"
               :variant="message.role === 'user' ? 'base' : 'outline'"
-              :handleActions="message.role === 'user' ? {} : handleActions"
+              :handleActions="message.role === 'user' || isGenerating ? {} : handleActions"
               :status="message.status"
               allowContentSegmentCustom>
               <template #actionbar>
+                <span v-if="message.status === 'stop' || message.ext?.interrupted" class="interruptedNotice">已中断，已生成内容已保存</span>
                 <div v-if="canRetry(message) || canRollback(message)" class="msgActions" :class="message.role === 'user' ? 'isUser' : 'isAssistant'">
                   <t-button v-if="canRetry(message)" size="small" variant="text" theme="default" @click="handleRetry(message)">
                     <template #icon><i-refresh size="13" /></template>
@@ -51,15 +52,15 @@
           </t-chat-list>
           <t-chat-sender
             class="inputBox"
-            :disabled="status === 'pending' || status === 'streaming'"
+            :disabled="isGenerating"
             v-model="inputValue"
-            :loading="status === 'pending' || status === 'streaming'"
+            :loading="isGenerating"
             placeholder="$t('workbench.scriptAgent.inputPlaceholder')"
             @send="handleSend"
             @stop="handleStop">
             <template #footer-prefix>
               <t-popup trigger="click" placement="top-left">
-                <t-button shape="square" variant="outline" size="small" :disabled="status === 'pending' || status === 'streaming'">
+                <t-button shape="square" variant="outline" size="small" :disabled="isGenerating">
                   <template #icon>
                     <i-setting-config size="16" />
                   </template>
@@ -147,15 +148,27 @@
           <t-tabs v-model="currentTable">
             <template #action>
               <div class="ac" v-if="currentTable == 1">
-                <t-button @click="editMdPreview">{{ $t("workbench.scriptAgent.edit") }}</t-button>
+                <t-button :disabled="isGenerating" @click="editMdPreview">{{ $t("workbench.scriptAgent.edit") }}</t-button>
               </div>
               <div class="ac" v-else-if="currentTable == 2">
-                <t-button @click="editMdPreview">{{ $t("workbench.scriptAgent.edit") }}</t-button>
+                <t-button :disabled="isGenerating" @click="editMdPreview">{{ $t("workbench.scriptAgent.edit") }}</t-button>
               </div>
             </template>
             <!-- <t-tab-panel :value="1" :label="$t('workbench.scriptAgent.chapterEvents')">
               <pre>{{ planData.event }}</pre>
             </t-tab-panel> -->
+            <t-tab-panel v-if="project?.contentFormat === 'explainer_video'" :value="0" :label="$t('workbench.scriptAgent.preflightResult')">
+              <div class="panelContent">
+                <PreflightPanel
+                  :state="planData.preflight"
+                  :report="planData.preflightReport"
+                  :busy="isGenerating"
+                  :connected="connected"
+                  :session-key="sessionAgentStore.$id"
+                  :theme="themeSetting.mode === 'auto' ? undefined : themeSetting.mode"
+                  @action="handlePreflightAction" />
+              </div>
+            </t-tab-panel>
             <t-tab-panel :value="1" :label="$t('workbench.scriptAgent.storySkeleton')">
               <div class="panelContent">
                 <MdPreview
@@ -195,10 +208,10 @@
                             <i-right v-else size="14" />
                           </template>
                         </t-button>
-                        <t-button size="small" @click="editScript(index)">
+                        <t-button size="small" :disabled="isGenerating" @click="editScript(index)">
                           <template #icon><i-edit size="14" /></template>
                         </t-button>
-                        <t-button theme="danger" variant="outline" size="small" @click="delScript(index)">
+                        <t-button theme="danger" variant="outline" size="small" :disabled="isGenerating" @click="delScript(index)">
                           <template #icon><i-delete size="14" /></template>
                         </t-button>
                       </div>
@@ -233,7 +246,7 @@
       width="80%"
       top="10vh"
       placement="center"
-      :confirm-btn="{ content: $t('workbench.scriptAgent.save'), theme: 'primary' }"
+      :confirm-btn="{ content: $t('workbench.scriptAgent.save'), theme: 'primary', disabled: isGenerating }"
       @confirm="saveScript"
       @close="scriptEditVisible = false">
       <div class="scriptEditForm">
@@ -266,10 +279,10 @@
         :autosize="{ minRows: 4, maxRows: 12 }"
         :placeholder="$t('workbench.scriptAgent.retryEditPlaceholder')" />
       <div class="f ac" style="justify-content: flex-end; gap: 10px; margin-top: 12px">
-        <t-button variant="outline" @click="retryEditVisible = false">
+        <t-button variant="outline" :disabled="retryEditBusy" @click="retryEditVisible = false">
           {{ $t("workbench.scriptAgent.msg.cancel") }}
         </t-button>
-        <t-button theme="primary" :disabled="!retryEditText.trim()" @click="confirmRetryEdit">
+        <t-button theme="primary" :loading="retryEditBusy" :disabled="!retryEditText.trim() || retryEditBusy" @click="confirmRetryEdit">
           {{ $t("workbench.scriptAgent.retryEditSend") }}
         </t-button>
       </div>
@@ -290,7 +303,11 @@ import projectStore from "@/stores/project";
 const { project } = storeToRefs(projectStore());
 import editMdPreivew from "@/components/editMdPreivew.vue";
 import scriptAgentStore from "@/stores/scriptAgent";
+import PreflightPanel from "./components/PreflightPanel.vue";
+import { buildPreflightAction } from "@/utils/preflight";
+import type { PreflightAction } from "@/utils/preflight";
 const route = useRoute();
+const router = useRouter();
 const { connected, messages, status, planData, thinkLevel, autoAdvance, isGenerating } = storeToRefs(scriptAgentStore());
 const sessionAgentStore = scriptAgentStore();
 interface ImportBatch {
@@ -308,6 +325,13 @@ const routeImportId = computed(() => queryNumber("importId"));
 const selectedImportId = ref(routeImportId.value !== undefined ? String(routeImportId.value) : MAINLINE_IMPORT);
 const importBatches = ref<ImportBatch[]>([]);
 const importListLoading = ref(false);
+/**
+ * 主线 = 批次功能之前的遗留会话（作用域不带 importId，取材范围是项目全量）。
+ * 项目一旦有了批次，主线和批次覆盖的是同一批原文，却各存一份骨架/策略/预审状态，
+ * 留在下拉框里只会让人误选、误以为数据丢了。所以有批次时不再提供，
+ * 只有当前会话本来就在主线上时保留该项，避免选择器显示空白。
+ */
+const showMainline = computed(() => !importBatches.value.length || selectedImportId.value === MAINLINE_IMPORT);
 const routeScriptId = computed(() => queryNumber("scriptId"));
 const routeMerge = computed(() => routeImportId.value !== undefined && route.query.merge === "1");
 const scriptSessionParams = () => ({
@@ -320,8 +344,10 @@ const thinkLevelOptions = [
   { label: $t("workbench.scriptAgent.thinkLevel.deep"), value: 2 },
   { label: $t("workbench.scriptAgent.thinkLevel.extreme"), value: 3 },
 ];
-const currentTable = ref(1);
-const inputValue = ref("");
+const currentTable = ref(project.value?.contentFormat === "explainer_video" ? 0 : 1);
+const draftKey = `scriptAgent-draft-${project.value?.id}-i${routeImportId.value ?? "main"}-s${routeScriptId.value ?? "main"}`;
+const inputValue = ref(localStorage.getItem(draftKey) ?? "");
+watch(inputValue, value => localStorage.setItem(draftKey, value));
 const currentBatchName = computed(() => {
   if (selectedImportId.value === MAINLINE_IMPORT) return $t("workbench.scriptAgent.projectMainline");
   const batch = importBatches.value.find((item) => String(item.id) === selectedImportId.value);
@@ -372,13 +398,17 @@ onMounted(() => {
   getImportList();
   sessionAgentStore.connect();
 
-  if (messages.value.length <= 1) getHistory();
+  void getHistory();
 });
 async function getImportList() {
   importListLoading.value = true;
   try {
     const { data } = await axios.post("/novel/getImportList", { projectId: project.value?.id });
     importBatches.value = Array.isArray(data) ? data : [];
+    // 未指定批次时默认进第一个批次，而不是落在主线上（工作台布局按 route.fullPath 做 key，replace 会重挂本页）
+    if (routeImportId.value === undefined && routeScriptId.value === undefined && importBatches.value.length && project.value?.id) {
+      await router.replace({ path: "/scriptAgent", query: { projectId: project.value.id, importId: String(importBatches.value[0].id) } });
+    }
   } catch (e) {
     console.error("获取取材批次失败:", e);
     window.$message.error($t("workbench.scriptAgent.msg.importListFailed"));
@@ -390,12 +420,12 @@ async function getImportList() {
 function handleBatchChange(value: string | number | boolean | unknown) {
   const nextValue = String(value);
   if (nextValue === MAINLINE_IMPORT) {
-    useRouter().push({ path: "/scriptAgent", query: { projectId: project.value?.id } });
+    router.push({ path: "/scriptAgent", query: { projectId: project.value?.id } });
     return;
   }
   const importId = Number(nextValue);
   if (!Number.isFinite(importId) || importId <= 0) return;
-  useRouter().push({
+  router.push({
     path: "/scriptAgent",
     query: {
       projectId: project.value?.id,
@@ -408,28 +438,35 @@ onUnmounted(() => {
 });
 const agentWorkDataId = ref<number>();
 async function getPlanData() {
-  const { data } = await axios.post("/scriptAgent/getPlanData", {
-    projectId: project.value?.id,
-    agentType: "scriptAgent",
-    ...scriptSessionParams(),
-    ...(routeImportId.value !== undefined ? { merge: routeMerge.value } : {}),
-  });
-  planData.value.storySkeleton = data.data.storySkeleton;
-  planData.value.adaptationStrategy = data.data.adaptationStrategy;
-  planData.value.script = data.data.script || [];
-  agentWorkDataId.value = data.id;
+  agentWorkDataId.value = await sessionAgentStore.getPlanData();
+}
+
+function handlePreflightAction(request: PreflightAction) {
+  const action = buildPreflightAction(planData.value.preflight, request.type, request.findingIds, isGenerating.value || !connected.value);
+  if (!action || action.reviewId !== request.reviewId || action.proposalId !== request.proposalId) return;
+  const labels: Record<PreflightAction["type"], string> = {
+    repair: "修复已选问题",
+    confirm_diff: "确认差异并复审",
+    ignore: "手动忽略全部问题并继续（包括红色问题）",
+    confirm_commit: "确认差异并提交：跳过复审，直接用当前候选全文落预审凭据并进入提取",
+    proceed: "继续下一步",
+    discard: "放弃全部候选修改并重审原文",
+  };
+  sessionAgentStore.chat(labels[action.type], undefined, { preflightAction: action });
 }
 
 //快捷发送
 const handleActions = {
   suggestion: (data?: any) => {
+    if (isGenerating.value) return;
     scriptAgentStore().chat(data?.content?.prompt);
   },
 };
 
 function handleSend(text: string) {
-  scriptAgentStore().chat(text);
-  inputValue.value = "";
+  if (scriptAgentStore().chat(text)) {
+    inputValue.value = "";
+  }
 }
 function handleStop() {
   scriptAgentStore().stopGenerate();
@@ -447,9 +484,13 @@ function toggleAutoAdvance() {
   }
 }
 
-/** 是否允许重试该消息：用户消息可重试；助手消息需前面紧邻一条用户消息；生成中禁用 */
+/**
+ * 是否允许重试该消息：用户消息可重试；助手消息需前面紧邻一条用户消息；生成中禁用。
+ * 忙判据必须用 isGenerating——status 只反映本页的流式状态，后台仍在跑或历史正在恢复时它是 idle，
+ * 按钮会亮着但请求进不去，表现为点了没反应。
+ */
 function canRetry(message: ChatMessagesData): boolean {
-  if (status.value === "pending" || status.value === "streaming") return false;
+  if (isGenerating.value) return false;
   const idx = messages.value.findIndex((m) => m.id === message.id);
   if (idx === -1) return false;
   if (message.role === "user") return true;
@@ -461,7 +502,16 @@ const retryEditVisible = ref(false);
 const retryEditText = ref("");
 const retryTargetId = ref("");
 
-/** 重试一轮对话：截断该轮之后的所有消息，重发用户输入（可编辑） */
+const retryEditBusy = ref(false);
+
+/** 把回退/重试的失败原因映射成可读提示 */
+function rollbackErrorText(message?: string) {
+  if (message === "generating") return $t("workbench.scriptAgent.rollbackBusy");
+  if (message?.includes("没有可用的状态快照")) return $t("workbench.scriptAgent.rollbackNoSnapshot");
+  return "";
+}
+
+/** 重试一轮对话：撤销该轮及其之后的内容，再重发用户输入（可编辑） */
 function handleRetry(message: ChatMessagesData) {
   const idx = messages.value.findIndex((m) => m.id === message.id);
   if (idx === -1) return;
@@ -474,17 +524,28 @@ function handleRetry(message: ChatMessagesData) {
   retryEditVisible.value = true;
 }
 
-/** 确认编辑后重试 */
-function confirmRetryEdit() {
+/** 确认编辑后重试：成功才关弹窗，失败要说清楚原因，不能让用户以为已经发出去了 */
+async function confirmRetryEdit() {
   const text = retryEditText.value.trim();
-  if (!text || !retryTargetId.value) return;
-  retryEditVisible.value = false;
-  scriptAgentStore().retryFrom(retryTargetId.value, text);
+  if (!text || !retryTargetId.value || retryEditBusy.value) return;
+  retryEditBusy.value = true;
+  try {
+    const res = await scriptAgentStore().retryFrom(retryTargetId.value, text);
+    if (!res.ok) {
+      window.$message.error(rollbackErrorText(res.message) || $t("workbench.scriptAgent.retryFailed"));
+      return;
+    }
+    retryEditVisible.value = false;
+    // 对话已在 store 里与库对齐，这里只需同步右侧工作区
+    await getPlanData();
+  } finally {
+    retryEditBusy.value = false;
+  }
 }
 
-/** 是否允许回退该消息：非欢迎语、非生成中；AI消息需其后还有内容（否则无可撤销项） */
+/** 是否允许回退该消息：非欢迎语、非生成中；AI消息需其后还有内容（否则无可撤销项，最后一轮请用「重新生成」） */
 function canRollback(message: ChatMessagesData): boolean {
-  if (status.value === "pending" || status.value === "streaming") return false;
+  if (isGenerating.value) return false;
   if (message.id === "welcome") return false;
   const idx = messages.value.findIndex((m) => m.id === message.id);
   if (idx === -1) return false;
@@ -512,20 +573,16 @@ function handleRollback(message: ChatMessagesData) {
     cancelBtn: $t("workbench.scriptAgent.msg.cancel"),
     theme: "warning",
     onConfirm: async () => {
+      if (isGenerating.value) return;
       dialog.destroy();
       const res = await scriptAgentStore().rollbackTo(message.id, mode);
       if (!res.ok) {
-        window.$message.error(
-          res.message === "generating"
-            ? $t("workbench.scriptAgent.rollbackBusy")
-            : res.message?.includes("没有可用的状态快照")
-              ? $t("workbench.scriptAgent.rollbackNoSnapshot")
-              : $t("workbench.scriptAgent.rollbackFailed"),
-        );
+        window.$message.error(rollbackErrorText(res.message) || $t("workbench.scriptAgent.rollbackFailed"));
         return;
       }
-      // 状态已回退：同步刷新右侧工作区数据
+      // 状态已回退：同步刷新右侧工作区数据，并按后端实际删掉的范围重新拉取对话
       await getPlanData();
+      await getHistory();
       // 回填被回退轮次的用户消息到输入框，便于改字重发
       if (backfillText) inputValue.value = backfillText;
       window.$message.success($t("workbench.scriptAgent.rollbackSuccess"));
@@ -546,9 +603,17 @@ function handleClearMemory(type: "message" | "summary" | "all" | "reconnect") {
     cancelBtn: $t("workbench.scriptAgent.msg.cancel"),
     theme: "warning",
     onConfirm: async () => {
-      await axios.post(`/agents/clearMemory`, { projectId: project.value?.id, agentType: "scriptAgent", type });
+      if (isGenerating.value) return;
+      await axios.post(`/agents/clearMemory`, {
+        projectId: project.value?.id,
+        agentType: "scriptAgent",
+        type,
+        ...(routeScriptId.value !== undefined ? { episodesId: routeScriptId.value } : {}),
+        ...(routeImportId.value !== undefined ? { importId: routeImportId.value } : {}),
+      });
       window.$message.success($t("workbench.scriptAgent.msg.memoryCleared", { type: memoryTypeLabel[type] }));
       dialog.destroy();
+      if (type !== "summary") { sessionAgentStore.clearMessages(); messages.value = [...defMsg]; }
       getHistory();
     },
   });
@@ -561,6 +626,7 @@ function handleResetConversation() {
     cancelBtn: $t("workbench.scriptAgent.msg.cancel"),
     theme: "danger",
     onConfirm: async () => {
+      if (isGenerating.value) return;
       await axios.post(`/scriptAgent/resetConversation`, {
         projectId: project.value?.id,
         ...scriptSessionParams(),
@@ -568,6 +634,7 @@ function handleResetConversation() {
       });
       window.$message.success($t("workbench.scriptAgent.resetSuccess"));
       dialog.destroy();
+      sessionAgentStore.clearMessages();
       messages.value = [...defMsg];
       getPlanData();
       getHistory();
@@ -588,15 +655,10 @@ function handleReconnect() {
   });
 }
 
-const loadingHistory = ref(false);
+const loadingHistory = computed(() => sessionAgentStore.loadingHistory);
 async function getHistory() {
-  loadingHistory.value = true;
-  const { data } = await axios.post(`/agents/getMemory`, {
-    projectId: project.value?.id,
-    agentType: "scriptAgent",
-  });
-  messages.value = [...defMsg, ...data];
-  loadingHistory.value = false;
+  try { await sessionAgentStore.getHistory(); }
+  catch (error) { console.error('对话恢复失败', error); window.$message.error('对话恢复失败，请重新连接后重试'); }
 }
 
 // 强制生成蒙层
@@ -606,6 +668,11 @@ const novelData = ref([]);
 function getNovel() {
   axios.post("/novel/getNovelData", { projectId: project.value?.id }).then(({ data }: any) => {
     novelData.value = data;
+    // 科普先预审、后提取事件，未分析章节不阻塞进入。
+    if (project.value?.contentFormat === "explainer_video") {
+      forceGenerateVisible.value = false;
+      return;
+    }
     const hasUnfinished = (novelData.value as any[]).some((item: any) => item.eventState === 0);
     if (hasUnfinished && !forceGenerateVisible.value) {
       forceGenerateVisible.value = true;
@@ -617,6 +684,7 @@ const dialogVisible = ref(false);
 const editContent = ref("");
 //编辑markdown
 function editMdPreview() {
+  if (isGenerating.value) return;
   if (currentTable.value == 1) editContent.value = planData.value.storySkeleton;
   else if (currentTable.value == 2) editContent.value = planData.value.adaptationStrategy;
   dialogVisible.value = true;
@@ -630,6 +698,7 @@ const scriptEditData = ref({
 const scriptEditVisible = ref(false);
 
 function editScript(index: number) {
+  if (isGenerating.value) return;
   const item = planData.value.script[index];
   scriptEditIndex.value = index;
   scriptEditData.value = {
@@ -640,6 +709,7 @@ function editScript(index: number) {
 }
 
 async function saveScript() {
+  if (isGenerating.value) return;
   if (scriptEditIndex.value < 0) return;
   planData.value.script[scriptEditIndex.value] = { ...scriptEditData.value };
   await scriptAgentStore().setPlanData();
@@ -648,6 +718,7 @@ async function saveScript() {
   scriptEditVisible.value = false;
 }
 async function delScript(index: number) {
+  if (isGenerating.value) return;
   const item = planData.value.script[index];
   const dialog = DialogPlugin.confirm({
     header: $t("workbench.scriptAgent.msg.deleteConfirm"),
@@ -656,6 +727,7 @@ async function delScript(index: number) {
     cancelBtn: $t("workbench.scriptAgent.msg.cancel"),
     theme: "danger",
     onConfirm: async () => {
+      if (isGenerating.value) return;
       if (item.id) {
         await axios.post("/script/delScript", { ids: [item.id] });
         planData.value.script.splice(index, 1);
@@ -670,6 +742,7 @@ async function delScript(index: number) {
   });
 }
 function onConfirm(value: string) {
+  if (isGenerating.value) return;
   axios
     .post("/scriptAgent/updateData", {
       id: agentWorkDataId.value,
@@ -772,6 +845,11 @@ function toggleAllCards() {
     &.isAssistant {
       justify-content: flex-start;
     }
+  }
+
+  .box.isGenerating :deep(.t-chat__item__suggestion-item) {
+    pointer-events: none;
+    opacity: 0.45;
   }
 
   .scriptAgent {

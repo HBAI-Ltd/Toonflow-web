@@ -39,7 +39,8 @@ function makeProductionAgentStore(projectId: string) {
 
     const episodesId = ref<number>();
 
-    const { connected, messages, chat, stopGenerate, socket, status, reconnect, connect, disconnect, isGenerating } = useChat({
+    const { connected, messages, chat, stopGenerate, socket, status, reconnect, connect, disconnect, isGenerating, restoreHistory, loadingHistory, clearMessages } =
+      useChat({
       url: `${settingStore().baseUrl}/socket/productionAgent`,
       auth: () => ({
         isolationKey: `${projectId}:productionAgent:${episodesId.value}`,
@@ -505,17 +506,26 @@ function makeProductionAgentStore(projectId: string) {
       });
     }
 
-    const loadingHistory = ref(false);
+    /**
+     * 从数据库恢复对话存档。
+     * 走 useChat.restoreHistory：按 journalRevision 比对，在途回合的流式内容不会被旧快照覆盖，
+     * 恢复期间到达的事件先入队、恢复完再重放，因此刷新/切页面回来能接着看到正在生成的内容。
+     */
     async function getHistory() {
-      loadingHistory.value = true;
-      const { data } = await axios.post(`/agents/getMemory`, {
-        projectId: projectId,
-        episodesId: episodesId.value,
-        agentType: "productionAgent",
+      return restoreHistory(async () => {
+        const { data } = await axios.post(`/agents/getMemory`, {
+          projectId: projectId,
+          episodesId: episodesId.value,
+          agentType: "productionAgent",
+        });
+        return data;
       });
-      messages.value = [];
-      messages.value = [...defMsg, ...data];
-      loadingHistory.value = false;
+    }
+
+    /** 切剧集/清空记忆后调用：先清空本地再拉取，避免上一条会话的消息残留 */
+    function resetMessages() {
+      clearMessages();
+      messages.value = [...defMsg];
     }
 
     function updateThinkConfig(value: number) {
@@ -540,6 +550,7 @@ function makeProductionAgentStore(projectId: string) {
       stopStoryboardPolling,
       updateContext,
       getHistory,
+      resetMessages,
       loadingHistory,
       batchGenerateStoryboard,
       reconnect,

@@ -66,6 +66,16 @@
         <div class="inputActions">
           <div class="leftTools">
             <span class="hint">Ctrl + Enter {{ $t("settings.vendor.test.send") }}</span>
+            <div class="thinkSwitch">
+              <t-switch v-model="thinkOn" size="small" :disabled="loading" />
+              <span class="thinkLabel">{{ $t("settings.vendor.test.thinkMode") }}</span>
+              <t-select v-model="thinkLevel" size="small" class="thinkLevelSelect" :disabled="loading || !thinkOn">
+                <t-option :value="0" :label="$t('settings.vendor.test.levelLight')" />
+                <t-option :value="1" :label="$t('settings.vendor.test.levelLow')" />
+                <t-option :value="2" :label="$t('settings.vendor.test.levelMedium')" />
+                <t-option :value="3" :label="$t('settings.vendor.test.levelHigh')" />
+              </t-select>
+            </div>
             <input
               ref="imageInputRef"
               type="file"
@@ -124,6 +134,8 @@ const inputText = ref("");
 const pendingImages = ref<string[]>([]);
 const imageInputRef = ref<HTMLInputElement | null>(null);
 const loading = ref(false);
+const thinkOn = ref(false);
+const thinkLevel = ref<0 | 1 | 2 | 3>(0);
 const messageListRef = ref<HTMLDivElement | null>(null);
 
 const canSend = computed(() => {
@@ -205,6 +217,7 @@ async function handleSend() {
       modelName: props.modelName,
       id: props.vendorId,
       messages: history,
+      ...(thinkOn.value ? { think: true, thinkLevel: thinkLevel.value } : {}),
     });
 
     assistantMsg.content = typeof data === "string" ? data : (data?.content ?? JSON.stringify(data));
@@ -229,6 +242,8 @@ function handleClose() {
   messages.value = [];
   pendingImages.value = [];
   inputText.value = "";
+  thinkOn.value = false;
+  thinkLevel.value = 0;
   loading.value = false;
 }
 </script>
@@ -397,6 +412,21 @@ function handleClose() {
         .hint {
           font-size: 12px;
           color: var(--td-text-color-placeholder);
+        }
+
+        .thinkSwitch {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+
+          .thinkLabel {
+            font-size: 12px;
+            color: var(--td-text-color-secondary);
+          }
+
+          .thinkLevelSelect {
+            width: 96px;
+          }
         }
 
         .uploadBtn {

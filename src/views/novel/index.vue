@@ -81,7 +81,8 @@
           table-layout="fixed"
           @select-change="handleSelectChange">
           <template #event="{ row }">
-            <t-loading v-if="row.eventState == 0" size="small" :text="$t('workbench.novel.generating')"></t-loading>
+            <t-tag v-if="isExplainer && row.eventState == 2" theme="warning" variant="light">等待预审</t-tag>
+            <t-loading v-else-if="row.eventState == 0" size="small" :text="$t('workbench.novel.generating')"></t-loading>
             <t-button
               v-else-if="row.eventState == -1 && !row.event"
               theme="danger"
@@ -357,68 +358,18 @@ async function getImportList() {
   }
 }
 
-/** 随机题材出题器：构建提示词（含已用题材排除）并复制到剪贴板 */
-const TOPIC_GENERATOR_PROMPT = `# 经典谜题科普材料生成
-
-你是资深科普作者。我给你一个经典逻辑谜题的名字，你把它扩写成一篇结构完整、可直接导入知识视频生产工具的材料文本。
-
-## 硬性规则
-1. 只处理你确切掌握解法机制的经典谜题/悖论；对给出的名字没有把握时，直接回复"该谜题我不掌握可靠解法"，禁止编造
-2. 逻辑自洽：落笔前先从最小情形完整重走一遍推导，确认每个时间点与结论一致；正文每一步"依据→结论"写全，禁止跳步
-3. 自包含：后续推导依赖的所有前提（绝对理性、同步观测、禁止交流、共同知晓规则等）必须显式写在设定里，正文不得引入未声明的前提
-4. 具体结局必须给：回到原题时写清本题的具体数字与完整时间线（第几夜/第几轮发生什么），主谜题解决后的连锁反应与后续结局也要写全，不得只留通用规律
-5. 必须包含一个"认知落差"：大众真实持有的直觉预期 vs 实际机制，两者互斥；直觉必须普遍真实，禁止硬凹
-6. 必须有一句可独立剪进视频的金句（10-25字）
-7. 写明推理成立的前提边界（在什么条件下这个结论才对）
-
-## 结构模板
-# {谜题名}（经典逻辑谜题）
-
-## 故事设定
-> 一句话场景
-- 规则/条件（逐条列出，后续推理用到的每一条前提都在这里）
-- 实际情况（隐藏的事实，如真实数量/分布）
-
-## 从最小情形推导（核心逻辑）
-### 情况1：最小规模（基准情形，必须独立成立）
-### 情况2：进一档（关键：上一步"没发生"本身就是信息）
-### 情况3：再进一档
-👉 每步写明时间点与发生了什么
-
-## 回到原题
-一般规律（一句话）→ 本题具体数字的完整时间线结局 → 连锁反应/后续结局
-
-## 最关键的疑问：{大众直觉问题}
-直觉是什么 → 为什么不成立 → 正确机制完整展开（涉及的概念区分写清楚）
-
-## 适用边界
-（成立前提逐条列出）
-
-## 篇幅与风格
-不设硬上限，但必须精炼。推理链完整、认知落差立住、边界写明——讲完就停。
-精炼 = 每句话只为推进推理或建立前提服务。删掉任何一句话，推理断了→保留；没断→删。同一个前提不在设定和推理段重复声明；同一个结论不在不同段落反复出现。
-参考：一个经典谜题通常 600~1200 字可讲清。明显超出时，检查是否在重复解释——超过的部分要么是必要深度，要么是废话，自己分辨。
-说人话，不堆术语；写给没见过这题的聪明普通人。
-
-## 待扩写谜题
-`;
-
-function handleRandomTopic() {
-  const usedNames = importBatches.value
-    .filter((b) => b.chapterCount > 0)
-    .map((b) => b.name)
-    .filter(Boolean);
-  let prompt = TOPIC_GENERATOR_PROMPT;
-  if (usedNames.length > 0) {
-    prompt += "\n\n## 排除以下已使用过的谜题，选一个其他的新谜题：\n" + usedNames.join("、") + "\n";
-  } else {
-    prompt += "\n请自行选择一个经典逻辑谜题。";
-  }
-  navigator.clipboard.writeText(prompt).then(() => {
+/** 随机题材出题器：后端读取本地模板、查询完整历史并选择分支 */
+async function handleRandomTopic() {
+  try {
+    const { data } = await axios.post("/novel/getTopicGeneratorPrompt", {
+      projectId: project.value?.id,
+    });
+    await navigator.clipboard.writeText(data.prompt);
     window.$message.success("出题提示词已复制，请粘贴到 AI 对话生成新题材");
-  }).catch(() => {
-    window.$message.error("复制失败，请手动复制");
-  });
+  } catch (e) {
+    console.error("生成出题提示词失败:", e);
+    window.$message.error("生成或复制出题提示词失败");
+  }
 }
 
 function getNovel() {
@@ -458,7 +409,14 @@ function handleImported(importIds: number[]) {
   getImportList();
   // 科普形态：上传后自动跳转到剧本Agent聊天页，进入预审+全流程
   if (isExplainer.value) {
-    router.push("/scriptAgent");
+    const importId = newImportIds.value[0];
+    router.push({
+      path: "/scriptAgent",
+      query: {
+        projectId: String(project.value?.id ?? ""),
+        ...(importId ? { importId: String(importId) } : {}),
+      },
+    });
   }
 }
 
@@ -607,7 +565,7 @@ function startEventAnalysis() {
 }
 
 const notCompultedData = computed(() => {
-  return tableData.value.filter((item) => !item.eventState);
+  return tableData.value.filter((item) => item.eventState === 0);
 });
 
 // 轮询相关

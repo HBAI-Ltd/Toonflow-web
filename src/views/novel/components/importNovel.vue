@@ -1,6 +1,6 @@
 <template>
   <div class="purgeNovel">
-    <t-dialog :footer="false" v-model:visible="purgeNovelShow" :header="$t('workbench.novel.import.title')" width="50%" placement="center">
+    <t-dialog :footer="false" v-model:visible="purgeNovelShow" :header="$t(isExplainer ? 'workbench.novel.import.explainer.title' : 'workbench.novel.import.title')" width="50%" placement="center">
       <div class="data">
         <t-tabs :value="activeKey" disabled>
           <t-tab-panel value="To1" :label="$t('workbench.novel.import.step1')" style="height: 680px; overflow-y: auto">
@@ -16,8 +16,8 @@
               <div class="dragIcon">
                 <i-upload-one theme="outline" size="32" fill="var(--td-brand-color)" />
               </div>
-              <p class="uploadText">{{ $t("workbench.novel.import.dragUpload") }}</p>
-              <p class="uploadHint">{{ $t("workbench.novel.import.uploadHint") }}</p>
+              <p class="uploadText">{{ $t(isExplainer ? "workbench.novel.import.explainer.dragUpload" : "workbench.novel.import.dragUpload") }}</p>
+              <p class="uploadHint">{{ $t(isExplainer ? "workbench.novel.import.explainer.uploadHint" : "workbench.novel.import.uploadHint") }}</p>
             </div>
             <div v-if="fileImporting" class="importProgress">{{ $t("workbench.novel.import.importingProgress", { current: importingCurrent, total: importTotal }) }}</div>
             <div v-if="importResults.length" class="fileResultList">
@@ -26,7 +26,7 @@
                   <span class="fileName">{{ result.fileName }}</span>
                   <t-loading v-if="result.status === 'pending'" size="small" />
                   <t-tag v-else-if="result.status === 'success'" theme="success" variant="light" size="small">
-                    {{ $t("workbench.novel.import.importedChapters", { count: result.chapterCount || 0 }) }}
+                    {{ $t(isExplainer ? "workbench.novel.import.explainer.importedChapters" : "workbench.novel.import.importedChapters", { count: result.chapterCount || 0 }) }}
                   </t-tag>
                   <t-tag v-else theme="danger" variant="light" size="small">{{ $t("workbench.novel.import.importFailed") }}</t-tag>
                 </div>
@@ -35,16 +35,16 @@
             </div>
             <t-divider>{{ $t("workbench.novel.import.or") }}</t-divider>
             <div class="formItem">
-              <div class="label">{{ $t("workbench.novel.import.pasteLabel") }}</div>
+              <div class="label">{{ $t(isExplainer ? "workbench.novel.import.explainer.pasteLabel" : "workbench.novel.import.pasteLabel") }}</div>
               <div class="uploadWrap">
-                <t-textarea v-model="content" :placeholder="$t('workbench.novel.import.pastePlaceholder')" :autosize="{ minRows: 12, maxRows: 12 }" />
+                <t-textarea v-model="content" :placeholder="$t(isExplainer ? 'workbench.novel.import.explainer.pastePlaceholder' : 'workbench.novel.import.pastePlaceholder')" :autosize="{ minRows: 12, maxRows: 12 }" />
               </div>
               <div class="footerInfo f ac jb" style="margin-top: 8px">
                 <div>
                   <span class="charCount">{{ content.length }} {{ $t("workbench.novel.import.chars") }}</span>
                   <span v-if="content.length > 0 && content.length < 100" class="tips warn">{{ $t("workbench.novel.import.tooShort") }}</span>
                 </div>
-                <span>{{ $t("workbench.novel.import.parsedChapters", { count: tableData.length }) }}</span>
+                <span>{{ $t(isExplainer ? "workbench.novel.import.explainer.parsedChapters" : "workbench.novel.import.parsedChapters", { count: tableData.length }) }}</span>
               </div>
             </div>
 
@@ -73,7 +73,7 @@
               </t-table>
               <div class="selectedInfo">{{ $t("workbench.novel.import.selectedInfo", { count: selectedTextLength }) }}</div>
               <div class="to2Footer f ac jb">
-                <t-input v-model="pasteBatchName" class="batchNameInput" :placeholder="$t('workbench.novel.import.batchNamePlaceholder')" :maxlength="60" clearable />
+                <t-input v-model="pasteBatchName" class="batchNameInput" :placeholder="$t(isExplainer ? 'workbench.novel.import.explainer.batchNamePlaceholder' : 'workbench.novel.import.batchNamePlaceholder')" :maxlength="60" clearable />
                 <div class="f ac">
                   <t-button variant="outline" @click="activeKey = 'To1'">{{ $t("workbench.novel.import.prevStep") }}</t-button>
                   <t-button theme="primary" style="margin-left: 10px" :loading="nextLoading" @click="keep">
@@ -96,6 +96,8 @@ import mammoth from "mammoth";
 import type { PrimaryTableCol, TableRowData } from "tdesign-vue-next";
 import projectStore from "@/stores/project";
 const { project } = storeToRefs(projectStore());
+// 科普形态：弹窗切换「知识文本」文案；批次名默认 导入文本_日期，提取完成后由后端自动改为标题
+const isExplainer = computed(() => project.value?.contentFormat === "explainer_video");
 interface ChapterItem {
   index: number;
   reel: string;
@@ -166,10 +168,6 @@ function triggerUpload() {
   if (!fileImporting.value) fileInputRef.value?.click();
 }
 
-function getBatchName(fileName: string) {
-  return fileName.replace(/\.[^.]+$/, "");
-}
-
 async function readFile(file: File): Promise<string> {
   const buffer = await file.arrayBuffer();
   if (file.type === "text/plain") {
@@ -225,7 +223,6 @@ async function importFiles(files: File[]) {
       const chapters = getChapters(contentText, file.name);
       const { data } = await axios.post("/novel/addNovel", {
         projectId: project.value?.id,
-        name: getBatchName(file.name),
         data: chapters,
       });
       const importId = Number(data?.importId);

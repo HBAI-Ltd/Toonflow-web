@@ -100,7 +100,7 @@
           <div class="meta">
             <t-tag size="small" variant="light">{{ ethnicityText(item.ethnicity) }}</t-tag>
             <t-tag size="small" variant="light" theme="primary">{{ ageGroupText(item.ageGroup) }}</t-tag>
-            <t-tag v-if="item.beautyScore != null" size="small" variant="light" theme="warning">颜值 {{ item.beautyScore }}</t-tag>
+            <t-tag v-if="item.beautyScore != null" size="small" variant="light" theme="warning">颜值 {{ beautyScoreText(item.beautyScore) }}</t-tag>
           </div>
           <!-- 始终可见的操作按钮区（不依赖 hover，触屏/桌面均可用） -->
           <div class="cardActionsBar">
@@ -199,7 +199,6 @@
               :min="20"
               :max="100"
               :step="1"
-              :decimal-places="0"
               theme="column"
               placeholder="留空自动评分"
               style="width: 150px" />
@@ -247,7 +246,6 @@
             :min="20"
             :max="100"
             :step="1"
-            :decimal-places="0"
             theme="column"
             placeholder="20 ~ 100"
             style="width: 150px" />
@@ -281,7 +279,7 @@
               <t-tag theme="primary" variant="light">性别：{{ genderText(detailItem.gender) }}</t-tag>
               <t-tag theme="success" variant="light">年龄段：{{ ageGroupText(detailItem.ageGroup) }}</t-tag>
               <t-tag theme="warning" variant="light">人种：{{ ethnicityText(detailItem.ethnicity) }}</t-tag>
-              <t-tag v-if="detailItem.beautyScore != null" theme="danger" variant="light">颜值：{{ detailItem.beautyScore }}</t-tag>
+              <t-tag v-if="detailItem.beautyScore != null" theme="danger" variant="light">颜值：{{ beautyScoreText(detailItem.beautyScore) }}</t-tag>
             </div>
           </div>
         </div>
@@ -318,7 +316,7 @@
             <span v-if="previewCurrent?.gender != null">{{ genderText(previewCurrent.gender) }}</span>
             <span v-if="previewCurrent?.ageGroup != null">{{ ageGroupText(previewCurrent.ageGroup) }}</span>
             <span v-if="previewCurrent?.ethnicity != null">{{ ethnicityText(previewCurrent.ethnicity) }}</span>
-            <span v-if="previewCurrent?.beautyScore != null">颜值 {{ previewCurrent.beautyScore }}</span>
+            <span v-if="previewCurrent?.beautyScore != null">颜值 {{ beautyScoreText(previewCurrent.beautyScore) }}</span>
             <span class="counter">{{ previewIndex + 1 }} / {{ previewImages.length }}</span>
           </div>
           <button class="faceLightbox__close" @click="closePreview" aria-label="关闭">
@@ -404,6 +402,13 @@ function ethnicityText(v: any) {
 }
 function ageGroupText(v: any) {
   return AGE_GROUP_LABEL[Number(v)] || "未标注";
+}
+
+// 颜值分归一化显示：兼容历史 10 分制数据（≤10 视为旧制，×10 换算为百分制）
+function beautyScoreText(v: any) {
+  const n = typeof v === "number" ? v : Number(v);
+  if (isNaN(n)) return "";
+  return String(n <= 10 ? Math.round(n * 10) : n);
 }
 
 const list = ref<any[]>([]);
@@ -802,7 +807,10 @@ function openEdit(item: any) {
     gender: Number(item.gender) || 2,
     ageGroup: Number(item.ageGroup) || 2,
     ethnicity: Number(item.ethnicity) || 1,
-    beautyScore: typeof item.beautyScore === "number" ? item.beautyScore : Number(item.beautyScore) || undefined,
+    beautyScore: (() => {
+      const n = typeof item.beautyScore === "number" ? item.beautyScore : Number(item.beautyScore);
+      return isNaN(n) ? undefined : n <= 10 ? n * 10 : n;
+    })(),
   });
   editVisible.value = true;
 }
@@ -873,15 +881,22 @@ async function confirmDel(item: any) {
 
   .toolbar {
     margin-bottom: 20px;
+    flex-wrap: wrap;
+    row-gap: 12px;
 
     .title {
       font-size: 18px;
       margin: 0;
+      white-space: nowrap;
     }
     .sub {
       margin-left: 12px;
       font-size: 12px;
       color: var(--td-text-color-placeholder);
+      white-space: nowrap;
+    }
+    .left {
+      flex-shrink: 0;
     }
     .right {
       gap: 10px;

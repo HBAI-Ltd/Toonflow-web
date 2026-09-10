@@ -451,6 +451,8 @@ watch(
     if (!newVal || newVal < 0) return;
     await refFlowData();
     productionAgentStore().updateContext();
+    // 换剧集等于换一条对话：先清空本地气泡，再从库里拉该剧集的存档
+    productionAgentStore().resetMessages();
     await productionAgentStore().getHistory();
   },
 );

@@ -34,7 +34,7 @@
               }}
             </t-tag>
             <t-tag shape="round">
-              {{ project.projectType == "novel" ? $t(`workbench.project.type.novel`) : $t(`workbench.project.type.script`) }}
+              {{ project.projectType == "explainer" ? $t(`workbench.project.type.explainer`) : project.projectType == "novel" ? $t(`workbench.project.type.novel`) : $t(`workbench.project.type.script`) }}
             </t-tag>
           </div>
         </div>
@@ -128,8 +128,8 @@ async function openProject(projectId: string | undefined) {
   }
 
   project.value = item;
-  if (item.projectType === "novel") router.push(`/novel`);
-  else if (item.projectType === "script") router.push(`/script`);
+  if (item.projectType === "script") router.push(`/script`);
+  else router.push(`/novel`); // novel 与 explainer（知识文本）共用原文页
 }
 
 function openEdit(item: {

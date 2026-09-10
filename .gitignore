@@ -36,3 +36,6 @@ oss
 
 backup
 .worktrees/
+
+# 预审校验用的构建产物（临时输出，不入仓）
+.verify-preflight-dist/

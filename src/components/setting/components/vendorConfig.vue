@@ -161,6 +161,23 @@
             </t-form-item>
           </template>
 
+          <template v-if="modelFormData.type === 'tts'">
+            <t-form-item name="voices" :label="$t('settings.vendor.ttsVoices')">
+              <div style="width: 100%; display: flex; flex-direction: column; gap: 8px">
+                <div v-for="(v, vi) in modelFormData.voices" :key="vi" style="display: flex; gap: 8px; align-items: center">
+                  <t-input v-model="v.title" :placeholder="$t('settings.vendor.voiceTitlePlaceholder')" style="flex: 1" />
+                  <t-input v-model="v.voice" :placeholder="$t('settings.vendor.voiceIdPlaceholder')" style="flex: 1" />
+                  <t-button variant="text" theme="danger" size="small" :disabled="modelFormData.voices.length <= 1" @click="modelFormData.voices.splice(vi, 1)">
+                    <template #icon><i-delete size="14" /></template>
+                  </t-button>
+                </div>
+                <t-button variant="outline" size="small" style="align-self: flex-start" @click="modelFormData.voices.push({ title: '', voice: '' })">
+                  {{ $t("settings.vendor.addVoice") }}
+                </t-button>
+              </div>
+            </t-form-item>
+          </template>
+
           <template v-if="modelFormData.type === 'image'">
             <t-form-item name="mode" :label="$t('settings.vendor.imageMode')">
               <t-checkbox-group v-model="modelFormData.mode">
@@ -388,7 +405,14 @@ interface VideoModel {
   durationResolutionMap: { duration: number[]; resolution: string[] }[];
 }
 
-type VendorModel = TextModel | ImageModel | VideoModel;
+interface TtsModel {
+  name: string;
+  modelName: string;
+  type: "tts";
+  voices: { title: string; voice: string }[];
+}
+
+type VendorModel = TextModel | ImageModel | VideoModel | TtsModel;
 
 interface VendorInput {
   key: string;
@@ -463,6 +487,7 @@ const modelTypeOptions = [
   { value: "text", label: "settings.vendor.textModel" },
   { value: "image", label: "settings.vendor.imageModel" },
   { value: "video", label: "settings.vendor.videoModel" },
+  { value: "tts", label: "settings.vendor.ttsModel" },
 ];
 
 const imageModeOptions = [
@@ -750,7 +775,7 @@ interface DrmRow {
 const modelFormData = ref({
   name: "",
   modelName: "",
-  type: "text" as "text" | "image" | "video",
+  type: "text" as "text" | "image" | "video" | "tts",
   think: false,
   apiKey: "",
   mode: [] as string[],
@@ -758,9 +783,10 @@ const modelFormData = ref({
   mixedModeCount: {} as Record<string, number>, // 每个 reference 的数量限制
   audio: "optional" as "optional" | false | true,
   durationResolutionMap: [{ duration: [] as string[], resolution: [] as string[] }] as DrmRow[],
+  voices: [] as { title: string; voice: string }[], // TTS 音色列表
 });
 
-function resetModelForm(type: "text" | "image" | "video" = "text") {
+function resetModelForm(type: "text" | "image" | "video" | "tts" = "text") {
   modelFormData.value = {
     name: "",
     modelName: "",
@@ -772,6 +798,7 @@ function resetModelForm(type: "text" | "image" | "video" = "text") {
     mixedModeCount: {},
     audio: "optional",
     durationResolutionMap: [{ duration: [], resolution: [] }],
+    voices: [],
   };
 }
 
@@ -802,6 +829,22 @@ function buildModelFromForm(): VendorModel | null {
       type: "text",
       think: modelFormData.value.think,
       apiKey: modelFormData.value.apiKey.trim() || undefined,
+    };
+  }
+
+  if (modelFormData.value.type === "tts") {
+    const voices = modelFormData.value.voices
+      .map((v) => ({ title: v.title.trim(), voice: v.voice.trim() }))
+      .filter((v) => v.title && v.voice);
+    if (!voices.length) {
+      window.$message.error($t("settings.vendor.msg.addVoice"));
+      return null;
+    }
+    return {
+      name,
+      modelName,
+      type: "tts" as const,
+      voices,
     };
   }
 
@@ -934,6 +977,7 @@ function handleEditModel(model: VendorModel) {
       mixedModeCount: {},
       audio: "optional",
       durationResolutionMap: [{ duration: [], resolution: [] }],
+      voices: [],
     };
   }
 
@@ -949,6 +993,7 @@ function handleEditModel(model: VendorModel) {
       mixedModeCount: {},
       audio: "optional",
       durationResolutionMap: [{ duration: [], resolution: [] }],
+      voices: [],
     };
   }
 
@@ -988,6 +1033,23 @@ function handleEditModel(model: VendorModel) {
       mixedModeCount,
       audio: model.audio,
       durationResolutionMap: rows,
+      voices: [],
+    };
+  }
+
+  if (model.type === "tts") {
+    modelFormData.value = {
+      name: model.name,
+      modelName: model.modelName,
+      type: "tts",
+      think: false,
+      apiKey: "",
+      mode: [],
+      mixedMode: [],
+      mixedModeCount: {},
+      audio: "optional",
+      durationResolutionMap: [{ duration: [], resolution: [] }],
+      voices: (model.voices ?? []).map((v) => ({ title: v.title ?? "", voice: v.voice ?? "" })),
     };
   }
 
@@ -1002,6 +1064,8 @@ function handleTestModel(item: (typeof vendorModels.value)[number]) {
     imageTestVisible.value = true;
   } else if (item.type === "video") {
     videoTestVisible.value = true;
+  } else if (item.type === "tts") {
+    window.$message.info($t("settings.vendor.msg.ttsTestPending"));
   }
 }
 

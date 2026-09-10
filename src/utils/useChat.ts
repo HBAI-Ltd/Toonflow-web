@@ -1,6 +1,7 @@
 // useChat.ts
 import { ref, shallowRef, onMounted, onUnmounted, computed } from "vue";
 import { io, Socket } from "socket.io-client";
+import type { PreflightAction, PreflightUpdate } from "./preflight";
 import type { ChatMessagesData, AIMessage, UserMessage, AIMessageContent, ChatMessageStatus } from "@tdesign-vue-next/chat";
 
 // Socket 事件类型定义
@@ -58,7 +59,7 @@ export interface XmlTagOption {
 
 export interface ChatSocketEvents {
   // 发送事件
-  chat: { content: string; attachments?: any[] };
+  chat: { messageId?: string; content: string; attachments?: any[]; preflightAction?: PreflightAction };
   stop: { messageId: string };
   regenerate: { messageId: string };
   autoAdvanceContinue: Record<string, never>;
@@ -68,6 +69,7 @@ export interface ChatSocketEvents {
   "message:update": MessageUpdateEvent;
   "content:add": ContentAddEvent;
   "content:update": ContentUpdateEvent;
+  "preflight:update": PreflightUpdate;
   error: { code: string; message: string };
 }
 
@@ -102,6 +104,13 @@ export function useChat(options: UseChatOptions) {
   const connected = ref(false);
   const connecting = ref(false);
   const messages = ref<ChatMessagesData[]>([]);
+  const loadingHistory = ref(false);
+  let historyRequest = 0;
+  let activityRevision = 0;
+  const remoteRunning = ref(false);
+  let suppressXmlEvents = false;
+  const pendingEvents: Array<{ event: string; data: any }> = [];
+  const eventHandlers = new Map<string, (data: any) => void>();
   const currentMessageId = ref<string | null>(null);
   const status = ref<"idle" | "pending" | "streaming">("idle");
   const xmlData = ref<Record<string, string>>({});
@@ -121,12 +130,16 @@ export function useChat(options: UseChatOptions) {
 
   // 计算属性 - 修复：增加对内容流状态的判断
   const isGenerating = computed(() => {
+    // chat() 会在发送前同步占用状态，覆盖服务端首条消息尚未返回的窗口。
+    if (remoteRunning.value || loadingHistory.value) return true;
+    if (status.value === "pending" || status.value === "streaming") return true;
+
     const lastMsg = messages.value[messages.value.length - 1];
     if (!lastMsg || lastMsg.role !== "assistant") return false;
 
-    const status = lastMsg.status;
+    const messageStatus = lastMsg.status;
     // pending 或 streaming 状态都算生成中
-    if (status === "pending" || status === "streaming") return true;
+    if (messageStatus === "pending" || messageStatus === "streaming") return true;
 
     // 额外检查：如果消息状态是其他，但有内容块还在流式中
     const aiMsg = lastMsg as AIMessage;
@@ -291,7 +304,7 @@ export function useChat(options: UseChatOptions) {
       xmlData.value = { ...xmlData.value, [tag]: value };
       changed = true;
 
-      onXmlTag?.({
+      if (!suppressXmlEvents) onXmlTag?.({
         messageId,
         contentId: content.id,
         type: content.type,
@@ -317,6 +330,72 @@ export function useChat(options: UseChatOptions) {
 
     const aiMessage = message as AIMessage;
     aiMessage.content?.forEach((content) => syncXmlData(messageId, content, messageStatus ?? aiMessage.status));
+  };
+
+  // Restore display data only: historical protocol tags must never write workspace state.
+  const restoreHistory = async (fetchHistory: () => Promise<ChatMessagesData[]>) => {
+    const request = ++historyRequest;
+    const activity = activityRevision;
+    const baseline = new Map(messages.value.map(message => [message.id, JSON.stringify(message)]));
+    loadingHistory.value = true;
+    try {
+      const history = await fetchHistory();
+      if (request !== historyRequest) return;
+      const current = new Map(messages.value.map(message => [message.id, message]));
+      const restored = (Array.isArray(history) ? history : []).map(record => {
+        const live = current.get(record.id);
+        const serverRevision = Number(record.ext?.journalRevision ?? 0);
+        const liveRevision = Number(baseline.has(record.id) ? JSON.parse(baseline.get(record.id)!).ext?.journalRevision ?? 0 : 0);
+        if (live && (serverRevision ? liveRevision > serverRevision : baseline.get(record.id) !== JSON.stringify(live))) return live;
+        const message = JSON.parse(JSON.stringify(record)) as ChatMessagesData;
+        if (message.role === 'assistant') {
+          (message as AIMessage).content?.forEach(content => {
+            if (message.status === 'stop' && (content.status === 'pending' || content.status === 'streaming')) content.status = 'stop';
+            if (isXmlTextContent(content)) {
+              rawContentState.set(getContentKey(message.id, content), content.data);
+              syncContentDisplay(message.id, content);
+            }
+          });
+        }
+        return message;
+      });
+      const ids = new Set(restored.map(message => message.id));
+      const extras = messages.value.filter(message => !ids.has(message.id));
+      messages.value = [...extras.filter(message => message.id === 'welcome'), ...restored, ...extras.filter(message => message.id !== 'welcome')];
+      suppressXmlEvents = true;
+      try {
+        for (const { event, data } of pendingEvents.splice(0)) {
+          const message = findMessage(data.messageId ?? data.id);
+          if (!message) { pendingEvents.push({event, data}); continue; }
+          if (data.journalRevision && data.journalRevision <= Number(message.ext?.journalRevision ?? 0)) continue;
+          eventHandlers.get(event)?.(data);
+          const updated = findMessage(data.messageId ?? data.id);
+          if (updated && data.journalRevision) updated.ext = {...updated.ext, journalRevision: data.journalRevision};
+        }
+      } finally { suppressXmlEvents = false; }
+      if (activity === activityRevision) {
+        const active = [...messages.value].reverse().find(message => message.role === 'assistant' && (message.status === 'pending' || message.status === 'streaming'));
+        currentMessageId.value = active?.id ?? null;
+        status.value = remoteRunning.value ? 'pending' : active ? (active.status === 'streaming' ? 'streaming' : 'pending') : 'idle';
+      }
+    } finally {
+      if (request === historyRequest) loadingHistory.value = false;
+    }
+  };
+
+  const finishPending = () => {
+    for (const message of messages.value) {
+      if (message.role !== 'assistant') continue;
+      if (message.status === 'pending' || message.status === 'streaming') {
+        message.status = 'stop';
+        message.ext = { ...message.ext, interrupted: true };
+      }
+      (message as AIMessage).content?.forEach(content => {
+        if (content.status === 'pending' || content.status === 'streaming') content.status = 'stop';
+      });
+    }
+    currentMessageId.value = null;
+    status.value = 'idle';
   };
 
   // 深度合并工具
@@ -355,6 +434,7 @@ export function useChat(options: UseChatOptions) {
 
   // 处理内容更新的核心逻辑
   const handleContentUpdate = (event: ContentUpdateEvent) => {
+    activityRevision++;
     const { messageId, contentId, type, data, strategy, status: eventStatus } = event;
 
     const msg = findMessage(messageId) as AIMessage;
@@ -418,8 +498,21 @@ export function useChat(options: UseChatOptions) {
   const setupHandlers = () => {
     if (!socket.value) return;
 
+    const registerMessageEvent = (event: string, handler: (data: any) => void) => {
+      eventHandlers.set(event, handler);
+      socket.value!.on(event, (data: any) => {
+        const message = findMessage(data.messageId ?? data.id);
+        if (loadingHistory.value || (!message && event !== 'message')) pendingEvents.push({event, data: JSON.parse(JSON.stringify(data))});
+        if (data.journalRevision && data.journalRevision <= Number(message?.ext?.journalRevision ?? 0)) return;
+        handler(data);
+        const updated = findMessage(data.messageId ?? data.id);
+        if (updated && data.journalRevision) updated.ext = {...updated.ext, journalRevision: data.journalRevision};
+      });
+    };
+
     // 新消息
-    socket.value.on("message", (data: MessageEvent) => {
+    registerMessageEvent("message", (data: MessageEvent) => {
+      activityRevision++;
       const newMessage: ChatMessagesData = {
         id: data.id,
         role: data.role,
@@ -443,7 +536,9 @@ export function useChat(options: UseChatOptions) {
         });
       }
 
-      messages.value.push(newMessage);
+      const existingIndex = findMessageIndex(newMessage.id);
+      if (existingIndex >= 0) messages.value[existingIndex] = newMessage;
+      else messages.value.push(newMessage);
 
       if (data.role === "assistant") {
         const aiMessage = newMessage as AIMessage;
@@ -452,17 +547,19 @@ export function useChat(options: UseChatOptions) {
 
       if (data.role === "assistant") {
         currentMessageId.value = data.id;
-        status.value = data.status === "streaming" ? "streaming" : "pending";
+        status.value = data.status === "streaming" ? "streaming" : data.status === "pending" ? "pending" : "idle";
       }
     });
 
     // 消息状态更新
-    socket.value.on("message:update", (data: MessageUpdateEvent) => {
+    registerMessageEvent("message:update", (data: MessageUpdateEvent) => {
+      activityRevision++;
       const msg = findMessage(data.id);
       if (!msg) return;
 
       if (data.status) {
         msg.status = data.status;
+        if (data.status === "stop" && msg.role === "assistant") (msg as AIMessage).content?.forEach(content => { if (content.status === "pending" || content.status === "streaming") content.status = "stop"; });
       }
 
       if (data.ext) {
@@ -495,7 +592,8 @@ export function useChat(options: UseChatOptions) {
     });
 
     // 添加内容块 - 修复：不要在这里改变消息状态
-    socket.value.on("content:add", (data: ContentAddEvent) => {
+    registerMessageEvent("content:add", (data: ContentAddEvent) => {
+      activityRevision++;
       const msg = findMessage(data.messageId) as AIMessage;
       if (!msg || msg.role !== "assistant") return;
 
@@ -539,11 +637,21 @@ export function useChat(options: UseChatOptions) {
     });
 
     // 内容更新（流式/完成）
-    socket.value.on("content:update", handleContentUpdate);
+    registerMessageEvent("content:update", handleContentUpdate);
+
+    socket.value.on('chat:state', (state: { running: boolean }) => {
+      activityRevision++;
+      remoteRunning.value = state.running;
+      if (state.running) status.value = 'pending';
+      else finishPending();
+    });
 
     // 错误处理
     socket.value.on("error", (error: { code: string; message: string }) => {
       console.error("[Chat Error]", error);
+      if (!currentMessageId.value) {
+        status.value = "idle";
+      }
       onError?.(error);
     });
 
@@ -557,6 +665,8 @@ export function useChat(options: UseChatOptions) {
     socket.value.on("disconnect", (reason) => {
       connected.value = false;
       connecting.value = false;
+      currentMessageId.value = null;
+      status.value = "idle";
       onDisconnect?.();
       console.log("[Chat Disconnected]", reason);
     });
@@ -564,6 +674,8 @@ export function useChat(options: UseChatOptions) {
     socket.value.on("connect_error", (error) => {
       connected.value = false;
       connecting.value = false;
+      currentMessageId.value = null;
+      status.value = "idle";
       console.error("[Chat Connect Error]", error);
     });
   };
@@ -627,16 +739,23 @@ export function useChat(options: UseChatOptions) {
   };
 
   // 业务方法
-  const chat = (content: string, attachments?: any[]) => {
+  const chat = (content: string, attachments?: any[], options?: { preflightAction?: PreflightAction }) => {
     if (!content.trim() && !attachments?.length) return false;
+    if (remoteRunning.value || loadingHistory.value || status.value !== "idle" || !socket.value?.connected) return false;
+
+    // 必须早于本地消息入列和 socket 发送，阻断同一事件循环内的连续点击。
+    activityRevision++;
+    status.value = "pending";
 
     const userMessage: UserMessage = {
-      id: `user_${Date.now()}`,
+      id: `user_${globalThis.crypto.randomUUID()}`,
       role: "user",
       status: "complete",
       datetime: new Date().toISOString(),
       content: [{ type: "text", data: content, status: "complete" }],
     };
+
+    if (options?.preflightAction) userMessage.ext = { preflightAction: options.preflightAction };
 
     if (attachments?.length) {
       userMessage.content.push({
@@ -648,17 +767,24 @@ export function useChat(options: UseChatOptions) {
 
     messages.value.push(userMessage);
 
-    return emit("chat", { content, attachments });
+    const sent = emit("chat", { messageId: userMessage.id, content, attachments, ...(options?.preflightAction ? { preflightAction: options.preflightAction } : {}) });
+    if (!sent) {
+      removeMessage(userMessage.id);
+      status.value = "idle";
+    }
+    return sent;
   };
 
   const stopGenerate = (messageId?: string) => {
-    const id = messageId || currentMessageId.value;
-    if (!id) return false;
+    const id = messageId || currentMessageId.value || (remoteRunning.value ? "" : null);
+    if (id === null) return false;
 
     // 立即更新本地状态，不等服务端响应
     const msg = findMessage(id);
     if (msg) {
       msg.status = "stop";
+      msg.ext = { ...msg.ext, interrupted: true };
+      if (msg.role === "assistant") (msg as AIMessage).content?.forEach(content => { if (content.status === "pending" || content.status === "streaming") content.status = "stop"; });
     }
     currentMessageId.value = null;
     status.value = "idle";
@@ -672,6 +798,9 @@ export function useChat(options: UseChatOptions) {
 
   // 消息管理
   const clearMessages = () => {
+    historyRequest++;
+    pendingEvents.length = 0;
+    loadingHistory.value = false;
     messages.value = [];
     currentMessageId.value = null;
     status.value = "idle";
@@ -733,6 +862,9 @@ export function useChat(options: UseChatOptions) {
 
   return {
     socket,
+    loadingHistory,
+    remoteRunning,
+    restoreHistory,
     connected,
     connecting,
     status,

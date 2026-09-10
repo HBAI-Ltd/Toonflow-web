@@ -14,9 +14,10 @@
         <div class="formLeft">
           <t-form :data="formState" label-align="top">
             <t-form-item :label="$t('workbench.project.dialog.projectType')">
-              <t-select v-model="formState.projectType" :placeholder="$t('workbench.project.dialog.selectType')">
+              <t-select v-model="formState.projectType" :placeholder="$t('workbench.project.dialog.selectType')" @change="handleTypeChange">
                 <t-option key="基于小说原文" :label="$t('workbench.project.dialog.basedOnNovel')" value="novel" />
                 <t-option key="基于剧本" :label="$t('workbench.project.dialog.basedOnScript')" value="script" />
+                <t-option key="知识科普" :label="$t('workbench.project.dialog.basedOnExplainer')" value="explainer" />
               </t-select>
             </t-form-item>
             <t-form-item v-if="!isEdit" :label="$t('workbench.project.dialog.ip')">
@@ -30,7 +31,7 @@
               </t-select>
             </t-form-item>
             <t-form-item :label="$t('workbench.project.dialog.contentFormat')">
-              <t-select v-model="formState.contentFormat" :placeholder="$t('workbench.project.dialog.contentFormatPh')" @change="applyDefaultManual">
+              <t-select v-model="formState.contentFormat" :placeholder="$t('workbench.project.dialog.contentFormatPh')" @change="handleFormatChange">
                 <t-option key="vertical_episode" :label="$t('workbench.project.dialog.formatVerticalEpisode')" value="vertical_episode" />
                 <t-option key="series_drama" :label="$t('workbench.project.dialog.formatSeriesDrama')" value="series_drama" />
                 <t-option key="single_film" :label="$t('workbench.project.dialog.formatSingleFilm')" value="single_film" />
@@ -58,7 +59,7 @@
               </t-form-item>
             </div>
             <div v-else-if="isEdit && (formState.contentFormat === 'single_film' || formState.contentFormat === 'explainer_video')" class="ac" style="gap: 10px; width: 100%; margin-bottom: 16px;">
-              <t-form-item :label="$t('workbench.project.dialog.filmDuration')" style="flex: 1; margin-bottom: 0;">
+              <t-form-item :label="formState.contentFormat === 'explainer_video' ? $t('workbench.project.dialog.targetDurationOptional') : $t('workbench.project.dialog.filmDuration')" style="flex: 1; margin-bottom: 0;">
                 <t-input-number v-model="formState.episodeDurationMinutes" :min="1" :max="180" :step="1" theme="column">
                   <template #suffix>{{ $t('workbench.project.dialog.minutesUnit') }}</template>
                 </t-input-number>
@@ -75,8 +76,8 @@
                 </t-select>
               </div>
             </t-form-item>
-            <t-form-item v-if="isEdit" :label="$t('workbench.project.dialog.novelType')">
-              <t-input v-model="formState.type" :placeholder="$t('workbench.project.dialog.novelTypePh')" />
+            <t-form-item v-if="isEdit" :label="formState.contentFormat === 'explainer_video' ? $t('workbench.project.dialog.knowledgeField') : $t('workbench.project.dialog.novelType')">
+              <t-input v-model="formState.type" :placeholder="formState.contentFormat === 'explainer_video' ? $t('workbench.project.dialog.knowledgeFieldPh') : $t('workbench.project.dialog.novelTypePh')" />
             </t-form-item>
             <t-form-item v-if="isEdit" :label="$t('workbench.project.dialog.modelData')">
               <div class="ac" style="gap: 5px; width: 100%">
@@ -91,7 +92,7 @@
             <t-form-item v-if="isEdit" :label="$t('workbench.project.dialog.videoRatio')">
               <t-select v-model="formState.videoRatio" :options="RATIO_OPTIONS" />
             </t-form-item>
-            <t-form-item v-if="isEdit" :label="$t('workbench.project.dialog.novelIntro')">
+            <t-form-item v-if="isEdit" :label="formState.contentFormat === 'explainer_video' ? $t('workbench.project.dialog.topicIntro') : $t('workbench.project.dialog.novelIntro')">
               <t-textarea
                 v-model="formState.intro"
                 :autosize="{ minRows: 3, maxRows: 6 }"
@@ -496,6 +497,23 @@ function applyDefaultManual() {
   }
 }
 
+// 科普类型⟺科普形态 双向锁定：任一侧选科普，另一侧自动跟随，防止类型与形态错位
+function handleTypeChange(value: unknown) {
+  if (value === "explainer" && formState.value.contentFormat !== "explainer_video") {
+    formState.value.contentFormat = "explainer_video";
+    applyDefaultManual();
+  } else if (value !== "explainer" && formState.value.contentFormat === "explainer_video") {
+    formState.value.contentFormat = "vertical_episode";
+    applyDefaultManual();
+  }
+}
+
+function handleFormatChange() {
+  if (formState.value.contentFormat === "explainer_video") formState.value.projectType = "explainer";
+  else if (formState.value.projectType === "explainer") formState.value.projectType = "novel";
+  applyDefaultManual();
+}
+
 // ===== 表单 =====
 const formState = ref(DEFAULT_FORM());
 
@@ -563,7 +581,7 @@ function handleOk() {
   if (!formState.value.videoRatio) {
     formState.value.videoRatio = formState.value.contentFormat === "vertical_episode" ? "9:16" : "16:9";
   }
-  if (!formState.value.type) formState.value.type = "都市";
+  if (!formState.value.type) formState.value.type = formState.value.contentFormat === "explainer_video" ? "" : "都市";
 
   const calculatedDuration =
     isEdit.value
@@ -576,7 +594,9 @@ function handleOk() {
     isEdit.value
       ? formState.value.contentFormat === "single_film"
         ? 1
-        : Number(formState.value.totalEpisodes) || 0
+        : formState.value.contentFormat === "explainer_video"
+          ? 0 // 科普：一批次一条视频，项目级集数无意义
+          : Number(formState.value.totalEpisodes) || 0
       : 0; // 新建时不硬编码集数，留给后续剧本分析推断
 
   if (isEdit.value) {
@@ -865,10 +885,13 @@ function changeFn(val: string, data: any) {
       label: getModeLabel(item),
       value: modeToKey(item),
     }));
-    // 如果当前 mode 未选或不在可用列表中，自动选中首选模式（优先 singleImage 或第一项）
+    // 如果当前 mode 未选或不在可用列表中，默认选中多参数模式（模型支持数组多参时优先），无多参再回退 singleImage/第一项
     const availableKeys = mode.value.map((m) => m.value);
     if (!formState.value.mode || !availableKeys.includes(formState.value.mode)) {
-      if (availableKeys.includes("singleImage")) {
+      const multiMode = (data.mode as unknown[]).find((item) => Array.isArray(item));
+      if (multiMode !== undefined) {
+        formState.value.mode = modeToKey(multiMode as VideoMode);
+      } else if (availableKeys.includes("singleImage")) {
         formState.value.mode = "singleImage";
       } else if (availableKeys.length > 0) {
         formState.value.mode = availableKeys[0];

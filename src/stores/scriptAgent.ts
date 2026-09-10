@@ -2,9 +2,12 @@ import axios from "@/utils/axios";
 import projectStore from "@/stores/project";
 import settingStore from "@/stores/setting";
 import { useChat } from "@/utils/useChat";
+import type { PreflightState, PreflightUpdate } from "@/utils/preflight";
 import router from "@/router";
 
 interface PlanData {
+  preflightReport: string;
+  preflight?: PreflightState;
   storySkeleton: string;
   adaptationStrategy: string;
   script: { id?: number; name: string; content: string }[];
@@ -21,15 +24,18 @@ function makeScriptAgentStore(session: ScriptAgentSession) {
   const { projectId, importId, scriptId, merge } = session;
   return defineStore(`scriptAgent-${projectId}${importId ? `-i${importId}` : ""}${scriptId ? `-s${scriptId}` : ""}${merge ? "-m1" : ""}`, () => {
         const planData = ref<PlanData>({
+          preflightReport: "",
           storySkeleton: "",
           adaptationStrategy: "",
           script: [],
         });
+        let preflightRevision = 0;
+        let planRequest = 0;
 
-        const { connected, messages, chat, stopGenerate, socket, status, disconnect, connect, reconnect, emit, removeMessagesAfter, isGenerating } = useChat({
+        const { connected, messages, chat, stopGenerate, socket, status, disconnect, connect, reconnect, emit, removeMessagesAfter, isGenerating, restoreHistory, loadingHistory, clearMessages } = useChat({
           url: `${settingStore().baseUrl}/socket/scriptAgent`,
           auth: () => ({
-            isolationKey: importId ? `${projectId}:scriptAgent:b${importId}` : `${projectId}:scriptAgent`,
+            isolationKey: importId ? `${projectId}:scriptAgent:b${importId}` : scriptId !== undefined ? `${projectId}:scriptAgent:${scriptId}` : `${projectId}:scriptAgent`,
             projectId: projectId,
             ...(importId !== undefined ? { importId } : {}),
             ...(scriptId !== undefined ? { scriptId } : {}),
@@ -40,9 +46,12 @@ function makeScriptAgentStore(session: ScriptAgentSession) {
             { tag: "storySkeleton", keepInMessage: false },
             { tag: "adaptationStrategy", keepInMessage: false },
             { tag: "scriptItem", keepInMessage: false },
+            { tag: "correctedBlock", keepInMessage: false },
           ],
           onXmlTag: (data) => {
             const { tag, value, children, status, attrs } = data;
+            // Candidate repairs are owned by the backend workflow and shown only in the diff panel.
+            if (tag === 'correctedBlock') return;
             if (tag === "storySkeleton") {
               planData.value.storySkeleton = value;
             } else if (tag === "adaptationStrategy") {
@@ -59,11 +68,13 @@ function makeScriptAgentStore(session: ScriptAgentSession) {
                 }
               }
             }
-            if (status === "complete") {
-              setPlanData();
-            }
+
           },
           autoConnect: false,
+          onError: (error) => {
+            window.$message.error(error.message);
+            void getPlanData().catch(() => {});
+          },
         });
 
         /** 智能推进开关：开启后决策层代替用户确认并自动推进；按项目持久化，重连后自动同步到后端 */
@@ -93,6 +104,21 @@ function makeScriptAgentStore(session: ScriptAgentSession) {
               s.on("getPlanData", (_, callback) => {
                 callback(planData.value);
               });
+              s.on("preflight:update", (update: PreflightUpdate) => {
+                preflightRevision++;
+                planData.value.preflight = update.preflight;
+                if (update.preflightReport !== undefined) planData.value.preflightReport = update.preflightReport;
+              });
+              const refreshPlan = () => void getPlanData().catch((error) => {
+                console.error("预审状态同步失败", error);
+                window.$message.error("预审状态同步失败，请重新连接后重试");
+              });
+              const refreshHistory = () => void getHistory().catch(error => { console.error("对话恢复失败", error); window.$message.error("对话恢复失败，请重新连接后重试"); });
+              s.on("connect", refreshHistory);
+              if (s.connected) refreshHistory();
+              s.on("chat:state", (state: { running: boolean }) => { if (!state.running) refreshPlan(); });
+              s.on("connect", refreshPlan);
+              if (s.connected) refreshPlan();
               const syncAutoAdvance = () => s.emit("setAutoAdvance", { enabled: autoAdvance.value });
               // socket 建立与每次重连都同步本地开关，避免后端连接级状态丢失后静默退回人工模式
               syncAutoAdvance();
@@ -105,22 +131,64 @@ function makeScriptAgentStore(session: ScriptAgentSession) {
           { immediate: true },
         );
 
+        async function getHistory() {
+          return restoreHistory(async () => {
+            const { data } = await axios.post('/agents/getMemory', {
+              projectId, agentType: 'scriptAgent',
+              ...(importId !== undefined ? { importId } : {}),
+              ...(scriptId !== undefined ? { episodesId: scriptId } : {}),
+            });
+            return data;
+          });
+        }
+
+        async function getPlanData() {
+          const revision = preflightRevision;
+          const request = ++planRequest;
+          const { data } = await axios.post("/scriptAgent/getPlanData", {
+            projectId,
+            agentType: "scriptAgent",
+            ...(importId !== undefined ? { importId, merge: !!merge } : {}),
+            ...(scriptId !== undefined ? { scriptId } : {}),
+          });
+          if (request === planRequest) {
+            const snapshot = data.data ?? {};
+            // A socket result received after this request began is more recent.
+            if (revision === preflightRevision) {
+              planData.value.preflight = snapshot.preflight;
+              planData.value.preflightReport = snapshot.preflightReport || "";
+            }
+            planData.value.storySkeleton = snapshot.storySkeleton || "";
+            planData.value.adaptationStrategy = snapshot.adaptationStrategy || "";
+            planData.value.script = snapshot.script || [];
+          }
+          return data.id as number | undefined;
+        }
+
         async function setPlanData() {
+          const { preflight, ...editablePlan } = planData.value;
           await axios.post("/scriptAgent/setPlanData", {
             projectId: projectId,
             agentType: "scriptAgent",
-            data: planData.value,
+            data: editablePlan,
             ...(importId !== undefined ? { importId } : {}),
             ...(scriptId !== undefined ? { scriptId } : {}),
           });
         }
 
-        /** 重试某一轮对话：截断该用户消息之后的所有回复，并原样重发 */
-        function retryFrom(userMessageId: string, text: string) {
-          if (!socket.value?.connected) return false;
-          if (isGenerating.value) stopGenerate();
-          removeMessagesAfter(userMessageId);
-          return emit("chat", { content: text });
+        /**
+         * 重试 = 先撤销该轮及其之后的一切，再用（可编辑的）原输入重发。
+         * 不能只 chat() 追加：旧轮和新轮会同时留在记忆里，后端 readChatContext 取最近若干条，
+         * 模型随后会同时看到两份互相矛盾的产出。撤销走的就是回退那条链路（discard 语义）。
+         */
+        async function retryFrom(userMessageId: string, text: string): Promise<{ ok: boolean; message?: string }> {
+          if (isGenerating.value) return { ok: false, message: "generating" };
+          if (!socket.value?.connected) return { ok: false, message: "socketNotConnected" };
+          const rolledBack = await rollbackTo(userMessageId, "discard");
+          if (!rolledBack.ok) return rolledBack;
+          // 撤销已落到库里：先与库对齐再重发，避免本地残留被删掉的轮次
+          await getHistory().catch(() => {});
+          return chat(text) ? { ok: true } : { ok: false, message: "sendFailed" };
         }
 
         /**
@@ -170,7 +238,7 @@ function makeScriptAgentStore(session: ScriptAgentSession) {
           }
         }
 
-        return { connected, messages, chat, stopGenerate, socket, status, planData, setPlanData, connect, disconnect, reconnect, thinkLevel, updateThinkConfig, retryFrom, rollbackTo, autoAdvance, updateAutoAdvance, autoAdvanceContinue, isGenerating };
+        return { getHistory, loadingHistory, clearMessages, connected, messages, chat, stopGenerate, socket, status, planData, getPlanData, setPlanData, connect, disconnect, reconnect, thinkLevel, updateThinkConfig, retryFrom, rollbackTo, autoAdvance, updateAutoAdvance, autoAdvanceContinue, isGenerating };
       });
 }
 
