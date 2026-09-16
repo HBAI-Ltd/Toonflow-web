@@ -192,33 +192,36 @@
                 <t-empty v-if="!planData.script?.length" :title="$t('workbench.scriptAgent.noContent')" />
                 <div v-else class="scriptList">
                   <div
-                    v-for="(item, index) in planData.script"
-                    :key="getScriptCardKey(item, index)"
+                    v-for="entry in structuredScripts"
+                    :key="getScriptCardKey(entry.item, entry.index)"
                     class="scriptCard"
-                    :class="{ collapsed: isCardCollapsed(item, index) }">
+                    :class="{ collapsed: isCardCollapsed(entry.item, entry.index) }">
                     <div class="scriptCardHeader">
                       <div class="scriptCardHeaderLeft">
-                        <span class="scriptIndex">#{{ index + 1 }}</span>
-                        <span class="scriptTitle">{{ item.name }}</span>
+                        <span class="scriptIndex">#{{ entry.index + 1 }}</span>
+                        <span class="scriptTitle">{{ entry.item.name }}</span>
                       </div>
                       <div class="scriptCardActions">
-                        <t-button size="small" variant="outline" @click="toggleCardCollapse(item, index)">
+                        <t-button size="small" variant="outline" @click="toggleCardCollapse(entry.item, entry.index)">
                           <template #icon>
-                            <i-down v-if="!isCardCollapsed(item, index)" size="14" />
+                            <i-down v-if="!isCardCollapsed(entry.item, entry.index)" size="14" />
                             <i-right v-else size="14" />
                           </template>
                         </t-button>
-                        <t-button size="small" :disabled="isGenerating" @click="editScript(index)">
+                        <t-button size="small" :disabled="isGenerating" @click="editScript(entry.index)">
                           <template #icon><i-edit size="14" /></template>
                         </t-button>
-                        <t-button theme="danger" variant="outline" size="small" :disabled="isGenerating" @click="delScript(index)">
+                        <t-button theme="danger" variant="outline" size="small" :disabled="isGenerating" @click="delScript(entry.index)">
                           <template #icon><i-delete size="14" /></template>
                         </t-button>
                       </div>
                     </div>
-                    <div class="scriptCardBody" v-if="!isCardCollapsed(item, index)">
-                      <pre v-if="item.content">{{ item.content }}</pre>
-                      <span v-else class="emptyContent">{{ $t("workbench.scriptAgent.noContent") }}</span>
+                    <div class="scriptCardBody" v-if="!isCardCollapsed(entry.item, entry.index)">
+                      <StructuredScriptViewer v-if="entry.data" :script="entry.data" />
+                      <div v-else class="scriptParseError" role="alert">
+                        <strong>{{ $t("workbench.scriptAgent.invalidStructuredScript") }}</strong>
+                        <p>{{ entry.error }}</p>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -304,12 +307,21 @@ const { project } = storeToRefs(projectStore());
 import editMdPreivew from "@/components/editMdPreivew.vue";
 import scriptAgentStore from "@/stores/scriptAgent";
 import PreflightPanel from "./components/PreflightPanel.vue";
+import StructuredScriptViewer from "./components/StructuredScriptViewer.vue";
 import { buildPreflightAction } from "@/utils/preflight";
 import type { PreflightAction } from "@/utils/preflight";
+import { parseStructuredScriptJson } from "@/utils/structuredScript";
 const route = useRoute();
 const router = useRouter();
 const { connected, messages, status, planData, thinkLevel, autoAdvance, isGenerating } = storeToRefs(scriptAgentStore());
 const sessionAgentStore = scriptAgentStore();
+const structuredScripts = computed(() => (planData.value.script ?? []).map((item, index) => {
+  try {
+    return { item, index, data: parseStructuredScriptJson(item.content), error: "" };
+  } catch (error) {
+    return { item, index, data: null, error: error instanceof Error ? error.message : String(error) };
+  }
+}));
 interface ImportBatch {
   id: number;
   name: string;
@@ -975,7 +987,7 @@ function toggleAllCards() {
 
 .scriptList {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: 12px;
   align-items: start;
 }
@@ -1028,27 +1040,17 @@ function toggleAllCards() {
     font-size: 13px;
     line-height: 1.7;
     padding: 10px 12px;
-    max-height: 300px;
-    overflow-y: auto;
-    &::-webkit-scrollbar-thumb {
-      background-color: var(--td-border-level-2-color);
-      border-radius: 4px;
-    }
-    &::-webkit-scrollbar-track {
-      background-color: var(--td-bg-color-secondarycontainer);
-    }
-    pre {
-      margin: 0;
-      white-space: pre-wrap;
-      word-break: break-all;
-      font-family: inherit;
-    }
-    .emptyContent {
-      display: block;
-      font-size: 13px;
-    }
-    :deep(.md-editor-preview-wrapper) {
-      padding: 0;
+    .scriptParseError {
+      padding: 12px;
+      border: 1px solid var(--td-error-color);
+      border-radius: 8px;
+      color: var(--td-error-color);
+      background: var(--td-error-color-1);
+      overflow-wrap: anywhere;
+      p {
+        margin: 6px 0 0;
+        white-space: pre-wrap;
+      }
     }
   }
   .scriptCardFooter {
