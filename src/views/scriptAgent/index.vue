@@ -190,7 +190,7 @@
             <t-tab-panel :value="3" :label="$t('workbench.scriptAgent.script')">
               <div class="panelContent">
                 <t-empty v-if="!planData.script?.length" :title="$t('workbench.scriptAgent.noContent')" />
-                <div v-else class="scriptList">
+                <div v-else class="scriptList" :class="{ structuredScriptList: isExplainerProject }">
                   <div
                     v-for="(item, index) in planData.script"
                     :key="getScriptCardKey(item, index)"
@@ -326,6 +326,7 @@ import StructuredScriptViewer from "./components/StructuredScriptViewer.vue";
 import { buildPreflightAction } from "@/utils/preflight";
 import type { PreflightAction } from "@/utils/preflight";
 import { parseStructuredScriptJson } from "@/utils/structuredScript";
+import { getSaveScriptErrorMessage } from "./saveScriptError";
 const route = useRoute();
 const router = useRouter();
 const { connected, messages, status, planData, thinkLevel, autoAdvance, isGenerating } = storeToRefs(scriptAgentStore());
@@ -740,12 +741,6 @@ function editScript(index: number) {
   scriptEditVisible.value = true;
 }
 
-function getSaveScriptErrorMessage(error: unknown) {
-  const response = (error as { response?: { data?: { message?: unknown } } }).response;
-  if (typeof response?.data?.message === "string" && response.data.message) return response.data.message;
-  return error instanceof Error ? error.message : String(error);
-}
-
 async function saveStructuredScript(content: string) {
   if (isGenerating.value || scriptEditIndex.value < 0 || scriptSaveBusy.value) return;
   const nextScripts = planData.value.script.map((item, index) =>
@@ -1040,9 +1035,13 @@ function toggleAllCards() {
 
 .scriptList {
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
   align-items: start;
+}
+
+.scriptList.structuredScriptList {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .scriptCard {
@@ -1093,6 +1092,15 @@ function toggleAllCards() {
     font-size: 13px;
     line-height: 1.7;
     padding: 10px 12px;
+    max-height: 300px;
+    overflow-y: auto;
+    &::-webkit-scrollbar-thumb {
+      background-color: var(--td-border-level-2-color);
+      border-radius: 4px;
+    }
+    &::-webkit-scrollbar-track {
+      background-color: var(--td-bg-color-secondarycontainer);
+    }
     pre {
       margin: 0;
       white-space: pre-wrap;
@@ -1132,6 +1140,11 @@ function toggleAllCards() {
       gap: 5.6px;
     }
   }
+}
+
+.structuredScriptList .scriptCardBody {
+  max-height: none;
+  overflow-y: visible;
 }
 
 .scriptEditForm {
