@@ -224,7 +224,10 @@
                           <p>{{ structuredScripts[index]?.error }}</p>
                         </div>
                       </template>
-                      <pre v-else>{{ item.content }}</pre>
+                      <template v-else>
+                        <pre v-if="item.content">{{ item.content }}</pre>
+                        <t-empty v-else :title="$t('workbench.scriptAgent.noContent')" />
+                      </template>
                     </div>
                   </div>
                 </div>
@@ -245,15 +248,23 @@
     </Splitpanes>
     <editMdPreivew v-model="dialogVisible" @save="onConfirm" :content="editContent" />
 
-    <!-- 剧本编辑对话框 -->
+    <ScriptJsonEditor
+      v-if="isExplainerProject"
+      v-model:visible="scriptEditVisible"
+      :model-value="scriptEditData.content"
+      :busy="isGenerating || scriptSaveBusy"
+      @save="saveScript" />
+
+    <!-- 非科普项目继续使用原有 Markdown 编辑器。 -->
     <t-dialog
+      v-else
       v-model:visible="scriptEditVisible"
       :header="$t('workbench.scriptAgent.editScript')"
       width="80%"
       top="10vh"
       placement="center"
-      :confirm-btn="{ content: $t('workbench.scriptAgent.save'), theme: 'primary', disabled: isGenerating }"
-      @confirm="saveScript"
+      :confirm-btn="{ content: $t('workbench.scriptAgent.save'), theme: 'primary', disabled: isGenerating || scriptSaveBusy }"
+      @confirm="saveScript(scriptEditData.content)"
       @close="scriptEditVisible = false">
       <div class="scriptEditForm">
         <div class="scriptEditField">
@@ -310,6 +321,7 @@ const { project } = storeToRefs(projectStore());
 import editMdPreivew from "@/components/editMdPreivew.vue";
 import scriptAgentStore from "@/stores/scriptAgent";
 import PreflightPanel from "./components/PreflightPanel.vue";
+import ScriptJsonEditor from "./components/ScriptJsonEditor.vue";
 import StructuredScriptViewer from "./components/StructuredScriptViewer.vue";
 import { buildPreflightAction } from "@/utils/preflight";
 import type { PreflightAction } from "@/utils/preflight";
@@ -715,6 +727,7 @@ const scriptEditData = ref({
   content: "",
 });
 const scriptEditVisible = ref(false);
+const scriptSaveBusy = ref(false);
 
 function editScript(index: number) {
   if (isGenerating.value) return;
@@ -727,14 +740,37 @@ function editScript(index: number) {
   scriptEditVisible.value = true;
 }
 
-async function saveScript() {
-  if (isGenerating.value) return;
-  if (scriptEditIndex.value < 0) return;
-  planData.value.script[scriptEditIndex.value] = { ...scriptEditData.value };
-  await scriptAgentStore().setPlanData();
-  await getPlanData();
-  window.$message.success($t("workbench.scriptAgent.msg.scriptUpdated"));
-  scriptEditVisible.value = false;
+function getSaveScriptErrorMessage(error: unknown) {
+  const response = (error as { response?: { data?: { message?: unknown } } }).response;
+  if (typeof response?.data?.message === "string" && response.data.message) return response.data.message;
+  return error instanceof Error ? error.message : String(error);
+}
+
+async function saveScript(content: string) {
+  if (isGenerating.value || scriptEditIndex.value < 0 || scriptSaveBusy.value) return;
+  const nextScripts = planData.value.script.map((item, index) =>
+    index === scriptEditIndex.value ? { ...item, content } : item,
+  );
+  scriptSaveBusy.value = true;
+  try {
+    await axios.post("/scriptAgent/setPlanData", {
+      projectId: project.value?.id,
+      agentType: "scriptAgent",
+      data: {
+        storySkeleton: planData.value.storySkeleton,
+        adaptationStrategy: planData.value.adaptationStrategy,
+        script: nextScripts,
+      },
+      ...scriptSessionParams(),
+    });
+    await getPlanData();
+    window.$message.success($t("workbench.scriptAgent.msg.scriptUpdated"));
+    scriptEditVisible.value = false;
+  } catch (error) {
+    window.$message.error($t("workbench.scriptAgent.saveFailedDraftKept", { message: getSaveScriptErrorMessage(error) }));
+  } finally {
+    scriptSaveBusy.value = false;
+  }
 }
 async function delScript(index: number) {
   if (isGenerating.value) return;
