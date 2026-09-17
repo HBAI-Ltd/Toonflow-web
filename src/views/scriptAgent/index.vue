@@ -253,7 +253,7 @@
       v-model:visible="scriptEditVisible"
       :model-value="scriptEditData.content"
       :busy="isGenerating || scriptSaveBusy"
-      @save="saveScript" />
+      @save="saveStructuredScript" />
 
     <!-- 非科普项目继续使用原有 Markdown 编辑器。 -->
     <t-dialog
@@ -263,8 +263,8 @@
       width="80%"
       top="10vh"
       placement="center"
-      :confirm-btn="{ content: $t('workbench.scriptAgent.save'), theme: 'primary', disabled: isGenerating || scriptSaveBusy }"
-      @confirm="saveScript(scriptEditData.content)"
+      :confirm-btn="{ content: $t('workbench.scriptAgent.save'), theme: 'primary', disabled: isGenerating }"
+      @confirm="saveLegacyScript"
       @close="scriptEditVisible = false">
       <div class="scriptEditForm">
         <div class="scriptEditField">
@@ -746,7 +746,7 @@ function getSaveScriptErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : String(error);
 }
 
-async function saveScript(content: string) {
+async function saveStructuredScript(content: string) {
   if (isGenerating.value || scriptEditIndex.value < 0 || scriptSaveBusy.value) return;
   const nextScripts = planData.value.script.map((item, index) =>
     index === scriptEditIndex.value ? { ...item, content } : item,
@@ -771,6 +771,16 @@ async function saveScript(content: string) {
   } finally {
     scriptSaveBusy.value = false;
   }
+}
+
+async function saveLegacyScript() {
+  if (isGenerating.value) return;
+  if (scriptEditIndex.value < 0) return;
+  planData.value.script[scriptEditIndex.value] = { ...scriptEditData.value };
+  await scriptAgentStore().setPlanData();
+  await getPlanData();
+  window.$message.success($t("workbench.scriptAgent.msg.scriptUpdated"));
+  scriptEditVisible.value = false;
 }
 async function delScript(index: number) {
   if (isGenerating.value) return;
