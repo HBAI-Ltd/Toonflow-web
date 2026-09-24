@@ -14,22 +14,25 @@
       <div class="settingRight">
         <div class="sectionTitle">{{ currentMenuItem ? $t(currentMenuItem.label) : "" }}</div>
         <div class="settingContent">
-          <uiConfig v-if="activeMenu === 'ui'" />
-          <languageConfig v-if="activeMenu === 'language'" />
-          <vendorConfig v-if="activeMenu === 'vendorConfig'" />
-          <requestConfig v-if="activeMenu === 'requestConfig'" />
-          <loginConfig v-if="activeMenu === 'loginConfig'" />
-          <agentConfog v-if="activeMenu === 'agentConfog'" />
-          <promptManage v-if="activeMenu === 'promptManage'" />
-          <otherConfig v-if="activeMenu === 'otherConfig'" />
-          <dbConfig v-if="activeMenu === 'dbConfig'" />
-          <about v-if="activeMenu === 'about'" />
-          <logoutConfig v-if="activeMenu === 'logoutConfig'" />
-          <memoryConfig v-if="activeMenu === 'memoryConfig'" />
-          <fileManagement v-if="activeMenu === 'fileManagement'" />
-          <skillManagement v-if="activeMenu === 'skillManagement'" />
-          <devConfig v-if="activeMenu === 'devConfig'" />
-          <modelMap v-if="activeMenu === 'modelMap'" />
+          <settingErrorBoundary :reset-key="activeMenu">
+            <uiConfig v-if="activeMenu === 'ui'" />
+            <languageConfig v-if="activeMenu === 'language'" />
+            <vendorConfig v-if="activeMenu === 'vendorConfig'" />
+            <requestConfig v-if="activeMenu === 'requestConfig'" />
+            <sshTunnelConfig v-if="activeMenu === 'sshTunnel'" />
+            <loginConfig v-if="activeMenu === 'loginConfig'" />
+            <agentConfog v-if="activeMenu === 'agentConfog'" />
+            <promptManage v-if="activeMenu === 'promptManage'" />
+            <otherConfig v-if="activeMenu === 'otherConfig'" />
+            <dbConfig v-if="activeMenu === 'dbConfig'" />
+            <about v-if="activeMenu === 'about'" />
+            <logoutConfig v-if="activeMenu === 'logoutConfig'" />
+            <memoryConfig v-if="activeMenu === 'memoryConfig'" />
+            <fileManagement v-if="activeMenu === 'fileManagement'" />
+            <skillManagement v-if="activeMenu === 'skillManagement'" />
+            <devConfig v-if="activeMenu === 'devConfig'" />
+            <modelMap v-if="activeMenu === 'modelMap'" />
+          </settingErrorBoundary>
         </div>
       </div>
     </div>
@@ -43,6 +46,8 @@ const { showSetting, activeMenu, needUpdate } = storeToRefs(settingStore());
 import uiConfig from "./components/uiConfig.vue";
 import languageConfig from "./components/languageConfig.vue";
 import requestConfig from "./components/requestConfig.vue";
+import sshTunnelConfig from "./components/sshTunnelConfig.vue";
+import settingErrorBoundary from "./components/settingErrorBoundary.vue";
 import loginConfig from "./components/loginConfig.vue";
 import agentConfog from "./components/agentConfog.vue";
 import dbConfig from "./components/dbConfig.vue";
@@ -70,6 +75,7 @@ const menuItems = [
   { key: "dbConfig", label: "settings.menu.dbConfig", icon: "i-data" },
   { key: "fileManagement", label: "settings.menu.fileManagement", icon: "i-hard-disk" },
   { key: "otherConfig", label: "settings.menu.otherConfig", icon: "i-application-menu" },
+  { key: "sshTunnel", label: "settings.menu.sshTunnel", icon: "i-link" },
   { key: "requestConfig", label: "settings.menu.requestConfig", icon: "i-api" },
   { key: "devConfig", label: "settings.menu.devConfig", icon: "i-flask" },
   { key: "about", label: "settings.menu.about", icon: "i-info" },
@@ -115,6 +121,7 @@ const currentMenuItem = computed(() => menuItems.find((item) => item.key === act
     .settingContent {
       width: 100%;
       height: calc(70vh - 5vh - 4px);
+      overflow-y: auto;
     }
   }
 }

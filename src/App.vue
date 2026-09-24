@@ -6,6 +6,8 @@
     <titleBar v-if="isElectron" />
     <t-config-provider :global-config="globalConfig">
       <router-view></router-view>
+      <!-- 全局后台任务托盘：跨页面常驻，长任务切走路由后继续运行 -->
+      <globalTaskTray />
     </t-config-provider>
   </template>
 </template>

@@ -73,6 +73,14 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  autoSelectDefault: {
+    type: Boolean,
+    default: false,
+  },
+  preferImage2: {
+    type: Boolean,
+    default: false,
+  },
 });
 const emit = defineEmits<{
   change: [value: string, data?: any];
@@ -80,7 +88,7 @@ const emit = defineEmits<{
 
 async function onChange(value: any, { option }: any) {
   selectValue.value = value;
-  selectValueLabel.value = option.label;
+  selectValueLabel.value = option?.label ?? "";
   if (props.changeConfig) {
     const { data } = await axios.post("/modelSelect/getModelDetail", {
       modelId: value,
@@ -109,7 +117,7 @@ const titleMap = {
 function handleModelChange() {
   axios
     .post("/modelSelect/getModelList", { type: props.type })
-    .then((response) => {
+    .then(async (response) => {
       const groupMap = new Map<string, VendorOption>();
       response.data.forEach((item: any) => {
         const groupKey = item.id;
@@ -130,13 +138,42 @@ function handleModelChange() {
       });
       optionsData.value = Array.from(groupMap.values());
 
+      const allChildren = optionsData.value.map((i) => i.children).flat();
+
       if (
-        optionsData.value
-          .map((i) => i.children)
-          .flat()
-          .every((i) => `${i.id}:${i.value}` !== selectValue.value)
+        allChildren.every((i) => `${i.id}:${i.value}` !== selectValue.value)
       ) {
         selectValue.value = "";
+      }
+
+      // 如果开启了自动预选且当前值为空，智能挑选默认模型
+      if (props.autoSelectDefault && !selectValue.value && allChildren.length > 0) {
+        let chosen = allChildren[0];
+        if (props.preferImage2 || props.type === "image") {
+          const matchImg2 = allChildren.find(
+            (c) =>
+              /image-2|image2|gpt-image-2|flux/i.test(c.value) ||
+              /image-2|image2|gpt-image-2|flux/i.test(c.label)
+          );
+          if (matchImg2) {
+            chosen = matchImg2;
+          }
+        }
+        const fullVal = `${chosen.id}:${chosen.value}`;
+        selectValue.value = fullVal;
+        selectValueLabel.value = chosen.label;
+        if (props.changeConfig) {
+          try {
+            const { data } = await axios.post("/modelSelect/getModelDetail", {
+              modelId: fullVal,
+            });
+            emit("change", fullVal, data);
+          } catch (e) {
+            emit("change", fullVal);
+          }
+        } else {
+          emit("change", fullVal);
+        }
       }
     })
     .catch((error) => {

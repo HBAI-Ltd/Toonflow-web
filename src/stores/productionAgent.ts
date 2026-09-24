@@ -39,7 +39,8 @@ function makeProductionAgentStore(projectId: string) {
 
     const episodesId = ref<number>();
 
-    const { connected, messages, chat, stopGenerate, socket, status, reconnect, connect, disconnect } = useChat({
+    const { connected, messages, chat, stopGenerate, socket, status, reconnect, connect, disconnect, isGenerating, restoreHistory, loadingHistory, clearMessages } =
+      useChat({
       url: `${settingStore().baseUrl}/socket/productionAgent`,
       auth: () => ({
         isolationKey: `${projectId}:productionAgent:${episodesId.value}`,
@@ -122,12 +123,38 @@ function makeProductionAgentStore(projectId: string) {
       true,
       true,
     );
+    /** 智能推进开关：开启后决策层代替用户确认并自动推进；按项目持久化，重连后自动同步到后端 */
+    const autoAdvance = ref(localStorage.getItem(`productionAgent-autoAdvance-${projectId}`) === "1");
+
+    /** 思考档位：前端默认轻量思考；连接建立与重连时同步到后端，避免连接级状态回退为关闭 */
+    const thinkLevel = ref(1);
+
+    function updateAutoAdvance(value: boolean) {
+      autoAdvance.value = value;
+      localStorage.setItem(`productionAgent-autoAdvance-${projectId}`, value ? "1" : "0");
+      if (socket.value) {
+        socket.value.emit("setAutoAdvance", { enabled: value });
+      }
+    }
+
+    /** 智能推进续跑：走专用控制事件，不产生用户消息气泡、不写入对话记忆 */
+    function autoAdvanceContinue() {
+      if (!socket.value?.connected) return false;
+      socket.value.emit("autoAdvanceContinue");
+      return true;
+    }
+
     // 注册 getPlanData 事件（无需依赖组件生命周期）
     watch(
       socket,
       (s) => {
         if (s) {
+          // 连接建立后同步本地开关状态，避免后端停留在旧模式
+          s.emit("setAutoAdvance", { enabled: autoAdvance.value });
+          s.emit("updateThinkConfig", { think: thinkLevel.value > 0, thinlLevel: thinkLevel.value });
           s.on("connect", () => {
+            s.emit("setAutoAdvance", { enabled: autoAdvance.value });
+            s.emit("updateThinkConfig", { think: thinkLevel.value > 0, thinlLevel: thinkLevel.value });
             getHistory();
           });
           s.on("getFlowData", (_, callback) => {
@@ -186,11 +213,12 @@ function makeProductionAgentStore(projectId: string) {
           });
           s.on("generateDeriveAsset", async (data, callback) => {
             const assetsData = await batchGenerateAssets(data.ids);
-            callback({ success: true, message: assetsData });
+            // 请求失败时 batchGenerateAssets 返回 undefined，必须把失败传回给后端 Agent，否则安全阀无法感知
+            callback({ success: !!assetsData, message: assetsData ?? "衍生资产图片生成请求失败" });
           });
           s.on("generateStoryboard", async (data, callback) => {
             const storyData = await batchGenerateStoryboard(data.ids);
-            callback({ success: true, message: storyData });
+            callback({ success: !!storyData, message: storyData ?? "分镜图生成请求失败" });
           });
           s.on("addStoryboard", async (data, callback) => {
             const insertVal = {
@@ -291,7 +319,16 @@ function makeProductionAgentStore(projectId: string) {
           });
         }
         return data;
-      } catch (e) {}
+      } catch (e) {
+        // 请求失败：回滚预置的“生成中”状态，避免界面永远卡在生成中
+        flowData.value.assets.forEach((asset) => {
+          asset.derive?.forEach((derive) => {
+            if (allIds.includes(derive.id) && derive.state === "生成中") {
+              derive.state = "未生成" as "未生成" | "生成中" | "已完成" | "生成失败";
+            }
+          });
+        });
+      }
     }
     const assetsNotStateImageIds = computed(() => {
       const ids: number[] = [];
@@ -469,20 +506,27 @@ function makeProductionAgentStore(projectId: string) {
       });
     }
 
-    const loadingHistory = ref(false);
+    /**
+     * 从数据库恢复对话存档。
+     * 走 useChat.restoreHistory：按 journalRevision 比对，在途回合的流式内容不会被旧快照覆盖，
+     * 恢复期间到达的事件先入队、恢复完再重放，因此刷新/切页面回来能接着看到正在生成的内容。
+     */
     async function getHistory() {
-      loadingHistory.value = true;
-      const { data } = await axios.post(`/agents/getMemory`, {
-        projectId: projectId,
-        episodesId: episodesId.value,
-        agentType: "productionAgent",
+      return restoreHistory(async () => {
+        const { data } = await axios.post(`/agents/getMemory`, {
+          projectId: projectId,
+          episodesId: episodesId.value,
+          agentType: "productionAgent",
+        });
+        return data;
       });
-      messages.value = [];
-      messages.value = [...defMsg, ...data];
-      loadingHistory.value = false;
     }
 
-    const thinkLevel = ref(0);
+    /** 切剧集/清空记忆后调用：先清空本地再拉取，避免上一条会话的消息残留 */
+    function resetMessages() {
+      clearMessages();
+      messages.value = [...defMsg];
+    }
 
     function updateThinkConfig(value: number) {
       thinkLevel.value = value;
@@ -506,11 +550,16 @@ function makeProductionAgentStore(projectId: string) {
       stopStoryboardPolling,
       updateContext,
       getHistory,
+      resetMessages,
       loadingHistory,
       batchGenerateStoryboard,
       reconnect,
       thinkLevel,
       updateThinkConfig,
+      autoAdvance,
+      updateAutoAdvance,
+      autoAdvanceContinue,
+      isGenerating,
     };
   });
 }

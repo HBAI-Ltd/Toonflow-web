@@ -21,9 +21,20 @@
           <div class="title">
             {{ project.name }}
           </div>
-          <div>
+          <div class="f ac" style="gap: 4px;">
+            <t-tag shape="round" theme="primary" variant="light" v-if="project.contentFormat">
+              {{
+                project.contentFormat === 'series_drama'
+                  ? '连续剧'
+                  : project.contentFormat === 'single_film'
+                  ? '微电影'
+                  : project.contentFormat === 'explainer_video'
+                  ? '科普解说'
+                  : '超短剧'
+              }}
+            </t-tag>
             <t-tag shape="round">
-              {{ project.projectType == "novel" ? $t(`workbench.project.type.novel`) : $t(`workbench.project.type.script`) }}
+              {{ project.projectType == "explainer" ? $t(`workbench.project.type.explainer`) : project.projectType == "novel" ? $t(`workbench.project.type.novel`) : $t(`workbench.project.type.script`) }}
             </t-tag>
           </div>
         </div>
@@ -74,6 +85,7 @@ const editProjectData = ref<{
   imageQuality: "1K" | "2K" | "4K" | "";
   mode: string;
   directorManual: string;
+  contentFormat?: "vertical_episode" | "series_drama" | "single_film" | "explainer_video" | null;
 } | null>(null);
 
 async function getAllProject() {
@@ -116,8 +128,8 @@ async function openProject(projectId: string | undefined) {
   }
 
   project.value = item;
-  if (item.projectType === "novel") router.push(`/novel`);
-  else if (item.projectType === "script") router.push(`/script`);
+  if (item.projectType === "script") router.push(`/script`);
+  else router.push(`/novel`); // novel 与 explainer（知识文本）共用原文页
 }
 
 function openEdit(item: {
@@ -176,11 +188,17 @@ function addProjectFn(data: {
   videoModel: string;
   imageQuality: string;
   mode: string;
+  ipId?: number;
 }) {
   axios
     .post("/project/addProject", data)
-    .then(() => {
-      window.$message.success($t("workbench.project.msg.addSuccess"));
+    .then(({ data: result }) => {
+      const copiedRoleCount = Number(result?.copiedRoleCount || 0);
+      window.$message.success(
+        copiedRoleCount > 0
+          ? $t("workbench.project.msg.addSuccessWithRoles", { count: copiedRoleCount })
+          : $t("workbench.project.msg.addSuccess"),
+      );
       getAllProject();
     })
     .catch((e) => {

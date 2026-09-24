@@ -15,6 +15,11 @@
           <template #icon><i-plus /></template>
           {{ $t("workbench.script.batchAddScript") }}
         </t-button>
+        <t-select v-model="batchFilter" class="batchFilter">
+          <t-option value="all" :label="$t('workbench.script.batchFilter.all')" />
+          <t-option v-for="batch in importBatches" :key="batch.id" :value="String(batch.id)" :label="batch.name || $t('workbench.script.batchFilter.unnamed')" />
+          <t-option v-if="hasUnbatchedScripts" value="unbatched" :label="$t('workbench.script.batchFilter.unbatched')" />
+        </t-select>
       </div>
       <div class="actionBar-right f ac w" v-if="scripts.length">
         <t-button :theme="isAllSelected ? 'default' : 'primary'" variant="outline" @click="toggleSelectAll(!isAllSelected)">
@@ -35,11 +40,11 @@
       </div>
     </div>
     <div class="contentArea">
-      <div v-if="scripts.length === 0" class="emptyState">
+      <div v-if="visibleScripts.length === 0" class="emptyState">
         <t-empty />
       </div>
       <div v-else class="scriptsList f w">
-        <div v-for="(item, index) in scripts" :key="index" @click="handleScriptClick(item)" class="scriptCard">
+        <div v-for="(item, index) in visibleScripts" :key="item.id || index" @click="handleScriptClick(item)" class="scriptCard">
           <t-card shadow hover-shadow :style="{ width: '400px', cursor: 'pointer' }">
             <template #header>
               <div class="cardHeader">
@@ -97,18 +102,37 @@ interface Script {
   id: number;
   name: string;
   content: string;
+  importId?: number | null;
   createTime?: number;
   extractState?: -1 | 0 | 1 | 2; // -1 失败 0 正在提取 1 成功 等待提取
   errorReason?: string;
   relatedAssets?: ScriptAsset[];
 }
+interface ImportBatch {
+  id: number;
+  name: string;
+  chapterCount: number;
+}
 const scripts = ref<Script[]>([]);
+const importBatches = ref<ImportBatch[]>([]);
+const batchFilter = ref("all");
 const searchQuery = ref("");
 const addScriptShow = ref(false);
 const selectedIds = ref<number[]>([]);
 const scriptLoad = ref(false);
 const batchScriptShow = ref(false);
-const isAllSelected = computed(() => scripts.value.length > 0 && selectedIds.value.length === scripts.value.length);
+const hasImportId = (importId?: number | null) => {
+  const value = Number(importId);
+  return Number.isFinite(value) && value > 0;
+};
+const hasUnbatchedScripts = computed(() => scripts.value.some((script) => !hasImportId(script.importId)));
+const visibleScripts = computed(() => {
+  if (batchFilter.value === "all") return scripts.value;
+  if (batchFilter.value === "unbatched") return scripts.value.filter((script) => !hasImportId(script.importId));
+  const importId = Number(batchFilter.value);
+  return scripts.value.filter((script) => Number(script.importId) === importId);
+});
+const isAllSelected = computed(() => visibleScripts.value.length > 0 && selectedIds.value.length === visibleScripts.value.length);
 function toggleSelect(id: number) {
   const idx = selectedIds.value.indexOf(id);
   if (idx === -1) {
@@ -120,11 +144,25 @@ function toggleSelect(id: number) {
 
 function toggleSelectAll(checked: boolean) {
   if (checked) {
-    selectedIds.value = scripts.value.map((s) => s.id);
+    selectedIds.value = visibleScripts.value.map((s) => s.id);
   } else {
     selectedIds.value = [];
   }
 }
+watch(batchFilter, () => {
+  selectedIds.value = selectedIds.value.filter((id) => visibleScripts.value.some((script) => script.id === id));
+});
+
+async function getImportList() {
+  try {
+    const { data } = await axios.post("/novel/getImportList", { projectId: project.value?.id });
+    importBatches.value = Array.isArray(data) ? data : [];
+  } catch (error) {
+    console.error("获取剧本批次失败:", error);
+    window.$message.error($t("workbench.script.batchFilter.loadFailed"));
+  }
+}
+
 // 搜索剧本
 async function searchScripts() {
   try {
@@ -133,12 +171,16 @@ async function searchScripts() {
       name: searchQuery.value,
     });
     scripts.value = res.data;
+    selectedIds.value = selectedIds.value.filter((id) => scripts.value.some((script) => script.id === id));
   } catch (error) {
     console.error("搜索剧本失败:", error);
     window.$message.error($t("workbench.script.msg.searchFailed"));
   }
 }
-onMounted(searchScripts);
+onMounted(() => {
+  searchScripts();
+  getImportList();
+});
 // 搜索输入变化
 function onChange() {
   searchScripts();
@@ -337,6 +379,9 @@ onUnmounted(() => {
     margin-top: 1.25rem;
     .actionBar-left {
       gap: 10px;
+      .batchFilter {
+        width: 220px;
+      }
     }
     .actionBar-right {
       gap: 12px;

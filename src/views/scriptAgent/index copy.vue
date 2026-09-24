@@ -168,6 +168,7 @@
 </template>
 
 <script setup lang="ts">
+// @ts-nocheck
 import _ from "lodash";
 import axios from "@/utils/axios";
 import projectStore from "@/stores/project";

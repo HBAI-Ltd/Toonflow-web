@@ -6,7 +6,7 @@
       </div>
       <div class="itemBox fc ac">
         <t-tooltip
-          :content="menu.labelKey ? $t(menu.labelKey) : ''"
+          :content="menuLabel(menu)"
           placement="right"
           destroyOnClose
           :showArrow="false"
@@ -45,7 +45,7 @@
         </div>
         <div class="rightBtnList f ac">
           <t-tooltip
-            :content="menu.labelKey ? $t(menu.labelKey) : ''"
+            :content="menuLabel(menu)"
             placement="bottom"
             destroyOnClose
             :showArrow="false"
@@ -53,7 +53,7 @@
             :key="index">
             <div
               class="item fc c"
-              v-if="menu.type === 'btn' && (project.projectType === 'novel' || !menu.nodelOnly)"
+              v-if="menu.type === 'btn' && (['novel', 'explainer'].includes(project.projectType) || !menu.nodelOnly)"
               :class="{ active: activeMenu == menu.path }"
               @click="handleClick(menu)">
               <component :is="menu.icon" class="icon" />
@@ -85,7 +85,8 @@ const { showSetting, isElectron, needUpdate } = storeToRefs(settingStore());
 const menuList = ref([
   { type: "btn", path: "/project", labelKey: "workbench.menu.myProject", icon: "i-folder-close" },
   { type: "btn", path: "/task", labelKey: "workbench.menu.taskCenter", icon: "i-view-list" },
-  // { type: "divider" },
+  { type: "btn", path: "/faceAsset", labelKey: "workbench.menu.faceAsset", icon: "i-face-recognition" },
+  { type: "btn", path: "/ip", labelKey: "workbench.menu.ipLibrary", icon: "i-peoples-two" },
 ]);
 
 const rightBtnList = ref([
@@ -109,8 +110,17 @@ watch(
   },
 );
 
+// 科普项目的「小说原文」入口显示为「知识文本」
+function menuLabel(menu: any) {
+  if (menu.path === "/novel" && project.value?.projectType === "explainer") return $t("workbench.menu.explainerText");
+  return menu.labelKey ? $t(menu.labelKey) : "";
+}
+
 function handleClick(menu: any) {
-  if (menu.needProject && !project.value) return;
+  if (menu.needProject && !project.value) {
+    NotifyPlugin.warning({ title: $t("workbench.selectProject"), content: $t("workbench.menu.needProjectTip") });
+    return;
+  }
   router.push(menu.path);
   activeMenu.value = menu.path;
 }

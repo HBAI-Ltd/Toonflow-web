@@ -19,19 +19,19 @@
           :name="(message as any).name"
           :placement="message.role === 'user' ? 'right' : 'left'"
           :variant="message.role === 'user' ? 'base' : 'outline'"
-          :handleActions="message.role === 'user' ? {} : handleActions"
+          :handleActions="message.role === 'user' || isGenerating ? {} : handleActions"
           :status="message.status"
           allowContentSegmentCustom>
-          <!-- <template #actionbar>
-            <t-chat-actionbar :action-bar="['replay', 'copy']" />
-          </template> -->
+          <template #actionbar>
+            <span v-if="message.status === 'stop' || (message as any).ext?.interrupted" class="interruptedNotice">已中断，已生成内容已保存</span>
+          </template>
         </t-chat-message>
       </t-chat-list>
       <t-chat-sender
         class="inputBox"
-        :disabled="status === 'pending' || status === 'streaming' || !connected"
+        :disabled="isGenerating || !connected"
         v-model="inputValue"
-        :loading="status === 'pending' || status === 'streaming'"
+        :loading="isGenerating"
         :placeholder="$t('workbench.production.chatBox.inputPlaceholder')"
         @send="handleSend"
         @stop="handleStop">
@@ -65,7 +65,7 @@
               </template>
             </t-popup>
             <t-popup trigger="click" placement="top" v-if="showThink">
-              <t-button size="small" variant="outline" :theme="['default', 'success', 'warning', 'danger'][thinkLevel] || 'default'">
+              <t-button size="small" variant="outline" :theme="(['default', 'success', 'warning', 'danger'] as const)[thinkLevel] || 'default'">
                 <template #icon>
                   <i-tips size="16" />
                 </template>
@@ -84,6 +84,20 @@
                 </div>
               </template>
             </t-popup>
+            <t-tooltip :content="autoAdvance ? $t('workbench.scriptAgent.autoAdvance.onTip') : $t('workbench.scriptAgent.autoAdvance.offTip')" placement="top">
+              <t-button
+                size="small"
+                variant="outline"
+                :theme="autoAdvance ? 'warning' : 'default'"
+                :disabled="!connected"
+                @click="toggleAutoAdvance()">
+                <template #icon>
+                  <i-pause v-if="autoAdvance" size="16" />
+                  <i-play v-else size="16" />
+                </template>
+                {{ autoAdvance ? $t("workbench.scriptAgent.autoAdvance.on") : $t("workbench.scriptAgent.autoAdvance.off") }}
+              </t-button>
+            </t-tooltip>
           </div>
         </template>
       </t-chat-sender>
@@ -98,7 +112,7 @@ import axios from "@/utils/axios";
 import productionAgentStore from "@/stores/productionAgent";
 import projectStore from "@/stores/project";
 const { project } = storeToRefs(projectStore());
-const { connected, messages, status, episodesId, loadingHistory, thinkLevel } = storeToRefs(productionAgentStore());
+const { connected, messages, status, episodesId, loadingHistory, thinkLevel, autoAdvance, isGenerating } = storeToRefs(productionAgentStore());
 const thinkLevelOptions = [
   { label: $t("workbench.scriptAgent.thinkLevel.off"), value: 0 },
   { label: $t("workbench.scriptAgent.thinkLevel.light"), value: 1 },
@@ -118,6 +132,18 @@ function handleSend(text: string) {
 }
 function handleStop() {
   productionAgentStore().stopGenerate();
+}
+
+/** 智能推进开关：开启后决策层代替用户确认并自动推进；若流程已启动且当前空闲，立即续跑 */
+function toggleAutoAdvance() {
+  const next = !autoAdvance.value;
+  productionAgentStore().updateAutoAdvance(next);
+  const hasConversation = messages.value.some((m) => m.role === "user");
+  // 最后一条消息是用户消息 = 有回合在途（首包前 isGenerating 尚为 false），此时补发续跑会触发后端 abort 杀掉当前回合
+  const awaitingReply = messages.value[messages.value.length - 1]?.role === "user";
+  if (next && hasConversation && connected.value && !isGenerating.value && !awaitingReply) {
+    productionAgentStore().autoAdvanceContinue();
+  }
 }
 function handleReconnect() {
   const dialog = DialogPlugin.confirm({
@@ -153,9 +179,11 @@ function handleClearMemory(type: "message" | "summary" | "all") {
     cancelBtn: $t("workbench.production.cancel"),
     theme: "warning",
     onConfirm: async () => {
+      if (isGenerating.value) return;
       await axios.post(`/agents/clearMemory`, { projectId: project.value?.id, agentType: "productionAgent", episodesId: episodesId.value, type });
       window.$message.success($t("workbench.production.chatBox.memoryCleared", { type: memoryTypeLabel[type] }));
       dialog.destroy();
+      if (type !== "summary") productionAgentStore().resetMessages();
       productionAgentStore().getHistory();
     },
   });
@@ -188,14 +216,15 @@ onMounted(async () => {
     showThink.value = true;
   }
 });
-watch(connected, (newVal) => {
-  if (status.value != "idle" && newVal) {
-    status.value = "idle";
-  }
-});
+// 连接状态不再兜底改写 status：是否在生成由后端 chat:state 决定，
+// 否则重连后会把"后台仍在跑"的状态误清成空闲。
 </script>
 
 <style lang="scss" scoped>
+.interruptedNotice {
+  font-size: 12px;
+  color: var(--td-text-color-placeholder);
+}
 .rightChatBox {
   position: absolute;
   top: 10px;

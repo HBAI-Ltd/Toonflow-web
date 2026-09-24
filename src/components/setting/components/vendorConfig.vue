@@ -41,7 +41,7 @@
             :message="$t('settings.vendor.msg.vendorNeedsUpdate')"
             style="margin-bottom: 12px" />
           <t-form-item>
-            <MdPreview v-model="currentVendor.description" :theme="themeSetting.mode" />
+            <MdPreview v-model="currentVendor.description" :theme="mdTheme" />
           </t-form-item>
           <t-form-item v-for="input in requiredInputs" :key="input.key" :name="input.key">
             <template #label>
@@ -155,6 +155,26 @@
                 <t-radio :value="true">{{ $t("settings.vendor.supported") }}</t-radio>
                 <t-radio :value="false">{{ $t("settings.vendor.notSupported") }}</t-radio>
               </t-radio-group>
+            </t-form-item>
+            <t-form-item name="apiKey" :label="$t('settings.vendor.modelApiKey')">
+              <t-input v-model="modelFormData.apiKey" type="password" :placeholder="$t('settings.vendor.modelApiKeyPlaceholder')" clearable />
+            </t-form-item>
+          </template>
+
+          <template v-if="modelFormData.type === 'tts'">
+            <t-form-item name="voices" :label="$t('settings.vendor.ttsVoices')">
+              <div style="width: 100%; display: flex; flex-direction: column; gap: 8px">
+                <div v-for="(v, vi) in modelFormData.voices" :key="vi" style="display: flex; gap: 8px; align-items: center">
+                  <t-input v-model="v.title" :placeholder="$t('settings.vendor.voiceTitlePlaceholder')" style="flex: 1" />
+                  <t-input v-model="v.voice" :placeholder="$t('settings.vendor.voiceIdPlaceholder')" style="flex: 1" />
+                  <t-button variant="text" theme="danger" size="small" :disabled="modelFormData.voices.length <= 1" @click="modelFormData.voices.splice(vi, 1)">
+                    <template #icon><i-delete size="14" /></template>
+                  </t-button>
+                </div>
+                <t-button variant="outline" size="small" style="align-self: flex-start" @click="modelFormData.voices.push({ title: '', voice: '' })">
+                  {{ $t("settings.vendor.addVoice") }}
+                </t-button>
+              </div>
             </t-form-item>
           </template>
 
@@ -351,6 +371,7 @@ import TextModelTest from "./vendorTest/TextModelTest.vue";
 import ImageModelTest from "./vendorTest/ImageModelTest.vue";
 import VideoModelTest from "./vendorTest/VideoModelTest.vue";
 const { themeSetting } = storeToRefs(settingStore());
+const mdTheme = computed(() => (themeSetting.value.mode === "auto" ? "light" : themeSetting.value.mode));
 
 // ── 类型 ──
 interface TextModel {
@@ -358,6 +379,7 @@ interface TextModel {
   modelName: string;
   type: "text";
   think: boolean;
+  apiKey?: string;
 }
 
 interface ImageModel {
@@ -383,7 +405,14 @@ interface VideoModel {
   durationResolutionMap: { duration: number[]; resolution: string[] }[];
 }
 
-type VendorModel = TextModel | ImageModel | VideoModel;
+interface TtsModel {
+  name: string;
+  modelName: string;
+  type: "tts";
+  voices: { title: string; voice: string }[];
+}
+
+type VendorModel = TextModel | ImageModel | VideoModel | TtsModel;
 
 interface VendorInput {
   key: string;
@@ -458,6 +487,7 @@ const modelTypeOptions = [
   { value: "text", label: "settings.vendor.textModel" },
   { value: "image", label: "settings.vendor.imageModel" },
   { value: "video", label: "settings.vendor.videoModel" },
+  { value: "tts", label: "settings.vendor.ttsModel" },
 ];
 
 const imageModeOptions = [
@@ -745,26 +775,30 @@ interface DrmRow {
 const modelFormData = ref({
   name: "",
   modelName: "",
-  type: "text" as "text" | "image" | "video",
+  type: "text" as "text" | "image" | "video" | "tts",
   think: false,
+  apiKey: "",
   mode: [] as string[],
   mixedMode: [] as string[], // referenceOptions 选中项，单独存放，构建时作为数组元素加入 mode
   mixedModeCount: {} as Record<string, number>, // 每个 reference 的数量限制
   audio: "optional" as "optional" | false | true,
   durationResolutionMap: [{ duration: [] as string[], resolution: [] as string[] }] as DrmRow[],
+  voices: [] as { title: string; voice: string }[], // TTS 音色列表
 });
 
-function resetModelForm(type: "text" | "image" | "video" = "text") {
+function resetModelForm(type: "text" | "image" | "video" | "tts" = "text") {
   modelFormData.value = {
     name: "",
     modelName: "",
     type,
     think: false,
+    apiKey: "",
     mode: [],
     mixedMode: [],
     mixedModeCount: {},
     audio: "optional",
     durationResolutionMap: [{ duration: [], resolution: [] }],
+    voices: [],
   };
 }
 
@@ -794,6 +828,23 @@ function buildModelFromForm(): VendorModel | null {
       modelName,
       type: "text",
       think: modelFormData.value.think,
+      apiKey: modelFormData.value.apiKey.trim() || undefined,
+    };
+  }
+
+  if (modelFormData.value.type === "tts") {
+    const voices = modelFormData.value.voices
+      .map((v) => ({ title: v.title.trim(), voice: v.voice.trim() }))
+      .filter((v) => v.title && v.voice);
+    if (!voices.length) {
+      window.$message.error($t("settings.vendor.msg.addVoice"));
+      return null;
+    }
+    return {
+      name,
+      modelName,
+      type: "tts" as const,
+      voices,
     };
   }
 
@@ -920,11 +971,13 @@ function handleEditModel(model: VendorModel) {
       modelName: model.modelName,
       type: "text",
       think: model.think,
+      apiKey: (model as any).apiKey || "",
       mode: [],
       mixedMode: [],
       mixedModeCount: {},
       audio: "optional",
       durationResolutionMap: [{ duration: [], resolution: [] }],
+      voices: [],
     };
   }
 
@@ -934,11 +987,13 @@ function handleEditModel(model: VendorModel) {
       modelName: model.modelName,
       type: "image",
       think: false,
+      apiKey: "",
       mode: [...model.mode],
       mixedMode: [],
       mixedModeCount: {},
       audio: "optional",
       durationResolutionMap: [{ duration: [], resolution: [] }],
+      voices: [],
     };
   }
 
@@ -972,11 +1027,29 @@ function handleEditModel(model: VendorModel) {
       modelName: model.modelName,
       type: "video",
       think: false,
+      apiKey: "",
       mode: mixedMode.length > 0 ? [...flatMode, "multiReference"] : flatMode,
       mixedMode,
       mixedModeCount,
       audio: model.audio,
       durationResolutionMap: rows,
+      voices: [],
+    };
+  }
+
+  if (model.type === "tts") {
+    modelFormData.value = {
+      name: model.name,
+      modelName: model.modelName,
+      type: "tts",
+      think: false,
+      apiKey: "",
+      mode: [],
+      mixedMode: [],
+      mixedModeCount: {},
+      audio: "optional",
+      durationResolutionMap: [{ duration: [], resolution: [] }],
+      voices: (model.voices ?? []).map((v) => ({ title: v.title ?? "", voice: v.voice ?? "" })),
     };
   }
 
@@ -991,6 +1064,8 @@ function handleTestModel(item: (typeof vendorModels.value)[number]) {
     imageTestVisible.value = true;
   } else if (item.type === "video") {
     videoTestVisible.value = true;
+  } else if (item.type === "tts") {
+    window.$message.info($t("settings.vendor.msg.ttsTestPending"));
   }
 }
 

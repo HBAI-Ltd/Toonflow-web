@@ -1,8 +1,29 @@
 <template>
   <div class="scriptAgent">
+    <div class="batchHeader f ac jb">
+      <div class="batchSelector f ac">
+        <span class="batchLabel">{{ $t("workbench.scriptAgent.sourceBatch") }}</span>
+        <t-select
+          v-model="selectedImportId"
+          class="batchSelect"
+          :loading="importListLoading"
+          :disabled="isGenerating"
+          @change="handleBatchChange">
+          <t-option v-if="showMainline" :value="MAINLINE_IMPORT" :label="$t('workbench.scriptAgent.projectMainline')" />
+          <t-option v-for="batch in importBatches" :key="batch.id" :value="String(batch.id)" :label="batch.name || $t('workbench.scriptAgent.unnamedBatch')" />
+        </t-select>
+      </div>
+      <span class="currentBatchName">{{ currentBatchName }}</span>
+    </div>
     <Splitpanes class="default-theme data f">
       <Pane :size="30" :min-size="15" class="operate">
-        <div class="box pr">
+        <div class="box pr" :class="{ isGenerating }">
+          <div class="resetBar">
+            <t-button size="small" theme="danger" variant="outline" @click="handleResetConversation()" :disabled="isGenerating">
+              <template #icon><i-refresh size="14" /></template>
+              {{ $t("workbench.scriptAgent.resetConversation") }}
+            </t-button>
+          </div>
           <t-chat-list :clear-history="false">
             <t-chat-message
               v-for="message in messages"
@@ -11,21 +32,35 @@
               :name="(message as any).name"
               :placement="message.role === 'user' ? 'right' : 'left'"
               :variant="message.role === 'user' ? 'base' : 'outline'"
-              :handleActions="message.role === 'user' ? {} : handleActions"
+              :handleActions="message.role === 'user' || isGenerating ? {} : handleActions"
               :status="message.status"
-              allowContentSegmentCustom></t-chat-message>
+              allowContentSegmentCustom>
+              <template #actionbar>
+                <span v-if="message.status === 'stop' || message.ext?.interrupted" class="interruptedNotice">已中断，已生成内容已保存</span>
+                <div v-if="canRetry(message) || canRollback(message)" class="msgActions" :class="message.role === 'user' ? 'isUser' : 'isAssistant'">
+                  <t-button v-if="canRetry(message)" size="small" variant="text" theme="default" @click="handleRetry(message)">
+                    <template #icon><i-refresh size="13" /></template>
+                    {{ message.role === "user" ? $t("workbench.scriptAgent.retry") : $t("workbench.scriptAgent.regenerate") }}
+                  </t-button>
+                  <t-button v-if="canRollback(message)" size="small" variant="text" theme="default" @click="handleRollback(message)">
+                    <template #icon><i-rollback size="13" /></template>
+                    {{ $t("workbench.scriptAgent.rollback") }}
+                  </t-button>
+                </div>
+              </template>
+            </t-chat-message>
           </t-chat-list>
           <t-chat-sender
             class="inputBox"
-            :disabled="status === 'pending' || status === 'streaming'"
+            :disabled="isGenerating"
             v-model="inputValue"
-            :loading="status === 'pending' || status === 'streaming'"
+            :loading="isGenerating"
             placeholder="$t('workbench.scriptAgent.inputPlaceholder')"
             @send="handleSend"
             @stop="handleStop">
             <template #footer-prefix>
               <t-popup trigger="click" placement="top-left">
-                <t-button shape="square" variant="outline" size="small" :disabled="status === 'pending' || status === 'streaming'">
+                <t-button shape="square" variant="outline" size="small" :disabled="isGenerating">
                   <template #icon>
                     <i-setting-config size="16" />
                   </template>
@@ -75,6 +110,24 @@
                   </div>
                 </template>
               </t-popup>
+              <t-tooltip
+                v-if="project?.contentFormat === 'explainer_video'"
+                :content="autoAdvance ? $t('workbench.scriptAgent.autoAdvance.onTip') : $t('workbench.scriptAgent.autoAdvance.offTip')"
+                placement="top">
+                <t-button
+                  size="small"
+                  variant="outline"
+                  :theme="autoAdvance ? 'warning' : 'default'"
+                  style="margin-left: 8px"
+                  :disabled="!connected"
+                  @click="toggleAutoAdvance()">
+                  <template #icon>
+                    <i-pause v-if="autoAdvance" size="16" />
+                    <i-play v-else size="16" />
+                  </template>
+                  {{ autoAdvance ? $t("workbench.scriptAgent.autoAdvance.on") : $t("workbench.scriptAgent.autoAdvance.off") }}
+                </t-button>
+              </t-tooltip>
             </template>
           </t-chat-sender>
           <i-dot class="dot" theme="outline" :fill="connected ? 'green' : 'red'" />
@@ -95,15 +148,27 @@
           <t-tabs v-model="currentTable">
             <template #action>
               <div class="ac" v-if="currentTable == 1">
-                <t-button @click="editMdPreview">{{ $t("workbench.scriptAgent.edit") }}</t-button>
+                <t-button :disabled="isGenerating" @click="editMdPreview">{{ $t("workbench.scriptAgent.edit") }}</t-button>
               </div>
               <div class="ac" v-else-if="currentTable == 2">
-                <t-button @click="editMdPreview">{{ $t("workbench.scriptAgent.edit") }}</t-button>
+                <t-button :disabled="isGenerating" @click="editMdPreview">{{ $t("workbench.scriptAgent.edit") }}</t-button>
               </div>
             </template>
             <!-- <t-tab-panel :value="1" :label="$t('workbench.scriptAgent.chapterEvents')">
               <pre>{{ planData.event }}</pre>
             </t-tab-panel> -->
+            <t-tab-panel v-if="project?.contentFormat === 'explainer_video'" :value="0" :label="$t('workbench.scriptAgent.preflightResult')">
+              <div class="panelContent">
+                <PreflightPanel
+                  :state="planData.preflight"
+                  :report="planData.preflightReport"
+                  :busy="isGenerating"
+                  :connected="connected"
+                  :session-key="sessionAgentStore.$id"
+                  :theme="themeSetting.mode === 'auto' ? undefined : themeSetting.mode"
+                  @action="handlePreflightAction" />
+              </div>
+            </t-tab-panel>
             <t-tab-panel :value="1" :label="$t('workbench.scriptAgent.storySkeleton')">
               <div class="panelContent">
                 <MdPreview
@@ -125,7 +190,7 @@
             <t-tab-panel :value="3" :label="$t('workbench.scriptAgent.script')">
               <div class="panelContent">
                 <t-empty v-if="!planData.script?.length" :title="$t('workbench.scriptAgent.noContent')" />
-                <div v-else class="scriptList">
+                <div v-else class="scriptList" :class="{ structuredScriptList: isExplainerProject }">
                   <div
                     v-for="(item, index) in planData.script"
                     :key="getScriptCardKey(item, index)"
@@ -143,17 +208,26 @@
                             <i-right v-else size="14" />
                           </template>
                         </t-button>
-                        <t-button size="small" @click="editScript(index)">
+                        <t-button size="small" :disabled="isGenerating" @click="editScript(index)">
                           <template #icon><i-edit size="14" /></template>
                         </t-button>
-                        <t-button theme="danger" variant="outline" size="small" @click="delScript(index)">
+                        <t-button theme="danger" variant="outline" size="small" :disabled="isGenerating" @click="delScript(index)">
                           <template #icon><i-delete size="14" /></template>
                         </t-button>
                       </div>
                     </div>
                     <div class="scriptCardBody" v-if="!isCardCollapsed(item, index)">
-                      <pre v-if="item.content">{{ item.content }}</pre>
-                      <span v-else class="emptyContent">{{ $t("workbench.scriptAgent.noContent") }}</span>
+                      <template v-if="isExplainerProject">
+                        <StructuredScriptViewer v-if="structuredScripts[index]?.data" :script="structuredScripts[index].data" />
+                        <div v-else class="scriptParseError" role="alert">
+                          <strong>{{ $t("workbench.scriptAgent.invalidStructuredScript") }}</strong>
+                          <p>{{ structuredScripts[index]?.error }}</p>
+                        </div>
+                      </template>
+                      <template v-else>
+                        <pre v-if="item.content">{{ item.content }}</pre>
+                        <t-empty v-else :title="$t('workbench.scriptAgent.noContent')" />
+                      </template>
                     </div>
                   </div>
                 </div>
@@ -174,15 +248,23 @@
     </Splitpanes>
     <editMdPreivew v-model="dialogVisible" @save="onConfirm" :content="editContent" />
 
-    <!-- 剧本编辑对话框 -->
+    <ScriptJsonEditor
+      v-if="isExplainerProject"
+      v-model:visible="scriptEditVisible"
+      :model-value="scriptEditData.content"
+      :busy="isGenerating || scriptSaveBusy"
+      @save="saveStructuredScript" />
+
+    <!-- 非科普项目继续使用原有 Markdown 编辑器。 -->
     <t-dialog
+      v-else
       v-model:visible="scriptEditVisible"
       :header="$t('workbench.scriptAgent.editScript')"
       width="80%"
       top="10vh"
       placement="center"
-      :confirm-btn="{ content: $t('workbench.scriptAgent.save'), theme: 'primary' }"
-      @confirm="saveScript"
+      :confirm-btn="{ content: $t('workbench.scriptAgent.save'), theme: 'primary', disabled: isGenerating }"
+      @confirm="saveLegacyScript"
       @close="scriptEditVisible = false">
       <div class="scriptEditForm">
         <div class="scriptEditField">
@@ -201,6 +283,27 @@
         </div>
       </div>
     </t-dialog>
+
+    <!-- 可编辑重试：预填该轮用户消息原文，可改字后重发；不改字直接发送即原样重试 -->
+    <t-dialog
+      :visible="retryEditVisible"
+      :header="$t('workbench.scriptAgent.retryEditTitle')"
+      :footer="false"
+      width="560px"
+      @close="retryEditVisible = false">
+      <t-textarea
+        v-model="retryEditText"
+        :autosize="{ minRows: 4, maxRows: 12 }"
+        :placeholder="$t('workbench.scriptAgent.retryEditPlaceholder')" />
+      <div class="f ac" style="justify-content: flex-end; gap: 10px; margin-top: 12px">
+        <t-button variant="outline" :disabled="retryEditBusy" @click="retryEditVisible = false">
+          {{ $t("workbench.scriptAgent.msg.cancel") }}
+        </t-button>
+        <t-button theme="primary" :loading="retryEditBusy" :disabled="!retryEditText.trim() || retryEditBusy" @click="confirmRetryEdit">
+          {{ $t("workbench.scriptAgent.retryEditSend") }}
+        </t-button>
+      </div>
+    </t-dialog>
   </div>
 </template>
 
@@ -217,16 +320,71 @@ import projectStore from "@/stores/project";
 const { project } = storeToRefs(projectStore());
 import editMdPreivew from "@/components/editMdPreivew.vue";
 import scriptAgentStore from "@/stores/scriptAgent";
-const { connected, messages, status, planData, thinkLevel } = storeToRefs(scriptAgentStore());
+import PreflightPanel from "./components/PreflightPanel.vue";
+import ScriptJsonEditor from "./components/ScriptJsonEditor.vue";
+import StructuredScriptViewer from "./components/StructuredScriptViewer.vue";
+import { buildPreflightAction } from "@/utils/preflight";
+import type { PreflightAction } from "@/utils/preflight";
+import { parseStructuredScriptJson } from "@/utils/structuredScript";
+import { getSaveScriptErrorMessage } from "./saveScriptError";
+const route = useRoute();
+const router = useRouter();
+const { connected, messages, status, planData, thinkLevel, autoAdvance, isGenerating } = storeToRefs(scriptAgentStore());
+const sessionAgentStore = scriptAgentStore();
+const isExplainerProject = computed(() => project.value?.contentFormat === "explainer_video");
+const structuredScripts = computed(() => {
+  if (!isExplainerProject.value) return [];
+  return (planData.value.script ?? []).map((item, index) => {
+    try {
+      return { item, index, data: parseStructuredScriptJson(item.content), error: "" };
+    } catch (error) {
+      return { item, index, data: null, error: error instanceof Error ? error.message : String(error) };
+    }
+  });
+});
+interface ImportBatch {
+  id: number;
+  name: string;
+  chapterCount: number;
+  scriptCount: number;
+}
+const MAINLINE_IMPORT = "mainline";
+const queryNumber = (name: string) => {
+  const value = Number(route.query[name]);
+  return Number.isFinite(value) && value > 0 ? value : undefined;
+};
+const routeImportId = computed(() => queryNumber("importId"));
+const selectedImportId = ref(routeImportId.value !== undefined ? String(routeImportId.value) : MAINLINE_IMPORT);
+const importBatches = ref<ImportBatch[]>([]);
+const importListLoading = ref(false);
+/**
+ * 主线 = 批次功能之前的遗留会话（作用域不带 importId，取材范围是项目全量）。
+ * 项目一旦有了批次，主线和批次覆盖的是同一批原文，却各存一份骨架/策略/预审状态，
+ * 留在下拉框里只会让人误选、误以为数据丢了。所以有批次时不再提供，
+ * 只有当前会话本来就在主线上时保留该项，避免选择器显示空白。
+ */
+const showMainline = computed(() => !importBatches.value.length || selectedImportId.value === MAINLINE_IMPORT);
+const routeScriptId = computed(() => queryNumber("scriptId"));
+const routeMerge = computed(() => routeImportId.value !== undefined && route.query.merge === "1");
+const scriptSessionParams = () => ({
+  ...(routeImportId.value !== undefined ? { importId: routeImportId.value } : {}),
+  ...(routeScriptId.value !== undefined ? { scriptId: routeScriptId.value } : {}),
+});
 const thinkLevelOptions = [
   { label: $t("workbench.scriptAgent.thinkLevel.off"), value: 0 },
   { label: $t("workbench.scriptAgent.thinkLevel.light"), value: 1 },
   { label: $t("workbench.scriptAgent.thinkLevel.deep"), value: 2 },
   { label: $t("workbench.scriptAgent.thinkLevel.extreme"), value: 3 },
 ];
-import productionAgentStore from "@/stores/productionAgent";
-const currentTable = ref(1);
-const inputValue = ref("");
+const currentTable = ref(project.value?.contentFormat === "explainer_video" ? 0 : 1);
+const draftKey = `scriptAgent-draft-${project.value?.id}-i${routeImportId.value ?? "main"}-s${routeScriptId.value ?? "main"}`;
+const inputValue = ref(localStorage.getItem(draftKey) ?? "");
+watch(inputValue, value => localStorage.setItem(draftKey, value));
+const currentBatchName = computed(() => {
+  if (selectedImportId.value === MAINLINE_IMPORT) return $t("workbench.scriptAgent.projectMainline");
+  const batch = importBatches.value.find((item) => String(item.id) === selectedImportId.value);
+  return batch?.name || $t("workbench.scriptAgent.unnamedBatch");
+});
 const toolbars: ToolbarNames[] = [
   "bold",
   "underline",
@@ -269,32 +427,199 @@ onMounted(() => {
   if (messages.value.length <= 0) messages.value = [...defMsg, ...messages.value];
   getPlanData();
   getNovel();
-  scriptAgentStore().connect();
+  getImportList();
+  sessionAgentStore.connect();
 
-  if (messages.value.length <= 1) getHistory();
+  void getHistory();
+});
+async function getImportList() {
+  importListLoading.value = true;
+  try {
+    const { data } = await axios.post("/novel/getImportList", { projectId: project.value?.id });
+    importBatches.value = Array.isArray(data) ? data : [];
+    // 未指定批次时默认进第一个批次，而不是落在主线上（工作台布局按 route.fullPath 做 key，replace 会重挂本页）
+    if (routeImportId.value === undefined && routeScriptId.value === undefined && importBatches.value.length && project.value?.id) {
+      await router.replace({ path: "/scriptAgent", query: { projectId: project.value.id, importId: String(importBatches.value[0].id) } });
+    }
+  } catch (e) {
+    console.error("获取取材批次失败:", e);
+    window.$message.error($t("workbench.scriptAgent.msg.importListFailed"));
+  } finally {
+    importListLoading.value = false;
+  }
+}
+
+function handleBatchChange(value: string | number | boolean | unknown) {
+  const nextValue = String(value);
+  if (nextValue === MAINLINE_IMPORT) {
+    router.push({ path: "/scriptAgent", query: { projectId: project.value?.id } });
+    return;
+  }
+  const importId = Number(nextValue);
+  if (!Number.isFinite(importId) || importId <= 0) return;
+  router.push({
+    path: "/scriptAgent",
+    query: {
+      projectId: project.value?.id,
+      importId: String(importId),
+    },
+  });
+}
+onUnmounted(() => {
+  sessionAgentStore.disconnect();
 });
 const agentWorkDataId = ref<number>();
 async function getPlanData() {
-  const { data } = await axios.post("/scriptAgent/getPlanData", { projectId: project.value?.id, agentType: "scriptAgent" });
-  planData.value.storySkeleton = data.data.storySkeleton;
-  planData.value.adaptationStrategy = data.data.adaptationStrategy;
-  planData.value.script = data.data.script || [];
-  agentWorkDataId.value = data.id;
+  agentWorkDataId.value = await sessionAgentStore.getPlanData();
+}
+
+function handlePreflightAction(request: PreflightAction) {
+  const action = buildPreflightAction(planData.value.preflight, request.type, request.findingIds, isGenerating.value || !connected.value);
+  if (!action || action.reviewId !== request.reviewId || action.proposalId !== request.proposalId) return;
+  const labels: Record<PreflightAction["type"], string> = {
+    repair: "修复已选问题",
+    confirm_diff: "确认差异并复审",
+    ignore: "手动忽略全部问题并继续（包括红色问题）",
+    confirm_commit: "确认差异并提交：跳过复审，直接用当前候选全文落预审凭据并进入提取",
+    proceed: "继续下一步",
+    discard: "放弃全部候选修改并重审原文",
+  };
+  sessionAgentStore.chat(labels[action.type], undefined, { preflightAction: action });
 }
 
 //快捷发送
 const handleActions = {
   suggestion: (data?: any) => {
+    if (isGenerating.value) return;
     scriptAgentStore().chat(data?.content?.prompt);
   },
 };
 
 function handleSend(text: string) {
-  scriptAgentStore().chat(text);
-  inputValue.value = "";
+  if (scriptAgentStore().chat(text)) {
+    inputValue.value = "";
+  }
 }
 function handleStop() {
   scriptAgentStore().stopGenerate();
+}
+
+/** 智能推进开关：开启后决策层代替用户确认并自动推进；若流程已启动且当前空闲，立即续跑 */
+function toggleAutoAdvance() {
+  const next = !autoAdvance.value;
+  scriptAgentStore().updateAutoAdvance(next);
+  const hasConversation = messages.value.some((m) => m.role === "user");
+  // 最后一条消息是用户消息 = 有回合在途（首包前 isGenerating 尚为 false），此时补发续跑会触发后端 abort 杀掉当前回合
+  const awaitingReply = messages.value[messages.value.length - 1]?.role === "user";
+  if (next && hasConversation && connected.value && !isGenerating.value && !awaitingReply) {
+    scriptAgentStore().autoAdvanceContinue();
+  }
+}
+
+/**
+ * 是否允许重试该消息：用户消息可重试；助手消息需前面紧邻一条用户消息；生成中禁用。
+ * 忙判据必须用 isGenerating——status 只反映本页的流式状态，后台仍在跑或历史正在恢复时它是 idle，
+ * 按钮会亮着但请求进不去，表现为点了没反应。
+ */
+function canRetry(message: ChatMessagesData): boolean {
+  if (isGenerating.value) return false;
+  const idx = messages.value.findIndex((m) => m.id === message.id);
+  if (idx === -1) return false;
+  if (message.role === "user") return true;
+  return idx > 0 && messages.value[idx - 1].role === "user";
+}
+
+/** 可编辑重试状态：点重试弹编辑框，预填该轮用户消息原文；不改字发送=原样重试，改字发送=编辑后重试 */
+const retryEditVisible = ref(false);
+const retryEditText = ref("");
+const retryTargetId = ref("");
+
+const retryEditBusy = ref(false);
+
+/** 把回退/重试的失败原因映射成可读提示 */
+function rollbackErrorText(message?: string) {
+  if (message === "generating") return $t("workbench.scriptAgent.rollbackBusy");
+  if (message?.includes("没有可用的状态快照")) return $t("workbench.scriptAgent.rollbackNoSnapshot");
+  return "";
+}
+
+/** 重试一轮对话：撤销该轮及其之后的内容，再重发用户输入（可编辑） */
+function handleRetry(message: ChatMessagesData) {
+  const idx = messages.value.findIndex((m) => m.id === message.id);
+  if (idx === -1) return;
+  const target = message.role === "user" ? message : messages.value[idx - 1];
+  if (!target || target.role !== "user") return;
+  const text = String((target.content?.[0] as any)?.data ?? "").trim();
+  if (!text) return;
+  retryTargetId.value = target.id;
+  retryEditText.value = text;
+  retryEditVisible.value = true;
+}
+
+/** 确认编辑后重试：成功才关弹窗，失败要说清楚原因，不能让用户以为已经发出去了 */
+async function confirmRetryEdit() {
+  const text = retryEditText.value.trim();
+  if (!text || !retryTargetId.value || retryEditBusy.value) return;
+  retryEditBusy.value = true;
+  try {
+    const res = await scriptAgentStore().retryFrom(retryTargetId.value, text);
+    if (!res.ok) {
+      window.$message.error(rollbackErrorText(res.message) || $t("workbench.scriptAgent.retryFailed"));
+      return;
+    }
+    retryEditVisible.value = false;
+    // 对话已在 store 里与库对齐，这里只需同步右侧工作区
+    await getPlanData();
+  } finally {
+    retryEditBusy.value = false;
+  }
+}
+
+/** 是否允许回退该消息：非欢迎语、非生成中；AI消息需其后还有内容（否则无可撤销项，最后一轮请用「重新生成」） */
+function canRollback(message: ChatMessagesData): boolean {
+  if (isGenerating.value) return false;
+  if (message.id === "welcome") return false;
+  const idx = messages.value.findIndex((m) => m.id === message.id);
+  if (idx === -1) return false;
+  if (message.role === "user") return true;
+  return idx < messages.value.length - 1;
+}
+
+/** 回退到某条消息对应时刻的工作区状态，并截断其后对话 */
+function handleRollback(message: ChatMessagesData) {
+  const mode = message.role === "user" ? "discard" : "keep";
+  // 回退前捕获将被截断范围的首条用户消息，回退成功后回填输入框（可改字重发，也可清空不用）
+  const rbIdx = messages.value.findIndex((m) => m.id === message.id);
+  let backfillText = "";
+  if (rbIdx >= 0) {
+    const removedUser =
+      mode === "discard" && message.role === "user"
+        ? message
+        : messages.value.slice(rbIdx + 1).find((m) => m.role === "user");
+    backfillText = String(((removedUser?.content?.[0] as any)?.data) ?? "").trim();
+  }
+  const dialog = DialogPlugin.confirm({
+    header: $t(mode === "keep" ? "workbench.scriptAgent.rollbackKeepTitle" : "workbench.scriptAgent.rollbackDiscardTitle"),
+    body: $t(mode === "keep" ? "workbench.scriptAgent.rollbackKeepBody" : "workbench.scriptAgent.rollbackDiscardBody"),
+    confirmBtn: { content: $t("workbench.scriptAgent.rollbackConfirm"), theme: "warning" },
+    cancelBtn: $t("workbench.scriptAgent.msg.cancel"),
+    theme: "warning",
+    onConfirm: async () => {
+      if (isGenerating.value) return;
+      dialog.destroy();
+      const res = await scriptAgentStore().rollbackTo(message.id, mode);
+      if (!res.ok) {
+        window.$message.error(rollbackErrorText(res.message) || $t("workbench.scriptAgent.rollbackFailed"));
+        return;
+      }
+      // 状态已回退：同步刷新右侧工作区数据，并按后端实际删掉的范围重新拉取对话
+      await getPlanData();
+      await getHistory();
+      // 回填被回退轮次的用户消息到输入框，便于改字重发
+      if (backfillText) inputValue.value = backfillText;
+      window.$message.success($t("workbench.scriptAgent.rollbackSuccess"));
+    },
+  });
 }
 
 const memoryTypeLabel: Record<string, string> = {
@@ -310,9 +635,40 @@ function handleClearMemory(type: "message" | "summary" | "all" | "reconnect") {
     cancelBtn: $t("workbench.scriptAgent.msg.cancel"),
     theme: "warning",
     onConfirm: async () => {
-      await axios.post(`/agents/clearMemory`, { projectId: project.value?.id, agentType: "scriptAgent", type });
+      if (isGenerating.value) return;
+      await axios.post(`/agents/clearMemory`, {
+        projectId: project.value?.id,
+        agentType: "scriptAgent",
+        type,
+        ...(routeScriptId.value !== undefined ? { episodesId: routeScriptId.value } : {}),
+        ...(routeImportId.value !== undefined ? { importId: routeImportId.value } : {}),
+      });
       window.$message.success($t("workbench.scriptAgent.msg.memoryCleared", { type: memoryTypeLabel[type] }));
       dialog.destroy();
+      if (type !== "summary") { sessionAgentStore.clearMessages(); messages.value = [...defMsg]; }
+      getHistory();
+    },
+  });
+}
+function handleResetConversation() {
+  const dialog = DialogPlugin.confirm({
+    header: $t("workbench.scriptAgent.resetConversation"),
+    body: $t("workbench.scriptAgent.resetBody"),
+    confirmBtn: $t("workbench.scriptAgent.clearAllMemory"),
+    cancelBtn: $t("workbench.scriptAgent.msg.cancel"),
+    theme: "danger",
+    onConfirm: async () => {
+      if (isGenerating.value) return;
+      await axios.post(`/scriptAgent/resetConversation`, {
+        projectId: project.value?.id,
+        ...scriptSessionParams(),
+        ...(routeImportId.value !== undefined ? { merge: routeMerge.value } : {}),
+      });
+      window.$message.success($t("workbench.scriptAgent.resetSuccess"));
+      dialog.destroy();
+      sessionAgentStore.clearMessages();
+      messages.value = [...defMsg];
+      getPlanData();
       getHistory();
     },
   });
@@ -325,21 +681,16 @@ function handleReconnect() {
     cancelBtn: $t("workbench.scriptAgent.msg.cancel"),
     theme: "warning",
     onConfirm: async () => {
-      productionAgentStore().reconnect();
+      scriptAgentStore().reconnect();
       dialog.destroy();
     },
   });
 }
 
-const loadingHistory = ref(false);
+const loadingHistory = computed(() => sessionAgentStore.loadingHistory);
 async function getHistory() {
-  loadingHistory.value = true;
-  const { data } = await axios.post(`/agents/getMemory`, {
-    projectId: project.value?.id,
-    agentType: "scriptAgent",
-  });
-  messages.value = [...defMsg, ...data];
-  loadingHistory.value = false;
+  try { await sessionAgentStore.getHistory(); }
+  catch (error) { console.error('对话恢复失败', error); window.$message.error('对话恢复失败，请重新连接后重试'); }
 }
 
 // 强制生成蒙层
@@ -349,6 +700,11 @@ const novelData = ref([]);
 function getNovel() {
   axios.post("/novel/getNovelData", { projectId: project.value?.id }).then(({ data }: any) => {
     novelData.value = data;
+    // 科普先预审、后提取事件，未分析章节不阻塞进入。
+    if (project.value?.contentFormat === "explainer_video") {
+      forceGenerateVisible.value = false;
+      return;
+    }
     const hasUnfinished = (novelData.value as any[]).some((item: any) => item.eventState === 0);
     if (hasUnfinished && !forceGenerateVisible.value) {
       forceGenerateVisible.value = true;
@@ -360,6 +716,7 @@ const dialogVisible = ref(false);
 const editContent = ref("");
 //编辑markdown
 function editMdPreview() {
+  if (isGenerating.value) return;
   if (currentTable.value == 1) editContent.value = planData.value.storySkeleton;
   else if (currentTable.value == 2) editContent.value = planData.value.adaptationStrategy;
   dialogVisible.value = true;
@@ -371,8 +728,10 @@ const scriptEditData = ref({
   content: "",
 });
 const scriptEditVisible = ref(false);
+const scriptSaveBusy = ref(false);
 
 function editScript(index: number) {
+  if (isGenerating.value) return;
   const item = planData.value.script[index];
   scriptEditIndex.value = index;
   scriptEditData.value = {
@@ -382,7 +741,35 @@ function editScript(index: number) {
   scriptEditVisible.value = true;
 }
 
-async function saveScript() {
+async function saveStructuredScript(content: string) {
+  if (isGenerating.value || scriptEditIndex.value < 0 || scriptSaveBusy.value) return;
+  const nextScripts = planData.value.script.map((item, index) =>
+    index === scriptEditIndex.value ? { ...item, content } : item,
+  );
+  scriptSaveBusy.value = true;
+  try {
+    await axios.post("/scriptAgent/setPlanData", {
+      projectId: project.value?.id,
+      agentType: "scriptAgent",
+      data: {
+        storySkeleton: planData.value.storySkeleton,
+        adaptationStrategy: planData.value.adaptationStrategy,
+        script: nextScripts,
+      },
+      ...scriptSessionParams(),
+    });
+    await getPlanData();
+    window.$message.success($t("workbench.scriptAgent.msg.scriptUpdated"));
+    scriptEditVisible.value = false;
+  } catch (error) {
+    window.$message.error($t("workbench.scriptAgent.saveFailedDraftKept", { message: getSaveScriptErrorMessage(error) }));
+  } finally {
+    scriptSaveBusy.value = false;
+  }
+}
+
+async function saveLegacyScript() {
+  if (isGenerating.value) return;
   if (scriptEditIndex.value < 0) return;
   planData.value.script[scriptEditIndex.value] = { ...scriptEditData.value };
   await scriptAgentStore().setPlanData();
@@ -391,6 +778,7 @@ async function saveScript() {
   scriptEditVisible.value = false;
 }
 async function delScript(index: number) {
+  if (isGenerating.value) return;
   const item = planData.value.script[index];
   const dialog = DialogPlugin.confirm({
     header: $t("workbench.scriptAgent.msg.deleteConfirm"),
@@ -399,6 +787,7 @@ async function delScript(index: number) {
     cancelBtn: $t("workbench.scriptAgent.msg.cancel"),
     theme: "danger",
     onConfirm: async () => {
+      if (isGenerating.value) return;
       if (item.id) {
         await axios.post("/script/delScript", { ids: [item.id] });
         planData.value.script.splice(index, 1);
@@ -413,6 +802,7 @@ async function delScript(index: number) {
   });
 }
 function onConfirm(value: string) {
+  if (isGenerating.value) return;
   axios
     .post("/scriptAgent/updateData", {
       id: agentWorkDataId.value,
@@ -497,11 +887,62 @@ function toggleAllCards() {
 </script>
 
 <style lang="scss" scoped>
-.scriptAgent {
+  .msgActions {
+    display: flex;
+    gap: 4px;
+    padding: 2px 0;
+    opacity: 0.55;
+    transition: opacity 0.2s;
+
+    &:hover {
+      opacity: 1;
+    }
+
+    &.isUser {
+      justify-content: flex-end;
+    }
+
+    &.isAssistant {
+      justify-content: flex-start;
+    }
+  }
+
+  .box.isGenerating :deep(.t-chat__item__suggestion-item) {
+    pointer-events: none;
+    opacity: 0.45;
+  }
+
+  .scriptAgent {
   height: calc(100% - 16px);
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  .batchHeader {
+    flex-shrink: 0;
+    gap: 16px;
+    min-height: 48px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--td-border-level-1-color);
+    .batchSelector {
+      gap: 10px;
+      .batchLabel {
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--td-text-color-secondary);
+      }
+      .batchSelect {
+        width: 280px;
+      }
+    }
+    .currentBatchName {
+      max-width: 360px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 13px;
+      font-weight: 600;
+    }
+  }
   :deep(.splitpanes__pane) {
     background-color: transparent !important;
   }
@@ -599,6 +1040,10 @@ function toggleAllCards() {
   align-items: start;
 }
 
+.scriptList.structuredScriptList {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .scriptCard {
   border: 1px solid var(--td-border-level-2-color);
   border-radius: 8px;
@@ -662,12 +1107,17 @@ function toggleAllCards() {
       word-break: break-all;
       font-family: inherit;
     }
-    .emptyContent {
-      display: block;
-      font-size: 13px;
-    }
-    :deep(.md-editor-preview-wrapper) {
-      padding: 0;
+    .scriptParseError {
+      padding: 12px;
+      border: 1px solid var(--td-error-color);
+      border-radius: 8px;
+      color: var(--td-error-color);
+      background: var(--td-error-color-1);
+      overflow-wrap: anywhere;
+      p {
+        margin: 6px 0 0;
+        white-space: pre-wrap;
+      }
     }
   }
   .scriptCardFooter {
@@ -690,6 +1140,11 @@ function toggleAllCards() {
       gap: 5.6px;
     }
   }
+}
+
+.structuredScriptList .scriptCardBody {
+  max-height: none;
+  overflow-y: visible;
 }
 
 .scriptEditForm {
@@ -779,6 +1234,11 @@ function toggleAllCards() {
       color: var(--td-error-color);
     }
   }
+}
+.resetBar {
+  display: flex;
+  justify-content: flex-end;
+  padding: 8px 12px 4px;
 }
 :deep(.t-tabs__operations--right) {
   top: 0;

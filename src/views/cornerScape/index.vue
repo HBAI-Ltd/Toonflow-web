@@ -189,20 +189,87 @@
               </div>
             </div>
           </t-form-item>
+          <t-form-item :label="$t('workbench.cornerScape.referenceLabel')">
+            <div class="referenceBox">
+              <div v-if="displayedReferences?.items?.length" class="referenceList f">
+                <div v-for="(refItem, idx) in displayedReferences.items" :key="`${refItem.source}-${refItem.id ?? idx}`" class="referenceItem">
+                  <t-image
+                    v-if="refItem.url"
+                    :src="refItem.url"
+                    :style="{ width: '84px', minWidth: '84px', height: '84px' }"
+                    :lazy="true"
+                    fit="contain" />
+                  <div v-else class="referenceNoThumb">{{ $t("workbench.cornerScape.refNoThumb") }}</div>
+                  <div class="referenceCaption">
+                    <t-tag size="small" variant="light" :theme="referenceSourceTheme(refItem.source)">
+                      {{ referenceSourceLabel(refItem.source) }}
+                    </t-tag>
+                    <span class="referenceName" :title="refItem.name">{{ refItem.name }}</span>
+                  </div>
+                </div>
+              </div>
+              <div v-else class="assets-empty">
+                {{ displayedReferences?.note || $t("workbench.cornerScape.refNone") }}
+              </div>
+              <div class="stylePlateRow">
+                <t-button
+                  size="small"
+                  :theme="currentItem.isStylePlate ? 'success' : 'default'"
+                  variant="outline"
+                  :loading="stylePlateSaving"
+                  :disabled="!currentItem.filePath || currentItem.state !== '已完成'"
+                  @click="toggleStylePlate">
+                  <template #icon><t-icon name="bookmark" /></template>
+                  {{ currentItem.isStylePlate ? $t("workbench.cornerScape.stylePlateUnset") : $t("workbench.cornerScape.stylePlateSet") }}
+                </t-button>
+                <span class="stylePlateHint">{{ $t("workbench.cornerScape.stylePlateHint") }}</span>
+              </div>
+            </div>
+          </t-form-item>
           <t-form-item :label="$t('workbench.cornerScape.genModel')">
             <modelSelect v-model="selectValue" :type="`image`" />
           </t-form-item>
           <t-form-item :label="$t('workbench.cornerScape.resolution')">
             <t-select v-model="editForm.resolution" :placeholder="$t('workbench.cornerScape.resolutionPh')" :options="resolutionOptions" />
           </t-form-item>
+          <t-form-item :label="$t('workbench.cornerScape.assetDescLabel')">
+            <div class="assetDescBox">
+              <div class="assetDescBlock">
+                <div class="assetDescHead">
+                  <t-tag size="small" theme="primary" variant="light">{{ $t("workbench.cornerScape.descVisual") }}</t-tag>
+                  <span class="assetDescHint">{{ $t("workbench.cornerScape.descVisualHint") }}</span>
+                </div>
+                <div class="assetDescText">{{ currentItem.describe || $t("workbench.cornerScape.descEmpty") }}</div>
+              </div>
+              <div class="assetDescBlock">
+                <div class="assetDescHead">
+                  <t-tag size="small" theme="default" variant="light">{{ $t("workbench.cornerScape.descStory") }}</t-tag>
+                  <span class="assetDescHint">{{ $t("workbench.cornerScape.descStoryHint") }}</span>
+                </div>
+                <div class="assetDescText muted">{{ currentItem.remark || $t("workbench.cornerScape.descStoryEmpty") }}</div>
+              </div>
+            </div>
+          </t-form-item>
           <t-form-item :label="$t('workbench.cornerScape.promptLabel')">
             <t-loading style="width: 100%" :loading="currentItem.promptState == '生成中'">
-              <t-textarea
-                v-model="editForm.prompt"
-                :placeholder="$t('workbench.cornerScape.promptPh')"
-                :autosize="{ minRows: 4, maxRows: 10 }"
-                :disabled="polishing"
-                @blur="savePromptOnBlur" />
+              <div class="promptComposer">
+                <div v-if="currentItem.promptPrefix" class="promptConst">
+                  <div class="promptConstHead">
+                    <t-tag size="small" variant="light" theme="default">{{ $t("workbench.cornerScape.promptConstTag") }}</t-tag>
+                    <span class="promptConstHint">{{ $t("workbench.cornerScape.promptConstHint") }}</span>
+                  </div>
+                  <div class="promptConstText">{{ currentItem.promptPrefix }}</div>
+                </div>
+                <t-textarea
+                  v-model="editForm.prompt"
+                  :placeholder="$t('workbench.cornerScape.promptPh')"
+                  :autosize="{ minRows: 4, maxRows: 12 }"
+                  :disabled="polishing"
+                  @blur="savePromptOnBlur" />
+                <div v-if="currentItem.promptSuffix" class="promptConst">
+                  <div class="promptConstText">{{ currentItem.promptSuffix }}</div>
+                </div>
+              </div>
             </t-loading>
           </t-form-item>
           <t-form-item :label="$t('workbench.cornerScape.assetsAudioLabel')">
@@ -252,9 +319,21 @@ import settingStore from "@/stores/setting";
 import openAssetsSelector from "@/utils/assetsCheck";
 
 const { otherSetting } = storeToRefs(settingStore());
+interface ReferenceItem {
+  source: "upload" | "face" | "stylePlate";
+  id?: number;
+  name?: string;
+  url?: string;
+}
+interface ReferenceMeta {
+  items: ReferenceItem[];
+  note?: string;
+}
 interface Image {
   filePath: string;
   id: number;
+  references?: ReferenceMeta | null;
+  isStylePlate?: boolean;
 }
 interface DataItem {
   id: number;
@@ -267,8 +346,13 @@ interface DataItem {
   model: string;
   resolution: string;
   describe: string;
+  remark?: string | null;
   promptState: string;
   historyImages: Image[];
+  references?: ReferenceMeta | null;
+  isStylePlate?: boolean;
+  promptPrefix?: string;
+  promptSuffix?: string;
   errorReason: string;
   promptErrorReason: string;
   relepedAudio: { id: number; name: string }[];
@@ -439,6 +523,54 @@ async function cancelGenerationFn(item: DataItem) {
 const drawerVisible = ref(false);
 const currentItem = ref<DataItem | null>(null);
 const selectedHistoryId = ref<number | null>(null);
+
+// 抽屉里展示的参考图：选中了历史图就跟随该次生成，否则用当前图这次生成的记录
+const displayedReferences = computed<ReferenceMeta | null>(() => {
+  if (!currentItem.value) return null;
+  if (selectedHistoryId.value != null) {
+    const hit = currentItem.value.historyImages.find((img) => img.id === selectedHistoryId.value);
+    if (hit) return hit.references ?? null;
+  }
+  return currentItem.value.references ?? null;
+});
+
+function referenceSourceLabel(source: ReferenceItem["source"]) {
+  const map: Record<ReferenceItem["source"], string> = {
+    face: $t("workbench.cornerScape.refSourceFace"),
+    upload: $t("workbench.cornerScape.refSourceUpload"),
+    stylePlate: $t("workbench.cornerScape.refSourceStylePlate"),
+  };
+  return map[source] ?? source;
+}
+
+const stylePlateSaving = ref(false);
+
+// 风格基准图：挂到本项目所有资产的生图请求上，用来把画风锁死在同一个点
+async function toggleStylePlate() {
+  if (!currentItem.value || !project.value) return;
+  const willClear = currentItem.value.isStylePlate;
+  stylePlateSaving.value = true;
+  try {
+    await axios.post("/project/setStylePlate", {
+      projectId: project.value.id,
+      imageId: willClear ? null : currentItem.value.imageId,
+    });
+    window.$message.success(
+      willClear ? $t("workbench.cornerScape.msg.stylePlateCleared") : $t("workbench.cornerScape.msg.stylePlateSet"),
+    );
+    await getFilteredData();
+    const fresh = dataList.value.find((d) => d.id === currentItem.value?.id);
+    if (fresh) currentItem.value = fresh;
+  } catch (e) {
+    window.$message.error((e as any)?.message ?? $t("workbench.cornerScape.msg.stylePlateFailed"));
+  } finally {
+    stylePlateSaving.value = false;
+  }
+}
+
+function referenceSourceTheme(source: ReferenceItem["source"]) {
+  return source === "face" ? "warning" : source === "stylePlate" ? "success" : "primary";
+}
 
 async function toggleHistorySelect(id: number) {
   selectedHistoryId.value = selectedHistoryId.value === id ? null : id;
@@ -1255,6 +1387,159 @@ async function selectAudio() {
   &.selected {
     border-color: var(--td-brand-color);
   }
+}
+
+.referenceBox {
+  width: 100%;
+}
+
+.promptComposer {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.promptConst {
+  border: 1px dashed var(--td-component-stroke);
+  border-radius: 6px;
+  padding: 8px 10px;
+  background: var(--td-bg-color-secondarycontainer);
+}
+
+.promptConstHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.promptConstHint {
+  font-size: 12px;
+  color: var(--td-text-color-placeholder);
+}
+
+.promptConstText {
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--td-text-color-placeholder);
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 140px;
+  overflow-y: auto;
+  user-select: text;
+}
+
+.assetDescBox {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.assetDescBlock {
+  border: 1px solid var(--td-component-stroke);
+  border-radius: 6px;
+  padding: 8px 10px;
+  background: var(--td-bg-color-container-select);
+}
+
+.assetDescHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.assetDescHint {
+  font-size: 12px;
+  color: var(--td-text-color-placeholder);
+}
+
+.assetDescText {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--td-text-color-primary);
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 160px;
+  overflow-y: auto;
+
+  &.muted {
+    color: var(--td-text-color-secondary);
+  }
+}
+
+.stylePlateRow {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.stylePlateHint {
+  font-size: 12px;
+  color: var(--td-text-color-placeholder);
+}
+
+.referenceList {
+  gap: 10px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  max-width: 100%;
+  width: 0;
+  min-width: 100%;
+  flex-shrink: 1;
+  padding-bottom: 4px;
+
+  &::-webkit-scrollbar {
+    height: 6px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
+
+.referenceItem {
+  flex-shrink: 0;
+  width: 84px;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.referenceNoThumb {
+  width: 84px;
+  height: 84px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-size: 12px;
+  line-height: 1.3;
+  padding: 0 6px;
+  color: var(--td-text-color-placeholder);
+  background: var(--td-bg-color-secondarycontainer);
+  border-radius: 4px;
+}
+
+.referenceCaption {
+  margin-top: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.referenceName {
+  font-size: 12px;
+  color: var(--td-text-color-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .drawerActions {

@@ -34,12 +34,13 @@ import { Handle, Position } from "@vue-flow/core";
 const visible = ref(false);
 
 interface WorkbenchData {
-  name: string;
-  duration: string;
-  resolution: string;
-  fps: string;
+  name?: string;
+  duration?: string;
+  resolution?: string;
+  fps?: string;
   cover?: string;
   gradient?: string;
+  videoList?: { id: number; prompt: string; duration: number; storyboardId: number; trackId: number }[];
 }
 
 const props = defineProps<{
