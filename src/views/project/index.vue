@@ -94,27 +94,6 @@ async function openProject(projectId: string | undefined) {
 
   if (!item) return window.$message.error($t("workbench.project.msg.notFound"));
 
-  if (!item.imageModel || !item.videoModel) {
-    window.$message.warning($t("workbench.project.msg.modelProviderDisabled"));
-    return openEdit(item);
-  }
-
-  try {
-    if (item.imageModel) {
-      await axios.post("/modelSelect/getModelDetail", {
-        modelId: item.imageModel,
-      });
-    }
-    if (item.videoModel) {
-      await axios.post("/modelSelect/getModelDetail", {
-        modelId: item.videoModel,
-      });
-    }
-  } catch {
-    window.$message.warning($t("workbench.project.msg.modelProviderDisabled"));
-    return openEdit(item);
-  }
-
   project.value = item;
   if (item.projectType === "novel") router.push(`/novel`);
   else if (item.projectType === "script") router.push(`/script`);

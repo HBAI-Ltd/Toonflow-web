@@ -56,6 +56,7 @@ import axios from "@/utils/axios";
 import projectStore from "@/stores/project";
 import promptEditor from "@/components/promptEditor.vue";
 import imageListCacheStore from "@/stores/imageListCache";
+import { buildManualVideoPrompt, copyText } from "@/utils/manualMedia";
 
 const { project } = storeToRefs(projectStore());
 const episodesId = inject<Ref<number>>("episodesId")!;
@@ -385,53 +386,31 @@ onMounted(() => {
 });
 /** 单个轨道生成视频 */
 async function generateVideo() {
-  const dlg = DialogPlugin.confirm({
-    header: $t("workbench.generate.generateConfirm"),
-    body: $t("workbench.generate.generateConfirmBody"),
-    onConfirm: async () => {
-      dlg.destroy();
-      try {
-        const { data } = await axios.post("/production/workbench/generateVideo", {
-          projectId: project.value?.id,
-          scriptId: episodesId.value,
-          uploadData:
-            modelParmas.value.mode === "text"
-              ? []
-              : (() => {
-                  const frameMode = ["startEndRequired", "endFrameOptional", "startFrameOptional"];
-                  const preSliced = frameMode.includes(modelParmas.value.mode)
-                    ? imageList.value.slice(0, 2)
-                    : modelParmas.value.mode === "singleImage"
-                      ? imageList.value.slice(0, 1)
-                      : imageList.value;
-                  const filtered = preSliced
-                    .filter((item) => Boolean(item.src) && typeof item.id === "number" && !isNaN(item.id))
-                    .map(({ id, sources }) => ({ id, sources }));
-                  if (frameMode.includes(modelParmas.value.mode)) return filtered.slice(0, 2);
-                  if (modelParmas.value.mode === "singleImage") return filtered.slice(0, 1);
-                  return filtered;
-                })(),
-          prompt: currentTrack.value.prompt,
-          model: modelParmas.value.model,
-          mode: modelParmas.value.mode,
-          resolution: modelParmas.value.resolution,
-          duration: modelParmas.value.duration,
-          audio: modelParmas.value.audio,
-          trackId: currentTrack.value.id,
-        });
-        window.$message.success($t("workbench.generate.generateStarted"));
-        currentTrack.value.videoList.push({
-          id: data,
-          state: "生成中",
-          src: "",
-        });
-      } catch (e) {
-        window.$message.error((e as any)?.message ?? "视频发起生成请求失败");
-      } finally {
-      }
-    },
-    onCancel: () => dlg.destroy(),
-  });
+  if (!currentTrack.value?.prompt?.trim()) return window.$message.warning("请先填写视频提示词");
+  try {
+    await copyText(
+      buildManualVideoPrompt({
+        name: `视频轨道 ${activeTrackIndex.value + 1}`,
+        prompt: currentTrack.value.prompt,
+        duration: modelParmas.value.duration,
+        aspectRatio: project.value?.videoRatio,
+        resolution: modelParmas.value.resolution,
+        mode: modelParmas.value.mode,
+        audio: modelParmas.value.audio,
+        references: imageList.value
+          .filter((item) => Boolean(item.src))
+          .map((item) => ({
+            fileType: item.fileType,
+            name: item.prompt,
+            prompt: item.prompt,
+            sources: item.sources,
+          })),
+      }),
+    );
+    window.$message.success("完整视频提示词已复制，请在外部工具生成后回到视频区域上传");
+  } catch (e) {
+    window.$message.error((e as any)?.message ?? "复制完整视频提示词失败");
+  }
 }
 let pollTimer: NodeJS.Timeout | null = null;
 let promptPollTimer: NodeJS.Timeout | null = null;

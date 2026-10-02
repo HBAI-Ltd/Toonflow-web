@@ -99,7 +99,7 @@
       <div class="ac" style="gap: 10px">
         <t-button block @click="previewAll" :disabled="!storyboard.length">{{ $t("workbench.production.node.storyboard.gridPreview") }}</t-button>
         <t-button block @click="batchGenerateImage" :disabled="!storyboard.length || !selectedIds.length" :loading="generateLoading">
-          {{ $t("workbench.production.node.storyboard.generateImage") }}
+          复制所选分镜完整生图提示词
         </t-button>
 
         <!-- <t-button block @click="batchGenerateImage" :disabled="!storyboard.length" :loading="generateLoading">
@@ -127,6 +127,7 @@ import axios from "@/utils/axios";
 import type { AssetItem, Storyboard } from "../utils/flowBuilder";
 import projectStore from "@/stores/project";
 import productionAgentStore from "@/stores/productionAgent";
+import { buildBatchPrompt, buildManualImagePrompt, copyText } from "@/utils/manualMedia";
 const { project } = storeToRefs(projectStore());
 const { episodesId } = storeToRefs(productionAgentStore());
 
@@ -262,11 +263,30 @@ async function batchGenerateImage() {
   if (!selectedIds.value.length) return window.$message.warning("请先选择分镜面板");
   generateLoading.value = true;
   try {
-    await productionAgentStore().batchGenerateStoryboard(selectedIds.value, true);
-    window.$message.success($t("workbench.production.node.storyboard.batchGenerateSuccess"));
+    const selectedStoryboards = storyboard.value.filter((item) => item.id != null && selectedIds.value.includes(item.id));
+    const emptyPrompts = selectedStoryboards.filter((item) => !item.prompt?.trim());
+    if (emptyPrompts.length) return window.$message.warning("所选分镜中存在空提示词，请先补充提示词");
+
+    await copyText(
+      buildBatchPrompt(
+        selectedStoryboards.map((item, index) => ({
+          title: `分镜 ${storyboard.value.indexOf(item) + 1 || index + 1}`,
+          prompt: buildManualImagePrompt({
+            category: "storyboard",
+            name: `分镜 ${storyboard.value.indexOf(item) + 1 || index + 1}`,
+            prompt: [item.prompt, item.videoDesc].filter(Boolean).join("\n"),
+            artStyle: project.value?.artStyle,
+            aspectRatio: project.value?.videoRatio,
+            resolution: project.value?.imageQuality,
+            referenceCount: item.associateAssetsIds?.length ?? 0,
+          }),
+        })),
+      ),
+    );
+    window.$message.success(`已复制 ${selectedStoryboards.length} 条完整分镜生图提示词，请在外部生成后点击对应分镜上传`);
     selectedIds.value = [];
-  } catch (e) {
-    window.$message.error($t("workbench.production.node.storyboard.batchGenerateFailed"));
+  } catch (e: any) {
+    window.$message.error(e?.message ?? "复制分镜提示词失败");
   } finally {
     generateLoading.value = false;
   }

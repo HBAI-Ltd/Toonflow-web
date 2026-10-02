@@ -1,7 +1,10 @@
 <template>
   <t-card :title="'#' + (activeTrackIndex + 1) + $t('workbench.generate.videoMenu')" header-bordered style="height: 100%">
     <template #actions>
-      <t-button size="small" :loading="generating" @click="emit('generate')">{{ $t("workbench.generate.generate") }}</t-button>
+      <t-space>
+        <t-button size="small" @click="emit('generate')">复制完整视频提示词</t-button>
+        <t-button size="small" theme="success" variant="outline" :loading="uploadingVideo" @click="uploadVideo">上传生成视频</t-button>
+      </t-space>
     </template>
     <div class="history">
       <div class="titleBox f ac">
@@ -81,6 +84,8 @@
 import type { Ref } from "vue";
 import axios from "@/utils/axios";
 import projectStore from "@/stores/project";
+import { useFileDialog } from "@vueuse/core";
+import { fileToDataUrl } from "@/utils/manualMedia";
 
 const props = defineProps<{
   activeTrackIndex: number;
@@ -101,6 +106,42 @@ const selectVideoId = ref();
 const videoCoverMap = ref<Record<string, string>>({});
 const videoPlayerVisible = ref(false);
 const playingVideoSrc = ref<string>();
+const uploadingVideo = ref(false);
+const {
+  open: openVideoFile,
+  onChange: onVideoFileChange,
+  onCancel: onVideoFileCancel,
+} = useFileDialog({
+  multiple: false,
+  reset: true,
+  accept: ".mp4,.webm,.mov,.mkv",
+});
+
+async function uploadVideo() {
+  if (!currentTrack.value?.id) return window.$message.warning("当前视频轨道不可用");
+  const files = await new Promise<FileList | null>((resolve) => {
+    openVideoFile();
+    onVideoFileChange((value) => resolve(value));
+    onVideoFileCancel(() => resolve(null));
+  });
+  if (!files?.length) return;
+
+  uploadingVideo.value = true;
+  try {
+    await axios.post("/production/workbench/uploadVideo", {
+      projectId: project.value?.id,
+      scriptId: episodesId.value,
+      trackId: currentTrack.value.id,
+      base64Data: await fileToDataUrl(files[0]),
+    });
+    window.$message.success("视频上传成功，已添加并选中为当前轨道视频");
+    emit("refresh");
+  } catch (e) {
+    window.$message.error((e as any)?.message ?? "视频上传失败");
+  } finally {
+    uploadingVideo.value = false;
+  }
+}
 
 /** 选中历史视频并同步到后端 */
 async function selectVideo(v: HistoryVideoItem) {

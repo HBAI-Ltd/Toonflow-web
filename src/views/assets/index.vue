@@ -32,7 +32,7 @@
                         <span @click="batchGeneration(1)">{{ $t("workbench.assets.generatePrompt") }}</span>
                       </div>
                       <div class="generateImage">
-                        <span @click="batchGeneration(2)">{{ $t("workbench.assets.generateImage") }}</span>
+                        <span @click="batchGeneration(2)">复制完整生图提示词</span>
                       </div>
                     </div>
                   </template>
@@ -413,11 +413,14 @@
       @confirm="keep"
       @close="batchGenerationShow = false">
       <div class="batch">
-        <span>{{ $t("workbench.assets.confirmBatch", { type: batchType }) }}</span>
+        <span>
+          {{
+            batchType === $t("workbench.assets.batchGenPrompt")
+              ? $t("workbench.assets.confirmBatch", { type: batchType })
+              : "复制所选资产的完整提示词，到外部工具生成后请逐项上传。"
+          }}
+        </span>
         <t-form labelAlign="top">
-          <t-form-item :label="$t('workbench.assets.model')" name="selectValue" v-if="batchType === $t('workbench.assets.batchGenImage')">
-            <modelSelect v-model="selectValue" :type="`image`" />
-          </t-form-item>
           <t-form-item :label="$t('workbench.assets.resolution')" name="resolution" v-if="batchType === $t('workbench.assets.batchGenImage')">
             <t-select v-model="resolution" :placeholder="$t('workbench.assets.resolutionPh')">
               <t-option key="1K" label="1K" value="1K" />
@@ -433,7 +436,6 @@
 
 <script setup lang="ts">
 import dayjs from "dayjs";
-import modelSelect from "@/components/modelSelect.vue";
 import { useFileDialog } from "@vueuse/core";
 import axios from "@/utils/axios";
 import type { TabValue, TableProps } from "tdesign-vue-next";
@@ -442,6 +444,7 @@ import addAudioAssets from "./components/addAudioAssets.vue";
 import generateImage from "./components/generateImage.vue";
 import projectStore from "@/stores/project";
 import settingStore from "@/stores/setting";
+import { buildBatchPrompt, buildManualImagePrompt, copyText } from "@/utils/manualMedia";
 const { otherSetting } = storeToRefs(settingStore());
 
 const props = withDefaults(
@@ -663,7 +666,6 @@ async function handleAdd(type: string) {
   }
 }
 const batchGenerationShow = ref(false);
-const selectValue = ref(""); //选择的模型
 const resolution = ref("1K"); //选择的分辨率
 const batchType = ref("");
 function batchGeneration(type: number) {
@@ -738,10 +740,6 @@ async function handleBatchGenerateImage() {
     window.$message.warning($t("workbench.assets.selectAtLeastOne"));
     return;
   }
-  if (!selectValue.value) {
-    window.$message.error($t("workbench.assets.selectModel"));
-    return;
-  }
   if (!resolution.value) {
     window.$message.error($t("workbench.assets.selectResolution"));
     return;
@@ -757,50 +755,29 @@ async function handleBatchGenerateImage() {
   });
   if (validAssets.length === 0) return;
 
-  // 设置 state 为 '生成中'，让轮询自动接管状态跟踪
-  const validParentAssets = validAssets.filter((a) => selectedRowKeys.value.includes(a.id));
-  const validSubAssets = validAssets.filter((a) => selectedSubRowKeys.value.includes(a.id));
-  validParentAssets.forEach((asset) => {
-    const target = tableData.value.find((row) => row.id === asset.id);
-    if (target) target.state = "生成中";
-  });
-  validSubAssets.forEach((asset) => {
-    tableData.value.forEach((row) => {
-      const target = row.sonAssets?.find((sub) => sub.id === asset.id);
-      if (target) target.state = "生成中";
-    });
-  });
   selectedRowKeys.value = selectedRowKeys.value.filter((key) => !validAssets.some((a) => a.id === key));
   selectedSubRowKeys.value = selectedSubRowKeys.value.filter((key) => !validAssets.some((a) => a.id === key));
   batchGenerationShow.value = false;
 
   try {
-    await axios.post("/assetsGenerate/batchGenerateImageAssets", {
-      projectId: project.value?.id,
-      model: selectValue.value,
-      resolution: resolution.value,
-      concurrentCount: otherSetting.value.assetsBatchGenereateSize,
-      items: validAssets.map((item) => ({
-        id: item.id,
-        type: item.type ?? "props",
-        name: item.name ?? $t("workbench.cornerScape.unnamed"),
-        prompt: item.prompt || item.describe,
+    const promptBundle = buildBatchPrompt(
+      validAssets.map((item) => ({
+        title: item.name ?? $t("workbench.cornerScape.unnamed"),
+        prompt: buildManualImagePrompt({
+          name: item.name,
+          category: item.type ?? "props",
+          prompt: item.prompt || item.describe,
+          description: item.describe,
+          artStyle: project.value?.artStyle,
+          aspectRatio: project.value?.videoRatio,
+          resolution: resolution.value,
+        }),
       })),
-    });
+    );
+    await copyText(promptBundle);
+    window.$message.success(`已复制 ${validAssets.length} 条完整生图提示词，请生成后逐项上传`);
   } catch (e: any) {
-    window.$message.error($t("workbench.assets.imageGenFail", { name: "", error: e.message ?? "" }));
-    validAssets.forEach((asset) => {
-      // 在父级和子级中都查找
-      const parentTarget = tableData.value.find((row) => row.id === asset.id);
-      if (parentTarget) {
-        parentTarget.state = "生成失败";
-      } else {
-        tableData.value.forEach((row) => {
-          const subTarget = row.sonAssets?.find((sub) => sub.id === asset.id);
-          if (subTarget) subTarget.state = "生成失败";
-        });
-      }
-    });
+    window.$message.error(e.message ?? "批量复制提示词失败");
   }
 }
 // 批量删除

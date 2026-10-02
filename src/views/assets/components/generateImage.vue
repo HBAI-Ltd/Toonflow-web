@@ -46,12 +46,15 @@
               </t-loading>
             </div>
           </div>
-          <div class="selectModel f">
-            <div style="width: 60%">
-              <span style="font-size: 16px; font-weight: 900">{{ $t("workbench.assets.gen.selectModel") }}</span>
-              <modelSelect v-model="selectValue" :type="`image`" />
+          <div class="manualPrompt">
+            <div class="jb">
+              <span class="manualPromptTitle">完整生图提示词</span>
+              <t-tag theme="warning">请复制后到外部工具生成</t-tag>
             </div>
-            <div style="width: 40%; margin-left: 15px">
+            <t-textarea :value="completePrompt" readonly :autosize="{ minRows: 9, maxRows: 12 }" />
+          </div>
+          <div class="selectModel f">
+            <div style="width: 50%">
               <span style="font-size: 16px; font-weight: 900">{{ $t("workbench.assets.gen.selectResolution") }}</span>
               <t-select v-model="resolution">
                 <t-option key="1K" label="1K" value="1K" />
@@ -59,15 +62,17 @@
                 <t-option key="4K" label="4K" value="4K" />
               </t-select>
             </div>
+            <div style="width: 50%; margin-left: 15px">
+              <span style="font-size: 16px; font-weight: 900">项目画幅</span>
+              <t-input :value="project?.videoRatio || '跟随项目设置'" readonly />
+            </div>
           </div>
           <div class="generateButton" style="margin-top: 20px">
-            <t-button theme="primary" size="large" block :loading="generateLoading" @click="handleGenerate">
-              {{ $t("workbench.assets.gen.generateBtn") }}
-            </t-button>
+            <t-button theme="primary" size="large" block @click="copyManualPrompt">复制完整生图提示词</t-button>
           </div>
         </t-card>
         <t-divider layout="vertical" style="height: 700px" />
-        <t-card :title="$t('workbench.assets.gen.resultTitle')" :bordered="false" :style="{ width: '60%' }">
+        <t-card title="上传外部生成结果" :bordered="false" :style="{ width: '60%' }">
           <template #actions>
             <t-tag v-if="resultImages.length">{{ $t("workbench.assets.gen.generatedCount", { count: resultImages.length }) }}</t-tag>
           </template>
@@ -120,7 +125,10 @@
                   <div
                     class="uploadPlaceholder f ac jc"
                     style="width: 180px; height: 180px; border: 2px dashed #d9d9d9; border-radius: 20px; cursor: pointer">
-                    <i-plus theme="outline" size="24" fill="#4a4a4a" />
+                    <div class="fc ac">
+                      <i-plus theme="outline" size="24" fill="#4a4a4a" />
+                      <span style="margin-top: 8px">上传生成好的图片</span>
+                    </div>
                   </div>
                 </t-upload>
               </div>
@@ -139,10 +147,10 @@
 </template>
 
 <script setup lang="ts">
-import modelSelect from "@/components/modelSelect.vue";
 import projectStore from "@/stores/project";
 const { project } = storeToRefs(projectStore());
 import axios from "@/utils/axios";
+import { buildManualImagePrompt, copyText, fileToDataUrl } from "@/utils/manualMedia";
 const props = defineProps<{
   formData: {
     id?: number;
@@ -172,9 +180,6 @@ const referenceFileList = ref<any[]>([]);
 const autoUpload = ref(false);
 const showImageFileName = ref(false);
 const generateLoading = ref(false);
-const selectValue = ref(""); //选择的模型
-
-const value2 = ref("");
 //智能生成提示词
 const promptLoading = ref(false);
 async function generatePrompt() {
@@ -199,53 +204,29 @@ async function generatePrompt() {
 }
 const emit = defineEmits(["update"]);
 const resolution = ref("1K");
-//生成图片
-async function handleGenerate() {
+const completePrompt = computed(() =>
+  buildManualImagePrompt({
+    name: props.formData.name,
+    category: props.formData.type,
+    prompt: props.formData.prompt,
+    description: props.formData.describe,
+    artStyle: project.value?.artStyle,
+    aspectRatio: project.value?.videoRatio,
+    resolution: resolution.value,
+    referenceCount: referenceFileList.value.length,
+  }),
+);
+
+async function copyManualPrompt() {
   if (!props.formData.prompt) {
     window.$message.error($t("workbench.assets.gen.fillPrompt"));
     return;
   }
-  if (!resolution.value) {
-    window.$message.error($t("workbench.assets.gen.pickResolution"));
-    return;
-  }
-  if (!selectValue.value) {
-    window.$message.error($t("workbench.assets.gen.pickModel"));
-    return;
-  }
-  generateLoading.value = true;
   try {
-    let referenceImageBase64 = "";
-    if (referenceFileList.value.length > 0) {
-      const file = referenceFileList.value[0].raw;
-      if (file instanceof File) {
-        referenceImageBase64 = await new Promise<string>((resolve) => {
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            const base64 = e.target?.result as string;
-            resolve(base64);
-          };
-          reader.readAsDataURL(file);
-        });
-      }
-    }
-    await axios.post("/assetsGenerate/generateAssets", {
-      type: props.formData.type ?? "props",
-      projectId: project.value?.id,
-      name: props.formData.name ?? $t("workbench.assets.gen.unnamed"),
-      base64: referenceImageBase64,
-      prompt: props.formData.prompt,
-      model: selectValue.value,
-      id: props.formData.id,
-      resolution: resolution.value,
-    });
-    window.$message.success($t("workbench.assets.gen.assetGenSuccess"));
-    await fetchGeneratedImages();
+    await copyText(completePrompt.value);
+    window.$message.success("完整生图提示词已复制，请在外部工具生成后上传");
   } catch (e: any) {
-    window.$message.error(e.message ?? $t("workbench.assets.gen.assetGenFail"));
-    fetchGeneratedImages();
-  } finally {
-    generateLoading.value = false;
+    window.$message.error(e.message ?? "复制提示词失败");
   }
 }
 //自定义上传图片
@@ -255,9 +236,7 @@ function handleCustomUpload(files: any[]): void {
   if (files.length > 0) {
     const file = files[0]?.raw || files[0];
     if (file instanceof File) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const base64 = e.target?.result as string;
+      fileToDataUrl(file).then((base64) => {
         resultImages.value.push({
           id: "",
           src: base64,
@@ -265,8 +244,7 @@ function handleCustomUpload(files: any[]): void {
         });
         window.$message.success($t("workbench.assets.gen.uploadOk"));
         customFileList.value = [];
-      };
-      reader.readAsDataURL(file);
+      });
     }
   }
 }
@@ -289,7 +267,6 @@ watch(
   (newVal) => {
     if (newVal) {
       referenceFileList.value = [];
-      value2.value = "";
       selectedImageIndex.value = null;
       hoveredImageIndex.value = null;
       generateLoading.value = false;
@@ -398,6 +375,16 @@ async function onClick() {
       margin-top: 20px;
       .input {
         margin-top: 10px;
+      }
+    }
+    .manualPrompt {
+      margin-top: 20px;
+      .manualPromptTitle {
+        font-size: 16px;
+        font-weight: 900;
+      }
+      :deep(textarea) {
+        font-family: Monaco, Menlo, Consolas, monospace;
       }
     }
     .selectModel {

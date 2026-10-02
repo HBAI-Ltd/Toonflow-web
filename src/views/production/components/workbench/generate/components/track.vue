@@ -11,9 +11,7 @@
           <t-button size="small" variant="outline" @click="batchGenText" :loading="generateTextLoad">
             {{ $t("workbench.generate.batchGenerateText") }}
           </t-button>
-          <t-button size="small" variant="outline" @click="batchGenVideo" :loading="generateVideoLoad">
-            {{ $t("workbench.generate.batchGenerateVideo") }}
-          </t-button>
+          <t-button size="small" variant="outline" @click="batchGenVideo" :loading="generateVideoLoad">批量复制完整视频提示词</t-button>
           <!-- <t-button size="small" variant="outline" @click="importVideo">{{ $t("workbench.generate.importVideo") }}</t-button> -->
         </div>
       </div>
@@ -75,6 +73,7 @@ import projectStore from "@/stores/project";
 import imageListCacheStore from "@/stores/imageListCache";
 import JSZip from "jszip";
 import settingStore from "@/stores/setting";
+import { buildBatchPrompt, buildManualVideoPrompt, copyText } from "@/utils/manualMedia";
 
 const { otherSetting } = storeToRefs(settingStore());
 const { project } = storeToRefs(projectStore());
@@ -301,60 +300,46 @@ function getTrackUploadInfo(track: TrackItem, filterEmpty = false) {
 }
 const generateVideoLoad = ref(false);
 /** 批量为已勾选轨道生成视频 */
-function batchGenVideo() {
-  const dlg = DialogPlugin.confirm({
-    header: $t("workbench.generate.generateConfirm"),
-    body: $t("workbench.generate.generateVideosInBatches"),
-    onConfirm: async () => {
-      dlg.destroy();
+async function batchGenVideo() {
+  const checkedTrackData = trackList.value.filter((track) => checkedTrackIds.value.includes(track.id));
+  if (!checkedTrackData.length) return window.$message.warning("请先勾选视频轨道");
+  const notHasPrompt = checkedTrackData.filter((item) => !item.prompt?.trim());
+  if (notHasPrompt.length) return window.$message.warning($t("workbench.generate.skipDataWithEmptyVideoPromptWords"));
 
-      const checkedTrackData = trackList.value.filter((track) => checkedTrackIds.value.includes(track.id));
-      const notHasPrompt = checkedTrackData.filter((i) => !i.prompt);
-      if (notHasPrompt.length) return window.$message.warning($t("workbench.generate.skipDataWithEmptyVideoPromptWords"));
-
-      const trackData = checkedTrackData.map((track) => {
-        const trackId = track.id;
-        const uploadData = props.modelParmas.mode === "text" ? [] : getTrackUploadInfo(track, true);
-        return {
-          duration: props.clampDuration(track.duration || props.modelParmas.duration),
-          prompt: track.prompt,
-          uploadData,
-          trackId,
-        };
-      });
-      const requestData = {
-        projectId: project.value?.id,
-        scriptId: episodesId.value,
-        model: props.modelParmas.model,
-        mode: props.modelParmas.mode,
-        resolution: props.modelParmas.resolution,
-        audio: Boolean(props.modelParmas.audio),
-        trackData,
-      };
-      try {
-        const { data } = await axios.post("/production/workbench/batchGenerateVideo", requestData);
-        const videoRecordId: Record<number, number> = {};
-        data.forEach((item: { videoId: number; trackId: number }) => {
-          videoRecordId[item.trackId] = item.videoId;
-        });
-        checkedTrackData.forEach((i) => {
-          if (videoRecordId[i.id])
-            i.videoList.push({
-              id: videoRecordId[i.id],
-              state: "生成中",
-              src: "",
-            });
-        });
-        checkedTrackIds.value = [];
-        window.$message.success($t("workbench.generate.generateStarted"));
-      } catch (e) {
-        window.$message.error((e as any)?.message ?? $t("workbench.generate.generateError"));
-      } finally {
-        generateVideoLoad.value = false;
-      }
-    },
-    onCancel: () => dlg.destroy(),
-  });
+  generateVideoLoad.value = true;
+  try {
+    await copyText(
+      buildBatchPrompt(
+        checkedTrackData.map((track) => ({
+          title: `视频轨道 ${trackList.value.indexOf(track) + 1}`,
+          prompt: buildManualVideoPrompt({
+            name: `视频轨道 ${trackList.value.indexOf(track) + 1}`,
+            prompt: track.prompt,
+            duration: props.clampDuration(track.duration || props.modelParmas.duration),
+            aspectRatio: project.value?.videoRatio,
+            resolution: props.modelParmas.resolution,
+            mode: props.modelParmas.mode,
+            audio: Boolean(props.modelParmas.audio),
+            references: (track.id === trackList.value[activeTrackIndex.value]?.id ? props.imageList : track.medias)
+              .filter((item) => Boolean(item.src))
+              .map((item) => ({
+                fileType: item.fileType,
+                name: item.prompt,
+                prompt: item.prompt,
+                sources: item.sources,
+              })),
+          }),
+        })),
+      ),
+    );
+    checkedTrackIds.value = [];
+    checkAll.value = false;
+    window.$message.success(`已复制 ${checkedTrackData.length} 条完整视频提示词，请在外部生成后逐轨上传`);
+  } catch (e) {
+    window.$message.error((e as any)?.message ?? "复制完整视频提示词失败");
+  } finally {
+    generateVideoLoad.value = false;
+  }
 }
 
 /** 全选 / 取消全选轨道 */
